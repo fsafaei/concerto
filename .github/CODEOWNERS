@@ -1,0 +1,31 @@
+# CODEOWNERS for CONCERTO/CHAMBER
+#
+# Global default — every PR needs at least one of these reviewers.
+*                              @fsafaei
+
+# Method (CONCERTO) — ADR-bearing, extra care.
+/src/concerto/api/             @fsafaei
+/src/concerto/safety/          @fsafaei
+/src/concerto/training/        @fsafaei
+/src/concerto/policies/        @fsafaei
+
+# Benchmark (CHAMBER) — ADR-bearing, extra care.
+/src/chamber/envs/             @fsafaei
+/src/chamber/comm/             @fsafaei
+/src/chamber/partners/         @fsafaei
+/src/chamber/safety/           @fsafaei
+/src/chamber/evaluation/       @fsafaei
+/src/chamber/benchmarks/       @fsafaei
+
+# ADR snapshot — frozen artefact, sync only via dedicated PR.
+/adr/                          @fsafaei
+
+# CI / supply-chain.
+/.github/                      @fsafaei
+/scripts/                      @fsafaei
+/Makefile                      @fsafaei
+/pyproject.toml                @fsafaei
+/uv.lock                       @fsafaei
+
+# Spike infrastructure — pre-registration discipline lives here.
+/spikes/                       @fsafaei
