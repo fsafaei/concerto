@@ -82,8 +82,30 @@ ALLOWED: frozenset[str] = frozenset(
 # Format: "Name==version"  (exact match to pip-licenses Name field).
 KNOWN_CLEAN: frozenset[str] = frozenset(
     {
-        "mani_skill==3.0.1",      # Apache-2.0 (verified from source repo)
+        "mani_skill==3.0.1",  # Apache-2.0 (verified from source repo)
         "matplotlib-inline==0.2.1",  # BSD-3-Clause (verified from source repo)
+    }
+)
+
+# NVIDIA CUDA runtime libraries installed as transitive dependencies of PyTorch
+# (ADR-002). These are GPU compute libs distributed under the NVIDIA EULA;
+# they are not linked into CONCERTO source code and do not affect the
+# project's open-source licence obligations. Matched by name only (no version
+# pin) so this list stays valid across CUDA minor-version bumps.
+PROPRIETARY_RUNTIME_EXEMPTIONS: frozenset[str] = frozenset(
+    {
+        "nvidia-cublas-cu12",
+        "nvidia-cuda-cupti-cu12",
+        "nvidia-cuda-nvrtc-cu12",
+        "nvidia-cuda-runtime-cu12",
+        "nvidia-cudnn-cu12",
+        "nvidia-cufft-cu12",
+        "nvidia-curand-cu12",
+        "nvidia-cusolver-cu12",
+        "nvidia-cusparse-cu12",
+        "nvidia-nccl-cu12",
+        "nvidia-nvjitlink-cu12",
+        "nvidia-nvtx-cu12",
     }
 )
 
@@ -100,7 +122,8 @@ def _is_allowed(licence: str) -> bool:
     return all(p.strip() in ALLOWED for p in parts if p.strip())
 
 
-def main(argv: list[str] | None = None) -> int:
+def main() -> int:
+    """Read pip-licenses JSON from stdin and exit non-zero on disallowed licences."""
     raw = sys.stdin.read()
     try:
         records = json.loads(raw)
@@ -115,6 +138,8 @@ def main(argv: list[str] | None = None) -> int:
         licence = rec.get("License", "<unknown>")
 
         if f"{name}=={version}" in KNOWN_CLEAN:
+            continue
+        if name in PROPRIETARY_RUNTIME_EXEMPTIONS:
             continue
 
         if licence == "UNKNOWN":
