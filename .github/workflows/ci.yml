@@ -137,6 +137,27 @@ jobs:
           name: sbom
           path: sbom.spdx.json
 
+  test-smoke:
+    name: test-smoke (${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    # Only run when wrapper or smoke-runner sources change (ADR-007 §Stage 0).
+    if: |
+      contains(github.event.head_commit.modified, 'src/chamber/envs/') ||
+      contains(github.event.head_commit.modified, 'src/chamber/benchmarks/stage0_smoke.py') ||
+      github.event_name == 'pull_request'
+    strategy:
+      matrix:
+        python-version: ["3.11", "3.12"]
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
+      - uses: astral-sh/setup-uv@f0ec1fc3b38f5e7cd731bb6ce540c5af426746bb  # v5.4.1
+        with:
+          python-version: ${{ matrix.python-version }}
+      - run: uv sync --group dev
+      # GPU-less runners: Tier-1 (fake env) tests run; Tier-2 (real ManiSkill) tests skip.
+      # Exit 5 ("no tests collected") is acceptable if the -k filter produces an empty set.
+      - run: uv run pytest -m smoke --no-cov || test $? -eq 5
+
   verify-no-ai-mentions:
     name: verify-no-ai-mentions
     runs-on: ubuntu-latest

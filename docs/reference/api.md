@@ -8,6 +8,8 @@ Generated from docstrings via mkdocstrings.
 
 ::: concerto.api
 
+::: concerto.api.comm
+
 ### `concerto.safety`
 
 ::: concerto.safety
@@ -21,6 +23,14 @@ Generated from docstrings via mkdocstrings.
 ### `chamber.envs`
 
 ::: chamber.envs
+
+::: chamber.envs.action_repeat
+
+::: chamber.envs.texture_filter
+
+::: chamber.envs.comm_shaping
+
+::: chamber.envs.errors
 
 ### `chamber.comm`
 
