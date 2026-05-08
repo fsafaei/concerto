@@ -12,6 +12,7 @@ follow-up PRs (T2.2-T2.6) per ``phase0_reading_kit/plan/02-comm-stack.md``.
 
 from __future__ import annotations
 
+from chamber.comm.aoi import AoIClock
 from chamber.comm.api import (
     SCHEMA_VERSION,
     CommChannel,
@@ -91,6 +92,7 @@ class FixedFormatCommChannel:
 
 __all__ = [
     "SCHEMA_VERSION",
+    "AoIClock",
     "ChamberCommError",
     "ChamberCommQPSaturationWarning",
     "CommChannel",
