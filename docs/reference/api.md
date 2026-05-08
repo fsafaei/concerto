@@ -8,8 +8,6 @@ Generated from docstrings via mkdocstrings.
 
 ::: concerto.api
 
-::: concerto.api.comm
-
 ### `concerto.safety`
 
 ::: concerto.safety
@@ -17,6 +15,8 @@ Generated from docstrings via mkdocstrings.
 ### `concerto.training`
 
 ::: concerto.training
+
+::: concerto.training.seeding
 
 ## CHAMBER — the benchmark
 
@@ -35,6 +35,20 @@ Generated from docstrings via mkdocstrings.
 ### `chamber.comm`
 
 ::: chamber.comm
+
+::: chamber.comm.api
+
+::: chamber.comm.aoi
+
+::: chamber.comm.fixed_format
+
+::: chamber.comm.learned_overlay
+
+::: chamber.comm.degradation
+
+::: chamber.comm.profiles
+
+::: chamber.comm.errors
 
 ### `chamber.partners`
 
