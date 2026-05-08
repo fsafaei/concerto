@@ -84,9 +84,8 @@ def test_aoi_matches_reference_implementation(ops: list[object]) -> None:
 
         for uid, expected in ref.items():
             actual = clock.aoi(uid)
-            assert actual == pytest.approx(
-                expected, abs=1e-12
-            ), f"AoI mismatch for {uid!r}: ref={expected}, clock={actual}"
+            mismatch = f"AoI mismatch for {uid!r}: ref={expected}, clock={actual}"
+            assert actual == pytest.approx(expected, abs=1e-12), mismatch
             assert actual >= 0.0
 
 

@@ -73,9 +73,8 @@ def test_drop_rate_empirical_match(name: str, profile: DegradationProfile) -> No
         wrapper.encode({})
     stats = wrapper.stats
     empirical = stats.dropped / _N_SAMPLES
-    assert (
-        abs(empirical - profile.drop_rate) <= _DROP_TOL
-    ), f"drop rate empirical {empirical:.4f} vs target {profile.drop_rate} (±{_DROP_TOL})"
+    msg = f"drop rate empirical {empirical:.4f} vs target {profile.drop_rate} (±{_DROP_TOL})"
+    assert abs(empirical - profile.drop_rate) <= _DROP_TOL, msg
 
 
 # ---------------------------------------------------------------------------
@@ -104,9 +103,8 @@ def test_latency_mean_within_tolerance(name: str, profile: DegradationProfile) -
         return
     empirical_mean = statistics.mean(latencies)
     target = profile.latency_mean_ms  # tick_period_ms = 1 -> ticks ≡ ms
-    assert abs(empirical_mean - target) <= _LATENCY_TOL * max(
-        target, 1.0
-    ), f"latency mean empirical {empirical_mean:.3f} vs target {target} (±{_LATENCY_TOL})"
+    msg = f"latency mean empirical {empirical_mean:.3f} vs target {target} (±{_LATENCY_TOL})"
+    assert abs(empirical_mean - target) <= _LATENCY_TOL * max(target, 1.0), msg
 
 
 @pytest.mark.parametrize(("name", "profile"), _PROFILES, ids=[n for n, _ in _PROFILES])
@@ -130,9 +128,8 @@ def test_latency_std_within_tolerance(name: str, profile: DegradationProfile) ->
     # Truncated-Normal clipping at [0, 2*mean] reduces the variance vs the
     # parent Normal; allow the tighter of (5 %, 0.5 ms absolute) tolerance.
     tol = max(_LATENCY_TOL * target, 0.5)
-    assert (
-        abs(empirical_std - target) <= tol
-    ), f"latency std empirical {empirical_std:.3f} vs target {target} (±{tol})"
+    msg = f"latency std empirical {empirical_std:.3f} vs target {target} (±{tol})"
+    assert abs(empirical_std - target) <= tol, msg
 
 
 # ---------------------------------------------------------------------------
