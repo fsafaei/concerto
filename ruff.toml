@@ -9,10 +9,11 @@ extend-select = [
 ignore = [
   "D203", "D213",              # one-blank-line vs two-blank-line conflict (we use D211/D212)
   "PLR0913",                   # function arg count — RL constructors are wide
+  "ANN101", "ANN102",          # annotating self/cls is not standard practice
 ]
 
 [lint.per-file-ignores]
-"tests/**/*.py" = ["S101", "ANN", "D"]    # asserts and missing docstrings OK in tests
+"tests/**/*.py" = ["S101", "ANN", "D", "ARG002", "PLR2004", "B007"]  # asserts, stubs, magic values OK in tests
 "src/chamber/cli/**/*.py" = ["T20"]       # print-allowed in CLI
 
 [lint.pydocstyle]
