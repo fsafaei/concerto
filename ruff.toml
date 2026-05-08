@@ -1,0 +1,22 @@
+target-version = "py311"
+line-length = 100
+
+[lint]
+extend-select = [
+  "E", "W", "F", "I", "N", "B", "A", "S", "C4", "PIE", "PT", "RET", "SIM",
+  "ARG", "PL", "RUF", "UP", "PERF", "LOG", "G", "TID", "TCH", "ANN", "D",
+]
+ignore = [
+  "D203", "D213",              # one-blank-line vs two-blank-line conflict (we use D211/D212)
+  "PLR0913",                   # function arg count — RL constructors are wide
+]
+
+[lint.per-file-ignores]
+"tests/**/*.py" = ["S101", "ANN", "D"]    # asserts and missing docstrings OK in tests
+"src/chamber/cli/**/*.py" = ["T20"]       # print-allowed in CLI
+
+[lint.pydocstyle]
+convention = "google"
+
+[format]
+docstring-code-format = true
