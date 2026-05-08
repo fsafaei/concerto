@@ -39,8 +39,8 @@ jobs:
 
   scorecard:
     name: OSSF Scorecard
+    if: false  # ossf/scorecard-action requires a public repo; re-enable when public
     runs-on: ubuntu-latest
-    if: github.event_name == 'push' || github.event_name == 'schedule'
     permissions:
       security-events: write
       id-token: write
