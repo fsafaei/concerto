@@ -25,7 +25,11 @@ from typing import TYPE_CHECKING, ClassVar
 if TYPE_CHECKING:
     import gymnasium as gym
 
-from chamber.comm import FixedFormatCommChannel
+from chamber.comm import (
+    URLLC_3GPP_R17,
+    CommDegradationWrapper,
+    FixedFormatCommChannel,
+)
 from chamber.envs import (
     CommShapingWrapper,
     PerAgentActionRepeatWrapper,
@@ -118,6 +122,10 @@ def make_stage0_env(*, render_mode: str | None = None) -> gym.Env:  # type: igno
 
     env = PerAgentActionRepeatWrapper(env, action_repeat=_SMOKE_ACTION_REPEAT)
     env = TextureFilterObsWrapper(env, keep_per_agent=_SMOKE_KEEP)
-    # T2.9 will compose CommDegradationWrapper(channel, URLLC_3GPP_R17["factory"])
-    # around the channel; for now the smoke test runs without degradation.
-    return CommShapingWrapper(env, channel=FixedFormatCommChannel())
+    channel = CommDegradationWrapper(
+        FixedFormatCommChannel(),
+        URLLC_3GPP_R17["factory"],
+        tick_period_ms=1.0,
+        root_seed=0,
+    )
+    return CommShapingWrapper(env, channel=channel)
