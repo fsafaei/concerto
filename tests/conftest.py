@@ -5,7 +5,13 @@ from __future__ import annotations
 
 import pytest
 
+from chamber.utils.device import device_report
 from tests.fakes import FakeMultiAgentEnv
+
+
+def pytest_report_header(config: pytest.Config) -> str:  # noqa: ARG001
+    """Emit a device-status line at the top of every pytest run."""
+    return device_report()
 
 
 @pytest.fixture

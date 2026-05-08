@@ -19,6 +19,7 @@ REPO_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
 cd "${REPO_ROOT}"
 
 echo "==> Stage-0 smoke (ADR-001 §Validation criteria)"
+echo "    $(uv run python -c 'from chamber.utils.device import device_report; print(device_report())' 2>/dev/null)"
 echo "    Running: uv run pytest -m smoke -x -v -k stage0"
 echo ""
 

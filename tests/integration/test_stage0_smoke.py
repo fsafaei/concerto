@@ -31,31 +31,10 @@ from chamber.envs import (
     TextureFilterObsWrapper,
 )
 from chamber.envs.errors import ChamberEnvCompatibilityError
+from chamber.utils.device import sapien_gpu_available
 from tests.fakes import FakeMultiAgentEnv
 
 _N_STEPS = 100
-
-
-def _sapien_gpu_available() -> bool:
-    """Return True iff SAPIEN can initialise a Vulkan render system."""
-    try:
-        import mani_skill.envs  # noqa: F401
-        from mani_skill.envs.sapien_env import BaseEnv
-
-        class _Probe(BaseEnv):
-            SUPPORTED_ROBOTS = [_SMOKE_ROBOT_UIDS]  # noqa: RUF012  # type: ignore[assignment]
-
-            def _load_scene(self, options):
-                pass
-
-            def _initialize_episode(self, env_idx, options):
-                pass
-
-        env = _Probe(robot_uids=_SMOKE_ROBOT_UIDS, num_envs=1, obs_mode="state", control_mode=None)  # type: ignore[arg-type]
-        env.close()
-        return True
-    except Exception:
-        return False
 
 
 # ---------------------------------------------------------------------------
@@ -124,7 +103,7 @@ class TestADR001CondCFake:
 
 @pytest.mark.smoke
 @pytest.mark.skipif(
-    not _sapien_gpu_available(), reason="Requires Vulkan/GPU (SAPIEN); skipped on CPU-only machines"
+    not sapien_gpu_available(), reason="Requires Vulkan/GPU (SAPIEN); skipped on CPU-only machines"
 )
 class TestRealManiSkillSmoke:
     def test_make_stage0_env_returns_gymnasium_env(self) -> None:
@@ -150,7 +129,7 @@ class TestRealManiSkillSmoke:
 @pytest.mark.smoke
 def test_make_stage0_env_raises_compat_error_without_gpu() -> None:
     """make_stage0_env() raises ChamberEnvCompatibilityError when Vulkan is absent."""
-    if _sapien_gpu_available():
+    if sapien_gpu_available():
         pytest.skip("Vulkan is available; error path not reachable")
     with pytest.raises(ChamberEnvCompatibilityError, match="SAPIEN/Vulkan"):
         make_stage0_env()
