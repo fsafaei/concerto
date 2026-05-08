@@ -27,13 +27,32 @@ wrappers reset with the same seed produce byte-identical traces.
 from __future__ import annotations
 
 import copy
+import time
+import warnings
 from dataclasses import dataclass, field
+from typing import TYPE_CHECKING
 
 from chamber.comm.api import SCHEMA_VERSION, CommChannel, CommPacket
+from chamber.comm.errors import ChamberCommQPSaturationWarning
+from concerto.safety import solve_qp_stub
 from concerto.training.seeding import derive_substream
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 #: Substream name for the wrapper's degradation RNG (P6 determinism).
 _SUBSTREAM_NAME = "comm.degrade"
+
+#: OSCBF QP-solver target from ADR-004 §"OSCBF target".
+#:
+#: A profile is considered "saturating" when the measured QP solve time
+#: exceeds this budget (M3 enforces it on real timings) or when the
+#: profile's parameters fall in the regime ADR-006 §Risks R5 calls out.
+_QP_TIME_BUDGET_MS: float = 1.0
+
+#: ADR-006 §Risks R5 saturation regime — drop rate >= 10 % or latency >= 100 ms.
+_SATURATION_DROP_RATE: float = 0.1
+_SATURATION_LATENCY_MS: float = 100.0
 
 
 @dataclass(frozen=True)
@@ -236,4 +255,60 @@ def _copy_packet(packet: CommPacket) -> CommPacket:
         task_state=copy.copy(packet["task_state"]),
         aoi=copy.copy(packet["aoi"]),
         learned_overlay=packet["learned_overlay"],
+    )
+
+
+def _profile_in_saturation_regime(profile: DegradationProfile) -> bool:
+    """ADR-006 §Risks R5: regime test for whether a profile is known to saturate."""
+    return (
+        profile.drop_rate >= _SATURATION_DROP_RATE
+        or profile.latency_mean_ms >= _SATURATION_LATENCY_MS
+    )
+
+
+def saturation_guard(
+    profile: DegradationProfile,
+    qp_solve_fn: Callable[..., tuple[float, float]] = solve_qp_stub,
+    *,
+    qp_time_budget_ms: float = _QP_TIME_BUDGET_MS,
+) -> None:
+    """Check the inner CBF QP solver's headroom under ``profile`` (ADR-006 §Risks R5).
+
+    Two conditions trigger :class:`~chamber.comm.errors.ChamberCommQPSaturationWarning`:
+
+      1. The measured QP solve time exceeds ``qp_time_budget_ms`` (M3 enforces
+         this on the real solver; the M2 stub returns immediately).
+      2. The profile is in the saturation regime per ADR-006 R5 — drop rate
+         >= 10 % or latency mean >= 100 ms — even when timing is fine. The
+         regime check exists so the test exists from M2 and M3 cannot regress
+         it.
+
+    Args:
+        profile: The :class:`DegradationProfile` whose feasibility against the
+            inner CBF QP we are testing.
+        qp_solve_fn: The QP solver under test. Defaults to
+            :func:`concerto.safety.solve_qp_stub`; M3 swaps in the real
+            solver. Must return a ``(decision, elapsed_seconds)`` pair.
+        qp_time_budget_ms: Solve-time budget. Defaults to the OSCBF target
+            from ADR-004 (1 ms).
+    """
+    start = time.perf_counter()
+    qp_solve_fn()
+    elapsed_ms = (time.perf_counter() - start) * 1000.0
+    timing_saturated = elapsed_ms > qp_time_budget_ms
+    regime_saturated = _profile_in_saturation_regime(profile)
+    if not (timing_saturated or regime_saturated):
+        return
+    reasons: list[str] = []
+    if timing_saturated:
+        reasons.append(f"QP solve {elapsed_ms:.4f} ms exceeds {qp_time_budget_ms:.4f} ms budget")
+    if regime_saturated:
+        reasons.append(
+            "profile in ADR-006 R5 saturation regime "
+            f"(drop_rate={profile.drop_rate}, latency_mean_ms={profile.latency_mean_ms})"
+        )
+    warnings.warn(
+        "ChamberCommQPSaturationWarning: " + "; ".join(reasons),
+        ChamberCommQPSaturationWarning,
+        stacklevel=2,
     )

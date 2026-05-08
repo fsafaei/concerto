@@ -32,6 +32,7 @@ from chamber.comm.degradation import (
     CommDegradationStats,
     CommDegradationWrapper,
     DegradationProfile,
+    saturation_guard,
 )
 from chamber.comm.errors import ChamberCommError, ChamberCommQPSaturationWarning
 from chamber.comm.fixed_format import FixedFormatCommChannel
@@ -53,4 +54,5 @@ __all__ = [
     "LearnedOverlay",
     "Pose",
     "TaskStatePredicate",
+    "saturation_guard",
 ]
