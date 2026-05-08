@@ -1,0 +1,108 @@
+[project]
+name = "concerto"
+version = "0.0.1.dev0"
+description = "Heterogeneous Multi-Robot Ad-Hoc Teamwork — benchmark + safety stack."
+readme = "README.md"
+requires-python = ">=3.11,<3.13"
+license = { file = "LICENSE" }
+authors = [
+  { name = "Farhad Safaei", email = "safaei.farhad@gmail.com" },
+]
+keywords = [
+  "multi-robot", "ad-hoc-teamwork", "manipulation", "control-barrier-functions",
+  "conformal-prediction", "heterogeneous-marl", "robotics-benchmark",
+]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Intended Audience :: Science/Research",
+  "License :: OSI Approved :: Apache Software License",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+
+# Runtime deps. Each entry is justified by an ADR or a tooling decision.
+dependencies = [
+  "numpy>=1.26,<2.2",
+  "torch>=2.3,<2.6",                 # ADR-002 PyTorch
+  "gymnasium>=1.0,<2.0",             # standard env API
+  "mani-skill==3.0.1",               # ADR-001; git commit a4a4f92 pinned in uv.lock
+  "sapien>=3.0,<4.0",                # ADR-005 (transitive but pinned for clarity)
+  "warp-lang>=1.3,<2.0",             # ADR-005 soft-body
+  "cvxpy>=1.5,<2.0",                 # ADR-004 CBF-QP solver
+  "qpsolvers[clarabel,osqp]>=4.0",   # fallback CBF-QP solver matrix
+  "scipy>=1.13,<2.0",
+  "pydantic>=2.6,<3.0",              # config models
+  "hydra-core>=1.3,<2.0",            # experiment configs
+  "omegaconf>=2.3,<3.0",
+  "rich>=13.7",                      # CLI rendering
+  "structlog>=24.1",                 # structured logs
+  "wandb>=0.17,<1.0",                # experiment tracking
+  # harl @ git+https://github.com/concerto-org/harl-fork.git@<COMMIT>
+  # ADR-002: uncomment and replace <COMMIT> once concerto-org/harl-fork is created.
+]
+
+[project.optional-dependencies]
+docs = [
+  "mkdocs>=1.6", "mkdocs-material>=9.5", "mkdocstrings[python]>=0.25",
+  "mike>=2.0",
+]
+dev = [
+  "ruff>=0.6", "pyright>=1.1.380",
+  "pre-commit>=3.7", "commitizen>=3.27",
+  "pytest>=8.2", "pytest-cov>=5.0", "pytest-xdist>=3.6",
+  "pytest-benchmark>=4.0", "hypothesis>=6.108",
+  "pip-licenses>=4.0", "cyclonedx-bom>=4.0",
+  "ipykernel", "ipython",
+]
+viz = ["matplotlib>=3.9", "seaborn>=0.13"]
+
+[project.scripts]
+concerto                = "concerto.cli:main"            # method-level entry (Phase-0 stub)
+chamber-spike           = "chamber.cli.spike:main"
+chamber-eval            = "chamber.cli.eval:main"
+chamber-render-tables   = "chamber.cli.render_tables:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.version]
+path = "src/concerto/__init__.py"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/concerto", "src/chamber"]   # both top-level packages ship in one distribution
+
+[dependency-groups]
+dev = [
+  "ruff>=0.6", "pyright>=1.1.380", "pre-commit>=3.7", "commitizen>=3.27",
+  "pytest>=8.2", "pytest-cov>=5.0", "pytest-xdist>=3.6",
+  "pytest-benchmark>=4.0", "hypothesis>=6.108",
+  "pip-licenses>=4.0", "cyclonedx-bom>=4.0",
+]
+
+[tool.pytest.ini_options]
+addopts = [
+  "-ra", "--strict-markers", "--strict-config",
+  "--cov=concerto", "--cov=chamber",
+  "--cov-report=term-missing", "--cov-report=xml",
+  "--hypothesis-show-statistics",
+]
+testpaths = ["tests"]
+markers = [
+  "slow: tests slower than 1 second",
+  "gpu: tests requiring CUDA",
+  "smoke: ADR-001 / ADR-007 Stage 0 smoke tests",
+  "spike: spike-bench tests (Stage 1/2/3)",
+]
+
+[tool.coverage.run]
+branch = true
+source = ["concerto", "chamber"]
+
+[tool.coverage.report]
+fail_under = 80
+show_missing = true
+skip_covered = true
+exclude_lines = ["pragma: no cover", "raise NotImplementedError"]
