@@ -51,7 +51,7 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
       - run: uv sync --group dev
-      - run: uv run pytest tests/unit -n auto
+      - run: uv run pytest tests/unit -n auto --no-cov
 
   test-property:
     name: test-property (${{ matrix.python-version }})
@@ -65,7 +65,8 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
       - run: uv sync --group dev
-      - run: uv run pytest tests/property
+      # Exit 5 ("no tests collected") is acceptable until Phase 1 adds property tests.
+      - run: uv run pytest tests/property --no-cov || test $? -eq 5
 
   test-integration:
     name: test-integration (${{ matrix.python-version }})
@@ -79,7 +80,8 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
       - run: uv sync --group dev
-      - run: uv run pytest tests/integration -n auto -m "not gpu"
+      # Exit 5 ("no tests collected") is acceptable until Phase 1 adds integration tests.
+      - run: uv run pytest tests/integration -n auto -m "not gpu" --no-cov || test $? -eq 5
 
   coverage-gate:
     name: coverage-gate
@@ -118,7 +120,7 @@ jobs:
           python-version: "3.11"
       - run: uv sync --group dev
       - run: uv run pip-licenses --format=json --with-license-file --with-notice-file --output-file=licences.json
-      - run: uv run python scripts/check_licences.py
+      - run: uv run python scripts/check_licences.py < licences.json
 
   sbom:
     name: sbom
