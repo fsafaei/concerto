@@ -46,10 +46,16 @@ if git log --all --pretty=format:'%h %s%n%b' \
   fail=1
 fi
 
-# 4. Untracked-but-not-ignored files (catches new files Claude wrote that you forgot to add or gitignore).
-if git ls-files --others --exclude-standard \
-   | xargs -r grep -lEni "$PATTERN" 2>/dev/null >/dev/null; then
+# 4. Untracked-but-not-ignored files (catches new files written outside the gitignore).
+LEAKED_UNTRACKED=$(git ls-files --others --exclude-standard \
+  | xargs -r grep -lEni "$PATTERN" 2>/dev/null \
+  | grep -vE "$EXEMPT_REGEX" || true)
+if [[ -n "$LEAKED_UNTRACKED" ]]; then
   echo "[hygiene] AI-tooling mention in untracked-but-not-ignored files. Aborting." >&2
+  echo "[hygiene] Offending paths:" >&2
+  echo "$LEAKED_UNTRACKED" | sed 's/^/    /' >&2
+  echo "[hygiene] Either add each path to .gitignore (if it's a local artefact)" >&2
+  echo "[hygiene] or delete it. Then re-run." >&2
   fail=1
 fi
 
