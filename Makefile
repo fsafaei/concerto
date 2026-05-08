@@ -27,7 +27,7 @@ docs-build:
 verify-licences:
 	uv run pip-licenses --format=json --with-license-file --with-notice-file \
 	    --output-file=licences.json
-	uv run python scripts/check_licences.py
+	uv run python scripts/check_licences.py < licences.json
 
 verify-no-ai-mentions:
 	bash scripts/check_no_ai_mentions.sh
