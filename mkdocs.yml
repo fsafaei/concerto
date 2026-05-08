@@ -1,0 +1,57 @@
+site_name: CONCERTO
+site_url: https://concerto-org.github.io/concerto/
+repo_url: https://github.com/concerto-org/concerto
+edit_uri: edit/main/docs/
+
+theme:
+  name: material
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.indexes
+    - search.highlight
+    - content.code.copy
+    - content.action.edit
+  palette:
+    - scheme: default
+    - scheme: slate
+
+plugins:
+  - search
+  - mkdocstrings:
+      handlers:
+        python:
+          options:
+            show_signature_annotations: true
+            separate_signature: true
+            docstring_section_style: list
+  - mike
+
+markdown_extensions:
+  - admonition
+  - pymdownx.superfences
+  - pymdownx.details
+  - pymdownx.snippets
+  - pymdownx.tabbed:
+      alternate_style: true
+
+nav:
+  - Home: index.md
+  - Tutorials:
+      - Hello-spike: tutorials/hello-spike.md
+      - Run Stage 0 smoke: tutorials/stage0-smoke.md
+  - How-to:
+      - Add a new partner class: how-to/add-partner.md
+      - Add a new safety filter: how-to/add-filter.md
+      - Run a spike with a custom hypothesis: how-to/run-spike.md
+  - Reference:
+      - API: reference/api.md
+      - ADRs: reference/adrs.md
+      - Glossary: reference/glossary.md
+  - Explanation:
+      - Why heterogeneous AHT?: explanation/why-aht.md
+      - Why fork ManiSkill v3?: explanation/why-maniskill.md
+      - Why conformal CBFs?: explanation/why-conformal.md
+      - Project principles: explanation/principles.md
+      - Threat model: explanation/threat-model.md
+      - Phase 0 results: explanation/phase0-results.md

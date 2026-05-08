@@ -6,6 +6,10 @@ __pycache__/
 .mypy_cache/
 .ruff_cache/
 *.egg-info/
+*.dist-info/
+.eggs/
+pip-wheel-metadata/
+site-packages/
 
 # AI tooling — local only (plan/10 §3.2)
 CLAUDE.md
@@ -26,3 +30,37 @@ dist/
 *.log
 spikes/results/
 .local/
+sbom.spdx.json
+licences.json
+htmlcov/
+*.cover
+.coverage
+coverage.xml
+
+# JetBrains IDEs
+.idea/
+*.iml
+*.iws
+*.ipr
+
+# VS Code
+.vscode/
+*.code-workspace
+
+# ML experiment artefacts
+wandb/
+outputs/
+multirun/
+checkpoints/
+*.pt
+*.pth
+*.safetensors
+*.ckpt
+
+# Docs build
+site/
+
+# OS
+Thumbs.db
+ehthumbs.db
+Desktop.ini
