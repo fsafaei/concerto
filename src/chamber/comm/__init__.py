@@ -30,6 +30,7 @@ from chamber.comm.api import (
 )
 from chamber.comm.errors import ChamberCommError, ChamberCommQPSaturationWarning
 from chamber.comm.fixed_format import FixedFormatCommChannel
+from chamber.comm.learned_overlay import LearnedOverlay
 
 __all__ = [
     "SCHEMA_VERSION",
@@ -39,6 +40,7 @@ __all__ = [
     "CommChannel",
     "CommPacket",
     "FixedFormatCommChannel",
+    "LearnedOverlay",
     "Pose",
     "TaskStatePredicate",
 ]
