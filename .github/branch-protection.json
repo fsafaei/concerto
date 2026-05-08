@@ -1,0 +1,34 @@
+{
+  "_note": "Apply this configuration to the 'main' branch via: gh api repos/concerto-org/concerto/branches/main/protection --method PUT --input .github/branch-protection.json",
+  "required_status_checks": {
+    "strict": true,
+    "contexts": [
+      "lint (3.11)",
+      "lint (3.12)",
+      "type-check (3.11)",
+      "type-check (3.12)",
+      "test-unit (3.11)",
+      "test-unit (3.12)",
+      "test-property (3.11)",
+      "test-property (3.12)",
+      "test-integration (3.11)",
+      "test-integration (3.12)",
+      "coverage-gate",
+      "docs-build",
+      "licence-scan",
+      "sbom"
+    ]
+  },
+  "enforce_admins": true,
+  "required_pull_request_reviews": {
+    "required_approving_review_count": 1,
+    "dismiss_stale_reviews": true,
+    "require_code_owner_reviews": true
+  },
+  "restrictions": null,
+  "required_linear_history": true,
+  "allow_force_pushes": false,
+  "allow_deletions": false,
+  "required_conversation_resolution": true,
+  "required_signatures": true
+}

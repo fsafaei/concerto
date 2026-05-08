@@ -1,0 +1,29 @@
+cff-version: 1.2.0
+message: >
+  If you use CONCERTO or CHAMBER in your research, please cite this
+  software as below.
+type: software
+title: "CONCERTO: Contact-rich Cooperation with Novel Cooperators under Embodiment Heterogeneity, Trust bounds, and Opacity"
+abstract: >
+  CONCERTO is a safety stack and training algorithm for heterogeneous
+  multi-robot ad-hoc teamwork (HetMR-AHT). CHAMBER is the accompanying
+  benchmark suite (ManiSkill v3 wrappers, partner zoo, evaluation
+  harness, leaderboard).
+authors:
+  - family-names: Safaei
+    given-names: Farhad
+    email: safaei.farhad@gmail.com
+    orcid: ""
+version: 0.0.1.dev0
+date-released: "2026-05-08"
+license: Apache-2.0
+repository-code: "https://github.com/concerto-org/concerto"
+doi: ""
+keywords:
+  - multi-robot
+  - ad-hoc-teamwork
+  - manipulation
+  - control-barrier-functions
+  - conformal-prediction
+  - heterogeneous-marl
+  - robotics-benchmark

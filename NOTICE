@@ -1,0 +1,40 @@
+CONCERTO
+Copyright 2026 Farhad Safaei
+
+This product includes or builds upon software from the following
+upstream projects. Each project is used under the terms of its
+respective licence, noted below.
+
+-------------------------------------------------------------------------------
+ManiSkill v3
+  Source:  https://github.com/haosulab/ManiSkill
+  Licence: Apache License 2.0
+  Used as: pinned external dependency (commit a4a4f92); not vendored.
+
+HARL (Heterogeneous-Agent Reinforcement Learning)
+  Source:  https://github.com/PKU-MARL/HARL
+  Licence: MIT License
+  Used as: forked external dependency (concerto-org/harl-fork); extended
+           with the frozen-partner ego-AHT wrapper introduced in this
+           project.
+
+CBF-QP reference implementation (Wang, Ames, Egerstedt 2017)
+  Source:  "Safety Barrier Certificates for Collisions-Free Multirobot
+           Systems", IEEE Transactions on Robotics 33(3), 2017.
+  Licence: No redistribution of source; algorithm implemented from scratch
+           following the published specification.
+
+Conformal CBF reference (Huriot & Sibai 2025)
+  Source:  "Conformal Prediction for Safe Multi-Agent Systems", 2025.
+  Licence: No redistribution of source; algorithm implemented from scratch
+           following the published specification.
+
+OSCBF reference (Morton & Pavone 2025)
+  Source:  "Operator-Splitting CBFs for High-Dimensional Systems", 2025.
+  Licence: No redistribution of source; algorithm implemented from scratch
+           following the published specification.
+-------------------------------------------------------------------------------
+
+Downstream users of CONCERTO must comply with the licences of all
+transitive dependencies. Refer to the SBOM (sbom.spdx.json, generated
+at build time) for a complete dependency manifest.
