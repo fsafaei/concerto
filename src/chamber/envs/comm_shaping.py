@@ -19,7 +19,7 @@ import gymnasium as gym
 from chamber.envs.errors import ChamberEnvCompatibilityError
 
 if TYPE_CHECKING:
-    from concerto.api.comm import CommChannel
+    from chamber.comm.api import CommChannel
 
 
 class CommShapingWrapper(gym.Wrapper):  # type: ignore[type-arg]
@@ -34,9 +34,9 @@ class CommShapingWrapper(gym.Wrapper):  # type: ignore[type-arg]
 
     Args:
         env: Env with a ``gym.spaces.Dict`` observation space.
-        channel: A :class:`concerto.api.comm.CommChannel` instance. In M1 this
-            is a stub :class:`chamber.comm.FixedFormatCommChannel` that returns
-            ``{}``. M2 fills the real fixed-format encoding.
+        channel: A :class:`chamber.comm.api.CommChannel` instance. In M1 this
+            is a stub :class:`chamber.comm.FixedFormatCommChannel` that emits
+            an empty packet shell. M2 fills the real fixed-format encoding.
 
     Raises:
         ChamberEnvCompatibilityError: if the inner observation space is not a
