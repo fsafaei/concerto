@@ -19,7 +19,7 @@ from tests.fakes import FakeMultiAgentEnv
 
 def _make_wrapper(uids: tuple[str, ...] = ("a", "b")) -> CommShapingWrapper:
     inner = FakeMultiAgentEnv(agent_uids=uids)
-    channel = FixedFormatCommChannel(latency_ms=50.0, drop_rate=0.05)
+    channel = FixedFormatCommChannel()
     return CommShapingWrapper(inner, channel=channel)
 
 

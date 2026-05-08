@@ -118,4 +118,6 @@ def make_stage0_env(*, render_mode: str | None = None) -> gym.Env:  # type: igno
 
     env = PerAgentActionRepeatWrapper(env, action_repeat=_SMOKE_ACTION_REPEAT)
     env = TextureFilterObsWrapper(env, keep_per_agent=_SMOKE_KEEP)
-    return CommShapingWrapper(env, channel=FixedFormatCommChannel(latency_ms=50.0, drop_rate=0.05))
+    # T2.9 will compose CommDegradationWrapper(channel, URLLC_3GPP_R17["factory"])
+    # around the channel; for now the smoke test runs without degradation.
+    return CommShapingWrapper(env, channel=FixedFormatCommChannel())

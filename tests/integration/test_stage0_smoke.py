@@ -46,9 +46,7 @@ def _make_wrapped_fake() -> tuple[CommShapingWrapper, FakeMultiAgentEnv]:
     inner = FakeMultiAgentEnv(agent_uids=_SMOKE_ROBOT_UIDS)
     env = PerAgentActionRepeatWrapper(inner, action_repeat=_SMOKE_ACTION_REPEAT)
     env = TextureFilterObsWrapper(env, keep_per_agent=_SMOKE_KEEP)
-    wrapped = CommShapingWrapper(
-        env, channel=FixedFormatCommChannel(latency_ms=50.0, drop_rate=0.05)
-    )
+    wrapped = CommShapingWrapper(env, channel=FixedFormatCommChannel())
     return wrapped, inner
 
 
