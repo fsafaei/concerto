@@ -28,17 +28,27 @@ from chamber.comm.api import (
     Pose,
     TaskStatePredicate,
 )
+from chamber.comm.degradation import (
+    CommDegradationStats,
+    CommDegradationWrapper,
+    DegradationProfile,
+)
 from chamber.comm.errors import ChamberCommError, ChamberCommQPSaturationWarning
 from chamber.comm.fixed_format import FixedFormatCommChannel
 from chamber.comm.learned_overlay import LearnedOverlay
+from chamber.comm.profiles import URLLC_3GPP_R17
 
 __all__ = [
     "SCHEMA_VERSION",
+    "URLLC_3GPP_R17",
     "AoIClock",
     "ChamberCommError",
     "ChamberCommQPSaturationWarning",
     "CommChannel",
+    "CommDegradationStats",
+    "CommDegradationWrapper",
     "CommPacket",
+    "DegradationProfile",
     "FixedFormatCommChannel",
     "LearnedOverlay",
     "Pose",
