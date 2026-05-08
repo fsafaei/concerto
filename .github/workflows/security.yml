@@ -19,7 +19,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
-      - uses: google/osv-scanner-action@6ac7a1b6e6b460d87ce5e1a91e9c1d6f2f18e47c  # v1.9.0
+      - uses: google/osv-scanner-action@c51854704019a247608d928f370c98740469d4b5  # v2.3.5
         with:
           scan-args: |-
             --lockfile=uv.lock
