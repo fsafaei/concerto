@@ -13,7 +13,8 @@ ignore = [
 ]
 
 [lint.per-file-ignores]
-"tests/**/*.py" = ["S101", "ANN", "D", "ARG002", "PLR2004", "B007"]  # asserts, stubs, magic values OK in tests
+"tests/**/*.py" = ["S101", "ANN", "D", "ARG002", "PLR2004", "B007", "PLC0415"]  # asserts, stubs, magic values OK in tests; PLC0415: lazy ManiSkill probe imports
+"src/chamber/benchmarks/**/*.py" = ["PLC0415"]  # lazy ManiSkill imports required (GPU availability gating)
 "src/chamber/cli/**/*.py" = ["T20"]       # print-allowed in CLI
 
 [lint.pydocstyle]
