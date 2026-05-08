@@ -12,8 +12,7 @@ Env ID note (2026-05-08, ManiSkill v3.0.1 at commit a4a4f92):
   custom :class:`_Stage0SmokeEnv` subclassing ``BaseEnv`` is used instead;
   this is a clean override (public hook, no monkey-patching) as confirmed by
   the ManiSkill audit (``maniskill_audit.md`` §3 "Override path").
-  The probe at ``tests/probes/probe_3robot.py`` (run 2026-05-08) confirmed
-  that ManiSkill's ``_load_agent`` accepts the 3-robot tuple without raising;
+  ManiSkill's ``_load_agent`` accepts the 3-robot tuple without raising;
   the only constraint is Vulkan/GPU availability (SAPIEN requires it).
   ADR-001 risk #3 (build_separate=True vs. dict-action conflict) is not yet
   verified on a GPU machine - flagged in the PR description.
@@ -114,7 +113,7 @@ def make_stage0_env(*, render_mode: str | None = None) -> gym.Env:  # type: igno
         raise ChamberEnvCompatibilityError(
             f"SAPIEN/Vulkan initialisation failed: {exc}\n"
             "Stage-0 smoke requires a GPU with Vulkan support. "
-            "See ADR-001 §Risks and tests/probes/probe_3robot.py."
+            "See ADR-001 §Risks."
         ) from exc
 
     env = PerAgentActionRepeatWrapper(env, action_repeat=_SMOKE_ACTION_REPEAT)
