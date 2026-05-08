@@ -31,7 +31,7 @@ frozen-partner ego-AHT variant of HAPPO.
 ## Install
 
 ```bash
-git clone https://github.com/concerto-org/concerto.git
+git clone https://github.com/fsafaei/concerto.git
 cd concerto
 pip install uv       # if not already installed
 uv sync --group dev
@@ -49,13 +49,13 @@ uv run pytest -m smoke -x -v
 
 ## Documentation
 
-Full documentation at <https://concerto-org.github.io/concerto/>:
+Full documentation at <https://fsafaei.github.io/concerto/>:
 
-- **[Tutorials](https://concerto-org.github.io/concerto/tutorials/hello-spike/)** — step-by-step walkthroughs
-- **[How-tos](https://concerto-org.github.io/concerto/how-to/add-partner/)** — goal-oriented recipes
-- **[API reference](https://concerto-org.github.io/concerto/reference/api/)** — generated from docstrings
-- **[ADR index](https://concerto-org.github.io/concerto/reference/adrs/)** — design decisions
-- **[Explanation](https://concerto-org.github.io/concerto/explanation/why-aht/)** — why these choices
+- **[Tutorials](https://fsafaei.github.io/concerto/tutorials/hello-spike/)** — step-by-step walkthroughs
+- **[How-tos](https://fsafaei.github.io/concerto/how-to/add-partner/)** — goal-oriented recipes
+- **[API reference](https://fsafaei.github.io/concerto/reference/api/)** — generated from docstrings
+- **[ADR index](https://fsafaei.github.io/concerto/reference/adrs/)** — design decisions
+- **[Explanation](https://fsafaei.github.io/concerto/explanation/why-aht/)** — why these choices
 
 ## Repository structure
 
@@ -86,7 +86,7 @@ If you use CONCERTO or CHAMBER in your research:
   title   = {{CONCERTO}: Contact-rich Cooperation with Novel Cooperators
              under Embodiment Heterogeneity, Trust bounds, and Opacity},
   year    = {2026},
-  url     = {https://github.com/concerto-org/concerto},
+  url     = {https://github.com/fsafaei/concerto},
   license = {Apache-2.0},
 }
 ```
