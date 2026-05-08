@@ -19,12 +19,13 @@ The canonical sentence: **"We evaluate CONCERTO on CHAMBER."**
 Real-world multi-robot deployment pairs robots that were not trained together,
 have different embodiments and action frequencies, and cannot share policy
 weights. Existing benchmarks assume homogeneous teams or full policy access.
-CHAMBER provides four heterogeneity axes — action-space (AS),
-observation-modality (OM), control-rate (CR), and communication degradation
-(CM) — with a pre-registered, ≥20pp comparison protocol and a composite
-Heterogeneity Robustness Score (HRS).
+CHAMBER evaluates agents across six heterogeneity axes — action-space (AS),
+observation-modality (OM), control-rate (CR), communication degradation (CM),
+partner familiarity (PF), and safety (SA) — with a pre-registered, ≥20pp
+comparison protocol and a composite Heterogeneity Robustness Score (HRS).
+See ADR-007 §Decision for the axis selection rationale and staging plan.
 
-CONCERTO addresses all four axes through an exponential CBF-QP safety filter
+CONCERTO addresses all six axes through an exponential CBF-QP safety filter
 with a conformal overlay and an OSCBF inner layer, trained with a
 frozen-partner ego-AHT variant of HAPPO.
 

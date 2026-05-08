@@ -8,11 +8,11 @@ differing sensor modalities, and no shared policy checkpoints.
 CONCERTO and CHAMBER focus on the hardest variant of this problem: the
 ego agent's partner is **opaque** (no policy access), **heterogeneous**
 (different morphology and action frequency), and **ad-hoc** (no prior
-joint training). The four axes that make this hard are: action-space
-heterogeneity (AS), observation-modality heterogeneity (OM), control-rate
-mismatch (CR), and communication degradation (CM). See ADR-007 for
-the axis selection rationale.
+joint training). The six axes that make this hard are: action-space heterogeneity (AS),
+observation-modality heterogeneity (OM), control-rate mismatch (CR),
+communication degradation (CM), partner familiarity (PF), and safety (SA).
+See ADR-007 for the axis selection rationale and staging plan.
 
 The four named precedents CONCERTO differentiates against — Liu 2024 RSS,
 COHERENT, Huriot–Sibai 2025, and Singh 2024 — each solve a subset of
-these axes. No prior system addresses all four simultaneously.
+these axes. No prior system addresses all six simultaneously.
