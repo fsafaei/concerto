@@ -24,7 +24,7 @@ classifiers = [
 
 # Runtime deps. Each entry is justified by an ADR or a tooling decision.
 dependencies = [
-  "numpy>=1.26,<2.2",
+  "numpy>=2.4.4,<2.5",
   "torch>=2.3,<2.6",                 # ADR-002 PyTorch
   "gymnasium>=1.0,<2.0",             # standard env API
   "mani-skill==3.0.1",               # ADR-001; git commit a4a4f92 pinned in uv.lock
