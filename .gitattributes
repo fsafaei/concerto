@@ -1,0 +1,31 @@
+# Normalise line endings to LF on checkout everywhere.
+* text=auto eol=lf
+
+# Source files — always text.
+*.py    text eol=lf
+*.toml  text eol=lf
+*.yaml  text eol=lf
+*.yml   text eol=lf
+*.json  text eol=lf
+*.md    text eol=lf
+*.rst   text eol=lf
+*.sh    text eol=lf
+*.cfg   text eol=lf
+*.ini   text eol=lf
+*.txt   text eol=lf
+*.lock  text eol=lf
+
+# Binary assets — do not diff or mangle.
+*.png   binary
+*.jpg   binary
+*.jpeg  binary
+*.gif   binary
+*.ico   binary
+*.pdf   binary
+*.pt    binary
+*.pth   binary
+*.ckpt  binary
+*.safetensors binary
+
+# Linguist overrides — keep language stats accurate.
+uv.lock linguist-generated=true
