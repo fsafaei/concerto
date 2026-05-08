@@ -24,7 +24,11 @@ from chamber.benchmarks.stage0_smoke import (
     _SMOKE_ROBOT_UIDS,
     make_stage0_env,
 )
-from chamber.comm import FixedFormatCommChannel
+from chamber.comm import (
+    URLLC_3GPP_R17,
+    CommDegradationWrapper,
+    FixedFormatCommChannel,
+)
 from chamber.envs import (
     CommShapingWrapper,
     PerAgentActionRepeatWrapper,
@@ -46,9 +50,13 @@ def _make_wrapped_fake() -> tuple[CommShapingWrapper, FakeMultiAgentEnv]:
     inner = FakeMultiAgentEnv(agent_uids=_SMOKE_ROBOT_UIDS)
     env = PerAgentActionRepeatWrapper(inner, action_repeat=_SMOKE_ACTION_REPEAT)
     env = TextureFilterObsWrapper(env, keep_per_agent=_SMOKE_KEEP)
-    wrapped = CommShapingWrapper(
-        env, channel=FixedFormatCommChannel(latency_ms=50.0, drop_rate=0.05)
+    channel = CommDegradationWrapper(
+        FixedFormatCommChannel(),
+        URLLC_3GPP_R17["factory"],
+        tick_period_ms=1.0,
+        root_seed=0,
     )
+    wrapped = CommShapingWrapper(env, channel=channel)
     return wrapped, inner
 
 

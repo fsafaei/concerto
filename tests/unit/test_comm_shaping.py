@@ -19,7 +19,7 @@ from tests.fakes import FakeMultiAgentEnv
 
 def _make_wrapper(uids: tuple[str, ...] = ("a", "b")) -> CommShapingWrapper:
     inner = FakeMultiAgentEnv(agent_uids=uids)
-    channel = FixedFormatCommChannel(latency_ms=50.0, drop_rate=0.05)
+    channel = FixedFormatCommChannel()
     return CommShapingWrapper(inner, channel=channel)
 
 
@@ -37,11 +37,16 @@ class TestCommKeyPresent:
         obs, *_ = wrapper.step({"a": np.array([0.0, 0.0]), "b": np.array([0.0, 0.0])})
         assert "comm" in obs
 
-    def test_stub_channel_returns_empty_dict(self) -> None:
-        """M1 stub FixedFormatCommChannel.encode() returns {}; M2 fills it."""
+    def test_stub_channel_emits_schema_versioned_packet(self) -> None:
+        """M2 T2.1 stub channel emits a CommPacket carrying SCHEMA_VERSION (ADR-003 §Decision)."""
+        from chamber.comm import SCHEMA_VERSION
+
         wrapper = _make_wrapper()
         obs, _ = wrapper.reset(seed=0)
-        assert obs["comm"] == {}
+        comm = obs["comm"]
+        assert comm["schema_version"] == SCHEMA_VERSION
+        expected_keys = {"schema_version", "pose", "task_state", "aoi", "learned_overlay"}
+        assert set(comm.keys()) == expected_keys
 
 
 class TestObservationSpace:
@@ -59,15 +64,29 @@ class TestObservationSpace:
 class TestChannelReset:
     def test_channel_reset_called_on_env_reset(self) -> None:
         """channel.reset() is invoked when the env resets (ADR-003 §Decision)."""
+        from chamber.comm import SCHEMA_VERSION, CommPacket
+
         inner = FakeMultiAgentEnv()
 
         class _TrackingChannel:
             reset_count = 0
 
-            def reset(self) -> None:
+            def reset(self, *, seed: int | None = None) -> None:
+                del seed
                 self.__class__.reset_count += 1
 
-            def encode(self, state) -> dict:
+            def encode(self, state: object) -> CommPacket:
+                del state
+                return CommPacket(
+                    schema_version=SCHEMA_VERSION,
+                    pose={},
+                    task_state={},
+                    aoi={},
+                    learned_overlay=None,
+                )
+
+            def decode(self, packet: CommPacket) -> dict[str, object]:
+                del packet
                 return {}
 
         wrapper = CommShapingWrapper(inner, channel=_TrackingChannel())

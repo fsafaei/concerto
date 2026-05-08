@@ -48,6 +48,31 @@ uv run concerto
 uv run pytest -m smoke -x -v
 ```
 
+The mandatory fixed-format comm channel (ADR-003) and the URLLC-anchored
+degradation wrapper (ADR-006) are usable from M2 onward:
+
+```python
+from chamber.comm import (
+    CommDegradationWrapper,
+    FixedFormatCommChannel,
+    URLLC_3GPP_R17,
+)
+
+# Compose a 5 ms-latency factory-floor channel; degradation is external
+# to the encoder so encode/decode stays pure and testable.
+channel = CommDegradationWrapper(
+    FixedFormatCommChannel(),
+    URLLC_3GPP_R17["factory"],
+    tick_period_ms=1.0,
+    root_seed=0,
+)
+```
+
+The six named profiles (`ideal`, `urllc`, `factory`, `wifi`, `lossy`,
+`saturation`) are the pre-registered Stage-2 CM sweep table — see
+[`docs/explanation/why-conformal.md`](docs/explanation/why-conformal.md)
+and [`docs/how-to/run-spike.md`](docs/how-to/run-spike.md).
+
 ## Documentation
 
 Full documentation at <https://fsafaei.github.io/concerto/>:
