@@ -1,10 +1,10 @@
 # CONCERTO
 
-[![CI](https://github.com/concerto-org/concerto/actions/workflows/ci.yml/badge.svg)](https://github.com/concerto-org/concerto/actions/workflows/ci.yml)
-[![Docs](https://img.shields.io/badge/docs-latest-blue)](https://concerto-org.github.io/concerto/)
+[![CI](https://github.com/fsafaei/concerto/actions/workflows/ci.yml/badge.svg)](https://github.com/fsafaei/concerto/actions/workflows/ci.yml)
+[![Docs](https://img.shields.io/badge/docs-latest-blue)](https://fsafaei.github.io/concerto/)
 [![PyPI](https://img.shields.io/pypi/v/concerto)](https://pypi.org/project/concerto/)
 [![License](https://img.shields.io/badge/license-Apache%202.0-green)](LICENSE)
-[![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/concerto-org/concerto/badge)](https://scorecard.dev/viewer/?uri=github.com/concerto-org/concerto)
+[![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/fsafaei/concerto/badge)](https://scorecard.dev/viewer/?uri=github.com/fsafaei/concerto)
 
 **CONCERTO** is the safety stack and ego-AHT training algorithm for
 **heterogeneous multi-robot ad-hoc teamwork** (HetMR-AHT).
