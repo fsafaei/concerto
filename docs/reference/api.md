@@ -24,6 +24,8 @@ Generated from docstrings via mkdocstrings.
 
 ::: concerto.training.config
 
+::: concerto.training.ego_aht
+
 ## CHAMBER — the benchmark
 
 ### `chamber.envs`
@@ -69,3 +71,5 @@ Generated from docstrings via mkdocstrings.
 ### `chamber.benchmarks`
 
 ::: chamber.benchmarks
+
+::: chamber.benchmarks.training_runner
