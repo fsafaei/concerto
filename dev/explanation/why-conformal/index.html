@@ -1007,10 +1007,93 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#the-three-layer-architecture-plus-braking-fallback" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The three-layer architecture (plus braking fallback)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="The three-layer architecture (plus braking fallback)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-outer-layer-exp-cbf-qp-backbone" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Outer layer — exp CBF-QP backbone
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-middle-layer-conformal-slack-overlay" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Middle layer — conformal slack overlay
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-inner-layer-oscbf-two-level-qp" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Inner layer — OSCBF two-level QP
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#per-step-backstop-hard-braking-fallback" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Per-step backstop — hard braking fallback
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#worked-example-outer-cbf-conformal-update" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Worked example — outer CBF + conformal update
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#communication-degradation-and-the-conformal-slack" class="md-nav__link">
     <span class="md-ellipsis">
       
         Communication degradation and the conformal slack
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#reading-list" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Reading list
       
     </span>
   </a>
@@ -1144,10 +1227,93 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#the-three-layer-architecture-plus-braking-fallback" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The three-layer architecture (plus braking fallback)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="The three-layer architecture (plus braking fallback)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-outer-layer-exp-cbf-qp-backbone" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Outer layer — exp CBF-QP backbone
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-middle-layer-conformal-slack-overlay" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Middle layer — conformal slack overlay
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-inner-layer-oscbf-two-level-qp" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Inner layer — OSCBF two-level QP
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#per-step-backstop-hard-braking-fallback" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Per-step backstop — hard braking fallback
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#worked-example-outer-cbf-conformal-update" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Worked example — outer CBF + conformal update
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#communication-degradation-and-the-conformal-slack" class="md-nav__link">
     <span class="md-ellipsis">
       
         Communication degradation and the conformal slack
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#reading-list" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Reading list
       
     </span>
   </a>
@@ -1193,7 +1359,155 @@ per-arm QPs.</p>
 <p>The key open theoretical question is whether the Huriot–Sibai
 average-loss bound can be sharpened to a per-step bound. This is not
 required for Phase 0 correctness but would strengthen the safety claim.
-See ADR-004 §Open questions.</p>
+See <a href="../../reference/adrs/">ADR-004</a> §Open questions.</p>
+<h2 id="the-three-layer-architecture-plus-braking-fallback">The three-layer architecture (plus braking fallback)</h2>
+<p><a href="../../reference/adrs/">ADR-004</a> §Decision pins a three-layer composition
+plus a per-step backstop. Each layer addresses a different shortcoming
+of the previous one.</p>
+<h3 id="1-outer-layer-exp-cbf-qp-backbone">1. Outer layer — exp CBF-QP backbone</h3>
+<p>Source: Wang–Ames–Egerstedt 2017 (Tier-2 note 37). Each pair of agents
+contributes one linear constraint to a quadratic program</p>
+<div class="highlight"><pre><span></span><code>min   ||u - u_hat||^2
+s.t.  A_ij u &lt;= b_ij  (per pair (i, j))
+      ||u_i||_inf &lt;= bounds.action_norm  (per agent)
+</code></pre></div>
+<p>where <code>A_ij</code> and <code>b_ij</code> are derived from a relative-degree-1 barrier</p>
+<div class="highlight"><pre><span></span><code>h_ij = sqrt(2 * alpha_pair * max(|Δp| - D_s, 0)) + (Δp / |Δp|)^T Δv
+</code></pre></div>
+<p>The barrier ensures the closing speed stays under the brakeable speed
+given the joint deceleration capacity. The per-pair budget is split by
+αᵢ/(αᵢ+αⱼ) (Wang §IV) so heterogeneous actuator limits don't favour
+one agent over the other.</p>
+<p>This formulation is <strong>dynamics-known</strong>: it requires the agents'
+acceleration limits and assumes the partner's behaviour fits into the
+QP's feasibility region. The conformal overlay (next layer) loosens
+that assumption.</p>
+<h3 id="2-middle-layer-conformal-slack-overlay">2. Middle layer — conformal slack overlay</h3>
+<p>Source: Huriot &amp; Sibai 2025 ICRA, the Tier-1 read (note 42; mislabelled
+"Singh" in the source CSV). A scalar slack λ is added per-pair to the
+right-hand side of every CBF constraint</p>
+<div class="highlight"><pre><span></span><code>A_ij u &lt;= b_ij + λ_ij
+</code></pre></div>
+<p>and updated each control step by Theorem 3's rule</p>
+<div class="highlight"><pre><span></span><code>λ_{k+1} = λ_k + η * (ε - l_k)
+</code></pre></div>
+<p>where <code>l_k</code> is the per-pair loss — the worst-case CBF-constraint gap
+between the conformal and ground-truth constraints (Huriot &amp; Sibai
+§IV.A). The default <code>ε = -0.05</code> (<a href="../../reference/adrs/">ADR-004</a>
+§Decision) biases λ toward tighter constraints during contact-rich
+manipulation.</p>
+<p>The Theorem 3 bound</p>
+<div class="highlight"><pre><span></span><code>1/K&#39; Σ l_k &lt;= ε + (λ_1 - λ_safe + η) / (η * K&#39;)
+</code></pre></div>
+<p>is <strong>distribution-free</strong>: it holds even under adversarial partner
+predictions. The trade-off is that it is <em>average-loss</em>, not per-step
+— a single bad step can still cause a constraint violation. The
+braking fallback below is the per-step backstop.</p>
+<p>On partner identity change (<code>obs["meta"]["partner_id"]</code> mismatch with
+the previous step), the conformal layer's stationarity assumption
+breaks. The reset protocol restores λ to a worst-case-bound <code>λ_safe</code>
+and runs a high-caution warmup window (<code>ε_warmup = 1.5 * ε</code>,
+default 50 steps) so the swap transient is mitigated rather than
+masked. See <a href="../../reference/adrs/">ADR-004</a> risk-mitigation #2 +
+<a href="../../reference/adrs/">ADR-006</a> risk #3.</p>
+<h3 id="3-inner-layer-oscbf-two-level-qp">3. Inner layer — OSCBF two-level QP</h3>
+<p>Source: Morton &amp; Pavone 2025 IROS (Tier-2 note 44). For
+manipulation-grade within-arm safety, the OSCBF QP minimises</p>
+<div class="highlight"><pre><span></span><code>||W_j (q_dot - q_dot_nom)||^2 + ||W_o (J q_dot - ν_nom)||^2 + ρ ||s||^2
+s.t.  A q_dot - I s &lt;= b
+      -s &lt;= 0
+</code></pre></div>
+<p>where the joint-space and operational-space objectives both
+participate, slack <code>s</code> absorbs infeasibility (Morton-Pavone §IV.D),
+and the constraints encode collision-avoidance (sphere-pair
+decomposition, Morton-Pavone §IV.B), joint-velocity limits, and any
+custom within-arm CBFs.</p>
+<p>Garg et al. 2024 (Tier-2 note 45) flag CBF-QP infeasibility under
+actuator limits as the central open challenge in multi-robot safe
+control; Morton-Pavone's slack-relaxation pattern is exactly the
+escape hatch that keeps the QP feasible without abandoning the
+safety claim — slack drives a quadratic penalty into the cost so
+the QP prefers feasible solutions but degrades gracefully when they
+don't exist.</p>
+<p>The 1 kHz solve-time target (Morton-Pavone §V; ADR-004 validation
+criterion 3) lets the OSCBF run in the inner control loop on a
+7-DOF Franka without falling behind the actuator-command rate.</p>
+<h3 id="per-step-backstop-hard-braking-fallback">Per-step backstop — hard braking fallback</h3>
+<p>Source: Wang–Ames–Egerstedt 2017 eq. 17 hybrid braking controller.
+Theorem 3 is <em>average-loss</em>, not per-step; in contact-rich
+manipulation a single step of constraint violation can damage
+hardware. The braking fallback bypasses the conformal QP entirely and
+applies max-magnitude push-apart acceleration when the per-pair
+time-to-collision drops below <code>τ_brake</code> (default 100 ms,
+configurable per task).</p>
+<p>This independence from QP feasibility is the whole point: even if
+the QP is infeasible or returns a bad solution, the braking fallback
+is computed from kinematic state alone and provides a guaranteed
+hardware-protective response. A structural test in
+<code>tests/property/test_braking.py</code> enforces that <code>braking.py</code> does not
+import any QP-solver symbol — the bypass cannot be silently undone
+by future refactoring.</p>
+<h2 id="worked-example-outer-cbf-conformal-update">Worked example — outer CBF + conformal update</h2>
+<p>The minimal end-to-end loop wires the outer CBF, conformal update,
+and braking fallback together. The example below is mirrored verbatim
+in <code>tests/unit/test_docs_examples.py::test_why_conformal_walkthrough_example</code>
+so the doc and the test cannot drift:</p>
+<div class="highlight"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">concerto.safety.api</span><span class="w"> </span><span class="kn">import</span> <span class="n">Bounds</span><span class="p">,</span> <span class="n">SafetyState</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">concerto.safety.braking</span><span class="w"> </span><span class="kn">import</span> <span class="n">maybe_brake</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">concerto.safety.cbf_qp</span><span class="w"> </span><span class="kn">import</span> <span class="n">AgentSnapshot</span><span class="p">,</span> <span class="n">ExpCBFQP</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">concerto.safety.conformal</span><span class="w"> </span><span class="kn">import</span> <span class="n">update_lambda</span>
+
+<span class="n">bounds</span> <span class="o">=</span> <span class="n">Bounds</span><span class="p">(</span>
+    <span class="n">action_norm</span><span class="o">=</span><span class="mf">5.0</span><span class="p">,</span>
+    <span class="n">action_rate</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
+    <span class="n">comm_latency_ms</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
+    <span class="n">force_limit</span><span class="o">=</span><span class="mf">20.0</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">state</span> <span class="o">=</span> <span class="n">SafetyState</span><span class="p">(</span>
+    <span class="n">lambda_</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">),</span>
+    <span class="n">epsilon</span><span class="o">=-</span><span class="mf">0.05</span><span class="p">,</span>
+    <span class="n">eta</span><span class="o">=</span><span class="mf">0.01</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">cbf</span> <span class="o">=</span> <span class="n">ExpCBFQP</span><span class="p">(</span><span class="n">cbf_gamma</span><span class="o">=</span><span class="mf">2.0</span><span class="p">)</span>
+
+<span class="n">agents</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;a&quot;</span><span class="p">:</span> <span class="n">AgentSnapshot</span><span class="p">(</span>
+        <span class="n">position</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="o">-</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">),</span>
+        <span class="n">velocity</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">),</span>
+        <span class="n">radius</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span>
+    <span class="p">),</span>
+    <span class="s2">&quot;b&quot;</span><span class="p">:</span> <span class="n">AgentSnapshot</span><span class="p">(</span>
+        <span class="n">position</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">),</span>
+        <span class="n">velocity</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="o">-</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">),</span>
+        <span class="n">radius</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span>
+    <span class="p">),</span>
+<span class="p">}</span>
+<span class="n">nominal</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;a&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">),</span>
+    <span class="s2">&quot;b&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">),</span>
+<span class="p">}</span>
+
+<span class="c1"># 1. Per-step braking fallback (kinematic backstop).</span>
+<span class="n">override</span><span class="p">,</span> <span class="n">fired</span> <span class="o">=</span> <span class="n">maybe_brake</span><span class="p">(</span><span class="n">nominal</span><span class="p">,</span> <span class="n">agents</span><span class="p">,</span> <span class="n">bounds</span><span class="o">=</span><span class="n">bounds</span><span class="p">)</span>
+<span class="k">if</span> <span class="n">fired</span> <span class="ow">and</span> <span class="n">override</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="n">safe</span> <span class="o">=</span> <span class="n">override</span>
+<span class="k">else</span><span class="p">:</span>
+    <span class="c1"># 2. Outer exp CBF-QP (Wang-Ames-Egerstedt 2017).</span>
+    <span class="n">safe</span><span class="p">,</span> <span class="n">info</span> <span class="o">=</span> <span class="n">cbf</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+        <span class="n">proposed_action</span><span class="o">=</span><span class="n">nominal</span><span class="p">,</span>
+        <span class="n">obs</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;agent_states&quot;</span><span class="p">:</span> <span class="n">agents</span><span class="p">,</span> <span class="s2">&quot;meta&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;partner_id&quot;</span><span class="p">:</span> <span class="s2">&quot;demo&quot;</span><span class="p">}},</span>
+        <span class="n">state</span><span class="o">=</span><span class="n">state</span><span class="p">,</span>
+        <span class="n">bounds</span><span class="o">=</span><span class="n">bounds</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="c1"># 3. Conformal lambda update (Huriot &amp; Sibai 2025 §IV).</span>
+    <span class="n">update_lambda</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">info</span><span class="p">[</span><span class="s2">&quot;loss_k&quot;</span><span class="p">],</span> <span class="n">in_warmup</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+</code></pre></div>
+<p>After this single step the agents either receive a push-apart
+brake action (if their time-to-collision dropped below 100 ms) or a
+QP-projected acceleration that respects the safety barrier. The
+conformal <code>state.lambda_</code> is updated in place ready for the next step.</p>
 <h2 id="communication-degradation-and-the-conformal-slack">Communication degradation and the conformal slack</h2>
 <p>Conformal CBFs only stay tight if the safety filter receives partner
 poses <em>fresh</em>. When the comm channel degrades — added latency, jitter,
@@ -1274,7 +1588,7 @@ prediction-error variance.</p>
   configuration that would saturate the inner CBF QP solver beyond the
   ADR-004 OSCBF target (1 ms). A <code>ChamberCommQPSaturationWarning</code>
   fires under the <code>saturation</code> profile (drop ≥ 10 % or
-  latency ≥ 100 ms), per ADR-006 §Risks R5.</li>
+  latency ≥ 100 ms), per <a href="../../reference/adrs/">ADR-006</a> §Risks R5.</li>
 <li><strong>Determinism.</strong> Every random draw — drop coin, latency sample —
   is derived from <code>concerto.training.seeding.derive_substream</code> so two
   resets with the same root seed produce byte-identical degradation
@@ -1283,9 +1597,9 @@ prediction-error variance.</p>
 <p>The full M2 wrapper composition that the Stage-0 smoke and Stage-2 CM
 spike both use is:</p>
 <div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">chamber.comm</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">URLLC_3GPP_R17</span><span class="p">,</span>
     <span class="n">CommDegradationWrapper</span><span class="p">,</span>
     <span class="n">FixedFormatCommChannel</span><span class="p">,</span>
-    <span class="n">URLLC_3GPP_R17</span><span class="p">,</span>
 <span class="p">)</span>
 
 <span class="n">channel</span> <span class="o">=</span> <span class="n">CommDegradationWrapper</span><span class="p">(</span>
@@ -1298,6 +1612,21 @@ spike both use is:</p>
 <p>The fixed-format channel itself ships <strong>no degradation</strong> — encoding
 logic stays pure and trivially testable, and degradation is composed
 externally (see <a href="../../reference/adrs/">ADR-003</a> §Decision).</p>
+<h2 id="reading-list">Reading list</h2>
+<p>The three-layer architecture and its empirical anchors are laid out
+across:</p>
+<ul>
+<li><strong>Tier-1</strong>: Huriot &amp; Sibai 2025 ICRA — the conformal slack and
+  Theorem 3 bound (note 42).</li>
+<li><strong>Tier-2</strong>: Wang–Ames–Egerstedt 2017 T-RO — exp CBF-QP backbone
+  and braking fallback (note 37); Morton–Pavone 2025 IROS — OSCBF
+  two-level QP (note 44); Garg et al. 2024 Annual Reviews — survey
+  framing the open intersection (note 45); Ballotta–Talak 2024 — AoI
+  predictor pattern (note 41).</li>
+<li><strong>ADRs</strong>: <a href="../../reference/adrs/">ADR-004</a> (filter formulation),
+  <a href="../../reference/adrs/">ADR-006</a> (partner-policy assumption set),
+  <a href="../../reference/adrs/">ADR-014</a> (three-table reporting).</li>
+</ul>
 
 
 
