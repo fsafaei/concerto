@@ -36,7 +36,7 @@ dependencies = [
   "pydantic>=2.6,<3.0",              # config models
   "hydra-core>=1.3,<2.0",            # experiment configs
   "omegaconf>=2.3,<3.0",
-  "rich>=13.7",                      # CLI rendering
+  "rich>=15.0.0",                      # CLI rendering
   "structlog>=24.1",                 # structured logs
   "wandb>=0.17,<1.0",                # experiment tracking
   # harl @ git+https://github.com/concerto-org/harl-fork.git@<COMMIT>
