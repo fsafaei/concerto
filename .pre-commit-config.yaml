@@ -22,6 +22,12 @@ repos:
     rev: v1.1.380
     hooks:
       - id: pyright
+        # The harl-fork patch files under scripts/harl-fork-patches/
+        # import from harl.*, which is not installed in this repo's
+        # virtualenv (the fork doesn't exist yet — the patches are
+        # scaffolding to be applied to it). They will be type-checked
+        # in the harl-fork's own CI once applied.
+        exclude: ^scripts/harl-fork-patches/
 
   - repo: https://github.com/astral-sh/uv-pre-commit
     rev: 0.4.18

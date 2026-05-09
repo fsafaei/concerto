@@ -3,5 +3,6 @@
   "venv": ".venv",
   "pythonVersion": "3.11",
   "typeCheckingMode": "standard",
+  "include": ["src", "tests"],
   "strict": ["src/concerto/safety"]
 }

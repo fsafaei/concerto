@@ -1,6 +1,15 @@
 target-version = "py311"
 line-length = 100
 
+# scripts/harl-fork-patches/ ships scaffolding that is COPIED into the
+# concerto-org/harl-fork repo (see scripts/harl-fork-patches/README.md).
+# Those files import from ``harl.*`` (uninstallable until the fork lands)
+# and interface with un-typed upstream HARL via ``Any``. They will be
+# linted in the harl-fork's own CI once applied; CONCERTO only needs to
+# ensure the recipe structure stays present (pinned via
+# tests/unit/test_harl_fork_patches.py).
+extend-exclude = ["scripts/harl-fork-patches/"]
+
 [lint]
 extend-select = [
   "E", "W", "F", "I", "N", "B", "A", "S", "C4", "PIE", "PT", "RET", "SIM",
