@@ -56,7 +56,7 @@ dev = [
   "pip-licenses>=4.0", "cyclonedx-bom>=4.0",
   "ipykernel", "ipython",
 ]
-viz = ["matplotlib>=3.9", "seaborn>=0.13"]
+viz = ["matplotlib>=3.9", "seaborn>=0.13.2"]
 
 [project.scripts]
 concerto                = "concerto.cli:main"            # method-level entry (Phase-0 stub)
