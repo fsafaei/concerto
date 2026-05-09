@@ -22,6 +22,8 @@ Generated from docstrings via mkdocstrings.
 
 ::: concerto.training.checkpoints
 
+::: concerto.training.config
+
 ## CHAMBER — the benchmark
 
 ### `chamber.envs`
