@@ -34,6 +34,8 @@ Generated from docstrings via mkdocstrings.
 
 ::: chamber.envs.comm_shaping
 
+::: chamber.envs.mpe_cooperative_push
+
 ::: chamber.envs.errors
 
 ### `chamber.comm`
