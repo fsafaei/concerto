@@ -1,0 +1,66 @@
+feat(aht): add ego-AHT HAPPO wrapper + runner + env adapter (v0.1.0-aht)
+
+Lands the CONCERTO ego-AHT extensions on top of upstream HARL per
+ADR-002 §Decisions and plan/05 §3 (CONCERTO project — see
+phase0_reading_kit/plan/05-training-stack.md). Three new modules; no
+existing HARL code is patched (plan/05 §2: minimise upstream merge
+conflicts).
+
+New files:
+
+- harl/algorithms/actors/ego_aht_happo.py
+  EgoAHTHAPPO subclass of HAPPO. Validates the partner is frozen at
+  construction (ADR-009 §Consequences runtime backstop for the AHT
+  no-joint-training contract); ego-only advantage decomposition;
+  reduces to single-agent PPO update. ``# UPSTREAM-VERIFY:`` markers
+  flag every spot that depends on the pinned upstream HAPPO signature
+  (collect_rollout body, update body, from_config kwargs).
+
+- harl/runners/ego_aht_runner.py
+  Hydra-driven launcher. Validates the composed config through
+  CONCERTO's EgoAHTConfig (Pydantic v2), then delegates to
+  chamber.benchmarks.training_runner.run_training with
+  EgoAHTHAPPO.from_config plugged into the trainer-factory seam from
+  CONCERTO M4b-5. Recommended invocation:
+      python -m harl.runners.ego_aht_runner \
+          --config-path "$PWD/configs/training/ego_aht_happo" \
+          --config-name mpe_cooperative_push
+
+- harl/envs/concerto_env_adapter.py
+  Thin shim from CONCERTO's Gymnasium-multi-agent env to HARL's
+  runner expectations. No new state; pure pass-through with a
+  ``# UPSTREAM-VERIFY:`` note about HARL's pre-/post-Gymnasium-0.26
+  return-tuple convention.
+
+- tests/test_ego_aht_happo.py
+  Subclassing + frozen-partner-validation smoke tests (skipped until
+  the upstream HAPPO __init__ signature is filled into
+  _HAPPO_INIT_ARGS). The two non-skipped tests cover the test
+  fixtures themselves so the freeze-check helper is sanity-checked.
+
+Inheritance contract (CONCERTO ↔ this fork after v0.1.0-aht):
+
+- concerto.training.ego_aht.train(cfg, *, env, partner, trainer_factory)
+  is the algorithm-agnostic loop (CONCERTO M4b-5; concerto.* does not
+  import chamber.*).
+- chamber.benchmarks.training_runner.run_training(cfg, *, trainer_factory)
+  is the chamber-side bridge (CONCERTO M4b-5).
+- harl.algorithms.actors.ego_aht_happo.EgoAHTHAPPO.from_config is the
+  fork-side trainer-factory: it satisfies CONCERTO's
+  concerto.training.ego_aht.TrainerFactory Protocol structurally and
+  builds an EgoAHTHAPPO from the validated EgoAHTConfig.
+
+A follow-up CONCERTO PR will:
+1. Bump pyproject.toml's harl @ git+...@<SHA> to this v0.1.0-aht SHA.
+2. Add tests/integration/test_ego_aht_runner_dry.py exercising the
+   full plumbing on a 100-frame dry run.
+3. Replace the M4b-8 empirical-guarantee experiment's RandomEgoTrainer
+   default with EgoAHTHAPPO.from_config so T4b.13 actually exercises
+   the AHT loop (rather than uniform-random ego actions).
+
+Licence: HARL is MIT-licensed; the fork inherits MIT for every file
+copied from upstream. The four files added by this commit are
+Apache 2.0 / MIT-compatible per their SPDX header
+(SPDX-License-Identifier: Apache-2.0) — see the NOTICE update
+accompanying this commit ("Modifications by CONCERTO Contributors,
+licensed under Apache 2.0").
