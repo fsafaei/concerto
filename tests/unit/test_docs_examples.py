@@ -109,3 +109,50 @@ def test_why_conformal_comm_wrapper_example() -> None:
     assert hasattr(channel, "encode")
     assert hasattr(channel, "decode")
     assert hasattr(channel, "reset")
+
+
+def test_add_partner_walkthrough_subclass_block() -> None:
+    """Mirror of ``docs/how-to/add-partner.md`` "Subclass + register" block (T4.10).
+
+    Validates that the recipe published in the how-to compiles, registers
+    the class, and instantiates via ``load_partner`` exactly as written.
+    """
+    from chamber.partners import registry as registry_module
+
+    # Use an isolated registry so the temporary class doesn't leak.
+    fresh: dict[str, type] = {}
+    saved = registry_module._REGISTRY
+    registry_module._REGISTRY = fresh
+    try:
+        # --- BEGIN: code block from docs/how-to/add-partner.md ---
+        from chamber.partners import PartnerBase, register_partner
+
+        @register_partner("my_new_partner")
+        class MyNewPartner(PartnerBase):
+            def reset(self, *, seed: int | None = None) -> None:
+                del seed
+
+            def act(self, obs, *, deterministic=True):
+                del obs, deterministic
+                return np.zeros(2, dtype=np.float32)
+
+        # --- END ---
+
+        # --- BEGIN: code block from docs/how-to/add-partner.md ---
+        from chamber.partners import PartnerSpec, load_partner
+
+        spec = PartnerSpec(
+            class_name="my_new_partner",
+            seed=0,
+            checkpoint_step=None,
+            weights_uri=None,
+            extra={"uid": "fetch"},
+        )
+        partner = load_partner(spec)
+        # --- END ---
+    finally:
+        registry_module._REGISTRY = saved
+
+    assert isinstance(partner, MyNewPartner)
+    assert partner.spec is spec
+    assert len(spec.partner_id) == 16
