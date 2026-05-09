@@ -151,13 +151,7 @@ class TestListRegistered:
         assert "PHANTOM" not in list_registered()
 
 
-class TestRegistryStartsEmpty:
-    def test_registry_is_empty_until_partners_register(self) -> None:
-        """Plan/04 §3.2: the registry is built up by ``@register_partner`` decorators.
-
-        This PR ships only the registry mechanism; concrete Phase-0 partners
-        (scripted heuristic, frozen MAPPO, frozen HARL) and Phase-1 stubs
-        (OpenVLA, CrossFormer) land in subsequent M4a PRs and will surface
-        their class names here at import time.
-        """
-        assert list_registered() == []
+class TestPhase0RegistryHasDraftZoo:
+    def test_heuristic_is_registered(self) -> None:
+        """The Phase-0 draft-zoo heuristic is registered at import time (T4.4)."""
+        assert "scripted_heuristic" in list_registered()
