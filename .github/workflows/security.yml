@@ -14,17 +14,29 @@ permissions:
   actions: read
 
 jobs:
+  # OSV-Scanner runs the CLI directly so the job exits non-zero on
+  # vulnerabilities without uploading SARIF — the SARIF-upload step in
+  # google/osv-scanner-action's reusable workflow requires GitHub Code
+  # Scanning, which needs a public repo or GitHub Advanced Security
+  # (the CodeQL + Scorecard jobs below are gated for the same reason).
+  # Re-introduce the reusable workflow once the repo is public per
+  # P5 (open-source from day one).
   osv-scan:
     name: OSV-Scanner
+    runs-on: ubuntu-latest
     permissions:
       contents: read
-      security-events: write
-      actions: read
-    uses: google/osv-scanner-action/.github/workflows/osv-scanner-reusable.yml@764c91816374ff2d8fc2095dab36eecd42d61638  # v1.9.2
-    with:
-      scan-args: |-
-        --lockfile=uv.lock
-        --recursive
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
+      - name: Install osv-scanner
+        run: |
+          set -euo pipefail
+          OSV_VERSION="2.0.2"
+          curl -fsSL "https://github.com/google/osv-scanner/releases/download/v${OSV_VERSION}/osv-scanner_linux_amd64" -o /usr/local/bin/osv-scanner
+          chmod +x /usr/local/bin/osv-scanner
+          osv-scanner --version
+      - name: Scan uv.lock
+        run: osv-scanner --lockfile=uv.lock --recursive .
 
   codeql:
     name: CodeQL
