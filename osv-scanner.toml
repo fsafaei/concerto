@@ -1,0 +1,40 @@
+# OSV-Scanner ignore list — accepted-risk advisories pending dep upgrades.
+#
+# Each entry MUST include an ``ignoreUntil`` date and a ``reason`` that
+# names the ADR pin and the Phase that's expected to clear the advisory.
+# Reviewed at every release per plan/08 dependency-management policy.
+
+[[IgnoredVulns]]
+id = "PYSEC-2025-41"
+ignoreUntil = 2026-12-31
+reason = """
+torch 2.5.1 deserialisation advisory. ADR-002 pins ``torch>=2.3,<2.6``;
+the fix lands in 2.6+. Phase-0 does not load untrusted checkpoints
+(no partner zoo with external weights yet); the partner stack lands
+in M4 and the Phase-1 OpenVLA / CrossFormer integration triggers the
+torch range bump + ADR-002 amendment that clears this advisory.
+Re-evaluate by 2026-12-31.
+"""
+
+[[IgnoredVulns]]
+id = "GHSA-53q9-r3pm-6pq6"
+ignoreUntil = 2026-12-31
+reason = "Companion to PYSEC-2025-41 (same torch 2.5.1 deserialisation chain); see that entry."
+
+[[IgnoredVulns]]
+id = "GHSA-3749-ghw9-m3mg"
+ignoreUntil = 2026-12-31
+reason = """
+torch 2.5.1 advisory (CVSS 3.3, low). ADR-002 range ``<2.6`` blocks the
+patched 2.6+ release; cleared in the Phase-1 OpenVLA / CrossFormer
+upgrade alongside PYSEC-2025-41.
+"""
+
+[[IgnoredVulns]]
+id = "GHSA-887c-mr87-cxwp"
+ignoreUntil = 2026-12-31
+reason = """
+torch 2.5.1 advisory (CVSS 4.8, medium). Same ADR-002 ``<2.6`` range
+gates the patched release; cleared in the Phase-1 upgrade alongside
+PYSEC-2025-41.
+"""
