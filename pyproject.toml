@@ -30,7 +30,7 @@ dependencies = [
   "mani-skill==3.0.1",               # ADR-001; git commit a4a4f92 pinned in uv.lock
   "sapien>=3.0,<4.0",                # ADR-005 (transitive but pinned for clarity)
   "warp-lang>=1.3,<2.0",             # ADR-005 soft-body
-  "cvxpy>=1.5,<2.0",                 # ADR-004 CBF-QP solver
+  "cvxpy>=1.8.2,<2.0",                 # ADR-004 CBF-QP solver
   "qpsolvers[clarabel,osqp]>=4.0",   # fallback CBF-QP solver matrix
   "scipy>=1.13,<2.0",
   "pydantic>=2.6,<3.0",              # config models
