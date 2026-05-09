@@ -39,8 +39,12 @@ dependencies = [
   "rich>=15.0.0",                      # CLI rendering
   "structlog>=24.1",                 # structured logs
   "wandb>=0.17,<1.0",                # experiment tracking
-  # harl @ git+https://github.com/concerto-org/harl-fork.git@<COMMIT>
-  # ADR-002: uncomment and replace <COMMIT> once concerto-org/harl-fork is created.
+  # ADR-002 §Decisions + plan/05 §2: HARL fork pinned by SHA. The fork
+  # currently lives at fsafaei/harl-fork (the concerto-org GitHub
+  # organisation does not exist yet; that move is tracked separately).
+  # v0.0.0-vendored is upstream HEAD with no patches; PR M4b-7 will bump
+  # this to v0.1.0-aht once the AHT-wrapper commit is pushed.
+  "harl @ git+https://github.com/fsafaei/harl-fork@5a08ba6e580968eaf71b28671830bbb9267bb0a7",  # T4b.2 v0.0.0-vendored
 ]
 
 [project.optional-dependencies]
@@ -70,6 +74,13 @@ build-backend = "hatchling.build"
 
 [tool.hatch.version]
 path = "src/concerto/__init__.py"
+
+[tool.hatch.metadata]
+# ADR-002 §Decisions + plan/05 §2: the HARL fork is pinned by SHA via
+# ``harl @ git+https://...`` in [project.dependencies]. Hatchling rejects
+# direct references by default; opt-in here so the SHA pin is not
+# silently downgraded to a PyPI version match.
+allow-direct-references = true
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/concerto", "src/chamber"]   # both top-level packages ship in one distribution
