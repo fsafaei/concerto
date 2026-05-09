@@ -13,10 +13,23 @@ ManiSkill v3
 
 HARL (Heterogeneous-Agent Reinforcement Learning)
   Source:  https://github.com/PKU-MARL/HARL
-  Licence: MIT License
-  Used as: forked external dependency (concerto-org/harl-fork); extended
-           with the frozen-partner ego-AHT wrapper introduced in this
-           project.
+  Fork:    https://github.com/fsafaei/harl-fork
+  Licence: MIT License. The fork's v0.0.0-vendored commit adds three
+           files atop upstream HEAD (themselves not patches to
+           upstream code): an explicit ``LICENSE`` file (verbatim OSI
+           MIT template attributed to "Copyright (c) 2023-2025
+           PKU-MARL HARL Contributors", formalising upstream's
+           setup.py licence declaration so licence scanners detect
+           MIT instead of "unknown"); a ``NOTICE`` file declaring
+           Apache-2.0 dual-licensing for future CONCERTO additions;
+           and a ``.gitignore`` extension (12 AI-tooling hygiene
+           patterns matching the parent repo). This is a documented
+           deviation from "first commit applies zero patches", not a
+           re-licensing.
+  Used as: forked external dependency pinned by SHA in pyproject.toml;
+           extended in v0.1.0-aht with the frozen-partner ego-AHT
+           wrapper introduced in this project (Apache 2.0 / MIT-
+           compatible per the SPDX header on each added file).
 
 CBF-QP reference implementation (Wang, Ames, Egerstedt 2017)
   Source:  "Safety Barrier Certificates for Collisions-Free Multirobot
