@@ -36,7 +36,9 @@ jobs:
           chmod +x /usr/local/bin/osv-scanner
           osv-scanner --version
       - name: Scan uv.lock
-        run: osv-scanner --lockfile=uv.lock --recursive .
+        # ``osv-scanner.toml`` at the repo root carries the accepted-risk
+        # ignore list for advisories blocked by ADR-pinned dep ranges.
+        run: osv-scanner --config=osv-scanner.toml --lockfile=uv.lock --recursive .
 
   codeql:
     name: CodeQL
