@@ -20,6 +20,8 @@ Generated from docstrings via mkdocstrings.
 
 ::: concerto.training.logging
 
+::: concerto.training.checkpoints
+
 ## CHAMBER — the benchmark
 
 ### `chamber.envs`
