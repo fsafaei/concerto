@@ -113,9 +113,9 @@ def test_head_on_collision_avoidance_wang_ames_egerstedt_crossing() -> None:
         d = float(np.linalg.norm(p_a - p_b))
         min_distance = min(min_distance, d)
 
-    assert (
-        min_distance > safety_distance
-    ), f"Head-on collision: min distance {min_distance:.4f} <= D_s {safety_distance:.4f}"
+    assert min_distance > safety_distance, (
+        f"Head-on collision: min distance {min_distance:.4f} <= D_s {safety_distance:.4f}"
+    )
 
 
 def test_lambda_relaxes_constraint_brings_safe_action_closer_to_proposal() -> None:
