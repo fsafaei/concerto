@@ -13,10 +13,11 @@ ignore = [
 ]
 
 [lint.per-file-ignores]
-"tests/**/*.py" = ["S101", "ANN", "D", "ARG002", "PLR2004", "B007", "PLC0415"]  # asserts, stubs, magic values OK in tests; PLC0415: lazy ManiSkill probe imports
+"tests/**/*.py" = ["S101", "ANN", "D", "ARG002", "PLR2004", "B007", "PLC0415", "N803", "N806"]  # asserts, stubs, magic values OK in tests; PLC0415: lazy ManiSkill probe imports; N803/N806: QP / linear-algebra math notation matches src/concerto/safety convention
 "src/chamber/benchmarks/**/*.py" = ["PLC0415"]  # lazy ManiSkill imports required (GPU availability gating)
 "src/chamber/utils/**/*.py" = ["PLC0415"]      # lazy ManiSkill/torch imports required (availability probing)
 "src/chamber/cli/**/*.py" = ["T20"]       # print-allowed in CLI
+"src/concerto/safety/**/*.py" = ["N803", "N806"]  # QP / linear-algebra math notation (P, A, M, J, K capitals) per plan/03 §3.7 + ADR-004 §Decision; matches numpy/scipy/cvxpy/qpsolvers convention
 
 [lint.pydocstyle]
 convention = "google"
