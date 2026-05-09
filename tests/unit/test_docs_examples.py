@@ -156,3 +156,48 @@ def test_add_partner_walkthrough_subclass_block() -> None:
     assert isinstance(partner, MyNewPartner)
     assert partner.spec is spec
     assert len(spec.partner_id) == 16
+
+
+def test_hello_spike_tutorial_code_block(tmp_path) -> None:  # type: ignore[no-untyped-def]
+    """Mirror of ``docs/tutorials/hello-spike.md`` "Run it" code block (T4b.15).
+
+    Plan/03 §4 T3.12 / plan/05 §4 T4b.15: the published code block is a
+    contract — when the doc or the runtime API changes, this test fails.
+    The tutorial's Python script runs unchanged here (modulo the
+    ``repo_root`` / ``configs_dir`` substitution: the doc points at the
+    user's CONCERTO checkout, the test points at this repo).
+    """
+    # Resolve the project's configs/ directory (siblings of src/ + tests/).
+    from pathlib import Path
+
+    repo_root = Path(__file__).resolve().parents[2]
+    configs_dir = repo_root / "configs"
+
+    # --- BEGIN: code block from docs/tutorials/hello-spike.md ---
+    from chamber.benchmarks.training_runner import run_training
+    from concerto.training.config import load_config
+
+    cfg = load_config(
+        config_path=configs_dir / "training" / "ego_aht_happo" / "mpe_cooperative_push.yaml",
+        overrides=[
+            "total_frames=1000",
+            "checkpoint_every=500",
+            "happo.rollout_length=250",
+            f"artifacts_root={tmp_path / 'hello_spike_artifacts'}",
+            f"log_dir={tmp_path / 'hello_spike_logs'}",
+        ],
+    )
+    curve = run_training(cfg, repo_root=repo_root)
+    # --- END ---
+
+    # The published example must produce a usable RewardCurve. Verify the
+    # public-surface promises the tutorial makes: 1000 steps; episodes count
+    # > 0; 2 checkpoints (at frames 500 and 1000); each checkpoint paired
+    # with its sidecar.
+    assert len(curve.per_step_ego_rewards) == 1000
+    assert len(curve.per_episode_ego_rewards) > 0
+    assert len(curve.checkpoint_paths) == 2
+    for path in curve.checkpoint_paths:
+        assert path.exists()
+        assert (path.parent / (path.name + ".json")).exists()
+    assert len(curve.run_id) == 16
