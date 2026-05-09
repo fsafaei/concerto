@@ -26,7 +26,7 @@ classifiers = [
 dependencies = [
   "numpy>=1.26,<2.2",
   "torch>=2.3,<2.6",                 # ADR-002 PyTorch
-  "gymnasium>=1.0,<2.0",             # standard env API
+  "gymnasium>=1.3.0,<2.0",             # standard env API
   "mani-skill==3.0.1",               # ADR-001; git commit a4a4f92 pinned in uv.lock
   "sapien>=3.0,<4.0",                # ADR-005 (transitive but pinned for clarity)
   "warp-lang>=1.3,<2.0",             # ADR-005 soft-body
