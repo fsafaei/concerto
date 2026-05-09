@@ -1,0 +1,49 @@
+# SPDX-License-Identifier: Apache-2.0
+# Hydra config for T4b.14 — zoo-seed run that produces M4a's draft-zoo checkpoint.
+#
+# Plan/05 §6 criterion 5 / ADR-009 §Consequences "draft-zoo scoping": 100k-frame
+# ego-AHT HAPPO run on the Stage-0 smoke env; saves the panda_wristcam policy
+# at the 50%-reward step as local://artifacts/happo_seed7_step50k.pt so M4a's
+# FrozenHARLPartner adapter (T4.6) can load it during M4 Phase 3.
+#
+# Runtime budget: ~2 h on a single consumer GPU. NOT executable from this
+# session — user-side run only. Validates against
+# concerto.training.config.EgoAHTConfig.
+
+algo: ego_aht_happo
+seed: 7
+total_frames: 100000
+checkpoint_every: 10000
+artifacts_root: ./artifacts
+log_dir: ./logs
+
+wandb:
+  enabled: true
+  project: concerto-m4b
+
+env:
+  # Stage-0 smoke env adapter — wired up in M4b-7 once the HARL fork's
+  # concerto_env_adapter lands. Phase-0 placeholder name.
+  task: stage0_smoke
+  episode_length: 100
+  agent_uids: [panda_wristcam, fetch]
+
+partner:
+  class_name: scripted_heuristic
+  seed: 0
+  checkpoint_step: null
+  weights_uri: null
+  extra:
+    uid: fetch
+    target_xy: "0.0,0.0"
+    action_dim: "2"
+
+happo:
+  lr: 3.0e-4
+  gamma: 0.99
+  gae_lambda: 0.95
+  clip_eps: 0.2
+  n_epochs: 4
+  rollout_length: 2048
+  batch_size: 512
+  hidden_dim: 128
