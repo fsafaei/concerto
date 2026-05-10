@@ -498,7 +498,7 @@ requires-dist = [
     { name = "cvxpy", specifier = ">=1.8.2,<2.0" },
     { name = "cyclonedx-bom", marker = "extra == 'dev'", specifier = ">=4.0" },
     { name = "gymnasium", specifier = ">=1.3.0,<2.0" },
-    { name = "harl", git = "https://github.com/fsafaei/harl-fork?rev=5a08ba6e580968eaf71b28671830bbb9267bb0a7#5a08ba6e580968eaf71b28671830bbb9267bb0a7" },
+    { name = "harl", git = "https://github.com/fsafaei/harl-fork.git?rev=56436e4da9453cf124b2b814e0d270db58859dd9#56436e4da9453cf124b2b814e0d270db58859dd9" },
     { name = "hydra-core", specifier = ">=1.3,<2.0" },
     { name = "hypothesis", marker = "extra == 'dev'", specifier = ">=6.108" },
     { name = "ipykernel", marker = "extra == 'dev'" },
@@ -1173,7 +1173,7 @@ wheels = [
 [[package]]
 name = "harl"
 version = "1.0.0"
-source = { git = "https://github.com/fsafaei/harl-fork?rev=5a08ba6e580968eaf71b28671830bbb9267bb0a7#5a08ba6e580968eaf71b28671830bbb9267bb0a7" }
+source = { git = "https://github.com/fsafaei/harl-fork.git?rev=56436e4da9453cf124b2b814e0d270db58859dd9#56436e4da9453cf124b2b814e0d270db58859dd9" }
 dependencies = [
     { name = "pyyaml" },
     { name = "setproctitle" },

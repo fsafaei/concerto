@@ -42,9 +42,9 @@ dependencies = [
   # ADR-002 §Decisions + plan/05 §2: HARL fork pinned by SHA. The fork
   # currently lives at fsafaei/harl-fork (the concerto-org GitHub
   # organisation does not exist yet; that move is tracked separately).
-  # v0.0.0-vendored is upstream HEAD with no patches; PR M4b-7 will bump
-  # this to v0.1.0-aht once the AHT-wrapper commit is pushed.
-  "harl @ git+https://github.com/fsafaei/harl-fork@5a08ba6e580968eaf71b28671830bbb9267bb0a7",  # T4b.2 v0.0.0-vendored
+  # v0.1.0-aht layers the CONCERTO AHT-wrapper patch (EgoAHTHAPPO + the
+  # Hydra-driven runner + the env adapter) on top of v0.0.0-vendored.
+  "harl @ git+https://github.com/fsafaei/harl-fork.git@56436e4da9453cf124b2b814e0d270db58859dd9",  # T4b.7 v0.1.0-aht
 ]
 
 [project.optional-dependencies]
