@@ -33,6 +33,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from chamber.benchmarks.ego_ppo_trainer import EgoPPOTrainer
 from chamber.envs.mpe_cooperative_push import MPECooperativePushEnv
 from chamber.partners.api import PartnerSpec
 from chamber.partners.registry import load_partner
@@ -124,12 +125,24 @@ def run_training(
     trainer_factory: TrainerFactory | None = None,
     repo_root: Path | None = None,
 ) -> RewardCurve:
-    """Build env + partner and run :func:`concerto.training.ego_aht.train` (T4b.11; ADR-002).
+    """Build env + partner and run the ego-AHT training loop (T4b.11; ADR-002 §Decisions).
+
+    Drives :func:`concerto.training.ego_aht.train` with the chamber-side
+    env + partner instances. The default ``trainer_factory`` is
+    :meth:`~chamber.benchmarks.ego_ppo_trainer.EgoPPOTrainer.from_config`
+    (M4b-8a / plan/05 §3.5): the HARL-HAPPO-backed ego-PPO trainer that
+    the empirical-guarantee experiment (M4b-8b / T4b.13) measures.
+    Pass ``trainer_factory=None`` is therefore a no-op fallback to the
+    learning trainer; callers that explicitly want
+    :class:`~concerto.training.ego_aht.RandomEgoTrainer` (test fixtures,
+    smoke runs) must construct it and pass it in.
 
     Args:
         cfg: Validated :class:`~concerto.training.config.EgoAHTConfig`.
-        trainer_factory: Optional :class:`~concerto.training.ego_aht.TrainerFactory`
-            (default: ``None`` → :class:`~concerto.training.ego_aht.RandomEgoTrainer`).
+        trainer_factory: Optional :class:`~concerto.training.ego_aht.TrainerFactory`.
+            ``None`` (default) selects the M4b-8a
+            :class:`~chamber.benchmarks.ego_ppo_trainer.EgoPPOTrainer`
+            via its ``from_config`` classmethod.
         repo_root: Working-tree root for run-metadata provenance.
 
     Returns:
@@ -142,11 +155,14 @@ def run_training(
     """
     env = build_env(cfg.env, root_seed=cfg.seed)
     partner = build_partner(cfg.partner)
+    factory: TrainerFactory = (
+        trainer_factory if trainer_factory is not None else EgoPPOTrainer.from_config
+    )
     return train(
         cfg,
         env=env,
         partner=partner,
-        trainer_factory=trainer_factory,
+        trainer_factory=factory,
         repo_root=repo_root,
     )
 

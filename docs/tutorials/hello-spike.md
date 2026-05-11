@@ -13,9 +13,10 @@ A 1000-frame training run with:
 - The 2-agent MPE Cooperative-Push env from
   [`chamber.envs.mpe_cooperative_push`][mpe-env].
 - A scripted-heuristic frozen partner from M4a's draft zoo.
-- The reference [`RandomEgoTrainer`][random-trainer] in place of the real
-  HAPPO trainer (the HARL fork's `EgoAHTHAPPO` swaps in via the trainer-
-  factory seam in PR M4b-7).
+- The real ego-PPO trainer
+  [`EgoPPOTrainer`][ego-ppo-trainer] (M4b-8a) — wraps HARL's HAPPO
+  actor over a hand-rolled MLP critic and rollout buffer. Selected as
+  the default by `run_training` when no `trainer_factory` is passed.
 - A JSONL log carrying the per-step provenance bundle (run id, seed,
   git SHA, pyproject hash) and `.pt` checkpoints at frames 500 and 1000.
 
@@ -103,18 +104,21 @@ ls hello_spike_artifacts/artifacts
 
 ## What's next
 
-The `RandomEgoTrainer` reference impl exercises the loop's plumbing but
-does not learn — `update()` is a no-op and the per-episode reward is just
-the partner's heuristic-guided trajectory. To demonstrate that the
-algorithm is non-decreasing on per-epoch reward, swap in the HARL fork's
-`EgoAHTHAPPO` via the trainer-factory seam: pass
-`trainer_factory=EgoAHTHAPPO.from_config` to `run_training`. PR M4b-7
-wires this default once the fork's `v0.1.0-aht` tag is pushed; the
-empirical-guarantee experiment lands in PR M4b-8 and produces the plot
-embedded in `docs/explanation/why-aht.md`.
+This 1k-frame demo validates that the trainer plumbing works end-to-end
+but is too short to demonstrate learning. The empirical-guarantee
+experiment in PR M4b-8b runs the same setup at 100k frames against the
+production config in
+`configs/training/ego_aht_happo/mpe_cooperative_push.yaml`, asserts the
+moving-window-of-10 ego reward is non-decreasing on ≥80% of intervals
+(ADR-002 risk-mitigation #1 trip-wire), and embeds the resulting plot
+in `docs/explanation/why-aht.md`. To opt out of the default and run with
+the parameter-free [`RandomEgoTrainer`][random-trainer] reference (smoke
+fixture only — does not learn) instead, construct it explicitly and pass
+it as `trainer_factory` to `run_training`.
 
 [adr-002]: ../reference/adrs.md
 [mpe-env]: ../reference/api.md
+[ego-ppo-trainer]: ../reference/api.md
 [random-trainer]: ../reference/api.md
 [run-context]: ../reference/api.md
 [save-checkpoint]: ../reference/api.md

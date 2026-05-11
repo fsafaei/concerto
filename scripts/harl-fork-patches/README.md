@@ -77,22 +77,30 @@ test) lands in two follow-up PRs (M4b-6 and M4b-7).
 
 ## Inheritance contract (CONCERTO ↔ harl-fork)
 
-After the fork's `v0.1.0-aht` lands:
+The fork's `EgoAHTHAPPO` is **reference scaffolding** for external
+researchers who want a HARL-fork-internal HAPPO subclass with a frozen-
+partner guard. The bodies of `EgoAHTHAPPO.from_config`, `collect_rollout`,
+and `update` are intentionally `NotImplementedError` — the architectural
+rule (plan/05 §3.5) is that *rollout / update / training logic lives on
+the CONCERTO side*, not in the fork.
 
-- `concerto.training.ego_aht.train(cfg, *, env, partner, trainer_factory)`
-  is the algorithm-agnostic loop (M4b-5; `concerto.*` does not import
-  `chamber.*`).
-- `chamber.benchmarks.training_runner.run_training(cfg, *,
-  trainer_factory)` is the chamber-side bridge (M4b-5).
-- `harl.algorithms.actors.ego_aht_happo.EgoAHTHAPPO.from_config` is the
-  fork-side trainer-factory: it satisfies CONCERTO's
-  `concerto.training.ego_aht.TrainerFactory` Protocol structurally and
-  builds an `EgoAHTHAPPO` from the validated `EgoAHTConfig`.
+CONCERTO's training run does **not** depend on the fork's
+`EgoAHTHAPPO.from_config` body. Instead, M4b-8a ships
+`chamber.benchmarks.ego_ppo_trainer.EgoPPOTrainer`, which:
 
-That seam is what M4b-7 wires up. After the wire-up, the empirical-
-guarantee experiment (T4b.13) can swap the M4b-5 `RandomEgoTrainer`
-default for `EgoAHTHAPPO.from_config` and exercise the real HAPPO loop
-against the 2-agent MPE Cooperative-Push env.
+- Imports `harl.algorithms.actors.happo.HAPPO` directly (the upstream
+  actor — no fork-specific class required).
+- Wraps it with a hand-rolled MLP critic and a hand-rolled rollout buffer.
+- Exposes `from_config(cfg, *, env, ego_uid)` as the
+  `concerto.training.ego_aht.TrainerFactory` callable that
+  `chamber.benchmarks.training_runner.run_training` selects by default.
+
+External researchers who *do* want a fork-internal trainer subclass can
+fill in the `# UPSTREAM-VERIFY:` markers in the fork's `EgoAHTHAPPO`
+following the same structure as the CONCERTO-side `EgoPPOTrainer`. The
+property test `tests/property/test_advantage_decomposition.py` documents
+the required GAE math; the scaffold's docstrings cite the specific
+upstream HARL signatures to call.
 
 ## Reproducibility
 
