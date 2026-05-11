@@ -15,6 +15,8 @@
 </p>
 
 <p align="center">
+  <a href="https://doi.org/10.5281/zenodo.20128469">
+    <img alt="DOI" src="https://zenodo.org/badge/DOI/10.5281/zenodo.20128469.svg"/></a>
   <a href="https://github.com/fsafaei/concerto/actions/workflows/ci.yml">
     <img alt="CI"   src="https://github.com/fsafaei/concerto/actions/workflows/ci.yml/badge.svg"/></a>
   <a href="https://fsafaei.github.io/concerto/">
