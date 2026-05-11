@@ -25,6 +25,21 @@ updates:
     labels:
       - "dependencies"
       - "python"
+    ignore:
+      # ADR-001 §Decision: ManiSkill v3 is pinned at 3.0.1 by SHA. The
+      # wrapper-only extension contract requires this exact version
+      # (private-API drift between minor releases would break our
+      # wrappers silently). Bumping requires a new ADR + a full
+      # wrapper sweep, not a dependabot PR.
+      - dependency-name: "mani-skill"
+      # ADR-002 §Decisions + plan/05 §2: the ``torch>=2.3,<2.6`` range
+      # is the validated compatibility window for both
+      # ``mani-skill==3.0.1`` and the ``harl@v0.1.0-aht`` fork. Bumping
+      # outside that range would break compat; bumping inside it (e.g.
+      # 2.5.0 → 2.5.1) requires a manual sweep of the test suite.
+      # Either way the upgrade decision is a CONCERTO-side audit, not
+      # a dependabot PR.
+      - dependency-name: "torch"
 
   - package-ecosystem: "docker"
     directory: "/"
