@@ -1279,9 +1279,10 @@ part of the M4b training stack against a small but real task
 <li>The 2-agent MPE Cooperative-Push env from
   <a href="../../reference/api/"><code>chamber.envs.mpe_cooperative_push</code></a>.</li>
 <li>A scripted-heuristic frozen partner from M4a's draft zoo.</li>
-<li>The reference <a href="../../reference/api/"><code>RandomEgoTrainer</code></a> in place of the real
-  HAPPO trainer (the HARL fork's <code>EgoAHTHAPPO</code> swaps in via the trainer-
-  factory seam in PR M4b-7).</li>
+<li>The real ego-PPO trainer
+  <a href="../../reference/api/"><code>EgoPPOTrainer</code></a> (M4b-8a) — wraps HARL's HAPPO
+  actor over a hand-rolled MLP critic and rollout buffer. Selected as
+  the default by <code>run_training</code> when no <code>trainer_factory</code> is passed.</li>
 <li>A JSONL log carrying the per-step provenance bundle (run id, seed,
   git SHA, pyproject hash) and <code>.pt</code> checkpoints at frames 500 and 1000.</li>
 </ul>
@@ -1353,15 +1354,17 @@ The <code>local://artifacts/...</code> URI scheme resolves under
 <div class="highlight"><pre><span></span><code>ls<span class="w"> </span>hello_spike_artifacts/artifacts
 </code></pre></div>
 <h2 id="whats-next">What's next</h2>
-<p>The <code>RandomEgoTrainer</code> reference impl exercises the loop's plumbing but
-does not learn — <code>update()</code> is a no-op and the per-episode reward is just
-the partner's heuristic-guided trajectory. To demonstrate that the
-algorithm is non-decreasing on per-epoch reward, swap in the HARL fork's
-<code>EgoAHTHAPPO</code> via the trainer-factory seam: pass
-<code>trainer_factory=EgoAHTHAPPO.from_config</code> to <code>run_training</code>. PR M4b-7
-wires this default once the fork's <code>v0.1.0-aht</code> tag is pushed; the
-empirical-guarantee experiment lands in PR M4b-8 and produces the plot
-embedded in <code>docs/explanation/why-aht.md</code>.</p>
+<p>This 1k-frame demo validates that the trainer plumbing works end-to-end
+but is too short to demonstrate learning. The empirical-guarantee
+experiment in PR M4b-8b runs the same setup at 100k frames against the
+production config in
+<code>configs/training/ego_aht_happo/mpe_cooperative_push.yaml</code>, asserts the
+moving-window-of-10 ego reward is non-decreasing on ≥80% of intervals
+(ADR-002 risk-mitigation #1 trip-wire), and embeds the resulting plot
+in <code>docs/explanation/why-aht.md</code>. To opt out of the default and run with
+the parameter-free <a href="../../reference/api/"><code>RandomEgoTrainer</code></a> reference (smoke
+fixture only — does not learn) instead, construct it explicitly and pass
+it as <code>trainer_factory</code> to <code>run_training</code>.</p>
 
 
 
