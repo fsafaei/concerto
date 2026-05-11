@@ -226,11 +226,11 @@ ISO&nbsp;10218-2:2025 directly. See
 
 Full documentation: [**fsafaei.github.io/concerto**](https://fsafaei.github.io/concerto/)
 
-- [**Tutorials**](https://fsafaei.github.io/concerto/tutorials/hello-spike/) &mdash; step-by-step walkthroughs.
-- [**How-tos**](https://fsafaei.github.io/concerto/how-to/add-partner/) &mdash; add a partner, add a safety filter, run a spike.
-- [**API reference**](https://fsafaei.github.io/concerto/reference/api/) &mdash; generated from docstrings.
-- [**ADR index**](https://fsafaei.github.io/concerto/reference/adrs/) &mdash; 15 design decisions with full rationale.
-- [**Glossary**](https://fsafaei.github.io/concerto/reference/glossary/) &mdash; HRS, AoI, OSCBF, FCP/MEP, all defined.
+- [**Tutorials**](https://fsafaei.github.io/concerto/latest/tutorials/hello-spike/) &mdash; step-by-step walkthroughs.
+- [**How-tos**](https://fsafaei.github.io/concerto/latest/how-to/add-partner/) &mdash; add a partner, add a safety filter, run a spike.
+- [**API reference**](https://fsafaei.github.io/concerto/latest/reference/api/) &mdash; generated from docstrings.
+- [**ADR index**](https://fsafaei.github.io/concerto/latest/reference/adrs/) &mdash; 15 design decisions with full rationale.
+- [**Glossary**](https://fsafaei.github.io/concerto/latest/reference/glossary/) &mdash; HRS, AoI, OSCBF, FCP/MEP, all defined.
 
 ---
 
