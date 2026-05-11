@@ -78,7 +78,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#tutorial-hello-spike" class="md-skip">
+        <a href="#tutorial-hello-spike-1k-frame-ego-aht-training-demo" class="md-skip">
           Skip to content
         </a>
       
@@ -542,10 +542,32 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#steps" class="md-nav__link">
+  <a href="#run-it" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Steps
+        Run it
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#inspect-the-run" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Inspect the run
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#whats-next" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What's next
       
     </span>
   </a>
@@ -1188,10 +1210,32 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#steps" class="md-nav__link">
+  <a href="#run-it" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Steps
+        Run it
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#inspect-the-run" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Inspect the run
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#whats-next" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What's next
       
     </span>
   </a>
@@ -1223,26 +1267,101 @@
   
 
 
-<h1 id="tutorial-hello-spike">Tutorial: Hello-spike</h1>
-<div class="admonition note">
-<p class="admonition-title">Phase-0 placeholder</p>
-<p>This tutorial will be filled once the Stage-0 smoke spike (M1) is
-implemented. It walks through running a single-axis spike end-to-end.</p>
-</div>
+<h1 id="tutorial-hello-spike-1k-frame-ego-aht-training-demo">Tutorial: hello-spike — 1k-frame ego-AHT training demo</h1>
+<p>This tutorial walks through running a tiny ego-AHT training loop end-to-end
+on a CPU in roughly five minutes. You will see the env step, the partner
+act, the trainer collect rollouts, and a checkpoint emit — every moving
+part of the M4b training stack against a small but real task
+(see <a href="../../reference/adrs/">ADR-002 §Decisions</a>).</p>
 <h2 id="what-you-will-build">What you will build</h2>
-<p>A minimal Stage-0 smoke run against the CHAMBER-Solo precursor task.</p>
+<p>A 1000-frame training run with:</p>
+<ul>
+<li>The 2-agent MPE Cooperative-Push env from
+  <a href="../../reference/api/"><code>chamber.envs.mpe_cooperative_push</code></a>.</li>
+<li>A scripted-heuristic frozen partner from M4a's draft zoo.</li>
+<li>The reference <a href="../../reference/api/"><code>RandomEgoTrainer</code></a> in place of the real
+  HAPPO trainer (the HARL fork's <code>EgoAHTHAPPO</code> swaps in via the trainer-
+  factory seam in PR M4b-7).</li>
+<li>A JSONL log carrying the per-step provenance bundle (run id, seed,
+  git SHA, pyproject hash) and <code>.pt</code> checkpoints at frames 500 and 1000.</li>
+</ul>
 <h2 id="prerequisites">Prerequisites</h2>
 <ul>
-<li>CHAMBER installed (<code>uv sync --group dev</code>)</li>
-<li>A GPU with CUDA 12.1+ (or the CPU fallback for the smoke task)</li>
+<li>A CONCERTO checkout with <code>make install</code> run (this installs the HARL
+  fork via the SHA pin in <code>pyproject.toml</code> from PR M4b-6).</li>
+<li>No GPU required. Total wall-time: roughly five minutes on a modern
+  laptop CPU.</li>
 </ul>
-<h2 id="steps">Steps</h2>
-<ol>
-<li>Verify the pre-registration SHA matches the tagged file.</li>
-<li>Launch the smoke spike.</li>
-<li>Inspect the result archive.</li>
-</ol>
-<p><em>(Full content added in M1.)</em></p>
+<h2 id="run-it">Run it</h2>
+<p>Save this as <code>hello_spike.py</code> in a clean directory and run it. It uses
+the existing Hydra config under <code>configs/training/ego_aht_happo/</code> with
+a few CLI-style overrides — <code>total_frames</code>, <code>checkpoint_every</code>, and
+<code>happo.rollout_length</code> are scaled down so the demo fits a five-minute
+laptop CPU budget; the production defaults from
+<code>configs/training/ego_aht_happo/mpe_cooperative_push.yaml</code> are 100k /
+10k / 1024 respectively.</p>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">chamber.benchmarks.training_runner</span><span class="w"> </span><span class="kn">import</span> <span class="n">run_training</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">concerto.training.config</span><span class="w"> </span><span class="kn">import</span> <span class="n">load_config</span>
+
+<span class="n">repo_root</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="vm">__file__</span><span class="p">)</span><span class="o">.</span><span class="n">resolve</span><span class="p">()</span><span class="o">.</span><span class="n">parent</span>
+<span class="n">configs_dir</span> <span class="o">=</span> <span class="n">repo_root</span> <span class="o">/</span> <span class="s2">&quot;configs&quot;</span>
+
+<span class="n">cfg</span> <span class="o">=</span> <span class="n">load_config</span><span class="p">(</span>
+    <span class="n">config_path</span><span class="o">=</span><span class="n">configs_dir</span>
+    <span class="o">/</span> <span class="s2">&quot;training&quot;</span>
+    <span class="o">/</span> <span class="s2">&quot;ego_aht_happo&quot;</span>
+    <span class="o">/</span> <span class="s2">&quot;mpe_cooperative_push.yaml&quot;</span><span class="p">,</span>
+    <span class="n">overrides</span><span class="o">=</span><span class="p">[</span>
+        <span class="s2">&quot;total_frames=1000&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;checkpoint_every=500&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;happo.rollout_length=250&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;artifacts_root=./hello_spike_artifacts&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;log_dir=./hello_spike_logs&quot;</span><span class="p">,</span>
+    <span class="p">],</span>
+<span class="p">)</span>
+<span class="n">curve</span> <span class="o">=</span> <span class="n">run_training</span><span class="p">(</span><span class="n">cfg</span><span class="p">,</span> <span class="n">repo_root</span><span class="o">=</span><span class="n">repo_root</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;run_id=</span><span class="si">{</span><span class="n">curve</span><span class="o">.</span><span class="n">run_id</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;steps=</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">curve</span><span class="o">.</span><span class="n">per_step_ego_rewards</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;episodes=</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">curve</span><span class="o">.</span><span class="n">per_episode_ego_rewards</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;checkpoints=</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">curve</span><span class="o">.</span><span class="n">checkpoint_paths</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</code></pre></div>
+<p>You should see output similar to:</p>
+<div class="highlight"><pre><span></span><code>run_id=4f1e8a2c0a3d62e5
+steps=1000
+episodes=20
+checkpoints=2
+</code></pre></div>
+<p>The exact <code>run_id</code> will differ from machine to machine because the
+provenance bundle includes the current git SHA + the hash of
+<code>pyproject.toml</code> (see <a href="../../reference/api/"><code>RunContext</code></a>).</p>
+<h2 id="inspect-the-run">Inspect the run</h2>
+<p>The JSONL log is a self-contained record: every line is a valid JSON
+object carrying the run-level provenance plus the per-event <code>step</code>,
+event name, and any payload fields. Substitute the <code>run_id</code> printed by
+the script for <code>&lt;run-id&gt;</code> below.</p>
+<div class="highlight"><pre><span></span><code>head<span class="w"> </span>-2<span class="w"> </span>hello_spike_logs/&lt;run-id&gt;.jsonl
+</code></pre></div>
+<p>Each checkpoint has a <code>.pt</code> payload plus a <code>.pt.json</code> sidecar with the
+SHA-256 integrity digest and the producing run's metadata
+(see <a href="../../reference/api/"><code>save_checkpoint</code></a> / <a href="../../reference/api/"><code>load_checkpoint</code></a>).
+The <code>local://artifacts/...</code> URI scheme resolves under
+<code>&lt;artifacts_root&gt;/artifacts/</code>, so the on-disk path doubles the
+<code>artifacts/</code> segment — that is intentional and grep-able:</p>
+<div class="highlight"><pre><span></span><code>ls<span class="w"> </span>hello_spike_artifacts/artifacts
+</code></pre></div>
+<h2 id="whats-next">What's next</h2>
+<p>The <code>RandomEgoTrainer</code> reference impl exercises the loop's plumbing but
+does not learn — <code>update()</code> is a no-op and the per-episode reward is just
+the partner's heuristic-guided trajectory. To demonstrate that the
+algorithm is non-decreasing on per-epoch reward, swap in the HARL fork's
+<code>EgoAHTHAPPO</code> via the trainer-factory seam: pass
+<code>trainer_factory=EgoAHTHAPPO.from_config</code> to <code>run_training</code>. PR M4b-7
+wires this default once the fork's <code>v0.1.0-aht</code> tag is pushed; the
+empirical-guarantee experiment lands in PR M4b-8 and produces the plot
+embedded in <code>docs/explanation/why-aht.md</code>.</p>
 
 
 

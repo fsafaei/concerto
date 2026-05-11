@@ -643,10 +643,54 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#steps-sketch" class="md-nav__link">
+  <a href="#1-subclass-partnerbase" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Steps (sketch)
+        1. Subclass PartnerBase
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-register-with-register_partner" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Register with @register_partner
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-build-instances-via-load_partner" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Build instances via load_partner
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-property-test-the-shield" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Property-test the shield
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-read-pose-from-the-comm-packet" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Read pose from the comm packet
       
     </span>
   </a>
@@ -1144,10 +1188,54 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#steps-sketch" class="md-nav__link">
+  <a href="#1-subclass-partnerbase" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Steps (sketch)
+        1. Subclass PartnerBase
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-register-with-register_partner" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Register with @register_partner
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-build-instances-via-load_partner" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Build instances via load_partner
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-property-test-the-shield" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Property-test the shield
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-read-pose-from-the-comm-packet" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Read pose from the comm packet
       
     </span>
   </a>
@@ -1180,18 +1268,59 @@
 
 
 <h1 id="how-to-add-a-new-partner-class">How-to: Add a new partner class</h1>
-<div class="admonition note">
-<p class="admonition-title">Phase-0 placeholder</p>
-<p>Full recipe added once <code>chamber.partners</code> is implemented in M4.</p>
-</div>
-<h2 id="steps-sketch">Steps (sketch)</h2>
-<ol>
-<li>Subclass <code>PartnerBase</code> from <code>chamber.partners.interface</code>.</li>
-<li>Implement the <code>FrozenPartner</code> protocol from <code>concerto.api.partner</code>.</li>
-<li>Add a registry entry in <code>chamber.partners.__init__</code>.</li>
-<li>Write a property test covering the <code>_FORBIDDEN_ATTRS</code> shield.</li>
-</ol>
-<p><em>(Full content added in M4.)</em></p>
+<p>This guide walks a Phase-1 contributor through adding a new partner class to
+the CHAMBER zoo. The contract is fixed in Phase 0 — see
+<a href="https://github.com/concerto-org/concerto/blob/main/adr/ADR-009-partner-zoo.md">ADR-009 §Decision</a> — and the steps below are the mechanical
+end-to-end recipe.</p>
+<h2 id="1-subclass-partnerbase">1. Subclass <code>PartnerBase</code></h2>
+<p>Every partner inherits from
+<a href="../../reference/api/"><code>chamber.partners.interface.PartnerBase</code></a>, which:</p>
+<ul>
+<li>stores <code>spec</code> (the <a href="../../reference/api/"><code>PartnerSpec</code></a> the registry passed in);</li>
+<li>shields the <code>_FORBIDDEN_ATTRS</code> set so the AHT no-joint-training constraint
+  is enforced at runtime even when callers reach for raw <code>torch</code> methods.</li>
+</ul>
+<p>Implement <code>reset(*, seed)</code> and <code>act(obs, *, deterministic)</code> to satisfy the
+<a href="../../reference/api/"><code>FrozenPartner</code></a> Protocol — that is the entire surface.</p>
+<h2 id="2-register-with-register_partner">2. Register with <code>@register_partner</code></h2>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">chamber.partners</span><span class="w"> </span><span class="kn">import</span> <span class="n">PartnerBase</span><span class="p">,</span> <span class="n">PartnerSpec</span><span class="p">,</span> <span class="n">register_partner</span>
+
+<span class="nd">@register_partner</span><span class="p">(</span><span class="s2">&quot;my_new_partner&quot;</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">MyNewPartner</span><span class="p">(</span><span class="n">PartnerBase</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">reset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">seed</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="o">...</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">act</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obs</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">deterministic</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="o">...</span>
+</code></pre></div>
+<p>The decorator records the class against the string id; double-registration
+raises <code>ValueError</code> so name collisions are caught at import time.</p>
+<h2 id="3-build-instances-via-load_partner">3. Build instances via <code>load_partner</code></h2>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">chamber.partners</span><span class="w"> </span><span class="kn">import</span> <span class="n">PartnerSpec</span><span class="p">,</span> <span class="n">load_partner</span>
+
+<span class="n">spec</span> <span class="o">=</span> <span class="n">PartnerSpec</span><span class="p">(</span>
+    <span class="n">class_name</span><span class="o">=</span><span class="s2">&quot;my_new_partner&quot;</span><span class="p">,</span>
+    <span class="n">seed</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+    <span class="n">checkpoint_step</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">weights_uri</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">extra</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;uid&quot;</span><span class="p">:</span> <span class="s2">&quot;fetch&quot;</span><span class="p">},</span>
+<span class="p">)</span>
+<span class="n">partner</span> <span class="o">=</span> <span class="n">load_partner</span><span class="p">(</span><span class="n">spec</span><span class="p">)</span>
+</code></pre></div>
+<p>The <code>partner_id</code> (a 16-hex hash of <code>class_name</code>, <code>seed</code>, <code>checkpoint_step</code>,
+<code>weights_uri</code>) is the stable identity the M3 conformal filter reads from
+<code>obs["meta"]["partner_id"]</code> to detect mid-episode partner swap
+(<a href="https://github.com/concerto-org/concerto/blob/main/adr/ADR-006-partner-policy-assumptions.md">ADR-006 risk #3</a>; <a href="https://github.com/concerto-org/concerto/blob/main/adr/ADR-004-safety-filter.md">ADR-004 §risk-mitigation #2</a>).</p>
+<h2 id="4-property-test-the-shield">4. Property-test the shield</h2>
+<p>Add a property test that <code>partner.train()</code> (and every other forbidden name)
+raises <code>AttributeError</code> referencing ADR-009. The existing
+<code>tests/property/test_no_train_allowed.py</code> covers <code>PartnerBase</code> directly; for
+new shielded subclasses, mirror that pattern.</p>
+<h2 id="5-read-pose-from-the-comm-packet">5. Read pose from the comm packet</h2>
+<p>Partners read proprio from <code>obs["agent"][uid]</code> and pose from
+<code>obs["comm"]["pose"][uid]</code> — the <a href="https://github.com/concerto-org/concerto/blob/main/adr/ADR-003-comm-interface.md">ADR-003 §Decision</a> fixed-format
+channel. Do <strong>not</strong> reach into env-specific keys; partners are env-agnostic
+by design.</p>
 
 
 
