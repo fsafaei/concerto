@@ -994,6 +994,56 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#concerto.training.GuaranteeReport" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        GuaranteeReport
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#concerto.training.assert_non_decreasing_window" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        assert_non_decreasing_window
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="assert_non_decreasing_window">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#concerto.training.assert_non_decreasing_window--1-mitigation-policy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1 mitigation policy).
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#concerto.training.plot_reward_curve" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        plot_reward_curve
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#concerto.training.seeding" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -4108,6 +4158,56 @@
     <span class="md-ellipsis">
       
         training
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#concerto.training.GuaranteeReport" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        GuaranteeReport
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#concerto.training.assert_non_decreasing_window" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        assert_non_decreasing_window
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="assert_non_decreasing_window">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#concerto.training.assert_non_decreasing_window--1-mitigation-policy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1 mitigation policy).
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#concerto.training.plot_reward_curve" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        plot_reward_curve
       
     </span>
   </a>
@@ -7880,6 +7980,759 @@ provides the determinism harness required by project principle P6.</p>
 
 
 
+<div class="doc doc-object doc-class">
+
+
+
+<h2 id="concerto.training.GuaranteeReport" class="doc doc-heading">
+            <span class="doc doc-object-name doc-class-name">GuaranteeReport</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-dataclass"><code>dataclass</code></small>
+  </span>
+
+</h2>
+
+
+    <div class="doc doc-contents ">
+
+
+
+        <p>Result of one empirical-guarantee assertion (T4b.13; ADR-002 §Risks #1).</p>
+<p>The dataclass is frozen so a returned report cannot be mutated after
+the fact (the project's reproducibility contract: provenance bundles
+are immutable). Serialise to JSON via :func:<code>dataclasses.asdict</code>
+(used by :func:<code>plot_reward_curve</code>).</p>
+
+
+<p><span class="doc-section-title">Attributes:</span></p>
+    <ul>
+        <li class="doc-section-item field-body">
+          <b><code><span title="concerto.training.GuaranteeReport.window">window</span></code></b>
+              (<code><span title="int">int</span></code>)
+          –
+          <div class="doc-md-description">
+            <p>Moving-average window length the report was computed
+against (default :data:<code>DEFAULT_WINDOW</code>).</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+          <b><code><span title="concerto.training.GuaranteeReport.threshold">threshold</span></code></b>
+              (<code><span title="float">float</span></code>)
+          –
+          <div class="doc-md-description">
+            <p>Pass threshold the report was checked against (default
+:data:<code>DEFAULT_THRESHOLD</code>).</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+          <b><code><span title="concerto.training.GuaranteeReport.n_intervals">n_intervals</span></code></b>
+              (<code><span title="int">int</span></code>)
+          –
+          <div class="doc-md-description">
+            <p>Number of consecutive-window-pair intervals examined.
+Equals <code>max(len(curve) - window, 0)</code> for a non-degenerate
+run; zero when the curve is empty or shorter than <code>window</code>.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+          <b><code><span title="concerto.training.GuaranteeReport.n_nondecreasing">n_nondecreasing</span></code></b>
+              (<code><span title="int">int</span></code>)
+          –
+          <div class="doc-md-description">
+            <p>Count of intervals whose later-window mean is
+<code>&gt;=</code> the earlier-window mean.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+          <b><code><span title="concerto.training.GuaranteeReport.fraction">fraction</span></code></b>
+              (<code><span title="float">float</span></code>)
+          –
+          <div class="doc-md-description">
+            <p><code>n_nondecreasing / n_intervals</code> when <code>n_intervals &gt; 0</code>;
+<code>1.0</code> (vacuously) when <code>n_intervals == 0</code> so callers can
+treat the degenerate case uniformly.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+          <b><code><span title="concerto.training.GuaranteeReport.passed">passed</span></code></b>
+              (<code><span title="bool">bool</span></code>)
+          –
+          <div class="doc-md-description">
+            <p><code>fraction &gt;= threshold</code>. Vacuously <code>True</code> when
+<code>n_intervals == 0</code> (the curve was too short to assert
+anything; the assertion is documented as vacuous in that
+regime).</p>
+          </div>
+        </li>
+    </ul>
+
+
+
+
+
+
+
+
+              <details class="mkdocstrings-source">
+                <summary>Source code in <code>src/concerto/training/empirical_guarantee.py</code></summary>
+                <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 67</span>
+<span class="normal"> 68</span>
+<span class="normal"> 69</span>
+<span class="normal"> 70</span>
+<span class="normal"> 71</span>
+<span class="normal"> 72</span>
+<span class="normal"> 73</span>
+<span class="normal"> 74</span>
+<span class="normal"> 75</span>
+<span class="normal"> 76</span>
+<span class="normal"> 77</span>
+<span class="normal"> 78</span>
+<span class="normal"> 79</span>
+<span class="normal"> 80</span>
+<span class="normal"> 81</span>
+<span class="normal"> 82</span>
+<span class="normal"> 83</span>
+<span class="normal"> 84</span>
+<span class="normal"> 85</span>
+<span class="normal"> 86</span>
+<span class="normal"> 87</span>
+<span class="normal"> 88</span>
+<span class="normal"> 89</span>
+<span class="normal"> 90</span>
+<span class="normal"> 91</span>
+<span class="normal"> 92</span>
+<span class="normal"> 93</span>
+<span class="normal"> 94</span>
+<span class="normal"> 95</span>
+<span class="normal"> 96</span>
+<span class="normal"> 97</span>
+<span class="normal"> 98</span>
+<span class="normal"> 99</span>
+<span class="normal">100</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">GuaranteeReport</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Result of one empirical-guarantee assertion (T4b.13; ADR-002 §Risks #1).</span>
+
+<span class="sd">    The dataclass is frozen so a returned report cannot be mutated after</span>
+<span class="sd">    the fact (the project&#39;s reproducibility contract: provenance bundles</span>
+<span class="sd">    are immutable). Serialise to JSON via :func:`dataclasses.asdict`</span>
+<span class="sd">    (used by :func:`plot_reward_curve`).</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        window: Moving-average window length the report was computed</span>
+<span class="sd">            against (default :data:`DEFAULT_WINDOW`).</span>
+<span class="sd">        threshold: Pass threshold the report was checked against (default</span>
+<span class="sd">            :data:`DEFAULT_THRESHOLD`).</span>
+<span class="sd">        n_intervals: Number of consecutive-window-pair intervals examined.</span>
+<span class="sd">            Equals ``max(len(curve) - window, 0)`` for a non-degenerate</span>
+<span class="sd">            run; zero when the curve is empty or shorter than ``window``.</span>
+<span class="sd">        n_nondecreasing: Count of intervals whose later-window mean is</span>
+<span class="sd">            ``&gt;=`` the earlier-window mean.</span>
+<span class="sd">        fraction: ``n_nondecreasing / n_intervals`` when ``n_intervals &gt; 0``;</span>
+<span class="sd">            ``1.0`` (vacuously) when ``n_intervals == 0`` so callers can</span>
+<span class="sd">            treat the degenerate case uniformly.</span>
+<span class="sd">        passed: ``fraction &gt;= threshold``. Vacuously ``True`` when</span>
+<span class="sd">            ``n_intervals == 0`` (the curve was too short to assert</span>
+<span class="sd">            anything; the assertion is documented as vacuous in that</span>
+<span class="sd">            regime).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">window</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">threshold</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">n_intervals</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">n_nondecreasing</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">fraction</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">passed</span><span class="p">:</span> <span class="nb">bool</span>
+</code></pre></div></td></tr></table></div>
+              </details>
+
+
+
+<div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+
+
+  </div>
+
+    </div>
+
+</div>
+
+
+<div class="doc doc-object doc-function">
+
+
+<h2 id="concerto.training.assert_non_decreasing_window" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">assert_non_decreasing_window</span>
+
+
+</h2>
+<div class="doc-signature highlight"><pre><span></span><code><span class="nf">assert_non_decreasing_window</span><span class="p">(</span>
+    <span class="n">curve</span><span class="p">:</span> <span class="n">RewardCurve</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">window</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">DEFAULT_WINDOW</span><span class="p">,</span>
+    <span class="n">threshold</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">DEFAULT_THRESHOLD</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">GuaranteeReport</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Check the moving-window-of-K mean for non-decreasing intervals (ADR-002 §Risks #1).</p>
+<p>Slides a window of length <code>window</code> over <code>curve.per_episode_ego_rewards</code>
+and counts the fraction of consecutive interval pairs whose later-window
+mean is <code>&gt;=</code> the earlier-window mean. A run is considered to have
+cleared the trip-wire when that fraction is <code>&gt;= threshold</code>.</p>
+<p>Plan/05 §6 criterion 4 names the canonical setting:
+<code>window=10, threshold=0.8</code>. Callers MUST NOT silently widen the
+window or lower the threshold to coerce a passing report — if the
+assertion fires under the production config, hand control back to
+the maintainer and open a <code>#scope-revision</code> issue (ADR-002 §Risks</p>
+<h3 id="concerto.training.assert_non_decreasing_window--1-mitigation-policy">1 mitigation policy).</h3>
+<p>Degenerate inputs (empty curve, <code>len(curve) &lt; window</code>) return a
+report with <code>n_intervals=0</code> and <code>passed=True</code>. The pass is
+<em>vacuous</em> — there is not enough signal to assert anything — and is
+only useful as a sentinel for unit tests of the helper itself; do
+not rely on it to mask a too-short production run.</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <ul>
+        <li class="doc-section-item field-body">
+            <b><code>curve</code></b>
+              (<code><a class="autorefs autorefs-internal" title="RewardCurve
+
+
+  
+      dataclass
+   (concerto.training.ego_aht.RewardCurve)" href="#concerto.training.ego_aht.RewardCurve">RewardCurve</a></code>)
+          –
+          <div class="doc-md-description">
+            <p>The reward curve produced by
+:func:<code>concerto.training.ego_aht.train</code>. Only the
+<code>per_episode_ego_rewards</code> field is read; the per-step
+series is deliberately ignored because the assertion is
+episode-aggregated (Huriot-Sibai 2025 Theorem 7 is stated
+over the policy-improvement step, which lives at episode
+granularity).</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+            <b><code>window</code></b>
+              (<code><span title="int">int</span></code>, default:
+                  <code><span title="concerto.training.empirical_guarantee.DEFAULT_WINDOW">DEFAULT_WINDOW</span></code>
+)
+          –
+          <div class="doc-md-description">
+            <p>Window size (default :data:<code>DEFAULT_WINDOW</code>).</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+            <b><code>threshold</code></b>
+              (<code><span title="float">float</span></code>, default:
+                  <code><span title="concerto.training.empirical_guarantee.DEFAULT_THRESHOLD">DEFAULT_THRESHOLD</span></code>
+)
+          –
+          <div class="doc-md-description">
+            <p>Pass threshold on the non-decreasing fraction
+(default :data:<code>DEFAULT_THRESHOLD</code>).</p>
+          </div>
+        </li>
+    </ul>
+
+
+<p><span class="doc-section-title">Returns:</span></p>
+    <ul>
+        <li class="doc-section-item field-body">
+<b><code>Frozen</code></b> (              <code><a class="autorefs autorefs-internal" title="GuaranteeReport
+
+
+  
+      dataclass
+   (concerto.training.empirical_guarantee.GuaranteeReport)" href="#concerto.training.GuaranteeReport">GuaranteeReport</a></code>
+)          –
+          <div class="doc-md-description">
+            <p>class:<code>GuaranteeReport</code>. Does NOT raise on failure — the</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+              <code><a class="autorefs autorefs-internal" title="GuaranteeReport
+
+
+  
+      dataclass
+   (concerto.training.empirical_guarantee.GuaranteeReport)" href="#concerto.training.GuaranteeReport">GuaranteeReport</a></code>
+          –
+          <div class="doc-md-description">
+            <p>caller decides whether to fail the test, exit the CLI non-zero,</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+              <code><a class="autorefs autorefs-internal" title="GuaranteeReport
+
+
+  
+      dataclass
+   (concerto.training.empirical_guarantee.GuaranteeReport)" href="#concerto.training.GuaranteeReport">GuaranteeReport</a></code>
+          –
+          <div class="doc-md-description">
+            <p>or just log the report.</p>
+          </div>
+        </li>
+    </ul>
+
+
+            <details class="mkdocstrings-source">
+              <summary>Source code in <code>src/concerto/training/empirical_guarantee.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">103</span>
+<span class="normal">104</span>
+<span class="normal">105</span>
+<span class="normal">106</span>
+<span class="normal">107</span>
+<span class="normal">108</span>
+<span class="normal">109</span>
+<span class="normal">110</span>
+<span class="normal">111</span>
+<span class="normal">112</span>
+<span class="normal">113</span>
+<span class="normal">114</span>
+<span class="normal">115</span>
+<span class="normal">116</span>
+<span class="normal">117</span>
+<span class="normal">118</span>
+<span class="normal">119</span>
+<span class="normal">120</span>
+<span class="normal">121</span>
+<span class="normal">122</span>
+<span class="normal">123</span>
+<span class="normal">124</span>
+<span class="normal">125</span>
+<span class="normal">126</span>
+<span class="normal">127</span>
+<span class="normal">128</span>
+<span class="normal">129</span>
+<span class="normal">130</span>
+<span class="normal">131</span>
+<span class="normal">132</span>
+<span class="normal">133</span>
+<span class="normal">134</span>
+<span class="normal">135</span>
+<span class="normal">136</span>
+<span class="normal">137</span>
+<span class="normal">138</span>
+<span class="normal">139</span>
+<span class="normal">140</span>
+<span class="normal">141</span>
+<span class="normal">142</span>
+<span class="normal">143</span>
+<span class="normal">144</span>
+<span class="normal">145</span>
+<span class="normal">146</span>
+<span class="normal">147</span>
+<span class="normal">148</span>
+<span class="normal">149</span>
+<span class="normal">150</span>
+<span class="normal">151</span>
+<span class="normal">152</span>
+<span class="normal">153</span>
+<span class="normal">154</span>
+<span class="normal">155</span>
+<span class="normal">156</span>
+<span class="normal">157</span>
+<span class="normal">158</span>
+<span class="normal">159</span>
+<span class="normal">160</span>
+<span class="normal">161</span>
+<span class="normal">162</span>
+<span class="normal">163</span>
+<span class="normal">164</span>
+<span class="normal">165</span>
+<span class="normal">166</span>
+<span class="normal">167</span>
+<span class="normal">168</span>
+<span class="normal">169</span>
+<span class="normal">170</span>
+<span class="normal">171</span>
+<span class="normal">172</span>
+<span class="normal">173</span>
+<span class="normal">174</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">assert_non_decreasing_window</span><span class="p">(</span>
+    <span class="n">curve</span><span class="p">:</span> <span class="n">RewardCurve</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">window</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">DEFAULT_WINDOW</span><span class="p">,</span>
+    <span class="n">threshold</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">DEFAULT_THRESHOLD</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">GuaranteeReport</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Check the moving-window-of-K mean for non-decreasing intervals (ADR-002 §Risks #1).</span>
+
+<span class="sd">    Slides a window of length ``window`` over ``curve.per_episode_ego_rewards``</span>
+<span class="sd">    and counts the fraction of consecutive interval pairs whose later-window</span>
+<span class="sd">    mean is ``&gt;=`` the earlier-window mean. A run is considered to have</span>
+<span class="sd">    cleared the trip-wire when that fraction is ``&gt;= threshold``.</span>
+
+<span class="sd">    Plan/05 §6 criterion 4 names the canonical setting:</span>
+<span class="sd">    ``window=10, threshold=0.8``. Callers MUST NOT silently widen the</span>
+<span class="sd">    window or lower the threshold to coerce a passing report — if the</span>
+<span class="sd">    assertion fires under the production config, hand control back to</span>
+<span class="sd">    the maintainer and open a ``#scope-revision`` issue (ADR-002 §Risks</span>
+<span class="sd">    #1 mitigation policy).</span>
+
+<span class="sd">    Degenerate inputs (empty curve, ``len(curve) &lt; window``) return a</span>
+<span class="sd">    report with ``n_intervals=0`` and ``passed=True``. The pass is</span>
+<span class="sd">    *vacuous* — there is not enough signal to assert anything — and is</span>
+<span class="sd">    only useful as a sentinel for unit tests of the helper itself; do</span>
+<span class="sd">    not rely on it to mask a too-short production run.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        curve: The reward curve produced by</span>
+<span class="sd">            :func:`concerto.training.ego_aht.train`. Only the</span>
+<span class="sd">            ``per_episode_ego_rewards`` field is read; the per-step</span>
+<span class="sd">            series is deliberately ignored because the assertion is</span>
+<span class="sd">            episode-aggregated (Huriot-Sibai 2025 Theorem 7 is stated</span>
+<span class="sd">            over the policy-improvement step, which lives at episode</span>
+<span class="sd">            granularity).</span>
+<span class="sd">        window: Window size (default :data:`DEFAULT_WINDOW`).</span>
+<span class="sd">        threshold: Pass threshold on the non-decreasing fraction</span>
+<span class="sd">            (default :data:`DEFAULT_THRESHOLD`).</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        Frozen :class:`GuaranteeReport`. Does NOT raise on failure — the</span>
+<span class="sd">        caller decides whether to fail the test, exit the CLI non-zero,</span>
+<span class="sd">        or just log the report.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">rewards</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">curve</span><span class="o">.</span><span class="n">per_episode_ego_rewards</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">rewards</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">window</span> <span class="ow">or</span> <span class="n">window</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">GuaranteeReport</span><span class="p">(</span>
+            <span class="n">window</span><span class="o">=</span><span class="n">window</span><span class="p">,</span>
+            <span class="n">threshold</span><span class="o">=</span><span class="n">threshold</span><span class="p">,</span>
+            <span class="n">n_intervals</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+            <span class="n">n_nondecreasing</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+            <span class="n">fraction</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
+            <span class="n">passed</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="c1"># Compute consecutive window means; n_intervals = len(means) - 1</span>
+    <span class="c1"># because we count *pairs* of adjacent windows.</span>
+    <span class="n">means</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">running_sum</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">rewards</span><span class="p">[:</span><span class="n">window</span><span class="p">])</span>
+    <span class="n">means</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">running_sum</span> <span class="o">/</span> <span class="n">window</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">window</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">rewards</span><span class="p">)):</span>
+        <span class="n">running_sum</span> <span class="o">+=</span> <span class="n">rewards</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">-</span> <span class="n">rewards</span><span class="p">[</span><span class="n">i</span> <span class="o">-</span> <span class="n">window</span><span class="p">]</span>
+        <span class="n">means</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">running_sum</span> <span class="o">/</span> <span class="n">window</span><span class="p">)</span>
+    <span class="n">n_intervals</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">means</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span>
+    <span class="n">n_nondecreasing</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="mi">1</span> <span class="k">for</span> <span class="n">prev</span><span class="p">,</span> <span class="n">nxt</span> <span class="ow">in</span> <span class="n">pairwise</span><span class="p">(</span><span class="n">means</span><span class="p">)</span> <span class="k">if</span> <span class="n">nxt</span> <span class="o">&gt;=</span> <span class="n">prev</span><span class="p">)</span>
+    <span class="n">fraction</span> <span class="o">=</span> <span class="n">n_nondecreasing</span> <span class="o">/</span> <span class="n">n_intervals</span> <span class="k">if</span> <span class="n">n_intervals</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="mf">1.0</span>
+    <span class="k">return</span> <span class="n">GuaranteeReport</span><span class="p">(</span>
+        <span class="n">window</span><span class="o">=</span><span class="n">window</span><span class="p">,</span>
+        <span class="n">threshold</span><span class="o">=</span><span class="n">threshold</span><span class="p">,</span>
+        <span class="n">n_intervals</span><span class="o">=</span><span class="n">n_intervals</span><span class="p">,</span>
+        <span class="n">n_nondecreasing</span><span class="o">=</span><span class="n">n_nondecreasing</span><span class="p">,</span>
+        <span class="n">fraction</span><span class="o">=</span><span class="n">fraction</span><span class="p">,</span>
+        <span class="n">passed</span><span class="o">=</span><span class="n">fraction</span> <span class="o">&gt;=</span> <span class="n">threshold</span><span class="p">,</span>
+    <span class="p">)</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h2 id="concerto.training.plot_reward_curve" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">plot_reward_curve</span>
+
+
+</h2>
+<div class="doc-signature highlight"><pre><span></span><code><span class="nf">plot_reward_curve</span><span class="p">(</span>
+    <span class="n">curve</span><span class="p">:</span> <span class="n">RewardCurve</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">report</span><span class="p">:</span> <span class="n">GuaranteeReport</span><span class="p">,</span>
+    <span class="n">out_dir</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Path</span><span class="p">,</span> <span class="n">Path</span><span class="p">]</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Emit <code>&lt;run_id&gt;.png</code> + <code>&lt;run_id&gt;.json</code> for the assertion plot (T4b.13; ADR-002 §Risks #1).</p>
+<p>Writes two files under <code>out_dir</code>:</p>
+<ul>
+<li><code>&lt;run_id&gt;.png</code>: matplotlib line plot of the per-episode reward
+  with the moving-window-of-<code>report.window</code> mean overlaid. The
+  report's <code>fraction</code> / <code>passed</code> are stamped into the title so
+  <code>docs/explanation/why-aht.md</code> can embed the figure unchanged.</li>
+<li><code>&lt;run_id&gt;.json</code>: machine-replayable sidecar carrying the raw
+  per-episode curve + the report. A future reader regenerates the
+  figure by replaying the JSON through this function.</li>
+</ul>
+<p><code>matplotlib</code> is imported lazily inside the function so the
+surrounding module stays importable in environments without the
+<code>viz</code> extra (Phase-0 CI, headless containers). Callers that need
+the plot must install the <code>viz</code> extra (<code>uv sync --extra viz</code>).</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <ul>
+        <li class="doc-section-item field-body">
+            <b><code>curve</code></b>
+              (<code><a class="autorefs autorefs-internal" title="RewardCurve
+
+
+  
+      dataclass
+   (concerto.training.ego_aht.RewardCurve)" href="#concerto.training.ego_aht.RewardCurve">RewardCurve</a></code>)
+          –
+          <div class="doc-md-description">
+            <p>The reward curve produced by
+:func:<code>concerto.training.ego_aht.train</code>. <code>curve.run_id</code>
+is used as the filename stem.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+            <b><code>report</code></b>
+              (<code><a class="autorefs autorefs-internal" title="GuaranteeReport
+
+
+  
+      dataclass
+   (concerto.training.empirical_guarantee.GuaranteeReport)" href="#concerto.training.GuaranteeReport">GuaranteeReport</a></code>)
+          –
+          <div class="doc-md-description">
+            <p>The :class:<code>GuaranteeReport</code> produced by
+:func:<code>assert_non_decreasing_window</code>. Stamped into the figure
+title and copied into the JSON sidecar.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+            <b><code>out_dir</code></b>
+              (<code><span title="pathlib.Path">Path</span></code>)
+          –
+          <div class="doc-md-description">
+            <p>Output directory. Created if missing.</p>
+          </div>
+        </li>
+    </ul>
+
+
+<p><span class="doc-section-title">Returns:</span></p>
+    <ul>
+        <li class="doc-section-item field-body">
+              <code><span title="pathlib.Path">Path</span></code>
+          –
+          <div class="doc-md-description">
+            <p><code>(png_path, json_path)</code> tuple — the absolute paths of the two</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+              <code><span title="pathlib.Path">Path</span></code>
+          –
+          <div class="doc-md-description">
+            <p>emitted files.</p>
+          </div>
+        </li>
+    </ul>
+
+
+            <details class="mkdocstrings-source">
+              <summary>Source code in <code>src/concerto/training/empirical_guarantee.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">177</span>
+<span class="normal">178</span>
+<span class="normal">179</span>
+<span class="normal">180</span>
+<span class="normal">181</span>
+<span class="normal">182</span>
+<span class="normal">183</span>
+<span class="normal">184</span>
+<span class="normal">185</span>
+<span class="normal">186</span>
+<span class="normal">187</span>
+<span class="normal">188</span>
+<span class="normal">189</span>
+<span class="normal">190</span>
+<span class="normal">191</span>
+<span class="normal">192</span>
+<span class="normal">193</span>
+<span class="normal">194</span>
+<span class="normal">195</span>
+<span class="normal">196</span>
+<span class="normal">197</span>
+<span class="normal">198</span>
+<span class="normal">199</span>
+<span class="normal">200</span>
+<span class="normal">201</span>
+<span class="normal">202</span>
+<span class="normal">203</span>
+<span class="normal">204</span>
+<span class="normal">205</span>
+<span class="normal">206</span>
+<span class="normal">207</span>
+<span class="normal">208</span>
+<span class="normal">209</span>
+<span class="normal">210</span>
+<span class="normal">211</span>
+<span class="normal">212</span>
+<span class="normal">213</span>
+<span class="normal">214</span>
+<span class="normal">215</span>
+<span class="normal">216</span>
+<span class="normal">217</span>
+<span class="normal">218</span>
+<span class="normal">219</span>
+<span class="normal">220</span>
+<span class="normal">221</span>
+<span class="normal">222</span>
+<span class="normal">223</span>
+<span class="normal">224</span>
+<span class="normal">225</span>
+<span class="normal">226</span>
+<span class="normal">227</span>
+<span class="normal">228</span>
+<span class="normal">229</span>
+<span class="normal">230</span>
+<span class="normal">231</span>
+<span class="normal">232</span>
+<span class="normal">233</span>
+<span class="normal">234</span>
+<span class="normal">235</span>
+<span class="normal">236</span>
+<span class="normal">237</span>
+<span class="normal">238</span>
+<span class="normal">239</span>
+<span class="normal">240</span>
+<span class="normal">241</span>
+<span class="normal">242</span>
+<span class="normal">243</span>
+<span class="normal">244</span>
+<span class="normal">245</span>
+<span class="normal">246</span>
+<span class="normal">247</span>
+<span class="normal">248</span>
+<span class="normal">249</span>
+<span class="normal">250</span>
+<span class="normal">251</span>
+<span class="normal">252</span>
+<span class="normal">253</span>
+<span class="normal">254</span>
+<span class="normal">255</span>
+<span class="normal">256</span>
+<span class="normal">257</span>
+<span class="normal">258</span>
+<span class="normal">259</span>
+<span class="normal">260</span>
+<span class="normal">261</span>
+<span class="normal">262</span>
+<span class="normal">263</span>
+<span class="normal">264</span>
+<span class="normal">265</span>
+<span class="normal">266</span>
+<span class="normal">267</span>
+<span class="normal">268</span>
+<span class="normal">269</span>
+<span class="normal">270</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">plot_reward_curve</span><span class="p">(</span>
+    <span class="n">curve</span><span class="p">:</span> <span class="n">RewardCurve</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">report</span><span class="p">:</span> <span class="n">GuaranteeReport</span><span class="p">,</span>
+    <span class="n">out_dir</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Path</span><span class="p">,</span> <span class="n">Path</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Emit ``&lt;run_id&gt;.png`` + ``&lt;run_id&gt;.json`` for the assertion plot (T4b.13; ADR-002 §Risks #1).</span>
+
+<span class="sd">    Writes two files under ``out_dir``:</span>
+
+<span class="sd">    - ``&lt;run_id&gt;.png``: matplotlib line plot of the per-episode reward</span>
+<span class="sd">      with the moving-window-of-``report.window`` mean overlaid. The</span>
+<span class="sd">      report&#39;s ``fraction`` / ``passed`` are stamped into the title so</span>
+<span class="sd">      ``docs/explanation/why-aht.md`` can embed the figure unchanged.</span>
+<span class="sd">    - ``&lt;run_id&gt;.json``: machine-replayable sidecar carrying the raw</span>
+<span class="sd">      per-episode curve + the report. A future reader regenerates the</span>
+<span class="sd">      figure by replaying the JSON through this function.</span>
+
+<span class="sd">    ``matplotlib`` is imported lazily inside the function so the</span>
+<span class="sd">    surrounding module stays importable in environments without the</span>
+<span class="sd">    ``viz`` extra (Phase-0 CI, headless containers). Callers that need</span>
+<span class="sd">    the plot must install the ``viz`` extra (``uv sync --extra viz``).</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        curve: The reward curve produced by</span>
+<span class="sd">            :func:`concerto.training.ego_aht.train`. ``curve.run_id``</span>
+<span class="sd">            is used as the filename stem.</span>
+<span class="sd">        report: The :class:`GuaranteeReport` produced by</span>
+<span class="sd">            :func:`assert_non_decreasing_window`. Stamped into the figure</span>
+<span class="sd">            title and copied into the JSON sidecar.</span>
+<span class="sd">        out_dir: Output directory. Created if missing.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        ``(png_path, json_path)`` tuple — the absolute paths of the two</span>
+<span class="sd">        emitted files.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Lazy import: matplotlib is in the ``viz`` extra (pyproject.toml),</span>
+    <span class="c1"># not the base install. Importing at module top would force every</span>
+    <span class="c1"># caller of ``concerto.training`` to install matplotlib even when</span>
+    <span class="c1"># they only want the assertion helper (e.g. CI, ``chamber-spike</span>
+    <span class="c1"># train --check-guarantee``).</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib</span>  <span class="c1"># noqa: PLC0415  # see lazy-import comment above.</span>
+
+    <span class="n">matplotlib</span><span class="o">.</span><span class="n">use</span><span class="p">(</span><span class="s2">&quot;Agg&quot;</span><span class="p">,</span> <span class="n">force</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>  <span class="c1"># noqa: PLC0415  # ditto.</span>
+
+    <span class="n">out_dir</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">rewards</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">curve</span><span class="o">.</span><span class="n">per_episode_ego_rewards</span><span class="p">)</span>
+
+    <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="mf">4.5</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">rewards</span><span class="p">:</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">rewards</span><span class="p">)),</span> <span class="n">rewards</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;per-episode ego reward&quot;</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.4</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">rewards</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="n">report</span><span class="o">.</span><span class="n">window</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">running_sum</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">rewards</span><span class="p">[:</span> <span class="n">report</span><span class="o">.</span><span class="n">window</span><span class="p">])</span>
+            <span class="n">means</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">running_sum</span> <span class="o">/</span> <span class="n">report</span><span class="o">.</span><span class="n">window</span><span class="p">]</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">report</span><span class="o">.</span><span class="n">window</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">rewards</span><span class="p">)):</span>
+                <span class="n">running_sum</span> <span class="o">+=</span> <span class="n">rewards</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">-</span> <span class="n">rewards</span><span class="p">[</span><span class="n">i</span> <span class="o">-</span> <span class="n">report</span><span class="o">.</span><span class="n">window</span><span class="p">]</span>
+                <span class="n">means</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">running_sum</span> <span class="o">/</span> <span class="n">report</span><span class="o">.</span><span class="n">window</span><span class="p">)</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
+                <span class="nb">range</span><span class="p">(</span><span class="n">report</span><span class="o">.</span><span class="n">window</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">rewards</span><span class="p">)),</span>
+                <span class="n">means</span><span class="p">,</span>
+                <span class="n">label</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;moving mean (window=</span><span class="si">{</span><span class="n">report</span><span class="o">.</span><span class="n">window</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">,</span>
+                <span class="n">linewidth</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+            <span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;episode index&quot;</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;ego reward (sum over episode)&quot;</span><span class="p">)</span>
+    <span class="n">status</span> <span class="o">=</span> <span class="s2">&quot;PASS&quot;</span> <span class="k">if</span> <span class="n">report</span><span class="o">.</span><span class="n">passed</span> <span class="k">else</span> <span class="s2">&quot;FAIL&quot;</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span>
+        <span class="sa">f</span><span class="s2">&quot;Empirical guarantee — run </span><span class="si">{</span><span class="n">curve</span><span class="o">.</span><span class="n">run_id</span><span class="si">}</span><span class="s2"> — </span><span class="si">{</span><span class="n">status</span><span class="si">}</span><span class="s2"> &quot;</span>
+        <span class="sa">f</span><span class="s2">&quot;(</span><span class="si">{</span><span class="n">report</span><span class="o">.</span><span class="n">n_nondecreasing</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">report</span><span class="o">.</span><span class="n">n_intervals</span><span class="si">}</span><span class="s2"> &quot;</span>
+        <span class="sa">f</span><span class="s2">&quot;non-decreasing, threshold=</span><span class="si">{</span><span class="n">report</span><span class="o">.</span><span class="n">threshold</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">)&quot;</span>
+    <span class="p">)</span>
+    <span class="k">if</span> <span class="n">rewards</span><span class="p">:</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="s2">&quot;lower right&quot;</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="n">visible</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.3</span><span class="p">)</span>
+    <span class="n">fig</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+    <span class="n">png_path</span> <span class="o">=</span> <span class="n">out_dir</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">curve</span><span class="o">.</span><span class="n">run_id</span><span class="si">}</span><span class="s2">.png&quot;</span>
+    <span class="n">fig</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">png_path</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">120</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">(</span><span class="n">fig</span><span class="p">)</span>
+
+    <span class="n">json_path</span> <span class="o">=</span> <span class="n">out_dir</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">curve</span><span class="o">.</span><span class="n">run_id</span><span class="si">}</span><span class="s2">.json&quot;</span>
+    <span class="n">json_path</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span>
+        <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span>
+            <span class="p">{</span>
+                <span class="s2">&quot;run_id&quot;</span><span class="p">:</span> <span class="n">curve</span><span class="o">.</span><span class="n">run_id</span><span class="p">,</span>
+                <span class="s2">&quot;per_episode_ego_rewards&quot;</span><span class="p">:</span> <span class="n">rewards</span><span class="p">,</span>
+                <span class="s2">&quot;report&quot;</span><span class="p">:</span> <span class="n">asdict</span><span class="p">(</span><span class="n">report</span><span class="p">),</span>
+            <span class="p">},</span>
+            <span class="n">sort_keys</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">indent</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+        <span class="p">),</span>
+        <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="n">png_path</span><span class="p">,</span> <span class="n">json_path</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
 
 
 
