@@ -5,7 +5,10 @@ edit_uri: edit/main/docs/
 
 theme:
   name: material
-  logo: assets/light_mode.png
+  # Material renders the header with the primary colour (default: indigo)
+  # for both ``default`` and ``slate`` palettes, so a single white-text
+  # variant works for both — no per-palette swap needed.
+  logo: assets/dark_mode.png
   features:
     - navigation.tabs
     - navigation.sections

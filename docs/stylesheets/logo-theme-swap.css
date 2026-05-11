@@ -1,7 +1,13 @@
-/* Swap the header logo to the dark-background variant when the user
-   selects the ``slate`` palette. The light variant is the default and
-   is configured via ``theme.logo`` in mkdocs.yml. */
-[data-md-color-scheme="slate"] .md-header__button.md-logo img,
-[data-md-color-scheme="slate"] .md-header__button.md-logo svg {
-  content: url("../assets/dark_mode.png");
+/* Header logo overrides.
+   Material's default logo height (~1.25 rem) makes the CONCERTO mark
+   illegibly small. Match it to the header height (~2.4 rem) and let
+   the natural 3:2 aspect of the source PNG drive the width. */
+.md-header__button.md-logo {
+  margin: 0 0.6rem;
+  padding: 0.2rem 0;
+}
+.md-header__button.md-logo img,
+.md-header__button.md-logo svg {
+  height: 2rem;
+  width: auto;
 }
