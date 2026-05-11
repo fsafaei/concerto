@@ -15,12 +15,15 @@ and partner (via :func:`chamber.partners.registry.load_partner`) and
 hands them to :func:`train`. That keeps every ``concerto.*`` arrow
 pointing only at lower layers.
 
-Trainer-factory injection: the HARL fork (T4b.4 to T4b.7) does not exist
-yet; :func:`train` therefore takes a ``trainer_factory`` callable so
-the loop is testable end-to-end before the fork lands. M4b-7 will swap
-the default to ``EgoAHTHAPPO.from_config``. Phase-0 ships
-:class:`RandomEgoTrainer` as the reference implementation that
-exercises the full plumbing without learnable parameters.
+Trainer-factory injection: this loop lives in ``concerto.*`` and so cannot
+import from ``chamber.*`` (project plan/10 §2). The real ego-PPO trainer
+(:class:`chamber.benchmarks.ego_ppo_trainer.EgoPPOTrainer`) wraps HARL's
+HAPPO and lives on the chamber side; the chamber-side
+:func:`chamber.benchmarks.training_runner.run_training` selects it as the
+default. :func:`train` therefore continues to accept ``trainer_factory``
+and falls back to :class:`RandomEgoTrainer` when called directly without
+an injected factory — which keeps the loop unit-testable inside
+``concerto.*`` without violating the dependency direction.
 
 ADR-002 risk-mitigation #1: this loop is the substrate the empirical-
 guarantee assertion runs against. Do not silently drop steps, mutate
@@ -51,8 +54,11 @@ if TYPE_CHECKING:  # pragma: no cover
 #: when :func:`train` is called without an explicit ``trainer_factory``.
 #:
 #: Matches :class:`chamber.envs.mpe_cooperative_push.MPECooperativePushEnv`'s
-#: action shape. The HARL trainer (M4b-7 / T4b.4-T4b.7) reads action dim
-#: from the env directly, so this constant is only a Phase-0 fallback.
+#: action shape. The real :class:`EgoPPOTrainer
+#: <chamber.benchmarks.ego_ppo_trainer.EgoPPOTrainer>` reads the action
+#: dim from the env directly, so this constant is only the Phase-0
+#: ``RandomEgoTrainer`` fallback used when :func:`train` is called
+#: without an injected ``trainer_factory``.
 _RANDOM_TRAINER_FALLBACK_ACTION_DIM: int = 2
 
 
@@ -127,12 +133,19 @@ class PartnerLike(Protocol):
 class EgoTrainer(Protocol):
     """Minimal contract the training loop expects of an ego trainer (T4b.11; ADR-002 §Decisions).
 
-    The HARL-fork :class:`EgoAHTHAPPO` will satisfy this Protocol once
-    M4b-7 lands; Phase-0's :class:`RandomEgoTrainer` already does. The
-    Protocol is intentionally tiny — :meth:`act` and :meth:`update` are
-    the only verbs the loop calls — so the seam stays small enough that
-    an external user can plug in their own algorithm without changing
-    :func:`train`.
+    Two concrete implementations satisfy this Protocol:
+
+    - :class:`chamber.benchmarks.ego_ppo_trainer.EgoPPOTrainer` — the
+      real HARL-HAPPO-backed ego-PPO trainer (M4b-8a / plan/05 §3.5),
+      and the default selected by
+      :func:`chamber.benchmarks.training_runner.run_training`.
+    - :class:`RandomEgoTrainer` — the Phase-0 reference fallback, used
+      by :func:`train` when no ``trainer_factory`` is injected.
+
+    The Protocol is intentionally tiny (:meth:`act` + :meth:`observe` +
+    :meth:`update` + :meth:`state_dict`) so the seam stays small enough
+    that an external user can plug in their own algorithm without
+    changing :func:`train`.
     """
 
     def act(
@@ -165,9 +178,10 @@ class EgoTrainer(Protocol):
 class TrainerFactory(Protocol):
     """Constructor that builds an :class:`EgoTrainer` (T4b.11; ADR-002 §Decisions).
 
-    The seam through which :func:`train` plugs in the algorithm. M4b-7
-    will replace the Phase-0 :class:`RandomEgoTrainer` factory with the
-    HARL fork's ``EgoAHTHAPPO.from_config``.
+    The seam through which :func:`train` plugs in the algorithm.
+    :func:`chamber.benchmarks.training_runner.run_training` selects
+    :meth:`EgoPPOTrainer.from_config <chamber.benchmarks.ego_ppo_trainer.EgoPPOTrainer.from_config>`
+    by default (M4b-8a / plan/05 §3.5).
     """
 
     def __call__(
@@ -289,9 +303,12 @@ def train(
             :func:`chamber.benchmarks.training_runner.build_partner`.
         trainer_factory: Constructor that builds the
             :class:`EgoTrainer`. When ``None`` (default), uses
-            :class:`RandomEgoTrainer` so the loop is exercisable end-to-
-            end before the HARL fork lands. M4b-7 swaps this default
-            to ``EgoAHTHAPPO.from_config``.
+            :class:`RandomEgoTrainer` — the Phase-0 in-``concerto.*``
+            fallback. The chamber-side wrapper
+            :func:`chamber.benchmarks.training_runner.run_training`
+            injects the M4b-8a
+            :class:`~chamber.benchmarks.ego_ppo_trainer.EgoPPOTrainer`
+            (the real HARL-HAPPO trainer; plan/05 §3.5) here.
         repo_root: Working-tree root for the run-metadata bundle
             (defaults to :func:`pathlib.Path.cwd`).
 

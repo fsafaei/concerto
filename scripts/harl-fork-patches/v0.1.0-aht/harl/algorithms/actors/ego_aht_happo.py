@@ -1,6 +1,27 @@
 # SPDX-License-Identifier: Apache-2.0
 """Ego-only HAPPO with frozen partner — CONCERTO ADR-002 risk-mitigation #1.
 
+**Reference scaffolding for external researchers.** The bodies of
+:meth:`EgoAHTHAPPO.from_config`, :meth:`collect_rollout`, and
+:meth:`update` are intentionally :class:`NotImplementedError`. CONCERTO's
+own training run does *not* depend on this class — the rollout / update
+logic lives on the CONCERTO side in
+``chamber.benchmarks.ego_ppo_trainer.EgoPPOTrainer`` (M4b-8a /
+plan/05 §3.5).
+
+The architectural rule: the fork stays a thin subclass with no
+project-specific concerns. Bridging
+:class:`concerto.training.config.EgoAHTConfig` (Pydantic, project-
+specific) to HARL's args dict, GAE, advantage normalization, and the
+per-step PPO update all belong on the CONCERTO side.
+
+External researchers who want a fork-internal trainer subclass can fill
+in the ``# UPSTREAM-VERIFY:`` markers below, following the same
+structure as :class:`EgoPPOTrainer
+<chamber.benchmarks.ego_ppo_trainer.EgoPPOTrainer>`. CONCERTO's
+``tests/property/test_advantage_decomposition.py`` documents the
+required GAE math (1e-6 against a hand-rolled reference).
+
 Drop-in subclass of upstream HARL's :class:`HAPPO` that adapts the
 sequential-update scheme to the AHT setting:
 
@@ -12,8 +33,8 @@ sequential-update scheme to the AHT setting:
 
 This loses Theorem 7's formal monotonic-improvement guarantee (which
 requires *all* agents to update simultaneously). CONCERTO verifies
-empirically (T4b.13) that per-epoch reward is non-decreasing on a
-2-agent MPE Cooperative-Push task on >=80% of moving-window-of-10
+empirically (T4b.13 / M4b-8b) that per-epoch reward is non-decreasing
+on a 2-agent MPE Cooperative-Push task on >=80% of moving-window-of-10
 intervals; if the assertion fails, the ADR-002 risk-mitigation #1
 trigger fires and Phase-0 stops to revisit the framework choice.
 
@@ -205,13 +226,20 @@ class EgoAHTHAPPO(HAPPO):
         env: Any,
         ego_uid: str,
     ) -> EgoAHTHAPPO:
-        """Construct from a CONCERTO :class:`EgoAHTConfig` (M4b-7 wires this up).
+        """Construct from a CONCERTO :class:`EgoAHTConfig` (intentionally unimplemented).
 
-        Bridges :class:`concerto.training.config.EgoAHTConfig` to HARL's
-        expected constructor args. This classmethod is the
-        :class:`concerto.training.ego_aht.TrainerFactory` callable that
-        :func:`concerto.training.ego_aht.train` plugs in via dependency
-        injection.
+        **Not used by CONCERTO's training run.** CONCERTO's run binds
+        :meth:`chamber.benchmarks.ego_ppo_trainer.EgoPPOTrainer.from_config`
+        instead — that adapter lives in CONCERTO because the bridge from
+        :class:`EgoAHTConfig` (Pydantic) to HARL's args dict is a
+        project-specific surface (plan/05 §3.5: the fork must stay free
+        of project-specific concerns).
+
+        This body is left as :class:`NotImplementedError` for two
+        reasons: (1) so the fork's surface remains a thin subclass per
+        the architecture rule; (2) so external researchers who want a
+        fork-internal trainer factory have a clear stub to fill in — see
+        the ``# UPSTREAM-VERIFY:`` markers below.
 
         Args:
             cfg: Validated :class:`concerto.training.config.EgoAHTConfig`.
@@ -220,6 +248,9 @@ class EgoAHTHAPPO(HAPPO):
 
         Returns:
             A constructed :class:`EgoAHTHAPPO` ready for the loop.
+
+        Raises:
+            NotImplementedError: Always — see the docstring rationale.
 
         # UPSTREAM-VERIFY: HARL's ``HAPPO.__init__`` arg list is the
         # blocker here. Map cfg.happo (lr / gamma / gae_lambda /
@@ -231,10 +262,12 @@ class EgoAHTHAPPO(HAPPO):
         """
         del cfg, env, ego_uid
         raise NotImplementedError(
-            "M4b-7: wire this once the upstream HAPPO constructor "
-            "signature is verified against the pinned v0.0.0-vendored "
-            "commit. The mapping from cfg.happo.* to HAPPO kwargs is "
-            "the only non-trivial piece."
+            "EgoAHTHAPPO.from_config is intentionally unimplemented; CONCERTO "
+            "uses chamber.benchmarks.ego_ppo_trainer.EgoPPOTrainer.from_config "
+            "instead (plan/05 §3.5). External researchers who want a "
+            "fork-internal trainer factory should fill this in following the "
+            "# UPSTREAM-VERIFY: markers above and "
+            "scripts/harl-fork-patches/README.md §'Inheritance contract'."
         )
 
 

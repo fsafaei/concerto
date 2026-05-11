@@ -73,3 +73,5 @@ Generated from docstrings via mkdocstrings.
 ::: chamber.benchmarks
 
 ::: chamber.benchmarks.training_runner
+
+::: chamber.benchmarks.ego_ppo_trainer
