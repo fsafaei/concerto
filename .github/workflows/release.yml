@@ -15,7 +15,7 @@ jobs:
       release_created: ${{ steps.release.outputs.release_created }}
       tag_name: ${{ steps.release.outputs.tag_name }}
     steps:
-      - uses: googleapis/release-please-action@a02a34c4d625211b5b44cf2a8e96ab3b5db9ef9e  # v4.1.3
+      - uses: googleapis/release-please-action@5c625bfb5d1ff62eadeeb3772007f7f66fdcf071  # v4.4.1
         id: release
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -31,13 +31,13 @@ jobs:
       id-token: write
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
-      - uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b  # v5.4.1
+      - uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b  # v8.1.0
         with:
           python-version: "3.11"
       - run: uv sync --group dev
       # Generate SBOM and attach to release
       - run: uv run cyclonedx-py environment -o sbom.spdx.json
-      - uses: softprops/action-gh-release@c95fe1489f96a7f55f2b4b87fab2f08e0e25dd4d  # v2.2.1
+      - uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65  # v2.6.2
         with:
           tag_name: ${{ needs.release-please.outputs.tag_name }}
           files: sbom.spdx.json
