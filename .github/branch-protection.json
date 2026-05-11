@@ -1,5 +1,5 @@
 {
-  "_note": "Apply this configuration to the 'main' branch via: gh api repos/concerto-org/concerto/branches/main/protection --method PUT --input .github/branch-protection.json",
+  "_note": "Apply to the 'main' branch via: gh api repos/fsafaei/concerto/branches/main/protection --method PUT --input .github/branch-protection.json",
   "required_status_checks": {
     "strict": true,
     "contexts": [
@@ -16,14 +16,18 @@
       "coverage-gate",
       "docs-build",
       "licence-scan",
-      "sbom"
+      "sbom",
+      "CodeQL",
+      "OSV-Scanner",
+      "verify-no-ai-mentions"
     ]
   },
   "enforce_admins": true,
   "required_pull_request_reviews": {
     "required_approving_review_count": 1,
     "dismiss_stale_reviews": true,
-    "require_code_owner_reviews": true
+    "require_code_owner_reviews": true,
+    "require_last_push_approval": true
   },
   "restrictions": null,
   "required_linear_history": true,
