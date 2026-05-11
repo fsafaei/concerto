@@ -1,5 +1,6 @@
 {
   "_note": "Apply to the 'main' branch via: gh api repos/fsafaei/concerto/branches/main/protection --method PUT --input .github/branch-protection.json",
+  "_solo_maintainer_note": "required_approving_review_count is 0 because the project currently has one maintainer who cannot self-approve PRs (enforce_admins is true). When a second human reviewer exists, flip ALL THREE together: required_approving_review_count -> 1, require_code_owner_reviews -> true, require_last_push_approval -> true.",
   "required_status_checks": {
     "strict": true,
     "contexts": [
@@ -24,10 +25,10 @@
   },
   "enforce_admins": true,
   "required_pull_request_reviews": {
-    "required_approving_review_count": 1,
+    "required_approving_review_count": 0,
     "dismiss_stale_reviews": true,
-    "require_code_owner_reviews": true,
-    "require_last_push_approval": true
+    "require_code_owner_reviews": false,
+    "require_last_push_approval": false
   },
   "restrictions": null,
   "required_linear_history": true,
