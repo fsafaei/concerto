@@ -257,15 +257,17 @@ Security policy: [`SECURITY.md`](SECURITY.md).
 
 If you use CONCERTO or CHAMBER in your research, please cite the
 preprint. Until the preprint is on arXiv (target: 2026&#x2011;06), cite
-the software:
+the archived software release via its Zenodo DOI:
 
 ```bibtex
-@misc{safaei2026concerto,
+@software{safaei2026concerto,
   author       = {Safaei, Farhad},
   title        = {{CONCERTO} and {CHAMBER}: Contact-rich Coordination
                   with Opaque, Heterogeneous Teammates},
   year         = {2026},
-  howpublished = {\url{https://github.com/fsafaei/concerto}},
+  publisher    = {Zenodo},
+  doi          = {10.5281/zenodo.20128469},
+  url          = {https://doi.org/10.5281/zenodo.20128469},
   note         = {arXiv preprint forthcoming},
 }
 ```

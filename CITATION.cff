@@ -14,11 +14,11 @@ authors:
     given-names: Farhad
     email: safaei.farhad@gmail.com
     orcid: ""
-version: 0.0.1.dev0
-date-released: "2026-05-08"
+version: 0.1.1
+date-released: "2026-05-11"
 license: Apache-2.0
-repository-code: "https://github.com/concerto-org/concerto"
-doi: ""
+repository-code: "https://github.com/fsafaei/concerto"
+doi: "10.5281/zenodo.20128469"
 keywords:
   - multi-robot
   - ad-hoc-teamwork
