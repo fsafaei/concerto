@@ -1,6 +1,6 @@
 site_name: CONCERTO
-site_url: https://concerto-org.github.io/concerto/
-repo_url: https://github.com/concerto-org/concerto
+site_url: https://fsafaei.github.io/concerto/
+repo_url: https://github.com/fsafaei/concerto
 edit_uri: edit/main/docs/
 
 theme:
