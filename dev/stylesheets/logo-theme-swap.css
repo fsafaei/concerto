@@ -1,0 +1,7 @@
+/* Swap the header logo to the dark-background variant when the user
+   selects the ``slate`` palette. The light variant is the default and
+   is configured via ``theme.logo`` in mkdocs.yml. */
+[data-md-color-scheme="slate"] .md-header__button.md-logo img,
+[data-md-color-scheme="slate"] .md-header__button.md-logo svg {
+  content: url("../assets/dark_mode.png");
+}
