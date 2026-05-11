@@ -12,4 +12,8 @@ and from ``concerto.safety`` / ``concerto.training``. The reverse
 direction is forbidden (CI-enforced).
 """
 
-__version__ = "0.0.1.dev0"
+from importlib.metadata import version as _dist_version
+
+# CHAMBER ships in the same wheel as CONCERTO, so the distribution name is
+# ``concerto`` (see ``[tool.hatch.build.targets.wheel]`` in pyproject.toml).
+__version__ = _dist_version("concerto")
