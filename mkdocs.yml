@@ -5,6 +5,7 @@ edit_uri: edit/main/docs/
 
 theme:
   name: material
+  logo: assets/light_mode.png
   features:
     - navigation.tabs
     - navigation.sections
@@ -15,6 +16,9 @@ theme:
   palette:
     - scheme: default
     - scheme: slate
+
+extra_css:
+  - stylesheets/logo-theme-swap.css
 
 plugins:
   - search
