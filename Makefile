@@ -1,5 +1,6 @@
 .PHONY: install test lint typecheck format docs docs-build \
-        verify-licences verify-no-ai-mentions sbom smoke verify
+        verify-licences verify-no-ai-mentions sbom smoke verify \
+        empirical-guarantee
 
 install:
 	uv sync --all-extras --group dev
@@ -37,5 +38,8 @@ sbom:
 
 smoke:
 	uv run pytest -m smoke -x -v
+
+empirical-guarantee:
+	uv run pytest tests/integration/test_empirical_guarantee.py -m slow --no-cov -v
 
 verify: lint typecheck test docs-build verify-licences verify-no-ai-mentions
