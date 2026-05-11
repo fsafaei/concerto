@@ -1,6 +1,6 @@
 [project]
 name = "concerto"
-version = "0.1.0"
+version = "0.1.1"
 description = "Heterogeneous Multi-Robot Ad-Hoc Teamwork — benchmark + safety stack."
 readme = "README.md"
 requires-python = ">=3.11,<3.13"
