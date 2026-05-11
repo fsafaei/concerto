@@ -42,7 +42,6 @@ jobs:
 
   codeql:
     name: CodeQL
-    if: false  # re-enable once the repo is public and Code Scanning is turned on
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
@@ -53,7 +52,6 @@ jobs:
 
   scorecard:
     name: OSSF Scorecard
-    if: false  # ossf/scorecard-action requires a public repo; re-enable when public
     runs-on: ubuntu-latest
     permissions:
       security-events: write
@@ -68,12 +66,11 @@ jobs:
         with:
           results_file: scorecard-results.sarif
           results_format: sarif
-          publish_results: false  # requires public repo + Code Scanning; re-enable when public
+          publish_results: true  # repo is public; results are submitted to the OSSF dashboard
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
         with:
           name: scorecard-results
           path: scorecard-results.sarif
       - uses: github/codeql-action/upload-sarif@68bde559dea0fdcac2102bfdf6230c5f70eb485e  # v4.35.4
-        continue-on-error: true  # requires Code Scanning; re-enable once repo is public
         with:
           sarif_file: scorecard-results.sarif
