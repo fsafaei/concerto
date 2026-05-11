@@ -1,17 +1,18 @@
 <p align="center">
-  <!--
   <a href="https://github.com/fsafaei/concerto">
-    <img src="assets/banner.svg" alt="CONCERTO and CHAMBER" width="640"/>
+    <picture>
+      <source media="(prefers-color-scheme: dark)" srcset="docs/assets/dark_mode.png">
+      <img alt="CONCERTO" src="docs/assets/light_mode.png" width="420"/>
+    </picture>
   </a>
-  -->
-  <h1 align="center">CONCERTO &amp; CHAMBER</h1>
-  <p align="center">
-    <em>Contact-rich coordination with opaque, heterogeneous teammates &mdash;
-    with high-probability safety bounds.</em><br/>
-    <strong>CONCERTO</strong> is the method.
-    <strong>CHAMBER</strong> is the benchmark.
-    We evaluate CONCERTO on CHAMBER.
-  </p>
+</p>
+
+<p align="center">
+  <em>Contact-rich coordination with opaque, heterogeneous teammates &mdash;
+  with high-probability safety bounds.</em><br/>
+  <strong>CONCERTO</strong> is the method.
+  <strong>CHAMBER</strong> is the benchmark.
+  We evaluate CONCERTO on CHAMBER.
 </p>
 
 <p align="center">
