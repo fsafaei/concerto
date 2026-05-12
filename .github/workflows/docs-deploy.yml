@@ -22,7 +22,7 @@ jobs:
           python-version: "3.11"
       - run: uv sync --extra docs --group dev
       - run: git config user.name "Farhad Safaei"
-      - run: git config user.email "safaei.farhad@gmail.com"
+      - run: git config user.email "cooperative.physical.ai@gmail.com"
       # Deploy the build to gh-pages under the "dev" version and alias it as "latest".
       # mike will create the gh-pages branch on first run if it does not exist.
       - run: uv run mike deploy --push --update-aliases dev latest

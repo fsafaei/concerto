@@ -5,7 +5,7 @@
 We take the security of CONCERTO and CHAMBER seriously. If you believe you have
 found a security vulnerability, please report it privately to:
 
-**safaei.farhad@gmail.com**
+**cooperative.physical.ai@gmail.com**
 
 Please do **not** open a public GitHub issue for security reports.
 
