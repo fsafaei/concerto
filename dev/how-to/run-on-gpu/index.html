@@ -8,13 +8,13 @@
       
       
       
-        <link rel="canonical" href="https://fsafaei.github.io/concerto/dev/how-to/run-spike/">
+        <link rel="canonical" href="https://fsafaei.github.io/concerto/dev/how-to/run-on-gpu/">
       
       
-        <link rel="prev" href="../add-filter/">
+        <link rel="prev" href="../run-spike/">
       
       
-        <link rel="next" href="../run-on-gpu/">
+        <link rel="next" href="../../reference/api/">
       
       
         
@@ -25,7 +25,7 @@
     
     
       
-        <title>Run a spike with a custom hypothesis - CONCERTO</title>
+        <title>Run on a GPU host - CONCERTO</title>
       
     
     
@@ -80,7 +80,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#how-to-run-a-spike-with-a-custom-hypothesis" class="md-skip">
+        <a href="#how-to-run-concerto-on-a-gpu-host" class="md-skip">
           Skip to content
         </a>
       
@@ -113,7 +113,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Run a spike with a custom hypothesis
+              Run on a GPU host
             
           </span>
         </div>
@@ -638,37 +638,10 @@
                 
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Run a spike with a custom hypothesis
-  
-
-    
-  </span>
-  
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../run-spike/" class="md-nav__link">
         
   
   
@@ -684,109 +657,6 @@
   
 
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#steps-sketch" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Steps (sketch)
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#walkthrough-comm-degradation-stage-2-cm" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Walkthrough: comm degradation (Stage-2 CM)
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Walkthrough: comm degradation (Stage-2 CM)">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#1-inspect-the-available-profiles" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        1. Inspect the available profiles
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#2-compose-the-wrapper-stack" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        2. Compose the wrapper stack
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#3-step-the-env-and-read-the-degraded-packet" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        3. Step the env and read the degraded packet
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#4-pull-telemetry-for-the-spike-report" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        4. Pull telemetry for the spike report
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#5-verify-the-saturation-guard" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        5. Verify the saturation guard
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -796,10 +666,19 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../run-on-gpu/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
@@ -815,6 +694,7 @@
   
 
       </a>
+      
     </li>
   
 
@@ -1239,97 +1119,6 @@
     
   
   
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#steps-sketch" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Steps (sketch)
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#walkthrough-comm-degradation-stage-2-cm" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Walkthrough: comm degradation (Stage-2 CM)
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Walkthrough: comm degradation (Stage-2 CM)">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#1-inspect-the-available-profiles" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        1. Inspect the available profiles
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#2-compose-the-wrapper-stack" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        2. Compose the wrapper stack
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#3-step-the-env-and-read-the-degraded-packet" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        3. Step the env and read the degraded packet
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#4-pull-telemetry-for-the-spike-report" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        4. Pull telemetry for the spike report
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#5-verify-the-saturation-guard" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        5. Verify the saturation guard
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-    </ul>
-  
 </nav>
                   </div>
                 </div>
@@ -1345,7 +1134,7 @@
 
 
   
-    <a href="https://github.com/fsafaei/concerto/edit/main/docs/how-to/run-spike.md" title="Edit this page" class="md-content__button md-icon" rel="edit">
+    <a href="https://github.com/fsafaei/concerto/edit/main/docs/how-to/run-on-gpu.md" title="Edit this page" class="md-content__button md-icon" rel="edit">
       
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 20H6V4h7v5h5v3.1l2-2V8l-6-6H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h4zm10.2-7c.1 0 .3.1.4.2l1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2m0 3.9L14.1 23H12v-2.1l6.1-6.1z"/></svg>
     </a>
@@ -1353,83 +1142,35 @@
   
 
 
-<h1 id="how-to-run-a-spike-with-a-custom-hypothesis">How-to: Run a spike with a custom hypothesis</h1>
-<div class="admonition note">
-<p class="admonition-title">Phase-0 placeholder</p>
-<p>The full spike harness lands in M5. The walkthrough below shows the
-M2 comm-degradation surface that the Stage-2 CM spike consumes;
-other axes get their own walkthroughs as they ship.</p>
+<h1 id="how-to-run-concerto-on-a-gpu-host">How to run CONCERTO on a GPU host</h1>
+<div class="admonition info">
+<p class="admonition-title">Coming in M4b-9b</p>
+<p>The full reproduction recipe (Dockerfile, prerequisites, the
+zoo-seed run that publishes the M4a partner checkpoint) lands in
+M4b-9b. This page is a deliberate placeholder linked from
+<a href="../../tutorials/hello-spike/"><code>docs/tutorials/hello-spike.md</code></a>'s
+"On a GPU host" footer so the cross-reference doesn't break the
+<code>mkdocs --strict</code> build.</p>
 </div>
-<h2 id="steps-sketch">Steps (sketch)</h2>
-<ol>
-<li>Copy the nearest existing pre-registration YAML from
-   <code>spikes/preregistration/</code> as a template.</li>
-<li>Edit the hypothesis, threshold, and comparison conditions.</li>
-<li>Commit the YAML and create a git tag (<code>stage&lt;n&gt;-&lt;axis&gt;-&lt;date&gt;</code>).</li>
-<li>Run <code>chamber-spike run --axis &lt;axis&gt;</code>.</li>
-</ol>
-<p><em>(Full content added in M5.)</em></p>
-<h2 id="walkthrough-comm-degradation-stage-2-cm">Walkthrough: comm degradation (Stage-2 CM)</h2>
-<p>The Stage-2 CM spike sweeps the URLLC + 3GPP Release 17 anchored
-profiles shipped in <code>chamber.comm.URLLC_3GPP_R17</code>. The six rows are
-the pre-registered conditions; do not vary them post-launch (per
-<a href="../../reference/adrs/">ADR-007</a> §Stage 2 CM and the project's
-pre-registration discipline).</p>
-<h3 id="1-inspect-the-available-profiles">1. Inspect the available profiles</h3>
-<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">chamber.comm</span><span class="w"> </span><span class="kn">import</span> <span class="n">URLLC_3GPP_R17</span>
-
-<span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">profile</span> <span class="ow">in</span> <span class="n">URLLC_3GPP_R17</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-    <span class="nb">print</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">profile</span><span class="p">)</span>
+<p>In the meantime, the Stage-0 training adapter
+(<a href="../../reference/api/"><code>make_stage0_training_env</code></a>) and the
+<a href="https://github.com/fsafaei/concerto/blob/main/configs/training/ego_aht_happo/stage0_smoke.yaml"><code>stage0_smoke.yaml</code></a>
+Hydra config are already wired up. On a Vulkan-capable Linux box with
+the M4b-9b dependencies installed, the entry point will be:</p>
+<div class="highlight"><pre><span></span><code>make<span class="w"> </span>zoo-seed-gpu
 </code></pre></div>
-<p>The output lists the six rows in order of aggressiveness
-(<code>ideal</code> → <code>saturation</code>). The <code>saturation</code> row is held aside for the
-QP-saturation property test (it is <em>expected</em> to trip the
-<code>ChamberCommQPSaturationWarning</code>).</p>
-<h3 id="2-compose-the-wrapper-stack">2. Compose the wrapper stack</h3>
-<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">chamber.comm</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
-    <span class="n">CommDegradationWrapper</span><span class="p">,</span>
-    <span class="n">FixedFormatCommChannel</span><span class="p">,</span>
-    <span class="n">URLLC_3GPP_R17</span><span class="p">,</span>
-<span class="p">)</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">chamber.envs</span><span class="w"> </span><span class="kn">import</span> <span class="n">CommShapingWrapper</span>
-
-<span class="c1"># Pick a profile from the pre-registered table; do not edit values.</span>
-<span class="n">profile</span> <span class="o">=</span> <span class="n">URLLC_3GPP_R17</span><span class="p">[</span><span class="s2">&quot;factory&quot;</span><span class="p">]</span>
-
-<span class="n">channel</span> <span class="o">=</span> <span class="n">CommDegradationWrapper</span><span class="p">(</span>
-    <span class="n">FixedFormatCommChannel</span><span class="p">(),</span>
-    <span class="n">profile</span><span class="p">,</span>
-    <span class="n">tick_period_ms</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>        <span class="c1"># 1 ms per env tick</span>
-    <span class="n">root_seed</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>               <span class="c1"># determinism (P6)</span>
-<span class="p">)</span>
-
-<span class="n">env</span> <span class="o">=</span> <span class="n">CommShapingWrapper</span><span class="p">(</span><span class="n">inner_env</span><span class="p">,</span> <span class="n">channel</span><span class="o">=</span><span class="n">channel</span><span class="p">)</span>
-</code></pre></div>
-<h3 id="3-step-the-env-and-read-the-degraded-packet">3. Step the env and read the degraded packet</h3>
-<div class="highlight"><pre><span></span><code><span class="n">obs</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">reset</span><span class="p">(</span><span class="n">seed</span><span class="o">=</span><span class="mi">42</span><span class="p">)</span>
-<span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1000</span><span class="p">):</span>
-    <span class="n">obs</span><span class="p">,</span> <span class="o">*</span><span class="n">_</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">step</span><span class="p">(</span><span class="n">action</span><span class="p">)</span>
-    <span class="n">packet</span> <span class="o">=</span> <span class="n">obs</span><span class="p">[</span><span class="s2">&quot;comm&quot;</span><span class="p">]</span>
-    <span class="c1"># Safety filter (M3) reads packet[&quot;pose&quot;][uid] / packet[&quot;aoi&quot;][uid].</span>
-</code></pre></div>
-<h3 id="4-pull-telemetry-for-the-spike-report">4. Pull telemetry for the spike report</h3>
-<p>The wrapper exposes a <code>stats</code> snapshot for the report consumer:</p>
-<div class="highlight"><pre><span></span><code><span class="nb">print</span><span class="p">(</span><span class="n">channel</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">dropped</span><span class="p">,</span> <span class="n">channel</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">delivered</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">channel</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">latency_ticks</span><span class="p">[:</span><span class="mi">10</span><span class="p">])</span>
-</code></pre></div>
-<p>The Stage-2 CM spike's three-table emitter feeds these counters into
-the per-condition column of the report
-(<a href="../../reference/adrs/">ADR-014</a> §Decision).</p>
-<h3 id="5-verify-the-saturation-guard">5. Verify the saturation guard</h3>
-<p>Before launching a long sweep, run the saturation guard locally to
-confirm the chosen profile honours the ADR-004 OSCBF target:</p>
-<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">chamber.comm</span><span class="w"> </span><span class="kn">import</span> <span class="n">saturation_guard</span>
-
-<span class="n">saturation_guard</span><span class="p">(</span><span class="n">profile</span><span class="p">)</span>  <span class="c1"># silent for ideal/urllc/factory/wifi/lossy</span>
-</code></pre></div>
-<p>The <code>saturation</code> row deliberately fires
-<code>ChamberCommQPSaturationWarning</code> — that is the
-<a href="../../reference/adrs/">ADR-006</a> §Risks R5 contract.</p>
+<p>That target is added in M4b-9b. Until then, this page documents the
+contract:</p>
+<ul>
+<li>ADR-001 §Risks: SAPIEN / ManiSkill v3 require a Vulkan-capable GPU.</li>
+<li>CPU-only hosts will receive a clear
+  <code>ChamberEnvCompatibilityError</code> from
+  <a href="../../reference/api/"><code>make_stage0_training_env</code></a> — the same error
+  shape <a href="../../reference/api/"><code>make_stage0_env</code></a> already emits.</li>
+<li>The training-side glue lives in
+  <a href="../../reference/api/"><code>chamber.benchmarks.stage0_smoke_adapter</code></a>;
+  see ADR-001 §Validation criteria for the role split.</li>
+</ul>
 
 
 

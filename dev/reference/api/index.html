@@ -11,7 +11,7 @@
         <link rel="canonical" href="https://fsafaei.github.io/concerto/dev/reference/api/">
       
       
-        <link rel="prev" href="../../how-to/run-spike/">
+        <link rel="prev" href="../../how-to/run-on-gpu/">
       
       
         <link rel="next" href="../adrs/">
@@ -526,6 +526,8 @@
       
         
       
+        
+      
     
     
     
@@ -642,6 +644,34 @@
     
   
     Run a spike with a custom hypothesis
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../how-to/run-on-gpu/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Run on a GPU host
   
 
     
@@ -29538,9 +29568,13 @@ here. M4b-7 will extend the dispatch with the HARL fork's
 <ul>
 <li><code>"mpe_cooperative_push"</code> → :class:<code>MPECooperativePushEnv</code> (T4b.13's
   empirical-guarantee env).</li>
-<li><code>"stage0_smoke"</code> → reserved for T4b.3 (HARL fork's
-  <code>concerto_env_adapter</code>); raises :class:<code>NotImplementedError</code>
-  until that lands.</li>
+<li><code>"stage0_smoke"</code> → :func:<code>chamber.benchmarks.stage0_smoke_adapter.make_stage0_training_env</code>
+  (T4b.3 / plan/05 §3.4). Constructs the rig-validated ADR-001
+  3-robot env and adapts it to the
+  :class:<code>~concerto.training.ego_aht.EnvLike</code> shape. Requires a
+  Vulkan-capable GPU; raises
+  :class:<code>chamber.envs.errors.ChamberEnvCompatibilityError</code> on
+  CPU-only hosts.</li>
 </ul>
 
 
@@ -29596,10 +29630,11 @@ for P6 reproducibility.</p>
           </div>
         </li>
         <li class="doc-section-item field-body">
-              <code><span title="NotImplementedError">NotImplementedError</span></code>
+              <code><span title="ChamberEnvCompatibilityError">ChamberEnvCompatibilityError</span></code>
             –
           <div class="doc-md-description">
-            <p>If <code>env_cfg.task == "stage0_smoke"</code>.</p>
+            <p>If <code>env_cfg.task == "stage0_smoke"</code>
+and SAPIEN / Vulkan is unavailable (see ADR-001 §Risks).</p>
           </div>
         </li>
     </ul>
@@ -29607,8 +29642,7 @@ for P6 reproducibility.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/chamber/benchmarks/training_runner.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">49</span>
-<span class="normal">50</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">50</span>
 <span class="normal">51</span>
 <span class="normal">52</span>
 <span class="normal">53</span>
@@ -29647,16 +29681,25 @@ for P6 reproducibility.</p>
 <span class="normal">86</span>
 <span class="normal">87</span>
 <span class="normal">88</span>
-<span class="normal">89</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">build_env</span><span class="p">(</span><span class="n">env_cfg</span><span class="p">:</span> <span class="n">EnvConfig</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">root_seed</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">EnvLike</span><span class="p">:</span>
+<span class="normal">89</span>
+<span class="normal">90</span>
+<span class="normal">91</span>
+<span class="normal">92</span>
+<span class="normal">93</span>
+<span class="normal">94</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">build_env</span><span class="p">(</span><span class="n">env_cfg</span><span class="p">:</span> <span class="n">EnvConfig</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">root_seed</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">EnvLike</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Construct the env from :class:`EnvConfig` (T4b.11; ADR-002 §Decisions; plan/05 §3.5).</span>
 
 <span class="sd">    Phase-0 dispatch table:</span>
 
 <span class="sd">    - ``&quot;mpe_cooperative_push&quot;`` → :class:`MPECooperativePushEnv` (T4b.13&#39;s</span>
 <span class="sd">      empirical-guarantee env).</span>
-<span class="sd">    - ``&quot;stage0_smoke&quot;`` → reserved for T4b.3 (HARL fork&#39;s</span>
-<span class="sd">      ``concerto_env_adapter``); raises :class:`NotImplementedError`</span>
-<span class="sd">      until that lands.</span>
+<span class="sd">    - ``&quot;stage0_smoke&quot;`` → :func:`chamber.benchmarks.stage0_smoke_adapter.make_stage0_training_env`</span>
+<span class="sd">      (T4b.3 / plan/05 §3.4). Constructs the rig-validated ADR-001</span>
+<span class="sd">      3-robot env and adapts it to the</span>
+<span class="sd">      :class:`~concerto.training.ego_aht.EnvLike` shape. Requires a</span>
+<span class="sd">      Vulkan-capable GPU; raises</span>
+<span class="sd">      :class:`chamber.envs.errors.ChamberEnvCompatibilityError` on</span>
+<span class="sd">      CPU-only hosts.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        env_cfg: The validated :class:`~concerto.training.config.EnvConfig`.</span>
@@ -29670,7 +29713,8 @@ for P6 reproducibility.</p>
 
 <span class="sd">    Raises:</span>
 <span class="sd">        ValueError: If ``env_cfg.task`` is not in the dispatch table.</span>
-<span class="sd">        NotImplementedError: If ``env_cfg.task == &quot;stage0_smoke&quot;``.</span>
+<span class="sd">        ChamberEnvCompatibilityError: If ``env_cfg.task == &quot;stage0_smoke&quot;``</span>
+<span class="sd">            and SAPIEN / Vulkan is unavailable (see ADR-001 §Risks).</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="n">env_cfg</span><span class="o">.</span><span class="n">task</span> <span class="o">==</span> <span class="s2">&quot;mpe_cooperative_push&quot;</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">MPECooperativePushEnv</span><span class="p">(</span>
@@ -29679,14 +29723,13 @@ for P6 reproducibility.</p>
             <span class="n">root_seed</span><span class="o">=</span><span class="n">root_seed</span><span class="p">,</span>
         <span class="p">)</span>
     <span class="k">if</span> <span class="n">env_cfg</span><span class="o">.</span><span class="n">task</span> <span class="o">==</span> <span class="s2">&quot;stage0_smoke&quot;</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
-            <span class="s2">&quot;stage0_smoke env is wired up via the HARL fork&#39;s &quot;</span>
-            <span class="s2">&quot;concerto_env_adapter (T4b.3); see ADR-002 §Decisions and &quot;</span>
-            <span class="s2">&quot;phase0_reading_kit/plan/05-training-stack.md §3.4.&quot;</span>
+        <span class="k">return</span> <span class="n">make_stage0_training_env</span><span class="p">(</span>
+            <span class="n">agent_uids</span><span class="o">=</span><span class="n">env_cfg</span><span class="o">.</span><span class="n">agent_uids</span><span class="p">,</span>
+            <span class="n">episode_length</span><span class="o">=</span><span class="n">env_cfg</span><span class="o">.</span><span class="n">episode_length</span><span class="p">,</span>
+            <span class="n">root_seed</span><span class="o">=</span><span class="n">root_seed</span><span class="p">,</span>
         <span class="p">)</span>
     <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-        <span class="sa">f</span><span class="s2">&quot;Unknown env task </span><span class="si">{</span><span class="n">env_cfg</span><span class="o">.</span><span class="n">task</span><span class="si">!r}</span><span class="s2">; supported: &#39;mpe_cooperative_push&#39;, &quot;</span>
-        <span class="s2">&quot;&#39;stage0_smoke&#39; (deferred to T4b.3).&quot;</span>
+        <span class="sa">f</span><span class="s2">&quot;Unknown env task </span><span class="si">{</span><span class="n">env_cfg</span><span class="o">.</span><span class="n">task</span><span class="si">!r}</span><span class="s2">; supported: &#39;mpe_cooperative_push&#39;, &#39;stage0_smoke&#39;.&quot;</span>
     <span class="p">)</span>
 </code></pre></div></td></tr></table></div>
             </details>
@@ -29762,12 +29805,7 @@ classes) applies uniformly.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/chamber/benchmarks/training_runner.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 92</span>
-<span class="normal"> 93</span>
-<span class="normal"> 94</span>
-<span class="normal"> 95</span>
-<span class="normal"> 96</span>
-<span class="normal"> 97</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 97</span>
 <span class="normal"> 98</span>
 <span class="normal"> 99</span>
 <span class="normal">100</span>
@@ -29789,7 +29827,12 @@ classes) applies uniformly.</p>
 <span class="normal">116</span>
 <span class="normal">117</span>
 <span class="normal">118</span>
-<span class="normal">119</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">build_partner</span><span class="p">(</span><span class="n">partner_cfg</span><span class="p">:</span> <span class="n">PartnerConfig</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">PartnerLike</span><span class="p">:</span>
+<span class="normal">119</span>
+<span class="normal">120</span>
+<span class="normal">121</span>
+<span class="normal">122</span>
+<span class="normal">123</span>
+<span class="normal">124</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">build_partner</span><span class="p">(</span><span class="n">partner_cfg</span><span class="p">:</span> <span class="n">PartnerConfig</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">PartnerLike</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Construct the frozen partner from :class:`PartnerConfig` (ADR-009 §Decision).</span>
 
 <span class="sd">    Builds a :class:`~chamber.partners.api.PartnerSpec` from the config</span>
@@ -29934,12 +29977,7 @@ via its <code>from_config</code> classmethod.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/chamber/benchmarks/training_runner.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">122</span>
-<span class="normal">123</span>
-<span class="normal">124</span>
-<span class="normal">125</span>
-<span class="normal">126</span>
-<span class="normal">127</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">127</span>
 <span class="normal">128</span>
 <span class="normal">129</span>
 <span class="normal">130</span>
@@ -29979,7 +30017,12 @@ via its <code>from_config</code> classmethod.</p>
 <span class="normal">164</span>
 <span class="normal">165</span>
 <span class="normal">166</span>
-<span class="normal">167</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">run_training</span><span class="p">(</span>
+<span class="normal">167</span>
+<span class="normal">168</span>
+<span class="normal">169</span>
+<span class="normal">170</span>
+<span class="normal">171</span>
+<span class="normal">172</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">run_training</span><span class="p">(</span>
     <span class="n">cfg</span><span class="p">:</span> <span class="n">EgoAHTConfig</span><span class="p">,</span>
     <span class="o">*</span><span class="p">,</span>
     <span class="n">trainer_factory</span><span class="p">:</span> <span class="n">TrainerFactory</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>

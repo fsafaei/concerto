@@ -574,6 +574,17 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#on-a-gpu-host" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        On a GPU host
+      
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -626,6 +637,8 @@
   
     
     
+      
+        
       
         
       
@@ -749,6 +762,34 @@
     
   
     Run a spike with a custom hypothesis
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../how-to/run-on-gpu/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Run on a GPU host
   
 
     
@@ -1242,6 +1283,17 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#on-a-gpu-host" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        On a GPU host
+      
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -1370,6 +1422,21 @@ wall-time).</p>
 <a href="../../reference/api/"><code>RandomEgoTrainer</code></a> reference (smoke fixture only —
 does not learn) instead, construct it explicitly and pass it as
 <code>trainer_factory</code> to <code>run_training</code>.</p>
+<h2 id="on-a-gpu-host">On a GPU host</h2>
+<p>The same Hydra config + the same <code>run_training</code> call drive the ADR-001
+Stage-0 rig-validated env (<code>panda_wristcam</code> + <code>fetch</code> +
+<code>allegro_hand_right</code>) on a Vulkan-capable Linux box. The only
+overrides are <code>env.task=stage0_smoke</code> and (under the runtime block,
+added in M4b-9b) <code>runtime.device=cuda</code>; the
+<code>configs/training/ego_aht_happo/stage0_smoke.yaml</code> config ships those
+defaults. On a CPU-only host the env constructor surfaces a
+<code>ChamberEnvCompatibilityError</code> from
+<a href="../../reference/api/"><code>make_stage0_training_env</code></a>, so the tutorial above is
+the right entry point for Mac / CPU users.</p>
+<p>Reproduction recipe (Dockerfile, prerequisites, the zoo-seed run that
+publishes the M4a partner checkpoint) lives in
+<a href="../../how-to/run-on-gpu/"><code>docs/how-to/run-on-gpu.md</code></a>, wired up in
+M4b-9b.</p>
 
 
 
