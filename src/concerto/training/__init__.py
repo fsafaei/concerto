@@ -7,17 +7,27 @@ provides the determinism harness required by project principle P6.
 """
 
 from concerto.training.empirical_guarantee import (
+    DEFAULT_ALPHA,
+    DEFAULT_MIN_EPISODES,
     DEFAULT_THRESHOLD,
     DEFAULT_WINDOW,
     GuaranteeReport,
+    SlopeReport,
     assert_non_decreasing_window,
+    assert_positive_learning_slope,
     plot_reward_curve,
+    plot_slope_curve,
 )
 
 __all__ = [
+    "DEFAULT_ALPHA",
+    "DEFAULT_MIN_EPISODES",
     "DEFAULT_THRESHOLD",
     "DEFAULT_WINDOW",
     "GuaranteeReport",
+    "SlopeReport",
     "assert_non_decreasing_window",
+    "assert_positive_learning_slope",
     "plot_reward_curve",
+    "plot_slope_curve",
 ]
