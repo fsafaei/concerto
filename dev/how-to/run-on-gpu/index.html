@@ -678,6 +678,24 @@
         
       
       
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Run on a GPU host
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
       <a href="./" class="md-nav__link md-nav__link--active">
         
   
@@ -694,6 +712,102 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#prerequisites" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Prerequisites
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#1-clone" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Clone
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-build-the-gpu-image" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Build the GPU image
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-smoke-test-the-rig" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Smoke-test the rig
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-run-the-zoo-seed-training" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Run the zoo-seed training
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-publish-verify" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Publish + verify
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#troubleshooting" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Troubleshooting
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
       
     </li>
   
@@ -1119,6 +1233,91 @@
     
   
   
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#prerequisites" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Prerequisites
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#1-clone" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Clone
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-build-the-gpu-image" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Build the GPU image
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-smoke-test-the-rig" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Smoke-test the rig
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-run-the-zoo-seed-training" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Run the zoo-seed training
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-publish-verify" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Publish + verify
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#troubleshooting" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Troubleshooting
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
 </nav>
                   </div>
                 </div>
@@ -1143,33 +1342,156 @@
 
 
 <h1 id="how-to-run-concerto-on-a-gpu-host">How to run CONCERTO on a GPU host</h1>
-<div class="admonition info">
-<p class="admonition-title">Coming in M4b-9b</p>
-<p>The full reproduction recipe (Dockerfile, prerequisites, the
-zoo-seed run that publishes the M4a partner checkpoint) lands in
-M4b-9b. This page is a deliberate placeholder linked from
-<a href="../../tutorials/hello-spike/"><code>docs/tutorials/hello-spike.md</code></a>'s
-"On a GPU host" footer so the cross-reference doesn't break the
-<code>mkdocs --strict</code> build.</p>
-</div>
-<p>In the meantime, the Stage-0 training adapter
-(<a href="../../reference/api/"><code>make_stage0_training_env</code></a>) and the
-<a href="https://github.com/fsafaei/concerto/blob/main/configs/training/ego_aht_happo/stage0_smoke.yaml"><code>stage0_smoke.yaml</code></a>
-Hydra config are already wired up. On a Vulkan-capable Linux box with
-the M4b-9b dependencies installed, the entry point will be:</p>
-<div class="highlight"><pre><span></span><code>make<span class="w"> </span>zoo-seed-gpu
-</code></pre></div>
-<p>That target is added in M4b-9b. Until then, this page documents the
-contract:</p>
+<p>This page is the recipe for reproducing the M4a draft-zoo seed
+checkpoint on a Linux + CUDA box. The Mac-CPU tutorial in
+<a href="../../tutorials/hello-spike/"><code>tutorials/hello-spike.md</code></a> covers
+day-to-day development; this page is what an outside contributor with
+a fresh CUDA-capable Linux box and Docker installed reads to
+reproduce the canonical Phase-0 artefact.</p>
+<p>Reproduction takes ~2 hours of GPU wall-time + ~10 minutes of build
+time. It targets <a href="../../reference/adrs/">ADR-001 §Validation criteria</a> (the
+rig-validated <code>panda_wristcam</code> + <code>fetch</code> + <code>allegro_hand_right</code> env)
+and writes the Phase-0 M4a draft-zoo seed checkpoint
+(<code>local://artifacts/happo_seed7_step50k.pt</code>, per
+<a href="../../reference/adrs/">ADR-009 §Decision</a>).</p>
+<h2 id="prerequisites">Prerequisites</h2>
 <ul>
-<li>ADR-001 §Risks: SAPIEN / ManiSkill v3 require a Vulkan-capable GPU.</li>
-<li>CPU-only hosts will receive a clear
-  <code>ChamberEnvCompatibilityError</code> from
-  <a href="../../reference/api/"><code>make_stage0_training_env</code></a> — the same error
-  shape <a href="../../reference/api/"><code>make_stage0_env</code></a> already emits.</li>
-<li>The training-side glue lives in
-  <a href="../../reference/api/"><code>chamber.benchmarks.stage0_smoke_adapter</code></a>;
-  see ADR-001 §Validation criteria for the role split.</li>
+<li><strong>Linux</strong> (Ubuntu 22.04 or equivalent). Windows + WSL2 has not been
+  validated.</li>
+<li><strong>NVIDIA GPU</strong> with CUDA 12.x driver. The image uses the
+  <code>nvidia/cuda:12.2.2-cudnn8-runtime-ubuntu22.04</code> base; minimum
+  driver version per NVIDIA's CUDA compatibility table is <strong>535.54</strong>.</li>
+<li>
+<p><strong>Docker</strong> ≥ 24, with <a href="https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html"><strong><code>nvidia-container-toolkit</code></strong></a>
+  installed and configured so <code>--gpus all</code> works:</p>
+<div class="highlight"><pre><span></span><code>docker<span class="w"> </span>run<span class="w"> </span>--rm<span class="w"> </span>--gpus<span class="w"> </span>all<span class="w"> </span>nvidia/cuda:12.2.2-cudnn8-runtime-ubuntu22.04<span class="w"> </span>nvidia-smi
+</code></pre></div>
+<p>If this prints <code>nvidia-smi</code> output, the GPU is wired correctly.
+- <strong><code>make</code></strong>, <strong><code>git</code></strong>, <strong>~12 GB of disk</strong> for the image + caches.</p>
+</li>
+</ul>
+<p>If your box doesn't satisfy the above, the
+<a href="../../tutorials/hello-spike/"><code>tutorials/hello-spike.md</code></a> CPU recipe
+runs the same training stack against the <code>mpe_cooperative_push</code> env
+on Mac / Linux laptop CPU in ~5 minutes.</p>
+<h2 id="1-clone">1. Clone</h2>
+<div class="highlight"><pre><span></span><code>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/fsafaei/concerto.git
+<span class="nb">cd</span><span class="w"> </span>concerto
+</code></pre></div>
+<h2 id="2-build-the-gpu-image">2. Build the GPU image</h2>
+<p>The repository ships two Dockerfiles:</p>
+<ul>
+<li><code>Dockerfile.cpu</code> — Ubuntu 22.04 base; no CUDA. Used by the
+  <code>.devcontainer/</code> Mac dev box. <strong>Not</strong> what you want here.</li>
+<li><code>Dockerfile.gpu</code> — <code>nvidia/cuda</code> base with three stages
+  (<code>dev</code> / <code>prod</code> / <code>gpu-host</code>). The <code>gpu-host</code> stage installs
+  <code>libvulkan1</code> + <code>mesa-vulkan-drivers</code> + <code>libegl1</code> + <code>libgles2</code>,
+  which SAPIEN / ManiSkill v3 need to initialise the rig
+  (<a href="../../reference/adrs/">ADR-001 §Risks</a>).</li>
+</ul>
+<p>Build the <code>gpu-host</code> stage:</p>
+<div class="highlight"><pre><span></span><code>docker<span class="w"> </span>build<span class="w"> </span>-f<span class="w"> </span>Dockerfile.gpu<span class="w"> </span>--target<span class="w"> </span>gpu-host<span class="w"> </span>-t<span class="w"> </span>concerto:gpu<span class="w"> </span>.
+</code></pre></div>
+<p>First build takes ~10 minutes (driven by <code>uv sync --frozen
+--no-dev</code>); subsequent builds reuse the apt + uv layer caches.</p>
+<h2 id="3-smoke-test-the-rig">3. Smoke-test the rig</h2>
+<p>Inside a container against your GPU, run the ADR-001 Stage-0 smoke
+test. This verifies the rig is talking to SAPIEN correctly before you
+spend GPU wall-time on a 100k-frame training run.</p>
+<div class="highlight"><pre><span></span><code>docker<span class="w"> </span>run<span class="w"> </span>--rm<span class="w"> </span>--gpus<span class="w"> </span>all<span class="w"> </span>-v<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$PWD</span><span class="s2">:/workspace&quot;</span><span class="w"> </span>-w<span class="w"> </span>/workspace<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>concerto:gpu<span class="w"> </span>make<span class="w"> </span>smoke
+</code></pre></div>
+<p>Expected: <code>Tier-2 real-SAPIEN</code> tests pass (the Mac CI run skips them
+via <code>sapien_gpu_available()</code>; here they execute).</p>
+<h2 id="4-run-the-zoo-seed-training">4. Run the zoo-seed training</h2>
+<p>This is the load-bearing step. It runs the 100k-frame ego-AHT HAPPO
+training on the Stage-0 env at <code>seed=7</code>, asserts the empirical-
+guarantee slope test (<a href="../../reference/adrs/">ADR-002 §Risks #1</a>; issue #62), and
+publishes the step-50000 checkpoint under the canonical name
+<a href="../../reference/adrs/">ADR-009 §Decision</a> specifies:</p>
+<div class="highlight"><pre><span></span><code>docker<span class="w"> </span>run<span class="w"> </span>--rm<span class="w"> </span>--gpus<span class="w"> </span>all<span class="w"> </span>-v<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$PWD</span><span class="s2">:/workspace&quot;</span><span class="w"> </span>-w<span class="w"> </span>/workspace<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>concerto:gpu<span class="w"> </span>make<span class="w"> </span>zoo-seed-gpu
+</code></pre></div>
+<p>What the target does (<code>scripts/repro/zoo_seed.sh</code>):</p>
+<ol>
+<li>Probes the device. Loud-fails (exit 2) if <code>torch_device() !=
+   "cuda"</code>.</li>
+<li>Invokes
+   <code>chamber-spike train --config configs/training/ego_aht_happo/stage0_smoke.yaml --check-guarantee</code>.</li>
+<li>On training success, copies
+   <code>./artifacts/artifacts/&lt;run_id&gt;_step50000.pt</code> (+ sidecar) to the
+   M4a-contract path
+   <code>./artifacts/artifacts/happo_seed7_step50k.pt</code>.</li>
+<li>Computes the SHA-256 of the published <code>.pt</code> and writes it to
+   <code>scripts/repro/artifacts/happo_seed7_step50k.pt.sha256</code>.</li>
+<li>Prints a closing line directing you to commit the SHA file via
+   the Branch-5 manifest PR.</li>
+</ol>
+<p>Exit codes:</p>
+<table>
+<thead>
+<tr>
+<th>Code</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0</td>
+<td>Trip-wire cleared, artefact published, SHA written.</td>
+</tr>
+<tr>
+<td>1</td>
+<td>Training failed or the published artefact wasn't found.</td>
+</tr>
+<tr>
+<td>2</td>
+<td>CPU-only host (<code>torch_device() != "cuda"</code>).</td>
+</tr>
+<tr>
+<td>3</td>
+<td>Empirical-guarantee slope test fired. <strong>Do not</strong> lower α or shorten the budget; open a <code>scope-revision</code> issue.</td>
+</tr>
+</tbody>
+</table>
+<p>Total GPU wall-time on a single consumer GPU: ~2 hours, plus
+~1 minute of artefact handling.</p>
+<h2 id="5-publish-verify">5. Publish + verify</h2>
+<p>After the run, you should have on disk:</p>
+<ul>
+<li><code>./artifacts/artifacts/happo_seed7_step50k.pt</code> (the .pt payload)</li>
+<li><code>./artifacts/artifacts/happo_seed7_step50k.pt.json</code> (the SHA-256</li>
+<li>provenance sidecar, per
+  <a href="../../reference/api/"><code>save_checkpoint</code></a>)</li>
+<li><code>scripts/repro/artifacts/happo_seed7_step50k.pt.sha256</code> (the
+  hex digest, ready for <code>git commit</code>)</li>
+</ul>
+<p>Commit the <code>.sha256</code> file and the <code>.pt</code> + sidecar (the M4a Phase-0
+draft-zoo artefacts the project hosts out-of-tree per
+<a href="../../reference/api/">plan/04 §3.8</a>) via the Branch-5 manifest PR
+(T4b.14). After that PR merges, future contributors verify the
+artefact integrity with:</p>
+<div class="highlight"><pre><span></span><code>make<span class="w"> </span>zoo-seed-verify
+</code></pre></div>
+<p>which loads the <code>.pt</code> through
+<a href="../../reference/api/"><code>load_checkpoint</code></a> and asserts the recomputed
+SHA-256 matches the committed manifest.</p>
+<h2 id="troubleshooting">Troubleshooting</h2>
+<ul>
+<li><strong><code>Cannot connect to the Docker daemon</code></strong> — Docker is not running.
+  Start it with <code>sudo systemctl start docker</code> (Linux) or via Docker
+  Desktop.</li>
+<li><strong><code>could not select device driver "" with capabilities: [gpu]</code></strong> —
+  <code>nvidia-container-toolkit</code> is not installed or not configured. See
+  <a href="https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html">NVIDIA's install guide</a>.</li>
+<li><strong><code>ChamberEnvCompatibilityError: SAPIEN/Vulkan initialisation failed</code></strong> —
+  the container started but couldn't reach the GPU's Vulkan stack.
+  Check the host driver version (must be ≥535.54) and that
+  <code>--gpus all</code> is on the <code>docker run</code> line.</li>
+<li><strong>Training trip-wire fires (exit 3)</strong> — read
+  <a href="../../explanation/why-aht/"><code>docs/explanation/why-aht.md</code></a> for what
+  the assertion measures + see issue #62 for the diagnostic protocol.
+  Do <strong>not</strong> widen the gate.</li>
 </ul>
 
 
