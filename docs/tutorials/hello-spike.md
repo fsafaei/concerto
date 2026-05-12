@@ -122,6 +122,24 @@ To opt out of the default and run with the parameter-free
 does not learn) instead, construct it explicitly and pass it as
 `trainer_factory` to `run_training`.
 
+## On a GPU host
+
+The same Hydra config + the same `run_training` call drive the ADR-001
+Stage-0 rig-validated env (`panda_wristcam` + `fetch` +
+`allegro_hand_right`) on a Vulkan-capable Linux box. The only
+overrides are `env.task=stage0_smoke` and (under the runtime block,
+added in M4b-9b) `runtime.device=cuda`; the
+`configs/training/ego_aht_happo/stage0_smoke.yaml` config ships those
+defaults. On a CPU-only host the env constructor surfaces a
+`ChamberEnvCompatibilityError` from
+[`make_stage0_training_env`][stage0-adapter], so the tutorial above is
+the right entry point for Mac / CPU users.
+
+Reproduction recipe (Dockerfile, prerequisites, the zoo-seed run that
+publishes the M4a partner checkpoint) lives in
+[`docs/how-to/run-on-gpu.md`](../how-to/run-on-gpu.md), wired up in
+M4b-9b.
+
 [adr-002]: ../reference/adrs.md
 [mpe-env]: ../reference/api.md
 [ego-ppo-trainer]: ../reference/api.md
@@ -129,3 +147,4 @@ does not learn) instead, construct it explicitly and pass it as
 [run-context]: ../reference/api.md
 [save-checkpoint]: ../reference/api.md
 [load-checkpoint]: ../reference/api.md
+[stage0-adapter]: ../reference/api.md
