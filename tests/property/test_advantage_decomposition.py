@@ -19,11 +19,13 @@ The claim under test:
     updates), the ego-PPO advantages computed by
     :class:`chamber.benchmarks.ego_ppo_trainer.EgoPPOTrainer` are
     bit-for-bit equivalent to single-agent PPO advantages computed on
-    the (rewards, values, dones) sequence the ego experienced.
+    the (rewards, values, next_values, boundaries) sequence the ego
+    experienced.
 
 The reference implementations (:func:`reference_gae` +
 :func:`reference_normalize`) are derived from the math in
-Schulman et al. 2016 §6.3 + Schulman et al. 2017 §6 — *not* copied from
+Schulman et al. 2016 §6.3, Schulman et al. 2017 §6, and Pardo et al.
+2017 ("Time Limits in Reinforcement Learning") — *not* copied from
 HARL or from the trainer module. This is what makes the comparison
 non-tautological.
 
@@ -64,15 +66,15 @@ from concerto.training.config import (
 def reference_gae(
     rewards: np.ndarray,
     values: np.ndarray,
-    dones: np.ndarray,
+    next_values: np.ndarray,
+    episode_boundaries: np.ndarray,
     *,
-    bootstrap_value: float,
     gamma: float,
     gae_lambda: float,
 ) -> np.ndarray:
-    """Hand-rolled single-agent GAE (Schulman et al. 2016 eq. 16).
+    """Hand-rolled single-agent GAE with per-step bootstrap (Schulman 2016 eq. 16; Pardo 2017 §4).
 
-    Derived from the paper, *not* from HARL or from
+    Derived from the papers, *not* from HARL or from
     :func:`chamber.benchmarks.ego_ppo_trainer.compute_gae`. This is the
     ``A_t`` reference the property test compares the trainer's output
     against. Two implementations of the same recurrence — independent —
@@ -80,19 +82,24 @@ def reference_gae(
 
     Recurrence::
 
-        delta_t = r_t + gamma * V(s_{t+1}) * (1 - done_t) - V(s_t)
-        A_t     = delta_t + gamma * lambda * (1 - done_t) * A_{t+1}
+        delta_t = r_t + gamma * next_values[t]                    - V(s_t)
+        A_t     = delta_t + gamma * lambda * (1 - boundary_t)     * A_{t+1}
         A_T     = delta_T
 
+    where ``next_values[t]`` is the caller-supplied bootstrap target
+    (``V(s_{t+1})`` for non-boundary steps; ``V(s_truncated_final_t)`` at
+    truncations; ``0`` at terminations; bootstrap at the rollout's last
+    step) and ``boundary_t`` zeros GAE propagation across episode
+    boundaries (Pardo 2017: advantages from a *different* episode must
+    not flow back into this episode).
     """
     n = rewards.shape[0]
     out = np.zeros(n, dtype=np.float32)
     next_advantage = 0.0
     for t in range(n - 1, -1, -1):
-        v_next = bootstrap_value if t == n - 1 else float(values[t + 1])
-        nonterminal = 0.0 if bool(dones[t]) else 1.0
-        delta = float(rewards[t]) + gamma * v_next * nonterminal - float(values[t])
-        next_advantage = delta + gamma * gae_lambda * nonterminal * next_advantage
+        delta = float(rewards[t]) + gamma * float(next_values[t]) - float(values[t])
+        propagate = 0.0 if bool(episode_boundaries[t]) else 1.0
+        next_advantage = delta + gamma * gae_lambda * propagate * next_advantage
         out[t] = np.float32(next_advantage)
     return out
 
@@ -123,29 +130,32 @@ _LENGTHS = st.integers(min_value=1, max_value=50)
 def _synthetic_trajectory(  # type: ignore[no-untyped-def]
     draw,
 ):
-    """Hypothesis composite: ``(rewards, values, dones, bootstrap, gamma, lam)``.
+    """Hypothesis composite: ``(rewards, values, next_values, boundaries, gamma, lam)``.
 
-    Generates a length-``n`` trajectory of finite floats, with at most one
-    interior terminal (the rest of the dones are False) plus the final
-    step's done flag drawn freely. This shape covers the full GAE-truncation
-    surface: pure rollout (no done), terminal-at-end (typical truncation),
-    and one mid-episode terminal (cross-episode rollout).
+    Generates a length-``n`` trajectory of finite floats covering the
+    full GAE surface: pure rollout (no boundary), boundary-at-end
+    (typical truncation), and at most one mid-episode boundary (cross-
+    episode rollout). ``next_values`` is drawn freely from the same
+    range as ``values`` since the math under test does not constrain
+    its relationship to ``values`` — the trainer's responsibility is
+    constructing a *meaningful* ``next_values`` array, which is tested
+    separately in ``test_ego_ppo_trainer.py``. Here we exercise the
+    pure GAE math against arbitrary inputs.
     """
     n = draw(_LENGTHS)
     rewards = np.array([draw(_FLOAT_FINITE) for _ in range(n)], dtype=np.float32)
     values = np.array([draw(_VALUE_FINITE) for _ in range(n)], dtype=np.float32)
-    dones = np.zeros(n, dtype=np.bool_)
+    next_values = np.array([draw(_VALUE_FINITE) for _ in range(n)], dtype=np.float32)
+    boundaries = np.zeros(n, dtype=np.bool_)
     if n > 1:
-        # Optional interior terminal at a random index.
-        interior_terminal_idx = draw(st.integers(min_value=-1, max_value=n - 2))
-        if interior_terminal_idx >= 0:
-            dones[interior_terminal_idx] = True
-    # Final-step done is drawn freely (truncated vs continuing rollout).
-    dones[-1] = draw(st.booleans())
-    bootstrap = draw(_VALUE_FINITE)
+        # Optional interior boundary at a random index.
+        interior_boundary_idx = draw(st.integers(min_value=-1, max_value=n - 2))
+        if interior_boundary_idx >= 0:
+            boundaries[interior_boundary_idx] = True
+    boundaries[-1] = draw(st.booleans())
     gamma = draw(_GAMMA_STRATEGY)
     lam = draw(_LAMBDA_STRATEGY)
-    return rewards, values, dones, bootstrap, gamma, lam
+    return rewards, values, next_values, boundaries, gamma, lam
 
 
 @settings(
@@ -170,20 +180,20 @@ def test_compute_gae_matches_hand_rolled_reference(  # type: ignore[no-untyped-d
     relative differences below this are noise from intermediate float
     promotions in numpy.
     """
-    rewards, values, dones, bootstrap, gamma, lam = trajectory
+    rewards, values, next_values, boundaries, gamma, lam = trajectory
     trainer_adv = compute_gae(
         rewards,
         values,
-        dones,
-        bootstrap_value=bootstrap,
+        next_values,
+        boundaries,
         gamma=gamma,
         gae_lambda=lam,
     )
     ref_adv = reference_gae(
         rewards,
         values,
-        dones,
-        bootstrap_value=bootstrap,
+        next_values,
+        boundaries,
         gamma=gamma,
         gae_lambda=lam,
     )
@@ -228,32 +238,95 @@ def test_compute_gae_constant_zero_reward_yields_zero_advantage() -> None:
     n = 16
     rewards = np.zeros(n, dtype=np.float32)
     values = np.zeros(n, dtype=np.float32)
-    dones = np.zeros(n, dtype=np.bool_)
-    adv = compute_gae(rewards, values, dones, bootstrap_value=0.0, gamma=0.99, gae_lambda=0.95)
+    next_values = np.zeros(n, dtype=np.float32)
+    boundaries = np.zeros(n, dtype=np.bool_)
+    adv = compute_gae(rewards, values, next_values, boundaries, gamma=0.99, gae_lambda=0.95)
     np.testing.assert_array_equal(adv, np.zeros(n, dtype=np.float32))
 
 
 def test_compute_gae_terminal_resets_bootstrap_correctly() -> None:
-    """plan/05 §5: a terminal step zeroes the next-value bootstrap, isolating per-segment GAE."""
-    # Two-segment trajectory: terminal at step 2.
+    """plan/05 §5: a termination zeros the bootstrap and stops cross-segment GAE propagation."""
+    # Two-segment trajectory: terminal at step 2. Termination means
+    # next_values[2] = 0 (true terminal: no value after) and
+    # boundaries[2] = True (don't propagate A_3 back into A_2).
     rewards = np.array([1.0, 1.0, 1.0, 1.0], dtype=np.float32)
     values = np.array([0.0, 0.0, 0.0, 0.0], dtype=np.float32)
-    dones = np.array([False, False, True, False], dtype=np.bool_)
-    bootstrap = 0.0
-    gamma, lam = 0.5, 1.0  # closed-form: A_t = sum_{k>=t} (gamma)^{k-t} r_k within the segment
-
-    adv = compute_gae(
-        rewards, values, dones, bootstrap_value=bootstrap, gamma=gamma, gae_lambda=lam
-    )
-    # Segment 1 (steps 0,1,2): truncated to length 3.
-    #   A_2 = r_2 = 1.0
+    next_values = np.array([0.0, 0.0, 0.0, 0.0], dtype=np.float32)
+    boundaries = np.array([False, False, True, False], dtype=np.bool_)
+    gamma, lam = 0.5, 1.0
+    adv = compute_gae(rewards, values, next_values, boundaries, gamma=gamma, gae_lambda=lam)
+    # Segment 1 (steps 0,1,2):
+    #   A_2 = r_2 + gamma * next_values[2] - V_2 = 1.0
     #   A_1 = r_1 + gamma * A_2 = 1 + 0.5 * 1 = 1.5
     #   A_0 = r_0 + gamma * A_1 = 1 + 0.5 * 1.5 = 1.75
-    # Segment 2 (step 3 only):
-    #   A_3 = r_3 + gamma * bootstrap = 1.0 (bootstrap=0; not terminal at last step,
-    #   so nonterminal=1 but bootstrap is 0).
+    # Segment 2 (step 3 only): not a boundary, next_values[3]=0 (bootstrap=0).
+    #   A_3 = r_3 + gamma * 0 - V_3 = 1.0
     expected = np.array([1.75, 1.5, 1.0, 1.0], dtype=np.float32)
     np.testing.assert_allclose(adv, expected, atol=1e-6, rtol=0.0)
+
+
+def test_compute_gae_truncation_bootstrap_is_not_termination() -> None:
+    """Pardo 2017 / issue #62: time-limit truncation bootstraps with V(s_next), unlike termination.
+
+    Two adjacent trajectories differ only in whether step 2 is treated
+    as a true termination (next_values[2]=0) or a time-limit truncation
+    (next_values[2]=10.0, i.e. V(s_truncated_final)). The boundary flag
+    is True in both cases (stops propagation), but the per-step delta
+    at step 2 differs:
+
+    - Termination:   delta_2 = r_2 + gamma * 0    - V_2 = 1
+    - Truncation:    delta_2 = r_2 + gamma * 10.0 - V_2 = 1 + gamma * 10
+
+    With gamma=0.5, that's a 5.0 reward-unit difference at step 2, and
+    it back-propagates through the segment's GAE:
+
+    - Termination:   A_0 = 1.75, A_1 = 1.5, A_2 = 1.0
+    - Truncation:    A_2 = 1 + 0.5*10 = 6.0
+                     A_1 = 1 + 0.5*6 = 4.0
+                     A_0 = 1 + 0.5*4 = 3.0
+    """
+    rewards = np.array([1.0, 1.0, 1.0, 1.0], dtype=np.float32)
+    values = np.array([0.0, 0.0, 0.0, 0.0], dtype=np.float32)
+    boundaries = np.array([False, False, True, False], dtype=np.bool_)
+    gamma, lam = 0.5, 1.0
+
+    # Case 1 — termination at step 2 (next_values[2]=0).
+    next_values_term = np.array([0.0, 0.0, 0.0, 0.0], dtype=np.float32)
+    adv_term = compute_gae(
+        rewards, values, next_values_term, boundaries, gamma=gamma, gae_lambda=lam
+    )
+    np.testing.assert_allclose(
+        adv_term, np.array([1.75, 1.5, 1.0, 1.0], dtype=np.float32), atol=1e-6
+    )
+
+    # Case 2 — truncation at step 2 (next_values[2] = V(s_trunc_final) = 10.0).
+    next_values_trunc = np.array([0.0, 0.0, 10.0, 0.0], dtype=np.float32)
+    adv_trunc = compute_gae(
+        rewards, values, next_values_trunc, boundaries, gamma=gamma, gae_lambda=lam
+    )
+    np.testing.assert_allclose(
+        adv_trunc, np.array([3.0, 4.0, 6.0, 1.0], dtype=np.float32), atol=1e-6
+    )
+
+
+def test_compute_gae_boundary_blocks_propagation_across_episodes() -> None:
+    """Pardo 2017: advantages from after an episode boundary do not flow back across it.
+
+    Two segments of length 2 with a boundary at step 1. The second
+    segment's per-step rewards (steps 2-3) must not contribute to the
+    first segment's advantages (A_0, A_1).
+    """
+    rewards = np.array([0.0, 0.0, 100.0, 100.0], dtype=np.float32)
+    values = np.array([0.0, 0.0, 0.0, 0.0], dtype=np.float32)
+    next_values = np.array([0.0, 0.0, 0.0, 0.0], dtype=np.float32)
+    boundaries = np.array([False, True, False, False], dtype=np.bool_)
+    adv = compute_gae(rewards, values, next_values, boundaries, gamma=0.99, gae_lambda=0.95)
+    # Segment 1 (steps 0, 1): all rewards = 0 and bootstrap = 0 → A_0 = A_1 = 0.
+    # Segment 2 (steps 2, 3): A_3 = 100, A_2 = 100 + 0.99*0.95*100 = 100 + 94.05 = 194.05.
+    assert adv[0] == pytest.approx(0.0, abs=1e-6)
+    assert adv[1] == pytest.approx(0.0, abs=1e-6)
+    assert adv[2] == pytest.approx(194.05, abs=1e-3)
+    assert adv[3] == pytest.approx(100.0, abs=1e-6)
 
 
 def test_normalize_advantages_constant_input_does_not_crash() -> None:
@@ -271,9 +344,9 @@ def test_normalize_advantages_constant_input_does_not_crash() -> None:
 # ---------------------------------------------------------------------------
 # Integration: the trainer's actual update path uses these module-level
 # functions. The test below rolls out a real trainer on the MPE env with a
-# real frozen partner, captures the (rewards, values, dones) the trainer
-# buffered, then re-runs the reference math and checks bit-for-bit agreement
-# with the trainer's actual computation.
+# real frozen partner, captures the (rewards, values, terminated, truncated,
+# truncation_bootstraps) the trainer buffered, then re-runs the reference
+# math and checks bit-for-bit agreement with the trainer's actual computation.
 # ---------------------------------------------------------------------------
 
 
@@ -316,14 +389,14 @@ def test_ego_trainer_advantages_match_reference_on_frozen_partner_rollout() -> N
     """plan/05 §5 integration: trainer's GAE on a real rollout matches the reference.
 
     Drives a 16-step rollout against the real MPE env + real frozen
-    heuristic partner. After the rollout, computes the trainer's
-    advantages via :func:`compute_gae` (which is what the trainer's
-    :meth:`update` uses), then independently computes
-    :func:`reference_gae` on the same buffered ``(rewards, values, dones)``,
-    then asserts equality.
+    heuristic partner. After the rollout, reconstructs the same per-step
+    ``next_values`` and ``boundaries`` arrays the trainer's
+    :meth:`EgoPPOTrainer.update` would build, runs both
+    :func:`compute_gae` and :func:`reference_gae`, then asserts equality.
 
     This exercises the *integration* path: the trainer's pre/post-step
-    cache, the buffer accumulation, and the GAE call. If a future change
+    cache, the buffer accumulation (including truncation-bootstrap
+    capture at observe time), and the GAE call. If a future change
     inlines the GAE math into :meth:`update`, this test will catch the
     silent re-implementation.
     """
@@ -336,7 +409,7 @@ def test_ego_trainer_advantages_match_reference_on_frozen_partner_rollout() -> N
         obs, reward, terminated, truncated, _ = env.step(
             {"ego": ego_action, "partner": partner_action}
         )
-        trainer.observe(obs, reward, terminated or truncated)
+        trainer.observe(obs, reward, terminated or truncated, truncated=truncated)
 
     # Pull the buffer state out for the reference comparison. These are
     # private attributes on purpose — the test asserts on the runtime
@@ -344,36 +417,54 @@ def test_ego_trainer_advantages_match_reference_on_frozen_partner_rollout() -> N
     # cleared by :meth:`update`).
     rewards = np.asarray(trainer._buf_rewards, dtype=np.float32)
     values = np.asarray(trainer._buf_values, dtype=np.float32)
-    dones = np.asarray(trainer._buf_dones, dtype=np.bool_)
-    # Bootstrap reproduces the trainer's own logic (private, but stable):
-    # zero if the last step ended the episode, else V(last_next_obs).
-    if dones[-1] or trainer._last_next_obs is None:
-        bootstrap = 0.0
-    else:
-        import torch
+    terminated_arr = np.asarray(trainer._buf_terminated, dtype=np.bool_)
+    truncated_arr = np.asarray(trainer._buf_truncated, dtype=np.bool_)
+    truncation_bootstraps = np.asarray(trainer._buf_truncation_bootstraps, dtype=np.float32)
+    n_steps = rewards.shape[0]
 
+    # Reconstruct ``next_values`` exactly as :meth:`EgoPPOTrainer.update`
+    # would: per-step bootstrap target with per-boundary corrections.
+    import torch
+
+    next_values = np.zeros(n_steps, dtype=np.float32)
+    for t in range(n_steps - 1):
+        if terminated_arr[t]:
+            next_values[t] = 0.0
+        elif truncated_arr[t]:
+            next_values[t] = truncation_bootstraps[t]
+        else:
+            next_values[t] = values[t + 1]
+    last_t = n_steps - 1
+    if terminated_arr[last_t]:
+        next_values[last_t] = 0.0
+    elif truncated_arr[last_t]:
+        next_values[last_t] = truncation_bootstraps[last_t]
+    elif trainer._last_next_obs is None:
+        next_values[last_t] = 0.0
+    else:
         with torch.no_grad():
-            bootstrap = float(
+            next_values[last_t] = float(
                 trainer._critic(
                     torch.from_numpy(trainer._last_next_obs).to(trainer._device).unsqueeze(0)
                 )
                 .squeeze()
                 .item()
             )
+    boundaries = terminated_arr | truncated_arr
 
     trainer_adv = compute_gae(
         rewards,
         values,
-        dones,
-        bootstrap_value=bootstrap,
+        next_values,
+        boundaries,
         gamma=trainer._gamma,
         gae_lambda=trainer._gae_lambda,
     )
     ref_adv = reference_gae(
         rewards,
         values,
-        dones,
-        bootstrap_value=bootstrap,
+        next_values,
+        boundaries,
         gamma=trainer._gamma,
         gae_lambda=trainer._gae_lambda,
     )
