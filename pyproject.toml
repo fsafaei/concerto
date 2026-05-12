@@ -6,7 +6,7 @@ readme = "README.md"
 requires-python = ">=3.11,<3.13"
 license = { file = "LICENSE" }
 authors = [
-  { name = "Farhad Safaei", email = "safaei.farhad@gmail.com" },
+  { name = "Farhad Safaei", email = "cooperative.physical.ai@gmail.com" },
 ]
 keywords = [
   "multi-robot", "ad-hoc-teamwork", "manipulation", "control-barrier-functions",
