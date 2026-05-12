@@ -60,6 +60,7 @@ from concerto.training.config import (
     EnvConfig,
     HAPPOHyperparams,
     PartnerConfig,
+    RuntimeConfig,
 )
 
 
@@ -369,6 +370,10 @@ def _build_trainer_and_env(
             n_epochs=1,
             hidden_dim=32,
         ),
+        # Pin device=cpu so the property test runs on the same backend
+        # the hand-rolled reference assumes (Mac MPS has numerical
+        # quirks under PPO). M4b-9b.
+        runtime=RuntimeConfig(device="cpu"),
     )
     env = MPECooperativePushEnv(root_seed=seed)
     partner = ScriptedHeuristicPartner(

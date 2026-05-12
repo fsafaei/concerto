@@ -1,6 +1,6 @@
 .PHONY: install test lint typecheck format docs docs-build \
         verify-licences verify-no-ai-mentions sbom smoke verify \
-        empirical-guarantee
+        empirical-guarantee zoo-seed-gpu zoo-seed-verify
 
 install:
 	uv sync --all-extras --group dev
@@ -41,5 +41,11 @@ smoke:
 
 empirical-guarantee:
 	uv run pytest tests/integration/test_empirical_guarantee.py -m slow --no-cov -v
+
+zoo-seed-gpu:
+	bash scripts/repro/zoo_seed.sh
+
+zoo-seed-verify:
+	uv run pytest tests/reproduction/test_zoo_seed_artifact.py -v --no-cov
 
 verify: lint typecheck test docs-build verify-licences verify-no-ai-mentions

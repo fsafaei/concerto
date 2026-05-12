@@ -1,6 +1,6 @@
 {
   "name": "concerto",
-  "build": { "dockerfile": "../Dockerfile", "target": "dev" },
+  "build": { "dockerfile": "../Dockerfile.cpu", "target": "dev" },
   "features": {
     "ghcr.io/devcontainers/features/git:1": {},
     "ghcr.io/devcontainers/features/github-cli:1": {}

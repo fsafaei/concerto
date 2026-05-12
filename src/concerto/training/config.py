@@ -29,6 +29,7 @@ in place.
 from __future__ import annotations
 
 from pathlib import Path
+from typing import Literal
 
 from hydra import compose, initialize_config_dir
 from hydra.core.global_hydra import GlobalHydra
@@ -118,6 +119,44 @@ class PartnerConfig(_FrozenModel):
     extra: dict[str, str] = Field(default_factory=dict)
 
 
+class RuntimeConfig(_FrozenModel):
+    """Device + perf knobs (ADR-002 §Decisions; plan/08 §4 GPU determinism caveat).
+
+    Phase-0 development runs on Mac CPU (Apple M-series). Production
+    zoo-seed runs target Linux + CUDA via
+    ``scripts/repro/zoo_seed.sh`` (M4b-9b). The two regimes have
+    different determinism contracts:
+
+    - **CPU**: byte-identical across runs at the same seed (plan/05 §6
+      criterion 7; pinned by ``tests/integration/test_cpu_determinism.py``).
+      ``deterministic_torch=True`` calls
+      :func:`torch.use_deterministic_algorithms` once at trainer
+      construction so any non-deterministic CUDA-style op falls back to
+      a deterministic implementation if one exists, or warns loudly
+      otherwise (``warn_only=True``).
+    - **CUDA / MPS**: plan/08 §4 grants the GPU determinism caveat —
+      cuDNN / cuBLAS kernels are not bit-deterministic across hardware
+      generations even with deterministic flags. Set
+      ``deterministic_torch=False`` on GPU configs to disable the
+      strict-mode flag and avoid the warning spam.
+
+    Attributes:
+        device: ``"auto"`` resolves via
+            :func:`chamber.utils.device.torch_device` (CUDA > MPS >
+            CPU). Explicit ``"cpu"`` / ``"cuda"`` / ``"mps"`` pins the
+            choice and raises if unavailable (the trainer reports the
+            ADR cite in the error message so a confused user
+            searching for the message lands on ADR-002 §Decisions).
+        deterministic_torch: When ``True``, the trainer calls
+            :func:`torch.use_deterministic_algorithms(True, warn_only=True)`
+            once at construction. Documented as a process-global side
+            effect.
+    """
+
+    device: Literal["auto", "cpu", "cuda", "mps"] = "auto"
+    deterministic_torch: bool = True
+
+
 class HAPPOHyperparams(_FrozenModel):
     """On-policy ego-AHT HAPPO hyperparameters (ADR-002 §Decisions; plan/05 §3.2).
 
@@ -169,6 +208,13 @@ class EgoAHTConfig(_FrozenModel):
         env: :class:`EnvConfig`.
         partner: :class:`PartnerConfig`.
         happo: :class:`HAPPOHyperparams`.
+        runtime: :class:`RuntimeConfig` — device + determinism knobs
+            (ADR-002 §Decisions; plan/08 §4 GPU determinism caveat).
+            Defaults to ``device="auto"`` + ``deterministic_torch=True``
+            so an unset YAML on a Mac CPU dev box just works; the
+            production ``mpe_cooperative_push.yaml`` pins
+            ``device: cpu`` and ``stage0_smoke.yaml`` pins
+            ``device: cuda``.
     """
 
     algo: str = "ego_aht_happo"
@@ -181,6 +227,7 @@ class EgoAHTConfig(_FrozenModel):
     env: EnvConfig
     partner: PartnerConfig = Field(default_factory=PartnerConfig)
     happo: HAPPOHyperparams = Field(default_factory=HAPPOHyperparams)
+    runtime: RuntimeConfig = Field(default_factory=RuntimeConfig)
 
 
 def load_config(
@@ -235,6 +282,7 @@ __all__ = [
     "EnvConfig",
     "HAPPOHyperparams",
     "PartnerConfig",
+    "RuntimeConfig",
     "WandbConfig",
     "load_config",
 ]

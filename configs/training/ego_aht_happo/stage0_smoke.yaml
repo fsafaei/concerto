@@ -47,3 +47,11 @@ happo:
   rollout_length: 2048
   batch_size: 512
   hidden_dim: 128
+
+# GPU host (Linux + CUDA via scripts/repro/zoo_seed.sh). plan/08 §4
+# grants the GPU determinism caveat: cuDNN / cuBLAS kernels are not
+# bit-deterministic across hardware generations, so flip the strict-
+# mode flag off to avoid spam.
+runtime:
+  device: cuda
+  deterministic_torch: false

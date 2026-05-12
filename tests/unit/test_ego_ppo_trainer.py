@@ -41,6 +41,7 @@ from concerto.training.config import (
     EnvConfig,
     HAPPOHyperparams,
     PartnerConfig,
+    RuntimeConfig,
 )
 
 
@@ -61,6 +62,10 @@ def _tiny_cfg(*, seed: int = 0, rollout_length: int = 16) -> EgoAHTConfig:
             n_epochs=1,
             hidden_dim=32,
         ),
+        # Pin device=cpu so the unit tests don't auto-promote to MPS on
+        # the Mac dev box; MPS has known numerical quirks under PPO that
+        # the test fixtures aren't tuned for. M4b-9b.
+        runtime=RuntimeConfig(device="cpu"),
     )
 
 
@@ -508,6 +513,79 @@ class TestDeterminism:
                 any_differ = True
                 break
         assert any_differ, "distinct seeds yielded identical actor weights"
+
+
+class TestDeviceResolution:
+    """ADR-002 §Decisions: RuntimeConfig.device resolves to a concrete torch.device."""
+
+    def test_auto_routes_through_torch_device(self) -> None:
+        """device='auto' defers to chamber.utils.device.torch_device()."""
+        from chamber.benchmarks.ego_ppo_trainer import _resolve_device
+        from chamber.utils.device import torch_device
+
+        resolved = _resolve_device("auto")
+        assert isinstance(resolved, torch.device)
+        assert resolved.type == torch_device()
+
+    def test_explicit_cpu(self) -> None:
+        """device='cpu' resolves to torch.device('cpu') unconditionally."""
+        from chamber.benchmarks.ego_ppo_trainer import _resolve_device
+
+        assert _resolve_device("cpu").type == "cpu"
+
+    def test_cuda_raises_with_adr_cite_when_unavailable(self) -> None:
+        """device='cuda' loud-fails with the ADR-002 cite when CUDA isn't available."""
+        from chamber.benchmarks.ego_ppo_trainer import _resolve_device
+
+        if torch.cuda.is_available():
+            pytest.skip("CUDA available; not-available path not reachable")
+        with pytest.raises(RuntimeError, match=r"ADR-002"):
+            _resolve_device("cuda")
+
+    def test_mps_raises_with_adr_cite_when_unavailable(self) -> None:
+        """device='mps' loud-fails with the ADR-002 cite when MPS isn't available."""
+        from chamber.benchmarks.ego_ppo_trainer import _resolve_device
+
+        if torch.backends.mps.is_available():
+            pytest.skip("MPS available; not-available path not reachable")
+        with pytest.raises(RuntimeError, match=r"ADR-002"):
+            _resolve_device("mps")
+
+    def test_from_config_calls_torch_determinism_on_cpu(self) -> None:
+        """plan/08 §4: trainer construction applies the determinism flag on CPU."""
+        from unittest.mock import patch
+
+        from chamber.benchmarks.stage0_smoke import _SMOKE_ROBOT_UIDS  # noqa: F401
+        from chamber.envs.mpe_cooperative_push import MPECooperativePushEnv
+
+        cfg = _tiny_cfg()
+        env = MPECooperativePushEnv(root_seed=0)
+        # Force device='cpu' + deterministic_torch=True via model_copy.
+        cfg_cpu = cfg.model_copy(
+            update={"runtime": cfg.runtime.model_copy(update={"device": "cpu"})}
+        )
+        with patch("chamber.benchmarks.ego_ppo_trainer._set_torch_determinism") as mock_set:
+            EgoPPOTrainer.from_config(cfg_cpu, env=env, ego_uid="ego")
+            mock_set.assert_called_once_with(True)
+
+    def test_from_config_skips_torch_determinism_when_flag_off(self) -> None:
+        """plan/08 §4: deterministic_torch=False skips the strict-mode flag."""
+        from unittest.mock import patch
+
+        from chamber.envs.mpe_cooperative_push import MPECooperativePushEnv
+
+        cfg = _tiny_cfg()
+        env = MPECooperativePushEnv(root_seed=0)
+        cfg_no_det = cfg.model_copy(
+            update={
+                "runtime": cfg.runtime.model_copy(
+                    update={"device": "cpu", "deterministic_torch": False}
+                )
+            }
+        )
+        with patch("chamber.benchmarks.ego_ppo_trainer._set_torch_determinism") as mock_set:
+            EgoPPOTrainer.from_config(cfg_no_det, env=env, ego_uid="ego")
+            mock_set.assert_not_called()
 
 
 class TestEgoPPOTrainerPublicSurface:
