@@ -900,6 +900,24 @@
         
       
       
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Why heterogeneous AHT?
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
       <a href="./" class="md-nav__link md-nav__link--active">
         
   
@@ -916,6 +934,69 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#why-ego-ppo-under-a-frozen-partner" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why ego-PPO under a frozen partner?
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#what-this-validates" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What this validates
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#what-this-does-not-claim" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What this does NOT claim
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#reproduce-locally" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Reproduce locally
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
       
     </li>
   
@@ -1089,6 +1170,58 @@
     
   
   
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#why-ego-ppo-under-a-frozen-partner" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why ego-PPO under a frozen partner?
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#what-this-validates" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What this validates
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#what-this-does-not-claim" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What this does NOT claim
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#reproduce-locally" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Reproduce locally
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
 </nav>
                   </div>
                 </div>
@@ -1120,13 +1253,96 @@ differing sensor modalities, and no shared policy checkpoints.</p>
 <p>CONCERTO and CHAMBER focus on the hardest variant of this problem: the
 ego agent's partner is <strong>opaque</strong> (no policy access), <strong>heterogeneous</strong>
 (different morphology and action frequency), and <strong>ad-hoc</strong> (no prior
-joint training). The six axes that make this hard are: action-space heterogeneity (AS),
-observation-modality heterogeneity (OM), control-rate mismatch (CR),
-communication degradation (CM), partner familiarity (PF), and safety (SA).
-See ADR-007 for the axis selection rationale and staging plan.</p>
-<p>The four named precedents CONCERTO differentiates against — Liu 2024 RSS,
-COHERENT, Huriot–Sibai 2025, and Singh 2024 — each solve a subset of
-these axes. No prior system addresses all six simultaneously.</p>
+joint training). The six axes that make this hard are: action-space
+heterogeneity (AS), observation-modality heterogeneity (OM), control-rate
+mismatch (CR), communication degradation (CM), partner familiarity
+(PF), and safety (SA). See <a href="../../reference/adrs/">ADR-007</a> for the axis
+selection rationale and staging plan.</p>
+<p>The four named precedents CONCERTO differentiates against — Liu 2024
+RSS, COHERENT, Huriot-Sibai 2025, and Singh 2024 — each solve a subset
+of these axes. No prior system addresses all six simultaneously.</p>
+<h2 id="why-ego-ppo-under-a-frozen-partner">Why ego-PPO under a frozen partner?</h2>
+<p><a href="../../reference/adrs/">ADR-002</a> selects on-policy PPO as the Phase-0 ego training
+substrate. The reasoning is theoretical: when the partner's policy is
+<em>frozen</em>, the multi-agent task degenerates to a single-agent MDP from
+the ego's perspective — the partner's actions are part of the
+transition kernel, not the ego's gradient. Huriot-Sibai 2025 Theorem 7
+states that ego-only PPO is then monotone-improving in expectation,
+which is the strongest theoretical guarantee available for this setting.</p>
+<p>The empirical-guarantee experiment (<a href="../../reference/api/">M4b-8b</a>) verifies that
+guarantee holds in practice on a real env at the project's frame
+budget. The 100k-frame ego-AHT HAPPO run against
+<code>configs/training/ego_aht_happo/mpe_cooperative_push.yaml</code> — a 2-agent
+cooperative-coverage task in the spirit of PettingZoo's
+<code>simple_spread_v3</code>, with a scripted heuristic partner — produces this
+reward curve:</p>
+<p><img alt="Empirical-guarantee slope test: PASS" src="../_assets/why-aht/a97c7993a7fb3e25/a97c7993a7fb3e25.png" /></p>
+<p>The plotted line is the least-squares regression on per-episode reward
+against episode index. The trainer drives an ~15-reward-unit positive
+drift over the run (slope ≈ +0.0077/episode, p ≈ 2 × 10⁻²³ one-sided
+against the null "slope ≤ 0"). Two methodology notes:</p>
+<ul>
+<li><strong>The statistic is a slope test, not a moving-window non-decreasing-
+  fraction.</strong> Per-episode reward stdev on this task is ~20, so adjacent
+  moving-window-of-10 means form a near-zero-mean random walk that
+  doesn't reflect the underlying learning signal. The slope test
+  integrates over the whole curve and is robust to that noise. See
+  <a href="https://github.com/fsafaei/concerto/issues/62">issue #62</a> for the diagnostic walk-through that led to
+  this replacement.</li>
+<li><strong>The trainer correctly handles time-limit truncation.</strong> An earlier
+  bug conflated time-limit truncation (<code>truncated=True,
+  terminated=False</code>) with true termination, zeroing the GAE bootstrap
+  value at every episode boundary on time-limit-only envs like the MPE
+  cooperative-push task. The fix in
+  <a href="../../reference/api/"><code>compute_gae</code></a> (per Pardo et al. 2018) bootstraps with
+  V(s_truncated_final) at truncation boundaries, ~doubling the
+  observed learning rate. See <a href="https://github.com/fsafaei/concerto/pull/70">PR #70</a> for the empirical A/B
+  comparison.</li>
+</ul>
+<h2 id="what-this-validates">What this validates</h2>
+<p>Three things, in order of certainty:</p>
+<ol>
+<li>The ego-PPO substrate the project uses for Phase-0 does in fact
+   produce a statistically significant positive learning signal on the
+   frozen-partner task within the budget. The trip-wire was designed
+   to be loud if this failed; it currently passes with very wide
+   margin.</li>
+<li>The trainer's GAE math, importance-ratio reduction, and rollout
+   buffer correctness are all consistent with single-agent PPO on the
+   same buffered <code>(rewards, values, next_values, boundaries)</code> tuples,
+   per the property test at
+   <code>tests/property/test_advantage_decomposition.py</code>. So the experiment
+   isn't measuring trainer wiring; it's measuring algorithm/task fit.</li>
+<li>The 100k-frame budget is <em>sufficient</em> for the positive-slope signal
+   to dominate noise. It is <strong>not</strong> sufficient for the policy to reach
+   the greedy-oracle ceiling on this task (eval at step 100k is roughly
+   -50; the greedy-nearest-landmark oracle achieves -41). Closing that
+   gap is a separate scaling question outside Phase-0's scope.</li>
+</ol>
+<h2 id="what-this-does-not-claim">What this does NOT claim</h2>
+<p>The empirical-guarantee experiment is a <em>necessary</em>-condition trip-
+wire, not a sufficient one. A passing slope test does not imply:</p>
+<ul>
+<li>That the trainer would still learn under a non-frozen partner (joint
+  training is out of scope for ADR-002).</li>
+<li>That the chosen hyperparameters are optimal.</li>
+<li>That the same setup will produce learning on harder tasks (Stage 1/2/3
+  spikes, per ADR-007).</li>
+</ul>
+<p>If the trip-wire ever fails on the production config — fraction or
+slope, depending on which statistic is canonical at the time — the
+project stops and revisits ADR-002, per the escalation policy in
+plan/05 §6.</p>
+<h2 id="reproduce-locally">Reproduce locally</h2>
+<p>The full reproduction lives in
+<a href="https://github.com/fsafaei/concerto/blob/main/scripts/repro/empirical_guarantee.sh"><code>scripts/repro/empirical_guarantee.sh</code></a> and runs via:</p>
+<div class="highlight"><pre><span></span><code>make<span class="w"> </span>empirical-guarantee
+</code></pre></div>
+<p>It runs <code>pytest -m slow tests/integration/test_empirical_guarantee.py</code>
+against the production YAML, prints the device report, and exits
+non-zero if either the wallclock budget is exceeded or the slope test
+trip-wire fires. Total CPU wall-time is ~10 seconds on a modern
+laptop.</p>
 
 
 

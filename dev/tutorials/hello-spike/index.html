@@ -1356,15 +1356,20 @@ The <code>local://artifacts/...</code> URI scheme resolves under
 <h2 id="whats-next">What's next</h2>
 <p>This 1k-frame demo validates that the trainer plumbing works end-to-end
 but is too short to demonstrate learning. The empirical-guarantee
-experiment in PR M4b-8b runs the same setup at 100k frames against the
-production config in
-<code>configs/training/ego_aht_happo/mpe_cooperative_push.yaml</code>, asserts the
-moving-window-of-10 ego reward is non-decreasing on ≥80% of intervals
-(ADR-002 risk-mitigation #1 trip-wire), and embeds the resulting plot
-in <code>docs/explanation/why-aht.md</code>. To opt out of the default and run with
-the parameter-free <a href="../../reference/api/"><code>RandomEgoTrainer</code></a> reference (smoke
-fixture only — does not learn) instead, construct it explicitly and pass
-it as <code>trainer_factory</code> to <code>run_training</code>.</p>
+experiment runs the same setup at 100k frames against the production
+config in <code>configs/training/ego_aht_happo/mpe_cooperative_push.yaml</code>
+and asserts the per-episode reward has a statistically significant
+positive learning slope (one-sided test, alpha=0.05). The trip-wire is
+ADR-002 risk-mitigation #1 — a loud signal if the on-policy PPO
+substrate under a frozen partner fails to learn. The science narrative
++ the resulting plot live in
+<a href="../../explanation/why-aht/"><code>docs/explanation/why-aht.md</code></a>; reproduce
+it locally with <code>make empirical-guarantee</code> (~10 seconds CPU
+wall-time).</p>
+<p>To opt out of the default and run with the parameter-free
+<a href="../../reference/api/"><code>RandomEgoTrainer</code></a> reference (smoke fixture only —
+does not learn) instead, construct it explicitly and pass it as
+<code>trainer_factory</code> to <code>run_training</code>.</p>
 
 
 
