@@ -1,0 +1,49 @@
+# syntax=docker/dockerfile:1.7
+# SPDX-License-Identifier: Apache-2.0
+#
+# GPU image (CUDA + Vulkan). Targets:
+#   - dev       : full extras + repo bind for development.
+#   - prod      : runtime-only image.
+#   - gpu-host  : prod + Vulkan/EGL runtime libs needed by SAPIEN /
+#                 ManiSkill v3 (ADR-001 §Risks). The zoo-seed
+#                 reproduction (`scripts/repro/zoo_seed.sh`) targets
+#                 this stage.
+#
+# CPU-only hosts (the Mac dev box; the .devcontainer) use
+# Dockerfile.cpu instead so they don't pull the NVIDIA stack.
+FROM nvidia/cuda:12.2.2-cudnn8-runtime-ubuntu22.04@sha256:2d913b09e6be8387e1a10976933642c73c840c0b735f0bf3c28d97fc9bc422e0 AS base
+ENV DEBIAN_FRONTEND=noninteractive PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    git curl ca-certificates build-essential libgl1 libglib2.0-0 \
+    && rm -rf /var/lib/apt/lists/*
+ADD --checksum=sha256:cd2f11a9703e911b3766d0c9bad02837e8125f94fd045fc22d237d04445f45bf \
+    https://astral.sh/uv/0.8.10/install.sh /tmp/install-uv.sh
+RUN sh /tmp/install-uv.sh && rm /tmp/install-uv.sh
+ENV PATH="/root/.local/bin:${PATH}"
+WORKDIR /workspace
+
+FROM base AS dev
+COPY pyproject.toml uv.lock ./
+RUN uv sync --frozen --all-extras
+COPY . .
+
+FROM base AS prod
+COPY pyproject.toml uv.lock ./
+RUN uv sync --frozen --no-dev
+COPY src ./src
+ENTRYPOINT ["uv", "run", "concerto"]
+
+FROM prod AS gpu-host
+# SAPIEN / ManiSkill v3 runtime deps (ADR-001 §Risks). Without these
+# the Vulkan probe in chamber.utils.device.sapien_gpu_available()
+# returns False and the Stage-0 env / zoo-seed run cannot start.
+# Installed on top of the prod stage so the image stays usable by both
+# `chamber-spike train` and the reproduction script
+# `scripts/repro/zoo_seed.sh`.
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libvulkan1 mesa-vulkan-drivers libegl1 libgles2 \
+    && rm -rf /var/lib/apt/lists/*
+# Re-set the entrypoint so the image can also be invoked as a bare
+# bash shell when running ad-hoc commands like `make zoo-seed-gpu`.
+# The prod ENTRYPOINT is preserved for `docker run concerto:gpu`.
+ENTRYPOINT ["uv", "run", "concerto"]

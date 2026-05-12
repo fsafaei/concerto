@@ -27,6 +27,7 @@ from concerto.training.config import (
     EnvConfig,
     HAPPOHyperparams,
     PartnerConfig,
+    RuntimeConfig,
 )
 from concerto.training.ego_aht import RewardCurve
 
@@ -47,6 +48,10 @@ def _tiny_cfg(tmp_path: Path, *, total_frames: int = 50) -> EgoAHTConfig:
             extra={"uid": "partner", "target_xy": "0.0,0.0", "action_dim": "2"},
         ),
         happo=HAPPOHyperparams(rollout_length=25),
+        # Pin device=cpu for unit tests (M4b-9b): the default RuntimeConfig
+        # device="auto" resolves to MPS on Mac, which has known numerical
+        # quirks under PPO that the test fixtures aren't tuned for.
+        runtime=RuntimeConfig(device="cpu"),
     )
 
 

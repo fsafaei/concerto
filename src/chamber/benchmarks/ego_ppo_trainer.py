@@ -123,6 +123,71 @@ _TORCH_SUBSTREAM: str = "training.ego_ppo.torch"
 _MINIBATCH_SUBSTREAM: str = "training.ego_ppo.minibatch"
 
 
+def _set_torch_determinism(enabled: bool) -> None:
+    """Wrap :func:`torch.use_deterministic_algorithms` for test patching (plan/08 §4).
+
+    Routed through a module-level helper so
+    ``tests/unit/test_ego_ppo_trainer.py`` can patch it during the
+    trainer-construction tests — calling the real torch function in a
+    unit test would impose a process-global side effect on every
+    subsequent test in the session, which is exactly the kind of
+    leakage the trainer's docstring warns about.
+
+    ``warn_only=True`` so ops without a deterministic implementation
+    (rare; nearly all of torch's MLP / softmax / Adam path is already
+    deterministic) emit a warning rather than raising — the trainer's
+    main loop must keep running. ADR-002 §Decisions: the determinism
+    contract is per-tensor-op, not strict-mode.
+    """
+    torch.use_deterministic_algorithms(enabled, warn_only=True)
+
+
+def _resolve_device(requested: str) -> torch.device:
+    """Resolve a :class:`RuntimeConfig` ``device`` string (ADR-002 §Decisions).
+
+    ``"auto"`` defers to :func:`chamber.utils.device.torch_device`, which
+    picks the best available backend (CUDA > MPS > CPU). Explicit
+    strings ``"cpu"`` / ``"cuda"`` / ``"mps"`` raise
+    :class:`RuntimeError` if the requested backend is unavailable.
+
+    Args:
+        requested: ``cfg.runtime.device`` value (literal-checked at
+            :class:`RuntimeConfig` validation time, so only the four
+            documented strings reach this resolver).
+
+    Returns:
+        A concrete :class:`torch.device`.
+
+    Raises:
+        RuntimeError: If ``requested in {"cuda", "mps"}`` and the
+            backend is unavailable. Error message cites ADR-002
+            §Decisions so a confused user searching for the message
+            lands on the ADR.
+    """
+    if requested == "auto":
+        from chamber.utils.device import torch_device
+
+        return torch.device(torch_device())
+    if requested == "cuda":
+        if not torch.cuda.is_available():
+            raise RuntimeError(
+                "RuntimeConfig.device='cuda' requested but torch.cuda.is_available() "
+                "is False. Either flip the config to 'auto' (resolves to CPU on this "
+                "host) or run on a CUDA-capable Linux box. See ADR-002 §Decisions for "
+                "the device-resolution contract."
+            )
+        return torch.device("cuda")
+    if requested == "mps":
+        if not torch.backends.mps.is_available():
+            raise RuntimeError(
+                "RuntimeConfig.device='mps' requested but torch.backends.mps.is_available() "
+                "is False. Flip the config to 'auto' or 'cpu'. See ADR-002 §Decisions for "
+                "the device-resolution contract."
+            )
+        return torch.device("mps")
+    return torch.device("cpu")
+
+
 def compute_gae(
     rewards: NDArray[np.float32],
     values: NDArray[np.float32],
@@ -382,8 +447,13 @@ class EgoPPOTrainer:
                 observation_space.
             ego_act_space: The Box space for the ego's action vector.
                 Read directly from ``env.action_space[ego_uid]``.
-            device: Torch device. Defaults to CPU; the M4b plan budgets
-                everything for CPU (Mac M5, no CUDA).
+            device: Torch device. Defaults to CPU when called directly;
+                :meth:`from_config` resolves it from
+                :attr:`RuntimeConfig.device` (auto / cpu / cuda / mps)
+                via :func:`_resolve_device` and applies the determinism
+                flag from :attr:`RuntimeConfig.deterministic_torch` on
+                CPU before constructing the trainer (ADR-002 §Decisions;
+                plan/08 §4).
         """
         self._device = device or torch.device("cpu")
         self._ego_uid = ego_uid
@@ -494,11 +564,19 @@ class EgoPPOTrainer:
                 f"env.action_space[{ego_uid!r}] to be a gym.spaces.Box; "
                 f"got {type(ego_act_space).__name__}."
             )
+        device = _resolve_device(cfg.runtime.device)
+        if device.type == "cpu" and cfg.runtime.deterministic_torch:
+            # CPU determinism is the project's P6 contract (plan/08 §4).
+            # Skip on CUDA/MPS where the contract is relaxed because
+            # cuDNN / Metal kernels are not bit-deterministic even with
+            # this flag.
+            _set_torch_determinism(True)
         return cls(
             cfg=cfg,
             ego_uid=ego_uid,
             ego_obs_space=ego_state_space,
             ego_act_space=ego_act_space,
+            device=device,
         )
 
     def act(

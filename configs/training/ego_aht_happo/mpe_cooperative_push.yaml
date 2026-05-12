@@ -46,3 +46,10 @@ happo:
   rollout_length: 1024
   batch_size: 256
   hidden_dim: 64
+
+# Mac M-series CPU dev box. plan/08 §4: deterministic_torch=True so
+# tests/integration/test_cpu_determinism.py's byte-identical contract
+# holds.
+runtime:
+  device: cpu
+  deterministic_torch: true

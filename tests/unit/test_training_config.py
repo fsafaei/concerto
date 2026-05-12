@@ -210,6 +210,41 @@ class TestLoadConfig:
             )
 
 
+class TestRuntimeConfig:
+    """M4b-9b: device + determinism knobs on EgoAHTConfig.runtime."""
+
+    def test_defaults_are_auto_and_deterministic(self) -> None:
+        """Plan/05 §2: default RuntimeConfig is device='auto' + deterministic_torch=True."""
+        from concerto.training.config import RuntimeConfig
+
+        rc = RuntimeConfig()
+        assert rc.device == "auto"
+        assert rc.deterministic_torch is True
+
+    def test_rejects_unknown_device(self) -> None:
+        """Pydantic Literal-validates device against the four allowed values."""
+        from concerto.training.config import RuntimeConfig
+
+        with pytest.raises(ValidationError):
+            RuntimeConfig.model_validate({"device": "tpu"})
+
+    def test_frozen(self) -> None:
+        """ADR-002 §Decisions: config is immutable."""
+        from concerto.training.config import RuntimeConfig
+
+        rc = RuntimeConfig()
+        with pytest.raises(ValidationError):
+            rc.device = "cuda"  # type: ignore[misc]
+
+    def test_ego_aht_config_has_default_runtime(self) -> None:
+        """Plan/05 §2: EgoAHTConfig.runtime is auto-populated when omitted."""
+        from concerto.training.config import RuntimeConfig
+
+        cfg = EgoAHTConfig(env=_minimal_env())
+        assert isinstance(cfg.runtime, RuntimeConfig)
+        assert cfg.runtime.device == "auto"
+
+
 class TestPublicSurface:
     def test_module_exports(self) -> None:
         from concerto.training import config as cfg_mod
@@ -219,6 +254,7 @@ class TestPublicSurface:
             "EnvConfig",
             "HAPPOHyperparams",
             "PartnerConfig",
+            "RuntimeConfig",
             "WandbConfig",
             "load_config",
         ):
