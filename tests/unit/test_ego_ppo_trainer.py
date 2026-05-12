@@ -96,7 +96,7 @@ def _drive_one_rollout(
         ego_a = trainer.act(obs)
         partner_a = partner.act(obs)
         obs, reward, terminated, truncated, _ = env.step({"ego": ego_a, "partner": partner_a})
-        trainer.observe(obs, reward, terminated or truncated)
+        trainer.observe(obs, reward, terminated or truncated, truncated=truncated)
 
 
 class TestBuildHarlArgs:
@@ -320,7 +320,9 @@ class TestObserveSurface:
         assert len(trainer._buf_actions) == 8
         assert len(trainer._buf_log_probs) == 8
         assert len(trainer._buf_values) == 8
-        assert len(trainer._buf_dones) == 8
+        assert len(trainer._buf_terminated) == 8
+        assert len(trainer._buf_truncated) == 8
+        assert len(trainer._buf_truncation_bootstraps) == 8
 
     def test_observe_clears_pending_cache(self) -> None:
         """plan/05 §3.5: observe() consumes the pre-step cache exactly once."""
@@ -332,8 +334,41 @@ class TestObserveSurface:
         next_obs, reward, term, trunc, _ = env.step(
             {"ego": np.zeros(2, dtype=np.float32), "partner": np.zeros(2, dtype=np.float32)}
         )
-        trainer.observe(next_obs, reward, term or trunc)
+        trainer.observe(next_obs, reward, term or trunc, truncated=trunc)
         assert trainer._pending is None
+
+    def test_observe_records_truncation_bootstrap_at_time_limit(self) -> None:
+        """Pardo 2017 / issue #62: at truncation, V(s_truncated_final) is cached for GAE."""
+        trainer = _build_trainer(rollout_length=2)
+        env = MPECooperativePushEnv(episode_length=2, root_seed=0)
+        partner = _build_partner()
+        obs, _ = env.reset(seed=0)
+        partner.reset(seed=0)
+        # Step 1: not a boundary.
+        trainer.act(obs)
+        next_obs, r, term, trunc, _ = env.step(
+            {"ego": np.zeros(2, dtype=np.float32), "partner": partner.act(obs)}
+        )
+        trainer.observe(next_obs, r, term or trunc, truncated=trunc)
+        obs = next_obs
+        assert trainer._buf_truncated[-1] is False
+        assert trainer._buf_truncation_bootstraps[-1] == 0.0
+        # Step 2: truncation boundary (episode_length=2).
+        trainer.act(obs)
+        next_obs, r, term, trunc, _ = env.step(
+            {"ego": np.zeros(2, dtype=np.float32), "partner": partner.act(obs)}
+        )
+        assert trunc is True
+        assert term is False
+        trainer.observe(next_obs, r, term or trunc, truncated=trunc)
+        assert trainer._buf_truncated[-1] is True
+        assert trainer._buf_terminated[-1] is False
+        # The truncation bootstrap should be a real critic value, not 0.0
+        # (the critic has bias terms so V(.) is generically nonzero).
+        # Defensive: pin only that it's a finite float, not a specific value.
+        bootstrap = trainer._buf_truncation_bootstraps[-1]
+        assert isinstance(bootstrap, float)
+        assert np.isfinite(bootstrap)
 
 
 class TestUpdateSurface:

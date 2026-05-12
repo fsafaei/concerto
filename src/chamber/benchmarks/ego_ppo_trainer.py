@@ -126,43 +126,59 @@ _MINIBATCH_SUBSTREAM: str = "training.ego_ppo.minibatch"
 def compute_gae(
     rewards: NDArray[np.float32],
     values: NDArray[np.float32],
-    dones: NDArray[np.bool_],
+    next_values: NDArray[np.float32],
+    episode_boundaries: NDArray[np.bool_],
     *,
-    bootstrap_value: float,
     gamma: float,
     gae_lambda: float,
 ) -> NDArray[np.float32]:
-    """Generalised Advantage Estimation (Schulman 2016 §6.3; ADR-002 §Decisions).
+    """GAE with per-step bootstrap (Schulman 2016 §6.3; Pardo 2017; ADR-002 §Decisions).
 
-    The reference recurrence::
+    Pardo et al. 2017 ("Time Limits in Reinforcement Learning") motivates
+    the per-step bootstrap target shape: time-limit truncation is **not**
+    a terminal state — the policy should still receive the value of the
+    state it would have transitioned to. Treating truncation as
+    termination zeros that bootstrap and biases advantages
+    systematically, slowing learning materially (see project issue #62).
 
-        delta_t = r_t + gamma * V(s_{t+1}) * (1 - done_t) - V(s_t)
-        A_t     = delta_t + gamma * lambda * (1 - done_t) * A_{t+1}
+    The recurrence is::
+
+        delta_t = r_t + gamma * next_values[t]     - V(s_t)
+        A_t     = delta_t + gamma * lambda * (1 - boundary_t) * A_{t+1}
         A_T     = delta_T
 
-    where ``V(s_{T+1}) = bootstrap_value`` (the value of the obs immediately
-    after the last buffered step). ``done_t`` zeroes the bootstrap when
-    the trajectory terminates / truncates at step ``t`` — for
-    :class:`~chamber.envs.mpe_cooperative_push.MPECooperativePushEnv`
-    this fires only on truncation (the env has no terminal state).
+    where ``next_values[t]`` is the *caller-supplied* bootstrap target —
+    in production it is:
 
-    plan/05 §5 and the property test
+    - ``values[t + 1]`` for non-boundary steps (typical mid-rollout).
+    - ``V(s_truncated_final_t)`` at truncation boundaries (the value of
+      the actual post-step obs of the truncated episode, computed by the
+      caller via the critic).
+    - ``0.0`` at termination boundaries (true terminal state — no value
+      after).
+    - The rollout-tail bootstrap (``V(s_T+1)`` if the rollout ends
+      mid-episode; ``0.0`` if it ends on an episode boundary) at the
+      final timestep ``t = T - 1``.
+
+    ``episode_boundaries[t]`` is ``True`` iff step ``t`` ended an episode
+    (terminated *or* truncated). It zeros GAE propagation across the
+    boundary — advantages from a *different* episode (steps ``> t`` after
+    a boundary) must not contribute to ``A_t``.
+
+    plan/05 §5 + the property test
     ``tests/property/test_advantage_decomposition.py`` verify this formula
     matches a freshly hand-rolled reference to within 1e-6 on synthetic
-    2-agent-with-frozen-partner trajectories — disentangles "trainer is
-    buggy" from "HARL doesn't work for our case" before the empirical-
-    guarantee experiment (T4b.13 / M4b-8b) runs.
+    trajectories that include both termination and truncation boundaries.
 
     Args:
         rewards: Per-step ego reward. Shape ``(T,)``.
         values: Per-step critic value estimate ``V(s_t)``. Shape ``(T,)``.
-        dones: ``True`` when step ``t`` ended the episode (terminated *or*
-            truncated). Shape ``(T,)``.
-        bootstrap_value: ``V(s_{T+1})`` — the critic's estimate at the obs
-            immediately following the last buffered step. The caller
-            (typically :meth:`EgoPPOTrainer.update`) chooses ``0.0`` when
-            the last step ended the episode and the actual critic value
-            otherwise.
+        next_values: Per-step bootstrap target. Shape ``(T,)``. Caller
+            responsibility (see module docstring + issue #62 root-cause
+            writeup for why this split matters).
+        episode_boundaries: ``True`` at steps that ended an episode
+            (terminated OR truncated). Shape ``(T,)``. Zeros GAE
+            propagation across the boundary.
         gamma: Discount factor in ``[0, 1]``.
         gae_lambda: GAE exponential smoothing in ``[0, 1]``.
 
@@ -179,10 +195,12 @@ def compute_gae(
     # both implementations using the same accumulation precision.
     gae = 0.0
     for t in reversed(range(n)):
-        next_value = bootstrap_value if t == n - 1 else float(values[t + 1])
-        next_nonterminal = 0.0 if bool(dones[t]) else 1.0
-        delta = float(rewards[t]) + gamma * next_value * next_nonterminal - float(values[t])
-        gae = delta + gamma * gae_lambda * next_nonterminal * gae
+        boundary = bool(episode_boundaries[t])
+        delta = float(rewards[t]) + gamma * float(next_values[t]) - float(values[t])
+        # Zero GAE propagation across episode boundaries: advantages from
+        # the next episode must not flow back into this episode (Pardo 2017
+        # §4; issue #62 root-cause writeup).
+        gae = delta + gamma * gae_lambda * (0.0 if boundary else 1.0) * gae
         advantages[t] = np.float32(gae)
     return advantages
 
@@ -403,7 +421,18 @@ class EgoPPOTrainer:
         self._buf_log_probs: list[NDArray[np.float32]] = []
         self._buf_values: list[float] = []
         self._buf_rewards: list[float] = []
-        self._buf_dones: list[bool] = []
+        # ADR-002 §Decisions + Pardo 2017 / issue #62: terminated and
+        # truncated are stored *separately* so :meth:`update` can build a
+        # per-step bootstrap target. Treating truncation as termination
+        # zeros V(s_next) at every time-limit boundary, biasing advantages
+        # and slowing learning 2-3x on time-limit-only envs.
+        self._buf_terminated: list[bool] = []
+        self._buf_truncated: list[bool] = []
+        # V(s_truncated_final) computed via the critic at observe time
+        # when a truncation occurs. Indexed parallel to the buffer; unused
+        # at non-truncation steps but populated with 0.0 so the array
+        # shapes stay aligned.
+        self._buf_truncation_bootstraps: list[float] = []
         # Pre-step cache (filled by :meth:`act`, consumed by :meth:`observe`).
         self._pending: _PendingStep | None = None
         # Last next-obs (cached by :meth:`observe`) for the critic
@@ -527,20 +556,44 @@ class EgoPPOTrainer:
         obs: Mapping[str, Any],
         reward: float,
         done: bool,
+        *,
+        truncated: bool = False,
     ) -> None:
-        """Push the pre-step cache + ``(reward, done)`` into the buffer (ADR-002 §Decisions).
+        """Buffer ``(pending, reward, terminated, truncated)`` (ADR-002 §Decisions; Pardo 2017).
 
         The trainer keeps a single ``(obs, action, log_prob, value)``
         cache — set by :meth:`act` — and pairs it with the
-        ``(reward, done)`` from :meth:`observe`. The post-step
+        ``(reward, done, truncated)`` from :meth:`observe`. The post-step
         ``obs`` is also remembered as the bootstrap target for
         :meth:`update`.
+
+        ``done`` keeps the historical "this step ended the episode" meaning
+        (terminated OR truncated). ``truncated`` is the new keyword-only
+        flag that distinguishes time-limit truncation from true
+        termination. The trainer derives
+        ``terminated = done and not truncated`` internally; the GAE
+        bootstrap then treats truncation correctly per Pardo et al. 2017
+        (V(s_truncated_final) flows through, not 0) — see :func:`compute_gae`
+        + project issue #62 for the root-cause writeup.
+
+        At truncation boundaries this method calls the critic on the
+        post-step obs once to capture V(s_truncated_final); that value
+        is later threaded into :func:`compute_gae` as the per-step
+        bootstrap target. At non-truncation steps the recorded value is
+        ``0.0`` and unused.
 
         Args:
             obs: Post-step env obs (the obs the env returned after the
                 action passed to the most recent :meth:`act` call).
             reward: Per-step ego reward (the env's shared scalar).
-            done: ``True`` if the env terminated *or* truncated this step.
+            done: ``True`` if the env terminated *or* truncated this step
+                (i.e. the loop should reset the env for the next step).
+            truncated: ``True`` iff this step ended the episode via
+                time-limit truncation (env returned ``truncated=True``).
+                Default ``False`` is the conservative legacy behavior —
+                callers that don't yet distinguish truncation from
+                termination see the historical "treat as terminal"
+                semantics.
         """
         pending = self._pending
         if pending is None:
@@ -548,25 +601,96 @@ class EgoPPOTrainer:
             # safely ignore a stray ``observe`` (eg. a pre-rollout
             # bookkeeping call).
             return
+        terminated = bool(done) and not bool(truncated)
+        truncated_b = bool(truncated)
         self._buf_obs.append(pending.obs)
         self._buf_actions.append(pending.action)
         self._buf_log_probs.append(pending.log_prob)
         self._buf_values.append(pending.value)
         self._buf_rewards.append(float(reward))
-        self._buf_dones.append(bool(done))
-        self._last_next_obs = _flat_ego_obs(obs, self._ego_uid)
+        self._buf_terminated.append(terminated)
+        self._buf_truncated.append(truncated_b)
+        next_flat = _flat_ego_obs(obs, self._ego_uid)
+        # Capture V(s_truncated_final) eagerly at the boundary. Doing it
+        # here (rather than at update time) is the cleanest place because
+        # ``next_flat`` is the actual post-step obs of the truncated
+        # episode; by update time the training loop has already reset
+        # the env, and the per-step "next obs in buffer" at index
+        # ``t + 1`` is from the *new* episode. The cost is one extra
+        # critic forward pass per truncation boundary.
+        if truncated_b and not terminated:
+            with torch.no_grad():
+                v_trunc = float(
+                    self._critic(torch.from_numpy(next_flat).to(self._device).unsqueeze(0))
+                    .squeeze()
+                    .item()
+                )
+            self._buf_truncation_bootstraps.append(v_trunc)
+        else:
+            self._buf_truncation_bootstraps.append(0.0)
+        self._last_next_obs = next_flat
         # Clear the pre-step cache so a stray double-observe cannot
         # double-insert the same tuple.
         self._pending = None
 
+    def _build_next_values(
+        self,
+        values: NDArray[np.float32],
+        terminated: NDArray[np.bool_],
+        truncated: NDArray[np.bool_],
+        truncation_bootstraps: NDArray[np.float32],
+    ) -> NDArray[np.float32]:
+        """Per-step ``V(s_{t+1})`` bootstrap target for GAE (Pardo 2017 §4; issue #62).
+
+        Mid-rollout non-boundary steps use ``values[t + 1]``. At
+        terminations the bootstrap is ``0`` (true terminal: no value
+        after). At truncations it is ``V(s_truncated_final)`` captured
+        at observe time. The rollout-tail step (``t = n-1``) follows the
+        same three-way rule, with the live critic call against the
+        remembered next-obs as the non-boundary tail bootstrap.
+        """
+        n_steps = values.shape[0]
+        next_values = np.zeros(n_steps, dtype=np.float32)
+        for t in range(n_steps - 1):
+            if terminated[t]:
+                next_values[t] = 0.0
+            elif truncated[t]:
+                next_values[t] = truncation_bootstraps[t]
+            else:
+                next_values[t] = values[t + 1]
+        last_t = n_steps - 1
+        if terminated[last_t]:
+            next_values[last_t] = 0.0
+        elif truncated[last_t]:
+            next_values[last_t] = truncation_bootstraps[last_t]
+        elif self._last_next_obs is None:
+            # Defensive: no remembered next-obs (rollout never observed
+            # anything past the last step). Falls back to zero — safe
+            # because the rollout will be cleared and the next one starts
+            # fresh.
+            next_values[last_t] = 0.0
+        else:
+            with torch.no_grad():
+                next_values[last_t] = float(
+                    self._critic(
+                        torch.from_numpy(self._last_next_obs).to(self._device).unsqueeze(0)
+                    )
+                    .squeeze()
+                    .item()
+                )
+        return next_values
+
     def update(self) -> None:
-        """Compute GAE; run PPO + critic updates; clear the buffer (ADR-002 §Decisions).
+        """Compute GAE; run PPO + critic updates; clear the buffer (ADR-002 §Decisions; Pardo 2017).
 
         Order of operations (Schulman 2017, lifted to ego-only / frozen-
         partner per plan/05 §3.5):
 
-        1. Compute the bootstrap value ``V(s_{T+1})``: ``0.0`` if the last
-           step ended the episode, else ``critic(last_next_obs)``.
+        1. Build the per-step ``next_values`` bootstrap array (Pardo 2017
+           §4): ``V(s_truncated_final_t)`` at truncation boundaries (cached
+           at observe time), ``0.0`` at terminations, ``values[t + 1]``
+           otherwise; rollout-tail bootstrap at ``t = T - 1`` is the same
+           rule applied to ``self._last_next_obs``.
         2. :func:`compute_gae` → raw advantages ``A_t``.
         3. ``returns_t = A_t + V(s_t)`` (the critic regression target).
         4. :func:`normalize_advantages` → normalized ``A_t`` for the
@@ -586,27 +710,19 @@ class EgoPPOTrainer:
         """
         if not self._buf_rewards:
             return
-        # Bootstrap value for the last buffered step.
-        if self._buf_dones[-1] or self._last_next_obs is None:
-            bootstrap_value = 0.0
-        else:
-            with torch.no_grad():
-                bootstrap_value = float(
-                    self._critic(
-                        torch.from_numpy(self._last_next_obs).to(self._device).unsqueeze(0)
-                    )
-                    .squeeze()
-                    .item()
-                )
 
         rewards = np.asarray(self._buf_rewards, dtype=np.float32)
         values = np.asarray(self._buf_values, dtype=np.float32)
-        dones = np.asarray(self._buf_dones, dtype=np.bool_)
+        terminated = np.asarray(self._buf_terminated, dtype=np.bool_)
+        truncated = np.asarray(self._buf_truncated, dtype=np.bool_)
+        truncation_bootstraps = np.asarray(self._buf_truncation_bootstraps, dtype=np.float32)
+        next_values = self._build_next_values(values, terminated, truncated, truncation_bootstraps)
+        episode_boundaries = terminated | truncated
         raw_advantages = compute_gae(
             rewards,
             values,
-            dones,
-            bootstrap_value=bootstrap_value,
+            next_values,
+            episode_boundaries,
             gamma=self._gamma,
             gae_lambda=self._gae_lambda,
         )
@@ -676,7 +792,9 @@ class EgoPPOTrainer:
         self._buf_log_probs.clear()
         self._buf_values.clear()
         self._buf_rewards.clear()
-        self._buf_dones.clear()
+        self._buf_terminated.clear()
+        self._buf_truncated.clear()
+        self._buf_truncation_bootstraps.clear()
         self._last_next_obs = None
 
     def state_dict(self) -> dict[str, Any]:

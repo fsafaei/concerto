@@ -162,8 +162,19 @@ class EgoTrainer(Protocol):
         obs: Mapping[str, Any],
         reward: float,
         done: bool,
+        *,
+        truncated: bool = False,
     ) -> None:
-        """Record a (s, a, r, s', done) tuple into the trainer's buffer (ADR-002 §Decisions)."""
+        """Record a (s, a, r, s', done, truncated) tuple (ADR-002 §Decisions; Pardo 2017).
+
+        ``done`` keeps the historical "this step ended the episode"
+        meaning (terminated OR truncated). ``truncated`` is a
+        keyword-only flag that distinguishes time-limit truncation from
+        true termination — needed by PPO-style trainers to bootstrap the
+        GAE target correctly (see :func:`chamber.benchmarks.ego_ppo_trainer.compute_gae`
+        and project issue #62 for the root-cause writeup). Default
+        ``truncated=False`` keeps legacy callers' behavior unchanged.
+        """
         ...  # pragma: no cover
 
     def update(self) -> None:
@@ -266,9 +277,11 @@ class RandomEgoTrainer:
         obs: Mapping[str, Any],
         reward: float,
         done: bool,
+        *,
+        truncated: bool = False,
     ) -> None:
         """No-op (ADR-002 §Decisions): reference trainer has no rollout buffer."""
-        del obs, reward, done
+        del obs, reward, done, truncated
 
     def update(self) -> None:
         """No-op (ADR-002 §Decisions): reference trainer has no learnable params."""
@@ -368,7 +381,13 @@ def train(
         obs, reward, terminated, truncated, _ = env.step(action)
         curve.per_step_ego_rewards.append(reward)
         episode_reward_acc += reward
-        trainer.observe(obs, reward, terminated or truncated)
+        # Pardo 2017 / issue #62: thread terminated AND truncated
+        # separately. ``done`` keeps the historical episode-boundary
+        # meaning (terminated OR truncated) so the loop's reset logic is
+        # unchanged; ``truncated`` is the kwarg-only flag PPO-style
+        # trainers use to bootstrap GAE correctly at time-limit
+        # boundaries.
+        trainer.observe(obs, reward, terminated or truncated, truncated=truncated)
 
         if (step + 1) % cfg.happo.rollout_length == 0:
             trainer.update()
