@@ -51,6 +51,7 @@ nav:
       - Add a new partner class: how-to/add-partner.md
       - Add a new safety filter: how-to/add-filter.md
       - Run a spike with a custom hypothesis: how-to/run-spike.md
+      - Run on a GPU host: how-to/run-on-gpu.md
   - Reference:
       - API: reference/api.md
       - ADRs: reference/adrs.md

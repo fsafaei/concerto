@@ -12,13 +12,16 @@ from typing import TYPE_CHECKING
 
 import pytest
 
+from chamber.benchmarks.stage0_smoke import _SMOKE_ROBOT_UIDS
 from chamber.benchmarks.training_runner import (
     build_env,
     build_partner,
     run_training,
 )
+from chamber.envs.errors import ChamberEnvCompatibilityError
 from chamber.envs.mpe_cooperative_push import MPECooperativePushEnv
 from chamber.partners.heuristic import ScriptedHeuristicPartner
+from chamber.utils.device import sapien_gpu_available
 from concerto.training.config import (
     EgoAHTConfig,
     EnvConfig,
@@ -55,10 +58,26 @@ class TestBuildEnv:
         obs, _ = env.reset(seed=0)
         assert "agent" in obs
 
-    def test_stage0_smoke_raises_until_t4b3(self) -> None:
-        """T4b.3: the Stage-0 adapter is deferred to the HARL fork."""
-        with pytest.raises(NotImplementedError, match=r"T4b\.3"):
+    def test_stage0_smoke_rejects_non_smoke_uids(self) -> None:
+        """T4b.3: the Stage-0 adapter rejects agent_uids that aren't ADR-001 rig robots."""
+        with pytest.raises(ValueError, match="_SMOKE_ROBOT_UIDS"):
             build_env(EnvConfig(task="stage0_smoke"), root_seed=0)
+
+    @pytest.mark.skipif(
+        sapien_gpu_available(),
+        reason="Vulkan is available; CPU-only error path not reachable here",
+    )
+    def test_stage0_smoke_raises_compat_error_without_gpu(self) -> None:
+        """ADR-001 §Risks: build_env for stage0_smoke surfaces the SAPIEN-missing error."""
+        with pytest.raises(ChamberEnvCompatibilityError, match="SAPIEN/Vulkan"):
+            build_env(
+                EnvConfig(
+                    task="stage0_smoke",
+                    episode_length=10,
+                    agent_uids=(_SMOKE_ROBOT_UIDS[0], _SMOKE_ROBOT_UIDS[1]),
+                ),
+                root_seed=0,
+            )
 
     def test_unknown_task_raises(self) -> None:
         """ADR-002 §Decisions: unknown task names fail loud."""

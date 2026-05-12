@@ -34,6 +34,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from chamber.benchmarks.ego_ppo_trainer import EgoPPOTrainer
+from chamber.benchmarks.stage0_smoke_adapter import make_stage0_training_env
 from chamber.envs.mpe_cooperative_push import MPECooperativePushEnv
 from chamber.partners.api import PartnerSpec
 from chamber.partners.registry import load_partner
@@ -53,9 +54,13 @@ def build_env(env_cfg: EnvConfig, *, root_seed: int) -> EnvLike:
 
     - ``"mpe_cooperative_push"`` → :class:`MPECooperativePushEnv` (T4b.13's
       empirical-guarantee env).
-    - ``"stage0_smoke"`` → reserved for T4b.3 (HARL fork's
-      ``concerto_env_adapter``); raises :class:`NotImplementedError`
-      until that lands.
+    - ``"stage0_smoke"`` → :func:`chamber.benchmarks.stage0_smoke_adapter.make_stage0_training_env`
+      (T4b.3 / plan/05 §3.4). Constructs the rig-validated ADR-001
+      3-robot env and adapts it to the
+      :class:`~concerto.training.ego_aht.EnvLike` shape. Requires a
+      Vulkan-capable GPU; raises
+      :class:`chamber.envs.errors.ChamberEnvCompatibilityError` on
+      CPU-only hosts.
 
     Args:
         env_cfg: The validated :class:`~concerto.training.config.EnvConfig`.
@@ -69,7 +74,8 @@ def build_env(env_cfg: EnvConfig, *, root_seed: int) -> EnvLike:
 
     Raises:
         ValueError: If ``env_cfg.task`` is not in the dispatch table.
-        NotImplementedError: If ``env_cfg.task == "stage0_smoke"``.
+        ChamberEnvCompatibilityError: If ``env_cfg.task == "stage0_smoke"``
+            and SAPIEN / Vulkan is unavailable (see ADR-001 §Risks).
     """
     if env_cfg.task == "mpe_cooperative_push":
         return MPECooperativePushEnv(
@@ -78,14 +84,13 @@ def build_env(env_cfg: EnvConfig, *, root_seed: int) -> EnvLike:
             root_seed=root_seed,
         )
     if env_cfg.task == "stage0_smoke":
-        raise NotImplementedError(
-            "stage0_smoke env is wired up via the HARL fork's "
-            "concerto_env_adapter (T4b.3); see ADR-002 §Decisions and "
-            "phase0_reading_kit/plan/05-training-stack.md §3.4."
+        return make_stage0_training_env(
+            agent_uids=env_cfg.agent_uids,
+            episode_length=env_cfg.episode_length,
+            root_seed=root_seed,
         )
     raise ValueError(
-        f"Unknown env task {env_cfg.task!r}; supported: 'mpe_cooperative_push', "
-        "'stage0_smoke' (deferred to T4b.3)."
+        f"Unknown env task {env_cfg.task!r}; supported: 'mpe_cooperative_push', 'stage0_smoke'."
     )
 
 
