@@ -54,14 +54,26 @@ CONCERTO is the first method designed and certified on it.
 
 ### How we sit relative to the closest prior work
 
+Every prior precedent covers at most three of the four aspects. The
+table below lists the closest precedent for each pair of aspects; no
+published row hits all four. Click any precedent to open the paper.
+
 | Method | Heterogeneous | Black-box partner | Safety bound | Contact-rich manipulation |
 |---|:---:|:---:|:---:|:---:|
-| Liu 2024 (RSS, LLM&#x2011;AHT)      | &#10003; | &#10003; |   |   |
-| COHERENT (LLM&#x2011;planning)      | &#10003; | &#10003; |   |   |
-| Huriot &amp; Sibai 2025 (conformal CBF) |   | &#10003; | &#10003; |   |
-| Singh 2024 (black-box CBF)          |   | &#10003; | &#10003; |   |
-| HetGPPO &nbsp;/ &nbsp;HARL          | &#10003; |   |   |   |
-| **CONCERTO + CHAMBER**              | **&#10003;** | **&#10003;** | **&#10003;** | **&#10003;** |
+| [Liu 2024 RSS (LLM&#x2011;AHT)](https://arxiv.org/abs/2406.12224)                            | &#10003; | &#10003; |          |          |
+| [COHERENT (LLM&#x2011;MR planning)](https://arxiv.org/abs/2409.15146)                        | &#10003; | &#10003; |          |          |
+| [Huriot &amp; Sibai 2025 (conformal CBF)](https://arxiv.org/abs/2409.18862)                  |          | &#10003; | &#10003; |          |
+| [HetGPPO](https://arxiv.org/abs/2301.07137) &nbsp;/ [HARL](https://jmlr.org/papers/v25/23-0488.html) (heterogeneous MARL) | &#10003; |          |          |          |
+| [Wang et al. 2017 (multi&#x2011;robot CBFs)](https://ieeexplore.ieee.org/document/7989121)   | &#10003; |          | &#10003; |          |
+| [RoCoBench (multi&#x2011;robot manipulation)](https://arxiv.org/abs/2307.04738)              | &#10003; |          |          | &#10003; |
+| [SafeBimanual (safe bimanual manip.)](https://arxiv.org/abs/2508.18268)                      |          |          | &#10003; | &#10003; |
+| **CONCERTO + CHAMBER**                                                                       | **&#10003;** | **&#10003;** | **&#10003;** | **&#10003;** |
+
+Read the table by columns to see what each aspect covers in isolation,
+and by rows to see what no single line of work has yet combined.
+Contact-rich manipulation appears with multi-robot coordination
+(RoCoBench) and with safety (SafeBimanual), but never with black-box
+ad-hoc partners under formal safety guarantees at the same time.
 
 See [`adr/ADR-007`](adr/ADR-007-heterogeneity-axis-selection.md) for the
 six-axis taxonomy that defines "heterogeneous" precisely, and the
