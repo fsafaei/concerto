@@ -39,6 +39,8 @@ from concerto.training.checkpoints import (
 if TYPE_CHECKING:
     from pathlib import Path
 
+    from numpy.typing import NDArray
+
 
 # ---------------------------------------------------------------------------
 # Fixture helpers
@@ -120,7 +122,7 @@ def _spec(**extra: str) -> PartnerSpec:
     )
 
 
-def _obs(state: np.ndarray | None = None) -> dict[str, object]:
+def _obs(state: NDArray[np.floating] | None = None) -> dict[str, object]:
     if state is None:
         state = np.zeros(_OBS_DIM, dtype=np.float32)
     return {"agent": {"allegro_hand_right": {"state": state}}}

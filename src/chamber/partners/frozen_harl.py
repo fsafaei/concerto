@@ -158,6 +158,12 @@ class FrozenHARLPartner(PartnerBase):
     deferred to the first :meth:`reset` / :meth:`act` call so the
     registry lookup in :func:`chamber.partners.registry.load_partner`
     stays cheap.
+
+    Device placement (Phase-0): inference runs on CPU. HAPPO actor
+    forward passes are microseconds-scale and not the project's
+    throughput bottleneck (the OpenVLA partner stratum is); partner-side
+    GPU placement is deferred to a future partner-config plane and would
+    need its own ADR amendment.
     """
 
     def __init__(self, spec: PartnerSpec) -> None:
