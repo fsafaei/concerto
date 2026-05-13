@@ -35,15 +35,15 @@
 </p>
 
 > **Status &mdash; pre-release, Phase&nbsp;0.** Architecture is
-> **provisionally specified** by 15 ADRs; the senior-advisor lock
-> review and the staged Phase-0 spike protocol
-> ([ADR-007](adr/ADR-007-heterogeneity-axis-selection.md)) are the
-> validation gates that will promote ADRs from Provisional / RFC to
-> Accepted and ultimately to Validated. The Stage-1
-> (AS&nbsp;+&nbsp;OM) preregistrations are the next launch; the
-> leaderboard fills with M5. The public API is on `0.x` &mdash;
-> MINOR bumps may break it per SemVer&nbsp;&sect;4. See
-> [Roadmap](#roadmap).
+> locked in 15 ADRs (13 Accepted, 2 RFC) under the working policy
+> recorded in [`adr/ADR-INDEX.md`](adr/ADR-INDEX.md); the staged
+> Phase-0 spike protocol
+> ([ADR-007](adr/ADR-007-heterogeneity-axis-selection.md)) is the
+> validation gate that promotes Accepted ADRs to **Validated** with
+> per-axis &#8805;20&nbsp;pp evidence. The Stage-1 (AS&nbsp;+&nbsp;OM)
+> preregistrations are the next launch; the leaderboard fills with
+> M5. The public API is on `0.x` &mdash; MINOR bumps may break it
+> per SemVer&nbsp;&sect;4. See [Roadmap](#roadmap).
 
 **TL;DR.** CONCERTO is a three-layer safety stack &mdash; exponential
 CBF&#x2011;QP, conformal-slack overlay, OSCBF inner filter, hard
@@ -348,12 +348,11 @@ Phase&nbsp;1 ships the partner zoo and the populated leaderboard.
 Phase&nbsp;2 expands tasks and adds the real-robot demo platform.
 
 **Now &mdash; Phase&nbsp;0, design contract live, spikes about to start.**
-15 ADRs classified as Provisional or RFC under the new status taxonomy
-(see [adr/ADR-INDEX.md](adr/ADR-INDEX.md)); Month-3 senior-advisor
-lock review imminent (&approx;9 ADRs targeted for promotion to
-Accepted). M1 (platform), M2 (comm), and M4b (training stack) are
-merged on `main`. The `chamber-spike` CLI runs the ego-AHT loop
-end-to-end against a Hydra config.
+15 ADRs (13 Accepted, 2 RFC) under the status taxonomy in
+[`adr/ADR-INDEX.md`](adr/ADR-INDEX.md); open follow-up work is
+tracked per-ADR via the footnote column. M1 (platform), M2 (comm),
+and M4b (training stack) are merged on `main`. The `chamber-spike`
+CLI runs the ego-AHT loop end-to-end against a Hydra config.
 
 **Next.**
 Stage-1 spikes (AS&nbsp;+&nbsp;OM) &mdash; preregistered, launched,
@@ -403,11 +402,13 @@ single violation can be irreversible, the hard braking fallback
 per-step backstop. Sharpening the average-loss bound to per-step is
 the project's headline open theoretical question; see
 [ADR-004 Open Questions](adr/ADR-004-safety-filter.md#open-questions-deferred-to-a-later-adr).
-The conformal layer is a *Provisional* claim under the ADR status
-taxonomy; per-step safety under heterogeneous action spaces is gated
-by the Stage-1 AS spike and the follow-up safety-stack refactor
-flagged in
-[ADR-004 §Open Questions](adr/ADR-004-safety-filter.md#open-questions-deferred-to-a-later-adr).
+The conformal layer's average-loss bound is an *Accepted* claim
+under the ADR status taxonomy with the per-step refinement flagged
+as **Open work** in
+[ADR-004](adr/ADR-004-safety-filter.md) (see also
+[ADR-INDEX footnote a](adr/ADR-INDEX.md#open-work-flags)); promoting
+the layer to *Validated* is gated on the Stage-1 AS spike and the
+follow-up safety-stack refactor.
 
 </details>
 

@@ -10,37 +10,66 @@
 | Validated | Accepted and empirically supported by spike or test evidence. |
 | Superseded by ADR-NNN | Historical only. |
 
-This replaces the prior binary "Proposed / Accepted" model. All 15
-existing ADRs are re-classified as **Provisional** or **RFC** below
-based on whether implementation is in progress for them. No ADR
-Decision is changed by this re-classification; only the Status label
-and §Revision history of each ADR are updated.
+While the project is solo, the working policy is to **treat each ADR
+that has a written Decision as Accepted as of its lock date** and to
+flag any open follow-up work on a per-ADR basis using the footnote
+column below. ADRs that genuinely have no Decision yet (no platform
+selected, no scope locked) remain RFC. Promotion from Accepted to
+Validated is reserved for ADRs that subsequently accrue spike or test
+evidence per their own §Validation criteria.
 
-| #   | Title                                                              | v0.2 ref           | Lock by    | Status                  |
-|-----|--------------------------------------------------------------------|--------------------|------------|-------------------------|
-| 001 | Fork ManiSkill2 vs. build standalone benchmark                     | §3.1               | Phase 0    | Provisional             |
-| 002 | RL framework — JAX (Mava) vs PyTorch (HARL)                        | §13                | Phase 0    | Provisional             |
-| 003 | Communication interface — fixed-format, learned, or both           | §13                | Phase 0    | Provisional             |
-| 004 | Safety filter formulation — exp CBF, HO-CBF, MPC, learned          | §6.2 + §13         | Phase 0    | Provisional<sup>†</sup> |
-| 005 | Simulator base — Isaac Lab, MuJoCo, PyBullet, ManiSkill            | §3.1, §3.9         | Phase 0    | Provisional             |
-| 006 | Partner-policy assumption set — bounded action norm/rate/latency   | §6.1               | Phase 0    | Provisional<sup>†</sup> |
-| 007 | Heterogeneity-axis selection (≥20pp gap rule)                      | §3.4               | Phase 0    | RFC                     |
-| 008 | HRS bundle composition                                             | §3.7               | Phase 0–1  | RFC                     |
-| 009 | Partner-zoo construction (algos / seeds / public-private split)    | §3.5               | Phase 1    | RFC                     |
-| 010 | Foundation-model partner selection                                 | §3.5               | Phase 1    | RFC                     |
-| 011 | Baseline set — which of B1–B7 ship in Phase 1                      | §3.10 + Phase 1    | Phase 0–1  | RFC                     |
-| 012 | License & CLA                                                      | §10                | Phase 0    | Provisional             |
-| 013 | Real-robot demo platform & vendor                                  | §5.1               | Phase 0    | RFC                     |
-| 014 | Safety violation reporting protocol                                | §6.3               | Phase 1    | Provisional<sup>‡</sup> |
-| 015 | Tier-task scope freeze                                             | §3.3 + §7.3        | Phase 1    | RFC                     |
+| #   | Title                                                              | v0.2 ref           | Lock by    | Status                       |
+|-----|--------------------------------------------------------------------|--------------------|------------|------------------------------|
+| 001 | Fork ManiSkill2 vs. build standalone benchmark                     | §3.1               | Phase 0    | Accepted (2026-05-13)        |
+| 002 | RL framework — JAX (Mava) vs PyTorch (HARL)                        | §13                | Phase 0    | Accepted (2026-05-13)        |
+| 003 | Communication interface — fixed-format, learned, or both           | §13                | Phase 0    | Accepted (2026-05-13)        |
+| 004 | Safety filter formulation — exp CBF, HO-CBF, MPC, learned          | §6.2 + §13         | Phase 0    | Accepted (2026-05-13)<sup>a</sup> |
+| 005 | Simulator base — Isaac Lab, MuJoCo, PyBullet, ManiSkill            | §3.1, §3.9         | Phase 0    | Accepted (2026-05-13)        |
+| 006 | Partner-policy assumption set — bounded action norm/rate/latency   | §6.1               | Phase 0    | Accepted (2026-05-13)<sup>a</sup> |
+| 007 | Heterogeneity-axis selection (≥20pp gap rule)                      | §3.4               | Phase 0    | Accepted (2026-05-13)<sup>b</sup> |
+| 008 | HRS bundle composition                                             | §3.7               | Phase 0–1  | Accepted (2026-05-13)<sup>c</sup> |
+| 009 | Partner-zoo construction (algos / seeds / public-private split)    | §3.5               | Phase 1    | Accepted (2026-05-13)        |
+| 010 | Foundation-model partner selection                                 | §3.5               | Phase 1    | Accepted (2026-05-13)        |
+| 011 | Baseline set — which of B1–B7 ship in Phase 1                      | §3.10 + Phase 1    | Phase 0–1  | Accepted (2026-05-13)        |
+| 012 | License & CLA                                                      | §10                | Phase 0    | Accepted (2026-05-13)<sup>d</sup> |
+| 013 | Real-robot demo platform & vendor                                  | §5.1               | Phase 0    | RFC<sup>e</sup>              |
+| 014 | Safety violation reporting protocol                                | §6.3               | Phase 1    | Accepted (2026-05-13)<sup>f</sup> |
+| 015 | Tier-task scope freeze                                             | §3.3 + §7.3        | Phase 1    | RFC<sup>e</sup>              |
 
-<sup>†</sup> Claims qualified — see [ADR-004 §Open Questions](ADR-004-safety-filter.md#open-questions-deferred-to-a-later-adr)
-for the average-loss → per-step bound gap and the related partner
-assumption-set qualifications that propagate to ADR-006.
+### Open work flags
 
-<sup>‡</sup> Reporting contract qualified — depends on the ADR-008
-HRS bundle composition and on the PR-A2 conformal-loss instrumentation
-that separates prediction-gap loss from constraint-violation signal.
+<sup>a</sup> Per-step safety bound under heterogeneous action spaces
+is not yet established — the conformal layer gives an average-loss
+bound (Huriot & Sibai 2025 Theorem 3); sharpening to per-step is
+gated by the Stage-1 AS spike and the follow-up safety-stack refactor.
+See [ADR-004 §Open questions](ADR-004-safety-filter.md#open-questions-deferred-to-a-later-adr)
+and [ADR-006 §Open questions](ADR-006-partner-policy-assumptions.md#open-questions-deferred-to-a-later-adr).
+
+<sup>b</sup> The staged Phase-0 spike protocol (Stage 1: AS + OM;
+Stage 2: CR + CM; Stage 3: PF + SA) is committed but the spikes have
+not yet been run; the ≥20 pp gate has not yet been measured for any
+axis. Promotion to **Validated** requires the per-axis spike evidence
+named in [ADR-007 §Validation criteria](ADR-007-heterogeneity-axis-selection.md#validation-criteria).
+
+<sup>c</sup> The HRS bundle's third axis (CM × PF × CR vs the
+fallback latency × drop × degraded-partner formula) depends on which
+axes survive the ADR-007 staged spikes. Default bundle is locked at
+**CM × PF × CR**; fallback rules are written into the Decision so the
+ADR self-resolves once Stage 2 / Stage 3 evidence lands.
+
+<sup>d</sup> Apache 2.0 license is locked; CLA bot wiring is not yet
+in place. See [ADR-012 §Open questions](ADR-012-license.md#open-questions-deferred-to-a-later-adr).
+
+<sup>e</sup> No Decision yet — ADR is genuinely pending. ADR-013
+waits on hardware-partner outreach; ADR-015 waits on Phase-0
+customer-discovery synthesis. These remain RFC until their Decision
+sections can be filled.
+
+<sup>f</sup> Reporting contract is qualified by ADR-008 HRS bundle
+composition (footnote c) and by the PR-A2 conformal-loss
+instrumentation that separates prediction-gap loss from
+constraint-violation signal. Table content is stable; per-axis row
+counts firm up once ADR-008 lands its surviving-axis set.
 
 ## Lock-by phases (per v0.2 §8 gates)
 - **Phase 0** (Month 3): ADRs 001, 002, 003, 004, 005, 006, 007, 012, 013.
@@ -49,11 +78,12 @@ that separates prediction-gap loss from constraint-violation signal.
 - **Phase 1** (Month 12 gate): ADR 015.
 
 ## Locking rule
+
 An ADR cannot be promoted to Accepted unless its **Evidence basis**
 cites at least one Tier-1 or Tier-2 reading note (or the
 customer-discovery synthesis for ADRs 008, 013, 015 where reading is
-not the primary input). ADRs without note citations remain RFC until
-reading catches up. Promotion from Provisional to Accepted requires
-the senior-advisor lock review; promotion from Accepted to Validated
-requires the corresponding spike or test evidence cited in the ADR
-§Validation criteria.
+not the primary input). Promotion from Accepted to Validated requires
+the corresponding spike or test evidence cited in the ADR §Validation
+criteria. While the project is solo, the lock decision rests with the
+project lead; once external reviewers / advisors are onboarded, the
+gate becomes a review checkpoint.

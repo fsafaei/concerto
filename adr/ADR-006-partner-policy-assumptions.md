@@ -1,6 +1,7 @@
 # ADR-006: Partner-policy assumption set
 
-**Status.** Provisional (dependency update 2026-05-08 in light of ADR-007 rev 3 staged rollout; claims remain qualified — see [ADR-004 §Open Questions](ADR-004-safety-filter.md#open-questions-deferred-to-a-later-adr))
+**Status.** Accepted (2026-05-13) (dependency update 2026-05-08 in light of ADR-007 rev 3 staged rollout)
+**Open work.** Partner-policy assumption set inherits the per-step-bound gap from ADR-004; see [ADR-004 §Open questions](ADR-004-safety-filter.md#open-questions-deferred-to-a-later-adr) and [ADR-INDEX footnote a](ADR-INDEX.md#open-work-flags).
 **Authors.** Farhad Safaei
 **Reviewers.** _to fill_
 **Tags.** v0.2 §6.1, SAFE
@@ -54,3 +55,4 @@ By Phase-1 end: (a) every partner in the partner-zoo has its empirical CBF-const
 ## Revision history
 - 2026-05-13 revision: anchors the comm-axis numeric bounds (latency, jitter, drop) in IEEE 802.1Qbv scheduled-traffic guarantees and the 3GPP Release 17 URLLC service class, with 3GPP TS 23.501 §5.27 as the 5G-TSN integration model. No change to the Decision. Ties to the public standards reference at docs/reference/standards.md.
 - 2026-05-13 status re-classification: status changed from Proposed to **Provisional** under the new ADR status taxonomy (see [ADR-INDEX §Status taxonomy](ADR-INDEX.md#status-taxonomy)); claims remain qualified by [ADR-004 §Open Questions](ADR-004-safety-filter.md#open-questions-deferred-to-a-later-adr); no Decision content is altered.
+- 2026-05-13 lock: promoted to **Accepted (2026-05-13)** under the solo-developer working policy in ADR-INDEX; the partner-policy bounds inherit the per-step-bound gap from ADR-004 and remain flagged as Open work; no Decision content is altered.

@@ -1,6 +1,7 @@
 # ADR-012: License & CLA
 
-**Status.** Provisional
+**Status.** Accepted (2026-05-13)
+**Open work.** CLA bot wiring is not yet in place; see [ADR-INDEX footnote d](ADR-INDEX.md#open-work-flags).
 **Authors.** _to fill_
 **Reviewers.** _to fill_
 **Tags.** v0.2 §10
@@ -46,3 +47,4 @@ Acceptance is unconditional; this ADR is largely a recording of the plan default
 ## Revision history
 
 - 2026-05-13 status re-classification: status changed from Proposed to **Provisional** under the new ADR status taxonomy (see [ADR-INDEX §Status taxonomy](ADR-INDEX.md#status-taxonomy)); the Apache 2.0 license is locked but the CLA bot is not yet wired; no Decision content is altered.
+- 2026-05-13 lock: promoted to **Accepted (2026-05-13)** under the solo-developer working policy in ADR-INDEX; the CLA bot wiring remains flagged as Open work; no Decision content is altered.

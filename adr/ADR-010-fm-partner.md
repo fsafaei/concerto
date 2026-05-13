@@ -1,6 +1,6 @@
 # ADR-010: Foundation-model partner selection
 
-**Status.** RFC
+**Status.** Accepted (2026-05-13)
 **Authors.** Farhad Safaei
 **Reviewers.** _to fill_
 **Tags.** v0.2 §3.5
@@ -60,3 +60,4 @@ By Phase-1 end: the OpenVLA LoRA-adapted partner achieves ≥ 50% task success o
 ## Revision history
 
 - 2026-05-13 status re-classification: status changed from Proposed to **RFC** under the new ADR status taxonomy (see [ADR-INDEX §Status taxonomy](ADR-INDEX.md#status-taxonomy)); Phase-1 lock pending; no Decision content is altered.
+- 2026-05-13 lock: promoted to **Accepted (2026-05-13)** under the solo-developer working policy in ADR-INDEX (Option B — OpenVLA + CrossFormer — is the committed Phase-1 FM stratum); no Decision content is altered.

@@ -1,6 +1,6 @@
 # ADR-003: Communication interface — fixed-format, learned, or both
 
-**Status.** Provisional (dependency update 2026-05-08 in light of ADR-007 rev 3 staged rollout)
+**Status.** Accepted (2026-05-13) (dependency update 2026-05-08 in light of ADR-007 rev 3 staged rollout)
 **Authors.** Farhad Safaei
 **Reviewers.** _to fill_
 **Tags.** v0.2 §13, §3.9, HMARL
@@ -60,3 +60,4 @@ By Phase-1 end: at least one B6 baseline (HetGPPO or CommFormer AHT fork) using 
 ## Revision history
 - 2026-05-13 revision: anchors the fixed-format channel in the IEEE 802.1 TSN family (802.1AS / 802.1Qbv / 802.1CB) and the 3GPP TS 23.501 §5.27 5G-TSN integration model in Context and Evidence basis. No change to the Decision. Ties to the public standards reference at docs/reference/standards.md.
 - 2026-05-13 status re-classification: status changed from Proposed to **Provisional** under the new ADR status taxonomy (see [ADR-INDEX §Status taxonomy](ADR-INDEX.md#status-taxonomy)); no Decision content is altered.
+- 2026-05-13 lock: promoted to **Accepted (2026-05-13)** under the solo-developer working policy in ADR-INDEX (M2 comm stack is merged on `main` and the fixed-format channel is in active use); no Decision content is altered.

@@ -1,6 +1,7 @@
 # ADR-015: Tier-task scope freeze
 
 **Status.** RFC
+**Open work.** No tier-task scope locked; waiting on Phase-0 customer-discovery synthesis. ADR remains RFC until a Decision is written. See [ADR-INDEX footnote e](ADR-INDEX.md#open-work-flags).
 **Authors.** Farhad Safaei
 **Reviewers.** _to fill_
 **Tags.** v0.2 §3.3 + §7.3
@@ -56,3 +57,4 @@ By Phase-1 end (Month-7 gate): (1) each confirmed tier has a documented integrat
 ## Revision history
 
 - 2026-05-13 status re-classification: status changed from Proposed to **RFC** under the new ADR status taxonomy (see [ADR-INDEX §Status taxonomy](ADR-INDEX.md#status-taxonomy)); Phase-1 lock pending DACH customer-discovery synthesis; no Decision content is altered.
+- 2026-05-13 lock review: ADR is held at **RFC** under the solo-developer working policy in ADR-INDEX. Unlike the 13 ADRs that promoted to Accepted on the same date, this ADR's Decision section is still "pending Phase-0 customer-discovery synthesis" — there is nothing to lock; promotion to Accepted is gated on writing a real Decision.

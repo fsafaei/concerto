@@ -1,6 +1,7 @@
 # ADR-004: Safety filter formulation — exp CBF, HO-CBF, MPC, learned
 
-**Status.** Provisional (dependency update 2026-05-08 in light of ADR-007 rev 3 staged rollout; claims remain qualified — see §Open questions deferred to a later ADR)
+**Status.** Accepted (2026-05-13) (dependency update 2026-05-08 in light of ADR-007 rev 3 staged rollout)
+**Open work.** Per-step safety bound under heterogeneous action spaces and the implied safety-stack refactor; see [§Open questions deferred to a later ADR](#open-questions-deferred-to-a-later-adr) and [ADR-INDEX footnote a](ADR-INDEX.md#open-work-flags).
 **Authors.** Farhad Safaei
 **Reviewers.** _to fill_
 **Tags.** v0.2 §6.2 + §13, SAFE
@@ -62,3 +63,4 @@ By Phase-2 end: (1) B0 with CBF-QP + conformal safety filter achieves <2% inter-
 ## Revision history
 - 2026-05-13 revision: adds foundational CBF and CP citations (Ames 2017, Ames 2019, Shafer-Vovk 2008, Angelopoulos-Bates 2023) in Context, Rationale, and Evidence basis. No change to the Decision. Ties to the new public literature page at docs/reference/literature.md.
 - 2026-05-13 status re-classification: status changed from Proposed to **Provisional** under the new ADR status taxonomy (see [ADR-INDEX §Status taxonomy](ADR-INDEX.md#status-taxonomy)); claims remain qualified by §Open questions; no Decision content is altered.
+- 2026-05-13 lock: promoted to **Accepted (2026-05-13)** under the solo-developer working policy in ADR-INDEX; the per-step-bound and safety-stack refactor remain flagged as Open work pointing into §Open questions; no Decision content is altered.

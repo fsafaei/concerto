@@ -1,6 +1,6 @@
 # ADR-002: RL framework — JAX (Mava) vs PyTorch (HARL) vs other
 
-**Status.** Provisional
+**Status.** Accepted (2026-05-13)
 **Authors.** Farhad Safaei
 **Reviewers.** _to fill_
 **Tags.** v0.2 §13, HMARL
@@ -51,3 +51,4 @@ By Phase-1 mid: ego-only HAPPO (frozen partner) reproduces published HARL Bi-Dex
 ## Revision history
 
 - 2026-05-13 status re-classification: status changed from Proposed to **Provisional** under the new ADR status taxonomy (see [ADR-INDEX §Status taxonomy](ADR-INDEX.md#status-taxonomy)); no Decision content is altered.
+- 2026-05-13 lock: promoted to **Accepted (2026-05-13)** under the solo-developer working policy in ADR-INDEX (M4b training stack is merged on `main`); no Decision content is altered.

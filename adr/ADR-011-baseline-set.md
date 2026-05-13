@@ -1,6 +1,6 @@
 # ADR-011: Baseline set — which of B1–B7 ship in Phase 1
 
-**Status.** RFC (dependency update 2026-05-08 in light of ADR-007 rev 3 staged rollout; Phase-1 lock pending)
+**Status.** Accepted (2026-05-13) (dependency update 2026-05-08 in light of ADR-007 rev 3 staged rollout)
 **Authors.** Farhad Safaei
 **Reviewers.** _to fill_
 **Tags.** v0.2 §3.10 + Phase 1
@@ -59,3 +59,4 @@ By Phase 1 end: (1) all five shipped baselines (B1, B2, B3, B6, B7) reproduce ta
 ## Revision history
 
 - 2026-05-13 status re-classification: status changed from Proposed to **RFC** under the new ADR status taxonomy (see [ADR-INDEX §Status taxonomy](ADR-INDEX.md#status-taxonomy)); Phase-1 lock pending; no Decision content is altered.
+- 2026-05-13 lock: promoted to **Accepted (2026-05-13)** under the solo-developer working policy in ADR-INDEX (Option A — ship B1, B2, B3, B6, B7 in Phase 1, defer B5 — is the committed scope); no Decision content is altered.

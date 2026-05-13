@@ -1,6 +1,6 @@
 # ADR-001: Fork ManiSkill2 vs. build standalone benchmark
 
-**Status.** Provisional
+**Status.** Accepted (2026-05-13)
 **Authors.** Farhad Safaei
 **Reviewers.** _to fill_
 **Tags.** v0.2 §3.1, BENCH, infrastructure
@@ -62,3 +62,4 @@ Phase-0 acceptance test (≤2 days): a 50-line script that (i) instantiates an e
 ## Revision history
 
 - 2026-05-13 status re-classification: status changed from Proposed to **Provisional** under the new ADR status taxonomy (see [ADR-INDEX §Status taxonomy](ADR-INDEX.md#status-taxonomy)); no Decision content is altered.
+- 2026-05-13 lock: promoted to **Accepted (2026-05-13)** under the solo-developer working policy in ADR-INDEX (Decision is implemented on `main` and the Phase-0 smoke test is green); no Decision content is altered.

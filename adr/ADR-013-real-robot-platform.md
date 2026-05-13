@@ -1,6 +1,7 @@
 # ADR-013: Real-robot demo platform & vendor
 
 **Status.** RFC
+**Open work.** No platform selected; waiting on hardware-partner outreach. ADR remains RFC until a Decision is written. See [ADR-INDEX footnote e](ADR-INDEX.md#open-work-flags).
 **Authors.** _to fill_
 **Reviewers.** _to fill_
 **Tags.** v0.2 §5.1
@@ -46,3 +47,4 @@ By Month 12: one Tier-2 demo recorded on real heterogeneous robots.
 ## Revision history
 
 - 2026-05-13 status re-classification: status changed from Proposed to **RFC** under the new ADR status taxonomy (see [ADR-INDEX §Status taxonomy](ADR-INDEX.md#status-taxonomy)); real-robot platform selection is pending partner outreach; no Decision content is altered.
+- 2026-05-13 lock review: ADR is held at **RFC** under the solo-developer working policy in ADR-INDEX. Unlike the 13 ADRs that promoted to Accepted on the same date, this ADR's Decision section is still "pending hardware-partner outreach in Phase 0" — there is nothing to lock; promotion to Accepted is gated on writing a real Decision.

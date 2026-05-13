@@ -1,6 +1,6 @@
 # ADR-009: Partner-zoo construction
 
-**Status.** RFC (dependency update 2026-05-08 in light of ADR-007 rev 3 staged rollout; Phase-1 lock pending)
+**Status.** Accepted (2026-05-13) (dependency update 2026-05-08 in light of ADR-007 rev 3 staged rollout)
 **Authors.** _to fill_
 **Reviewers.** _to fill_
 **Tags.** v0.2 §3.5
@@ -66,3 +66,4 @@ By Phase-1 end:
 ## Revision history
 
 - 2026-05-13 status re-classification: status changed from Proposed to **RFC** under the new ADR status taxonomy (see [ADR-INDEX §Status taxonomy](ADR-INDEX.md#status-taxonomy)); Phase-1 lock pending; no Decision content is altered.
+- 2026-05-13 lock: promoted to **Accepted (2026-05-13)** under the solo-developer working policy in ADR-INDEX (Decision committed; the 3-partner draft zoo lands as part of ADR-007 Stage 3 preparation per the Validation criteria); no Decision content is altered.
