@@ -13,6 +13,11 @@ Public surface (see :mod:`concerto.safety.api` for full docstrings):
 - :class:`FilterInfo` — telemetry payload (ADR-014).
 - :class:`SafetyFilter` — integrated-stack Protocol (ADR-004).
 - :class:`ConcertoSafetyInfeasible` — QP-infeasibility error (ADR-004).
+- :class:`EmergencyController` — per-uid embodiment hook for the hard
+  braking fallback (ADR-004 risk-mitigation #1).
+- :class:`CartesianAccelEmergencyController` — default Cartesian
+  sum-and-saturate override for double-integrator agents (ADR-004
+  risk-mitigation #1).
 - :data:`DEFAULT_EPSILON`, :data:`DEFAULT_ETA`, :data:`DEFAULT_WARMUP_STEPS` —
   conformal defaults (ADR-004 §Decision).
 - :func:`solve_qp_stub` — small Clarabel QP benchmark used by the M2
@@ -33,6 +38,10 @@ from concerto.safety.api import (
     FloatArray,
     SafetyFilter,
     SafetyState,
+)
+from concerto.safety.emergency import (
+    CartesianAccelEmergencyController,
+    EmergencyController,
 )
 from concerto.safety.errors import ConcertoSafetyInfeasible
 from concerto.safety.solvers import ClarabelSolver
@@ -94,7 +103,9 @@ __all__ = [
     "DEFAULT_ETA",
     "DEFAULT_WARMUP_STEPS",
     "Bounds",
+    "CartesianAccelEmergencyController",
     "ConcertoSafetyInfeasible",
+    "EmergencyController",
     "FilterInfo",
     "FloatArray",
     "SafetyFilter",
