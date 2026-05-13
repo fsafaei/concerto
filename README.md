@@ -9,7 +9,7 @@
 
 <p align="center">
   <em>Contact-rich coordination with opaque, heterogeneous teammates &mdash;
-  with high-probability safety bounds.</em><br/>
+  with explicit safety assumptions and conformal-CBF reporting.</em><br/>
   <strong>CONCERTO</strong> is the method.
   <strong>CHAMBER</strong> is the benchmark.
   We evaluate CONCERTO on CHAMBER.
@@ -193,7 +193,10 @@ training. The few that don't focus on planning or navigation, not on
 contact-rich physical manipulation. The intersection of
 **Heterogeneity &times; Black-box partner &times; Safety &times; Manipulation** is
 empty in the published literature. CHAMBER is built to fill it, and
-CONCERTO is the first method designed and certified on it.
+CONCERTO is the first method designed against this four-aspect
+contract; empirical validation is staged through CHAMBER spikes
+(Stage&nbsp;1&nbsp;&rarr;&nbsp;Stage&nbsp;3) per
+[ADR-007 &sect;Decision](adr/ADR-007-heterogeneity-axis-selection.md#decision).
 
 ### How we sit relative to the closest prior work
 
@@ -221,7 +224,7 @@ Read the table by columns to see what each aspect covers in isolation,
 and by rows to see what no single line of work has yet combined.
 Contact-rich manipulation appears with multi-robot coordination
 (RoCoBench) and with safety (SafeBimanual), but never with black-box
-ad-hoc partners under formal safety guarantees at the same time.
+ad-hoc partners under explicit safety assumptions at the same time.
 CONCERTO + CHAMBER occupy the four-aspect intersection at the
 **design-contract** level (ADRs, scaffold, smoke test); empirical
 validation across the six heterogeneity sub-axes is the staged
