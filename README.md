@@ -88,22 +88,41 @@ pip install uv && uv sync --group dev
 
 # Smoke test the rig (ADR-001 acceptance criterion).
 uv run pytest -m smoke -x -v
+```
 
-# Compose a 5 ms-latency factory-floor channel.
-uv run python -c "
+Compose a factory-floor channel (URLLC-anchored degradation profile
+from ADR-006) and round-trip a packet through `encode` &rarr; `decode`:
+
+```python
 from chamber.comm import (
-    CommDegradationWrapper, FixedFormatCommChannel, URLLC_3GPP_R17,
+    CommDegradationWrapper,
+    FixedFormatCommChannel,
+    URLLC_3GPP_R17,
 )
+
 channel = CommDegradationWrapper(
     FixedFormatCommChannel(),
-    URLLC_3GPP_R17['factory'],
+    URLLC_3GPP_R17["factory"],
     tick_period_ms=1.0,
     root_seed=0,
 )
-packet = channel.send({'pose': (0, 0, 0), 'gripper': 0.0}, t_ms=0)
-print('shaped packet:', packet)
-"
+
+state = {
+    "pose": {
+        "ego": {"xyz": (0.0, 0.0, 0.0), "quat_wxyz": (1.0, 0.0, 0.0, 0.0)},
+    },
+    "task_state": {"ego": {"grasp_side": "left"}},
+}
+
+# The factory profile delays each packet by ~5 ticks; drain the queue so
+# the visible packet carries the freshly-encoded state.
+for _ in range(10):
+    packet = channel.encode(state)
+decoded = channel.decode(packet)
+print("decoded payload:", decoded)
 ```
+
+Save the snippet to `quickstart.py` and run `uv run python quickstart.py`.
 
 The six pre-registered URLLC profiles &mdash; `ideal`, `urllc`,
 `factory`, `wifi`, `lossy`, `saturation` &mdash; are the Stage&#x2011;2
