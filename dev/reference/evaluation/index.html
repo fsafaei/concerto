@@ -1550,11 +1550,15 @@ the citation.</p>
 <p>Beyond mean ± 95% CI, the CHAMBER leaderboard reports the
 rliable-style robust aggregate metrics introduced by Agarwal et al.
 (2021) [<code>agarwal2021precipice</code>]: interquartile mean (IQM),
-optimality gap, and performance profiles. IQM is the median of the middle 50% of scores, robust to
-outliers in either tail; optimality gap reports the proportion of the
-score distribution below a target threshold; performance profiles
-visualise the full score distribution as a CDF, surfacing dispersion
-that point estimates hide.</p>
+optimality gap, and performance profiles. IQM is the median of the
+middle 50% of scores, robust to outliers in either tail.</p>
+<p>Optimality gap reports the <strong>expected shortfall</strong> below a target
+threshold: <code>optimality_gap(X, τ) = E[max(τ - X, 0)]</code>. This is the
+Agarwal et al. 2021 / rliable definition: not the empirical CDF
+at τ, but the average amount by which the distribution falls
+short of τ.</p>
+<p>Performance profiles visualise the full score distribution as a CDF,
+surfacing dispersion that point estimates hide.</p>
 <p>The rliable contract is pinned in
 <a href="https://github.com/fsafaei/concerto/blob/main/adr/ADR-014-safety-reporting.md"><code>ADR-014</code></a>
 §Decision and mirrored verbatim here so that the two documents stay
@@ -1584,6 +1588,9 @@ definitions) so the leaderboard remains renderable without the
 optional extra; performance profiles delegate to <code>rliable</code> when the
 extra is installed and return <code>None</code> with a <code>RuntimeWarning</code>
 otherwise.</p>
+<p>Native IQM and optimality gap are computed without optional
+dependencies. Performance profiles delegate to rliable; install via
+<code>uv sync --extra eval</code> to enable them.</p>
 <p>See <code>agarwal2021precipice</code> in <a href="../literature/"><code>literature.md §5</code></a>
 for the citation.</p>
 <hr />

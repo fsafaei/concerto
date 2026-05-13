@@ -731,6 +731,17 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#prerequisites" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Prerequisites
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#protocol" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1294,6 +1305,17 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#prerequisites" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Prerequisites
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#protocol" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1352,6 +1374,19 @@ and verifies the git-tag SHA per
 the ≥20 pp gap test (reviewer P1-9); <code>hrs.py</code> computes the per-axis
 HRS vector and the headline scalar per
 <a href="https://github.com/fsafaei/concerto/blob/main/adr/ADR-008-hrs-bundle.md">ADR-008 §Decision</a>.</p>
+<h2 id="prerequisites">Prerequisites</h2>
+<p>Install CHAMBER with the <code>eval</code> optional extra so the renderer can
+emit the rliable-style performance-profile column alongside the
+native IQM and optimality-gap columns:</p>
+<div class="highlight"><pre><span></span><code>uv<span class="w"> </span>sync<span class="w"> </span>--extra<span class="w"> </span><span class="nb">eval</span>
+</code></pre></div>
+<p>The <code>eval</code> extra pulls in <code>rliable</code> (Agarwal et al. 2021). IQM and
+optimality gap are computed natively in
+<a href="../../reference/evaluation/"><code>chamber.evaluation.bootstrap</code></a> and do
+not require the extra; only performance profiles do. Without the
+extra, <code>chamber-render-tables</code> still produces a valid leaderboard
+row — the performance-profile column is emitted as <code>None</code> and a
+<code>RuntimeWarning</code> points back here.</p>
 <h2 id="protocol">Protocol</h2>
 <ol>
 <li>Copy the nearest existing pre-registration YAML from
