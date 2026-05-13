@@ -3,8 +3,24 @@ name: CI
 on:
   push:
     branches: [main]
+    paths:
+      - "src/**"
+      - "tests/**"
+      - ".github/workflows/ci.yml"
+      - "pyproject.toml"
+      - "README.md"
+      - "docs/**"
+      - "mkdocs.yml"
   pull_request:
     branches: [main]
+    paths:
+      - "src/**"
+      - "tests/**"
+      - ".github/workflows/ci.yml"
+      - "pyproject.toml"
+      - "README.md"
+      - "docs/**"
+      - "mkdocs.yml"
 
 permissions:
   contents: read
@@ -65,8 +81,7 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
       - run: uv sync --group dev
-      # Exit 5 ("no tests collected") is acceptable until Phase 1 adds property tests.
-      - run: uv run pytest tests/property --no-cov || test $? -eq 5
+      - run: uv run pytest tests/property --no-cov
 
   test-integration:
     name: test-integration (${{ matrix.python-version }})
@@ -80,8 +95,7 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
       - run: uv sync --group dev
-      # Exit 5 ("no tests collected") is acceptable until Phase 1 adds integration tests.
-      - run: uv run pytest tests/integration -n auto -m "not gpu" --no-cov || test $? -eq 5
+      - run: uv run pytest tests/integration -n auto -m "not gpu" --no-cov
 
   coverage-gate:
     name: coverage-gate
@@ -140,11 +154,6 @@ jobs:
   test-smoke:
     name: test-smoke (${{ matrix.python-version }})
     runs-on: ubuntu-latest
-    # Only run when wrapper or smoke-runner sources change (ADR-007 §Stage 0).
-    if: |
-      contains(github.event.head_commit.modified, 'src/chamber/envs/') ||
-      contains(github.event.head_commit.modified, 'src/chamber/benchmarks/stage0_smoke.py') ||
-      github.event_name == 'pull_request'
     strategy:
       matrix:
         python-version: ["3.11", "3.12"]
@@ -155,8 +164,7 @@ jobs:
           python-version: ${{ matrix.python-version }}
       - run: uv sync --group dev
       # GPU-less runners: Tier-1 (fake env) tests run; Tier-2 (real ManiSkill) tests skip.
-      # Exit 5 ("no tests collected") is acceptable if the -k filter produces an empty set.
-      - run: uv run pytest -m smoke --no-cov || test $? -eq 5
+      - run: uv run pytest -m smoke --no-cov
 
   verify-no-ai-mentions:
     name: verify-no-ai-mentions
