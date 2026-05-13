@@ -8,6 +8,8 @@
 ## Context
 v0.2 §13 names this as open. The benchmark must support both fixed-format protocols (so any black-box partner can be plugged in) and learned messages (so methods that train them have somewhere to put them). The black-box AHT constraint is the binding design pressure: the partner policy arrives frozen and opaque at deployment, making any protocol that requires joint negotiation of message representations incompatible with the primary setting. At the same time, B6 baselines (learned-comm methods such as HetGPPO and CommFormer) must run on the same benchmark tasks as B5 baselines (no explicit comm), or the comparison is not controlled. The interface design must therefore accommodate both research lines without collapsing into a single mandatory choice.
 
+The fixed-format channel's semantics derive from deterministic-networking standards. IEEE 802.1AS establishes the generalised precision time protocol for distributed clock synchronisation; IEEE 802.1Qbv defines time-aware scheduled traffic with guaranteed latency bounds; IEEE 802.1CB defines frame replication and elimination for redundancy. The 5G-TSN integration model in 3GPP TS 23.501 §5.27 specifies how the 5G system is exposed as a virtual TSN bridge with DS-TT and NW-TT translator functions. CHAMBER's URLLC degradation profiles (`chamber.comm.URLLC_3GPP_R17`) are anchored to 3GPP Release 17 URLLC service-class targets and the 5G-ACIA industrial integration recommendations. The clause-level summaries and the standard-to-measurable-variable mapping live in [`docs/reference/standards.md` §Deterministic networking and 5G-TSN](../docs/reference/standards.md#2-deterministic-networking-and-5g-tsn).
+
 ## Considered alternatives
 
 | # | Option | Source / advocate | Pros | Cons |
@@ -25,6 +27,13 @@ HetGPPO's DTDE GNN (`notes/tier1/23_hetgppo.md`, §5) already embodies the hybri
 ## Evidence basis (links to reading notes)
 - [notes/tier1/23_hetgppo.md] — DTDE GNN architecture (§5, Fig. 2): fixed-format relative-pose edge features as the mandatory observation channel; full joint training as the prerequisite for learned message aggregation weights, establishing why learned-only breaks black-box AHT; behavioral-typing brittleness implies fixed-format pose observations must be noise-robust
 - [notes/tier3/refs.bib #27 CommFormer] — dynamic communication graph that learns to construct and exploit topology for coordination; joint-training requirement confirmed in abstract; establishes CommFormer as an opt-in learned-overlay candidate, not a wire-protocol baseline
+
+### Standards (deterministic networking and 5G-TSN)
+- [docs/reference/standards.md#ieee-8021as](../docs/reference/standards.md#ieee-8021as) — IEEE 802.1AS, the generalised precision time protocol that gives the fixed-format channel its per-tick clock alignment.
+- [docs/reference/standards.md#ieee-8021qbv](../docs/reference/standards.md#ieee-8021qbv) — IEEE 802.1Qbv, time-aware scheduled traffic; anchors the microsecond-grade jitter bounds the URLLC profiles report.
+- [docs/reference/standards.md#ieee-8021cb](../docs/reference/standards.md#ieee-8021cb) — IEEE 802.1CB, frame replication and elimination for reliability; the reference for the redundancy variant of the comm-degradation wrapper.
+- [docs/reference/standards.md#3gpp-ts-23501-527](../docs/reference/standards.md#3gpp-ts-23501-527) — 3GPP TS 23.501 §5.27, the integration model exposing the 5G system as a virtual TSN bridge with DS-TT / NW-TT translator functions.
+- [docs/reference/standards.md#5g-acia-5g-tsn-integration-white-paper](../docs/reference/standards.md#5g-acia-5g-tsn-integration-white-paper) — 5G-ACIA 5G-TSN integration white paper; the industry-side cross-check on factory-floor parameterisation of the URLLC degradation profiles.
 
 ## Consequences
 - **Project scope**: the benchmark API exposes two observation-bus channels — a mandatory fixed-format channel (pose, task-state predicates, AoI timestamp) and an optional learned-message channel; any partner that does not implement the learned channel is fully interoperable; jointly-trained B6 baselines can use both channels.
@@ -47,3 +56,6 @@ By Phase-1 end: at least one B6 baseline (HetGPPO or CommFormer AHT fork) using 
 - (#verify, from `notes/tier1/23_hetgppo.md`) Can the DTDE GNN's communication be cleanly split into a fixed-format edge-feature path and a learned aggregation path such that freezing the learned path still yields a usable fixed-format-only baseline? Confirm before committing HetGPPO as B3/B6.
 - (#verify) Does CommFormer's dynamic graph construction degrade gracefully when the learned-message channel is null (black-box partner setting), or does it require all agents to have an active learned channel? Confirm when CommFormer note #27 is written.
 - (#design-decision, from ADR-007 rev 3) Should the comm-degradation wrapper expose AoI directly (note 41 Ballotta & Talak) as the latency proxy for ADR-007's Stage 2 CM spike, or end-to-end round-trip time? AoI is more theoretically grounded and matches the ADR-008 HRS bundle latency-axis instrumentation, but RTT is cheaper to log; the choice affects whether ADR-008 Option A (latency × drop × partner-familiarity) is directly comparable across baselines.
+
+## Revision history
+- 2026-05-13 revision: anchors the fixed-format channel in the IEEE 802.1 TSN family (802.1AS / 802.1Qbv / 802.1CB) and the 3GPP TS 23.501 §5.27 5G-TSN integration model in Context and Evidence basis. No change to the Decision. Ties to the public standards reference at docs/reference/standards.md.
