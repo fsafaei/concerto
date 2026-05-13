@@ -176,7 +176,13 @@ so the doc and the test cannot drift:
 ```python
 import numpy as np
 
-from concerto.safety.api import Bounds, SafetyState
+from concerto.safety.api import (
+    AgentControlModel,
+    Bounds,
+    DoubleIntegratorControlModel,
+    SafetyMode,
+    SafetyState,
+)
 from concerto.safety.braking import maybe_brake
 from concerto.safety.cbf_qp import AgentSnapshot, ExpCBFQP
 from concerto.safety.conformal import update_lambda_from_predictor
@@ -193,7 +199,19 @@ state = SafetyState(
     epsilon=-0.05,
     eta=0.01,
 )
-cbf = ExpCBFQP(cbf_gamma=2.0)
+# The deployment-time filter optimises only the ego agent's action;
+# the partner enters as a predicted disturbance. The explicit
+# CENTRALIZED variant below is used here to keep the walkthrough
+# symmetric in both agents (both shown as decision variables);
+# production deployments use SafetyMode.EGO_ONLY.
+control_models: dict[str, AgentControlModel] = {}
+control_models["a"] = DoubleIntegratorControlModel(uid="a", action_dim=2)
+control_models["b"] = DoubleIntegratorControlModel(uid="b", action_dim=2)
+cbf = ExpCBFQP(
+    mode=SafetyMode.CENTRALIZED,
+    cbf_gamma=2.0,
+    control_models=control_models,
+)
 
 agents = {
     "a": AgentSnapshot(

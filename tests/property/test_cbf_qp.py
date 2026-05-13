@@ -1,9 +1,13 @@
 # SPDX-License-Identifier: Apache-2.0
-"""Property + reproduction tests for ``concerto.safety.cbf_qp`` (T3.5).
+"""Property + reproduction tests for ``concerto.safety.cbf_qp`` (T3.5; spike_004A).
 
 Covers:
 
 - ADR-004 §Decision (exp CBF-QP backbone, Wang-Ames-Egerstedt 2017 §III).
+- spike_004A §Reduction: the existing homogeneous double-integrator
+  invariants must still hold when every uid passes through
+  :class:`DoubleIntegratorControlModel` in :attr:`SafetyMode.CENTRALIZED`
+  mode.
 - The "QP cannot worsen the proposed action when feasible" invariant
   (plan/03 §5).
 - Wang-Ames-Egerstedt 2017 §V toy 2-agent crossing reproduction —
@@ -16,12 +20,21 @@ Covers:
 
 from __future__ import annotations
 
+from typing import cast
+
 import numpy as np
 import pytest
 from hypothesis import HealthCheck, given, settings
 from hypothesis import strategies as st
 
-from concerto.safety.api import Bounds, SafetyState
+from concerto.safety.api import (
+    AgentControlModel,
+    Bounds,
+    DoubleIntegratorControlModel,
+    FloatArray,
+    SafetyMode,
+    SafetyState,
+)
 from concerto.safety.cbf_qp import AgentSnapshot, ExpCBFQP
 
 
@@ -46,6 +59,23 @@ def _snap(x: float, y: float, vx: float, vy: float, r: float = 0.2) -> AgentSnap
     )
 
 
+def _models(uids: tuple[str, ...], dim: int = 2) -> dict[str, AgentControlModel]:
+    """spike_004A §Reduction migration shim: identity control models per uid."""
+    out: dict[str, AgentControlModel] = {}
+    for uid in uids:
+        out[uid] = DoubleIntegratorControlModel(uid=uid, action_dim=dim)
+    return out
+
+
+def _centralized(uids: tuple[str, ...], *, gamma: float = 5.0) -> ExpCBFQP:
+    """Build a CENTRALIZED-mode filter for the legacy dict-of-actions tests."""
+    return ExpCBFQP(
+        mode=SafetyMode.CENTRALIZED,
+        cbf_gamma=gamma,
+        control_models=_models(uids),
+    )
+
+
 def test_well_separated_agents_pass_through_proposed_action() -> None:
     """When CBF constraints are inactive, QP returns u_hat exactly."""
     snaps = {"a": _snap(0.0, 0.0, 0.0, 0.0), "b": _snap(10.0, 0.0, 0.0, 0.0)}
@@ -53,13 +83,14 @@ def test_well_separated_agents_pass_through_proposed_action() -> None:
         "a": np.array([0.5, 0.3], dtype=np.float64),
         "b": np.array([-0.4, 0.1], dtype=np.float64),
     }
-    cbf = ExpCBFQP()
-    safe, info = cbf.filter(
+    cbf = _centralized(("a", "b"))
+    raw_safe, info = cbf.filter(
         proposed_action=proposed,
         obs={"agent_states": snaps, "meta": {"partner_id": None}},
         state=_state(1),
         bounds=_bounds(),
     )
+    safe = cast("dict[str, FloatArray]", raw_safe)
     np.testing.assert_allclose(safe["a"], proposed["a"], atol=1e-5)
     np.testing.assert_allclose(safe["b"], proposed["b"], atol=1e-5)
     assert info["fallback_fired"] is False
@@ -86,7 +117,7 @@ def test_head_on_collision_avoidance_wang_ames_egerstedt_crossing() -> None:
     v_a = np.array([1.0, 0.0], dtype=np.float64)
     v_b = np.array([-1.0, 0.0], dtype=np.float64)
 
-    cbf = ExpCBFQP(cbf_gamma=2.0)
+    cbf = _centralized(("a", "b"), gamma=2.0)
     bounds = _bounds(action_norm=a_max)
     state = _state(1)
 
@@ -100,12 +131,13 @@ def test_head_on_collision_avoidance_wang_ames_egerstedt_crossing() -> None:
             "a": np.zeros(2, dtype=np.float64),
             "b": np.zeros(2, dtype=np.float64),
         }
-        safe, _ = cbf.filter(
+        raw_safe, _ = cbf.filter(
             proposed_action=proposed,
             obs={"agent_states": snaps, "meta": {"partner_id": None}},
             state=state,
             bounds=bounds,
         )
+        safe = cast("dict[str, FloatArray]", raw_safe)
         v_a += safe["a"] * dt
         v_b += safe["b"] * dt
         p_a += v_a * dt
@@ -133,21 +165,23 @@ def test_lambda_relaxes_constraint_brings_safe_action_closer_to_proposal() -> No
         "a": np.array([1.0, 0.0], dtype=np.float64),
         "b": np.array([-1.0, 0.0], dtype=np.float64),
     }
-    cbf = ExpCBFQP()
+    cbf = _centralized(("a", "b"))
     bounds = _bounds(action_norm=5.0)
 
-    safe_zero, _ = cbf.filter(
+    raw_safe_zero, _ = cbf.filter(
         proposed_action=proposed,
         obs={"agent_states": snaps, "meta": {"partner_id": None}},
         state=_state(1),
         bounds=bounds,
     )
-    safe_relaxed, _ = cbf.filter(
+    raw_safe_relaxed, _ = cbf.filter(
         proposed_action=proposed,
         obs={"agent_states": snaps, "meta": {"partner_id": None}},
         state=SafetyState(lambda_=np.array([2.0], dtype=np.float64)),
         bounds=bounds,
     )
+    safe_zero = cast("dict[str, FloatArray]", raw_safe_zero)
+    safe_relaxed = cast("dict[str, FloatArray]", raw_safe_relaxed)
 
     diff_zero = np.linalg.norm(
         np.concatenate([safe_zero["a"] - proposed["a"], safe_zero["b"] - proposed["b"]])
@@ -175,7 +209,7 @@ def test_constraint_violation_is_clamped_nonnegative_per_pair_gap() -> None:
         "a": np.zeros(2, dtype=np.float64),
         "b": np.zeros(2, dtype=np.float64),
     }
-    _, info = ExpCBFQP().filter(
+    _, info = _centralized(("a", "b")).filter(
         proposed_action=proposed,
         obs={"agent_states": snaps},
         state=_state(1),
@@ -195,7 +229,7 @@ def test_filter_rejects_lambda_shape_mismatch() -> None:
     }
     state_wrong = SafetyState(lambda_=np.zeros(5, dtype=np.float64))  # 1 pair; expected shape (1,).
     with pytest.raises(ValueError, match="lambda_ shape"):
-        ExpCBFQP().filter(
+        _centralized(("a", "b")).filter(
             proposed_action=proposed,
             obs={"agent_states": snaps},
             state=state_wrong,
@@ -209,7 +243,7 @@ def test_filter_rejects_missing_agent_states() -> None:
         "b": np.zeros(2, dtype=np.float64),
     }
     with pytest.raises(ValueError, match="agent_states"):
-        ExpCBFQP().filter(
+        _centralized(("a", "b")).filter(
             proposed_action=proposed,
             obs={},
             state=_state(1),
@@ -235,13 +269,13 @@ def test_qp_cannot_worsen_when_zero_is_feasible(seed: int) -> None:
     u_hat_b = rng.uniform(-1.0, 1.0, size=2).astype(np.float64)
     proposed = {"a": u_hat_a, "b": u_hat_b}
 
-    safe, _ = ExpCBFQP().filter(
+    raw_safe, _ = _centralized(("a", "b")).filter(
         proposed_action=proposed,
         obs={"agent_states": snaps},
         state=_state(1),
         bounds=_bounds(action_norm=2.0),
     )
-
+    safe = cast("dict[str, FloatArray]", raw_safe)
     diff = np.concatenate([safe["a"] - u_hat_a, safe["b"] - u_hat_b])
     u_hat_full = np.concatenate([u_hat_a, u_hat_b])
     assert np.linalg.norm(diff) <= np.linalg.norm(u_hat_full) + 1e-5
@@ -259,15 +293,76 @@ def test_three_agents_no_collision_under_random_drift() -> None:
         "b": np.zeros(2, dtype=np.float64),
         "c": np.zeros(2, dtype=np.float64),
     }
-    cbf = ExpCBFQP(cbf_gamma=2.0)
+    cbf = _centralized(("a", "b", "c"), gamma=2.0)
     state = _state(3)
-    safe, info = cbf.filter(
+    raw_safe, info = cbf.filter(
         proposed_action=proposed,
         obs={"agent_states": snaps},
         state=state,
         bounds=_bounds(action_norm=5.0),
     )
+    safe = cast("dict[str, FloatArray]", raw_safe)
     assert set(safe.keys()) == {"a", "b", "c"}
     assert info["lambda"].shape == (3,)
     assert info["constraint_violation"].shape == (3,)
     assert info["prediction_gap_loss"] is None
+
+
+def test_centralized_requires_dict_action() -> None:
+    """CENTRALIZED mode rejects a single-array proposed_action with a clear error."""
+    snaps = {"a": _snap(0.0, 0.0, 0.0, 0.0), "b": _snap(10.0, 0.0, 0.0, 0.0)}
+    with pytest.raises(TypeError, match="must be a dict"):
+        _centralized(("a", "b")).filter(
+            proposed_action=np.zeros(4, dtype=np.float64),  # type: ignore[arg-type]
+            obs={"agent_states": snaps},
+            state=_state(1),
+            bounds=_bounds(),
+        )
+
+
+def test_ego_only_requires_ego_uid_and_partner_predicted_states() -> None:
+    """EGO_ONLY mode raises on the partner-disturbance and ego-uid arguments missing."""
+    snaps = {"a": _snap(0.0, 0.0, 0.0, 0.0), "b": _snap(10.0, 0.0, 0.0, 0.0)}
+    cbf = ExpCBFQP(
+        mode=SafetyMode.EGO_ONLY,
+        control_models=_models(("a", "b")),
+    )
+    with pytest.raises(ValueError, match="ego_uid is required"):
+        cbf.filter(
+            proposed_action=np.zeros(2, dtype=np.float64),
+            obs={"agent_states": snaps},
+            state=_state(1),
+            bounds=_bounds(),
+        )
+    with pytest.raises(ValueError, match="partner_predicted_states"):
+        cbf.filter(
+            proposed_action=np.zeros(2, dtype=np.float64),
+            obs={"agent_states": snaps},
+            state=_state(1),
+            bounds=_bounds(),
+            ego_uid="a",
+        )
+
+
+def test_shared_control_requires_partner_action_bound() -> None:
+    """SHARED_CONTROL mode raises when partner_action_bound is missing."""
+    snaps = {"a": _snap(0.0, 0.0, 0.0, 0.0), "b": _snap(10.0, 0.0, 0.0, 0.0)}
+    cbf = ExpCBFQP(
+        mode=SafetyMode.SHARED_CONTROL,
+        control_models=_models(("a", "b")),
+    )
+    proposed = {"a": np.zeros(2, dtype=np.float64), "b": np.zeros(2, dtype=np.float64)}
+    with pytest.raises(ValueError, match="partner_action_bound"):
+        cbf.filter(
+            proposed_action=proposed,
+            obs={"agent_states": snaps},
+            state=_state(1),
+            bounds=_bounds(),
+            ego_uid="a",
+        )
+
+
+def test_constructor_requires_non_empty_control_models() -> None:
+    """spike_004A §Per-agent control model + reviewer P0-2: no implicit fallback."""
+    with pytest.raises(ValueError, match="control_models"):
+        ExpCBFQP(control_models={})

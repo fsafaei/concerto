@@ -21,8 +21,18 @@ def test_why_conformal_walkthrough_example() -> None:
     fallback + outer exp CBF-QP + conformal lambda update) runs
     end-to-end on a head-on 2-agent scenario.
     """
+    # Test-scaffolding imports (outside the doc-mirrored block).
+    from typing import cast
+
     # --- BEGIN: code block from docs/explanation/why-conformal.md ---
-    from concerto.safety.api import Bounds, SafetyState
+    from concerto.safety.api import (
+        AgentControlModel,
+        Bounds,
+        DoubleIntegratorControlModel,
+        FloatArray,
+        SafetyMode,
+        SafetyState,
+    )
     from concerto.safety.braking import maybe_brake
     from concerto.safety.cbf_qp import AgentSnapshot, ExpCBFQP
     from concerto.safety.conformal import update_lambda_from_predictor
@@ -39,7 +49,19 @@ def test_why_conformal_walkthrough_example() -> None:
         epsilon=-0.05,
         eta=0.01,
     )
-    cbf = ExpCBFQP(cbf_gamma=2.0)
+    # The deployment-time filter optimises only the ego agent's action;
+    # the partner enters as a predicted disturbance. The explicit
+    # CENTRALIZED variant below is used here to keep the walkthrough
+    # symmetric in both agents (both shown as decision variables);
+    # production deployments use SafetyMode.EGO_ONLY.
+    control_models: dict[str, AgentControlModel] = {}
+    control_models["a"] = DoubleIntegratorControlModel(uid="a", action_dim=2)
+    control_models["b"] = DoubleIntegratorControlModel(uid="b", action_dim=2)
+    cbf = ExpCBFQP(
+        mode=SafetyMode.CENTRALIZED,
+        cbf_gamma=2.0,
+        control_models=control_models,
+    )
 
     agents = {
         "a": AgentSnapshot(
@@ -70,16 +92,18 @@ def test_why_conformal_walkthrough_example() -> None:
 
     # 1. Per-step braking fallback (kinematic backstop).
     override, fired = maybe_brake(nominal, agents, bounds=bounds)
+    safe: dict[str, FloatArray]
     if fired and override is not None:
         safe = override
     else:
         # 2. Outer exp CBF-QP (Wang-Ames-Egerstedt 2017).
-        safe, info = cbf.filter(
+        raw_safe, info = cbf.filter(
             proposed_action=nominal,
             obs={"agent_states": agents, "meta": {"partner_id": "demo"}},
             state=state,
             bounds=bounds,
         )
+        safe = cast("dict[str, FloatArray]", raw_safe)
         # `info["constraint_violation"]` is the per-step CBF gap; it goes
         # into Table 2 of the ADR-014 three-table report but does NOT
         # drive the conformal update.

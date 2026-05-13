@@ -30,13 +30,18 @@ from __future__ import annotations
 import numpy as np
 
 from concerto.safety.api import (
+    DEFAULT_DLS_DAMPING,
     DEFAULT_EPSILON,
     DEFAULT_ETA,
     DEFAULT_WARMUP_STEPS,
+    AgentControlModel,
     Bounds,
+    DoubleIntegratorControlModel,
     FilterInfo,
     FloatArray,
+    JacobianControlModel,
     SafetyFilter,
+    SafetyMode,
     SafetyState,
 )
 from concerto.safety.emergency import (
@@ -99,16 +104,21 @@ def solve_qp_stub(*args: object, **kwargs: object) -> tuple[float, float]:
 
 
 __all__ = [
+    "DEFAULT_DLS_DAMPING",
     "DEFAULT_EPSILON",
     "DEFAULT_ETA",
     "DEFAULT_WARMUP_STEPS",
+    "AgentControlModel",
     "Bounds",
     "CartesianAccelEmergencyController",
     "ConcertoSafetyInfeasible",
+    "DoubleIntegratorControlModel",
     "EmergencyController",
     "FilterInfo",
     "FloatArray",
+    "JacobianControlModel",
     "SafetyFilter",
+    "SafetyMode",
     "SafetyState",
     "solve_qp_stub",
 ]
