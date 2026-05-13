@@ -1,5 +1,28 @@
 # Why conformal CBFs?
 
+## What conformal prediction is
+
+Conformal prediction (CP) is a distribution-free framework for turning
+any black-box predictor into one that returns calibrated prediction
+sets: given a user-chosen miscoverage level ε ∈ (0, 1), CP wraps the
+predictor so its sets contain the true outcome with probability at
+least 1 − ε, with no assumptions on the data distribution beyond
+exchangeability. The canonical reference for the framework and its
+finite-sample coverage proof is Shafer & Vovk 2008 ("A Tutorial on
+Conformal Prediction," JMLR).
+
+Angelopoulos & Bates 2023 ("Conformal Prediction: A Gentle
+Introduction," Foundations and Trends in Machine Learning) is the
+practical entry point for ML readers — it walks through the
+split-CP, full-CP, and online-CP variants and the regret-style
+guarantees that the online variant enjoys when the data stream is
+non-exchangeable. What Huriot & Sibai 2025 contributes on top is to
+specialise the online-CP update to a CBF safety-filter setting: the
+calibration variable becomes the per-pair conformal slack λ added to
+each CBF constraint, and the resulting ε + o(1) long-term risk bound
+inherits CP's distribution-freeness while binding it to a per-step
+safety filter.
+
 The exponential CBF-QP backbone (Wang–Ames–Egerstedt 2017) provides
 instantaneous safety guarantees but requires tight a-priori bounds on
 partner behaviour. In heterogeneous ad-hoc teamwork those bounds are
@@ -292,3 +315,8 @@ across:
 - **ADRs**: [ADR-004](../reference/adrs.md) (filter formulation),
   [ADR-006](../reference/adrs.md) (partner-policy assumption set),
   [ADR-014](../reference/adrs.md) (three-table reporting).
+
+For the full bibliography — Ames 2017, Ames 2019, Shafer & Vovk 2008,
+Angelopoulos & Bates 2023, Wang–Ames–Egerstedt 2017, Huriot & Sibai
+2025, and the surrounding canon — see
+[the literature reference page](../reference/literature.md#3-conformal-prediction-and-conformal-control).
