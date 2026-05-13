@@ -101,14 +101,10 @@ class TestPhase1SelectZooStub:
 class TestFrozenRLRegistrationStatus:
     """Pin which draft-zoo specs ``load_partner`` resolves (ADR-009 §Decision).
 
-    Plan/04 §1: the heuristic (T4.4) + frozen-MAPPO (T4.5) adapters are
-    registered in M4 Phase 1/2; the frozen-HARL adapter (T4.6) lands in a
-    follow-up PR. Until then, calling
-    :func:`chamber.partners.registry.load_partner` on the third spec
-    raises :class:`KeyError` listing the registered keys — loud failure
-    surfaces the deferral. Once T4.6 lands, the
-    :meth:`test_load_frozen_harl_spec_raises_until_phase3` assertion
-    flips and the M4-gate integration test (T4.9) takes over.
+    Plan/04 §1: all three adapters (heuristic T4.4, frozen-MAPPO T4.5,
+    frozen-HARL T4.6) are registered. The M4 gate (plan/04 §6 #1, the
+    T4.9 integration round-trip test) lands in a follow-up PR; this
+    class pins that ``load_partner`` resolves every draft-zoo spec.
     """
 
     def test_load_frozen_mappo_spec_succeeds(self) -> None:
@@ -119,12 +115,13 @@ class TestFrozenRLRegistrationStatus:
         partner = load_partner(make_phase0_draft_zoo()[1])
         assert isinstance(partner, FrozenMAPPOPartner)
 
-    def test_load_frozen_harl_spec_raises_until_phase3(self) -> None:
-        """T4.6 deferred: ``frozen_harl`` is not registered until the follow-up PR."""
+    def test_load_frozen_harl_spec_succeeds(self) -> None:
+        """T4.6: ``frozen_harl`` is registered and ``load_partner`` returns the wrapper."""
+        from chamber.partners.frozen_harl import FrozenHARLPartner
         from chamber.partners.registry import load_partner
 
-        with pytest.raises(KeyError, match="frozen_harl"):
-            load_partner(make_phase0_draft_zoo()[2])
+        partner = load_partner(make_phase0_draft_zoo()[2])
+        assert isinstance(partner, FrozenHARLPartner)
 
     def test_load_heuristic_spec_succeeds(self) -> None:
         """T4.4 ships in M4a Phase 1: ``scripted_heuristic`` IS registered."""
