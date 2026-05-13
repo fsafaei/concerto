@@ -61,6 +61,21 @@ score distribution below a target threshold; performance profiles
 visualise the full score distribution as a CDF, surfacing dispersion
 that point estimates hide.
 
+The rliable contract is pinned in
+[`ADR-014`](https://github.com/fsafaei/concerto/blob/main/adr/ADR-014-safety-reporting.md)
+§Decision and mirrored verbatim here so that the two documents stay
+in sync (this page is §3 in the `docs/reference/` outline; §3.1 below
+is the seed-count table in §1, and the present subsection is §3.2):
+
+> Aggregate metrics across seeds use rliable-style robust statistics
+> (Agarwal et al. 2021): interquartile mean, optimality gap, and
+> bootstrap performance profiles, in addition to mean ± 95% bootstrap
+> CI. The minimum-seed count per cell is the figure committed in
+> `docs/reference/evaluation.md` §3.1. This is the explicit avoidance
+> of the reporting anti-patterns catalogued by Henderson et al. 2018.
+
+Henderson et al. (2018) is catalogued in §1's anti-pattern list above.
+
 The Phase-1 leaderboard renderer `chamber-render-tables` *must* emit
 a per-axis IQM column when the `rliable` package is available as an
 optional dependency, and *should* additionally emit optimality-gap
