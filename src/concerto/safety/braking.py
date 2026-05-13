@@ -15,10 +15,27 @@ feasibility. The override is computed from the kinematic state alone:
 
 1. Compute per-pair time-to-collision ``ttc_ij`` from current positions
    and velocities (sphere-pair quadratic root).
-2. If any ``ttc_ij < tau_brake``, apply max-magnitude push-apart
-   acceleration ``+/- bounds.action_norm * (Dp/|Dp|)`` to each
-   involved agent and signal ``fired=True``.
+2. If any ``ttc_ij < tau_brake``, accumulate the per-pair push-apart
+   unit vectors per uid, then dispatch each uid's *aggregate*
+   repulsion to its :class:`concerto.safety.emergency.EmergencyController`
+   for embodiment-specific saturation. Signal ``fired=True`` iff at
+   least one uid received an override.
 3. Otherwise, return ``(None, False)`` — the QP path stays in charge.
+
+The aggregation step is load-bearing: a uid in two simultaneous
+dangerous pairs (e.g. uid_0 squeezed between uid_1 on the left and
+uid_2 on the right) gets an override reflecting the *sum* of the
+two push-apart unit vectors, not the last-processed pair only. The
+prior "write override[uid] per pair" path lost superposition and was
+non-deterministic across dict-iteration order (ADR-004
+risk-mitigation #1).
+
+The embodiment hook (the :class:`EmergencyController` Protocol)
+turns the Cartesian-to-control mapping into a first-class concern.
+The default :class:`CartesianAccelEmergencyController` is correct for
+double-integrator agents whose control dim equals the Cartesian dim;
+a 7-DOF arm needs a Jacobian-aware override (Stage-1 deliverable,
+flagged in ADR-007 §"Stage 1 — Foundation axes" AS spike scope).
 
 The ``fired`` flag propagates into ``FilterInfo["fallback_fired"]`` so
 the ADR-014 three-table renderer's "fallback fired" column can count
@@ -32,9 +49,16 @@ from typing import TYPE_CHECKING
 
 import numpy as np
 
+from concerto.safety.emergency import (
+    CartesianAccelEmergencyController,
+)
+
 if TYPE_CHECKING:
+    from collections.abc import Mapping
+
     from concerto.safety.api import Bounds, FloatArray
     from concerto.safety.cbf_qp import AgentSnapshot
+    from concerto.safety.emergency import EmergencyController
 
 #: Default time-to-collision threshold in seconds. Plan/03 §2 Decision
 #: row "Braking fallback trigger" pins 100 ms; configurable per task.
@@ -141,6 +165,7 @@ def maybe_brake(
     *,
     bounds: Bounds,
     tau_brake: float = DEFAULT_TAU_BRAKE,
+    emergency_controllers: Mapping[str, EmergencyController] | None = None,
 ) -> tuple[dict[str, FloatArray] | None, bool]:
     """Per-step braking-fallback override (ADR-004 risk-mitigation #1).
 
@@ -153,22 +178,49 @@ def maybe_brake(
     per-step; in contact-rich manipulation a single bad step can damage
     hardware.
 
+    The override is computed in two phases. First, for every pair whose
+    TTC is below ``tau_brake``, the Cartesian push-apart unit vector is
+    appended to *each involved uid's* repulsion list (positive on uid_i,
+    negative on uid_j). Second, each uid with at least one repulsion
+    vector is dispatched to its
+    :class:`concerto.safety.emergency.EmergencyController`, which
+    aggregates the per-pair vectors and produces an embodiment-specific
+    override action. uids with zero repulsion vectors retain
+    ``proposed_action[uid]`` unchanged — no spurious override.
+
+    The dispatch step is what makes the fallback embodiment-aware:
+    double-integrator agents get the default
+    :class:`concerto.safety.emergency.CartesianAccelEmergencyController`
+    (Cartesian sum-and-saturate); 7-DOF arms get a Jacobian-aware
+    controller (Stage-1 deliverable, see ADR-007 §"Stage 1 — Foundation
+    axes" AS spike scope).
+
     Args:
         proposed_action: The QP-projected (or nominal) per-agent action;
-            used to size and locate the override action's array shape.
+            used as the no-override fallback for uids in zero dangerous
+            pairs.
         snaps: Per-agent kinematic state at the current step.
-        bounds: Per-task :class:`Bounds`; the override magnitude is
-            ``bounds.action_norm`` per agent.
+        bounds: Per-task :class:`Bounds`; the per-uid override magnitude
+            is capped at ``bounds.action_norm`` inside each
+            controller's saturation step.
         tau_brake: TTC threshold in seconds (default
             :data:`DEFAULT_TAU_BRAKE` = 100 ms; ADR-004 §Decision row
             "Braking fallback trigger").
+        emergency_controllers: Per-uid embodiment dispatch map. When
+            :data:`None`, a default
+            :class:`CartesianAccelEmergencyController` is built per uid;
+            this preserves the toy-crossing behaviour for the Phase-0
+            smoke tests. Callers integrating a 7-DOF arm uid MUST pass
+            an entry that is *not* the Cartesian default (the
+            :class:`JacobianEmergencyController` placeholder will raise
+            until Stage-1 lands the real controller).
 
     Returns:
         ``(override, fired)``: when ``fired=True``, ``override`` is a
         dict matching the keys of ``proposed_action`` carrying the
-        push-apart accelerations; the QP path is then skipped. When
-        ``fired=False``, ``override`` is ``None`` and the QP solution
-        stays in charge.
+        per-uid override actions (overridden or unchanged); the QP path
+        is then skipped. When ``fired=False``, ``override`` is
+        ``None`` and the QP solution stays in charge.
     """
     ttc_per_pair = compute_min_ttc(snaps)
     if not ttc_per_pair:
@@ -176,14 +228,31 @@ def maybe_brake(
     if min(ttc_per_pair.values()) >= tau_brake:
         return None, False
 
-    override: dict[str, FloatArray] = {
-        uid: np.zeros_like(action, dtype=np.float64) for uid, action in proposed_action.items()
-    }
+    controllers: Mapping[str, EmergencyController] = (
+        {uid: CartesianAccelEmergencyController() for uid in proposed_action}
+        if emergency_controllers is None
+        else emergency_controllers
+    )
+
+    repulsion_per_uid: dict[str, list[FloatArray]] = {uid: [] for uid in proposed_action}
     for (uid_i, uid_j), ttc in ttc_per_pair.items():
         if ttc < tau_brake:
             n_hat = _push_apart_unit_vector(snaps[uid_i], snaps[uid_j])
-            override[uid_i] = bounds.action_norm * n_hat
-            override[uid_j] = -bounds.action_norm * n_hat
+            repulsion_per_uid[uid_i].append(+n_hat)
+            repulsion_per_uid[uid_j].append(-n_hat)
+
+    override: dict[str, FloatArray] = {}
+    fired = False
+    for uid, action in proposed_action.items():
+        vectors = repulsion_per_uid[uid]
+        if not vectors:
+            override[uid] = action
+            continue
+        override[uid] = controllers[uid].compute_override(snaps[uid], vectors, bounds)
+        fired = True
+
+    if not fired:
+        return None, False
     return override, True
 
 
