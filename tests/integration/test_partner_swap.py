@@ -145,10 +145,18 @@ def test_partner_swap_consumer_gates_on_partner_id_none() -> None:
     without M4's producer wired up. Document the contract by importing
     the filter and asserting it tolerates the None marker.
     """
-    from concerto.safety.api import Bounds
+    from concerto.safety.api import (
+        AgentControlModel,
+        Bounds,
+        DoubleIntegratorControlModel,
+        SafetyMode,
+    )
     from concerto.safety.cbf_qp import AgentSnapshot, ExpCBFQP
 
-    cbf = ExpCBFQP()
+    control_models: dict[str, AgentControlModel] = {}
+    control_models["a"] = DoubleIntegratorControlModel(uid="a", action_dim=2)
+    control_models["b"] = DoubleIntegratorControlModel(uid="b", action_dim=2)
+    cbf = ExpCBFQP(mode=SafetyMode.CENTRALIZED, control_models=control_models)
     bounds = Bounds(action_norm=2.0, action_rate=0.5, comm_latency_ms=1.0, force_limit=20.0)
     snaps = {
         "a": AgentSnapshot(
@@ -168,12 +176,17 @@ def test_partner_swap_consumer_gates_on_partner_id_none() -> None:
     }
     state = SafetyState(lambda_=np.zeros(1, dtype=np.float64))
     # partner_id is None: must NOT raise.
-    safe, _ = cbf.filter(
+    from typing import cast
+
+    from concerto.safety.api import FloatArray
+
+    raw_safe, _ = cbf.filter(
         proposed_action=proposed,
         obs={"agent_states": snaps, "meta": {"partner_id": None}},
         state=state,
         bounds=bounds,
     )
+    safe = cast("dict[str, FloatArray]", raw_safe)
     assert set(safe.keys()) == {"a", "b"}
 
 

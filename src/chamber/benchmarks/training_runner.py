@@ -31,16 +31,20 @@ here. M4b-7 will extend the dispatch with the HARL fork's
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
+
+import gymnasium as gym
 
 from chamber.benchmarks.ego_ppo_trainer import EgoPPOTrainer
 from chamber.benchmarks.stage0_smoke_adapter import make_stage0_training_env
 from chamber.envs.mpe_cooperative_push import MPECooperativePushEnv
 from chamber.partners.api import PartnerSpec
 from chamber.partners.registry import load_partner
+from concerto.safety.api import AgentControlModel, DoubleIntegratorControlModel
 from concerto.training.ego_aht import EnvLike, PartnerLike, RewardCurve, train
 
 if TYPE_CHECKING:  # pragma: no cover
+    from collections.abc import Mapping
     from pathlib import Path
 
     from concerto.training.config import EgoAHTConfig, EnvConfig, PartnerConfig
@@ -172,4 +176,68 @@ def run_training(
     )
 
 
-__all__ = ["build_env", "build_partner", "run_training"]
+def build_control_models(env: gym.Env[Any, Any]) -> Mapping[str, AgentControlModel]:
+    """Build a per-uid :class:`AgentControlModel` map from an env (ADR-004 §Decision; spike_004A).
+
+    Reads each uid's ``action_space[uid]`` Box shape and returns a
+    :class:`concerto.safety.api.DoubleIntegratorControlModel` per uid
+    sized to ``shape[0]``. Phase-0 envs in CHAMBER expose their
+    actions as Cartesian velocities or accelerations (the safety
+    filter's CBF assumes Cartesian acceleration), so the
+    double-integrator identity model is the correct default for every
+    env currently in the dispatch table.
+
+    Stage-1 AS spike will introduce embodiments whose action space
+    is not Cartesian (e.g. a 7-DOF arm whose actions are joint
+    torques); those callers construct a :class:`JacobianControlModel`
+    directly rather than going through this helper. The helper's
+    contract is "every uid I produce uses :class:`DoubleIntegratorControlModel`";
+    if that no longer fits the env, the caller MUST supply
+    ``control_models`` itself rather than silently relying on the
+    helper to do the wrong thing.
+
+    Args:
+        env: A multi-agent Gymnasium-conformant env exposing
+            ``action_space`` as a :class:`gym.spaces.Dict` of
+            :class:`gym.spaces.Box` per uid (the contract every
+            Phase-0 CHAMBER env satisfies).
+
+    Returns:
+        ``{uid: DoubleIntegratorControlModel(uid, action_dim=shape[0])}``
+        for every uid in ``env.action_space.spaces``.
+
+    Raises:
+        TypeError: If ``env.action_space`` is not a
+            :class:`gymnasium.spaces.Dict` or any ``action_space[uid]``
+            is not a :class:`gymnasium.spaces.Box`.
+        ValueError: If any uid's action Box is not 1-D (multi-D action
+            shapes would need a custom control model rather than the
+            double-integrator identity).
+    """
+    action_space = env.action_space
+    if not isinstance(action_space, gym.spaces.Dict):
+        msg = (
+            "build_control_models requires env.action_space to be a "
+            f"gym.spaces.Dict; got {type(action_space).__name__}."
+        )
+        raise TypeError(msg)
+    control_models: dict[str, AgentControlModel] = {}
+    for uid, sub in action_space.spaces.items():
+        if not isinstance(sub, gym.spaces.Box):
+            msg = f"action_space[{uid!r}] must be a gym.spaces.Box; got {type(sub).__name__}."
+            raise TypeError(msg)
+        if len(sub.shape) != 1:
+            msg = (
+                f"action_space[{uid!r}].shape={sub.shape} is not 1-D; "
+                "non-1-D actions require a custom AgentControlModel rather "
+                "than the DoubleIntegratorControlModel default."
+            )
+            raise ValueError(msg)
+        model: AgentControlModel = DoubleIntegratorControlModel(
+            uid=uid, action_dim=int(sub.shape[0])
+        )
+        control_models[uid] = model
+    return control_models
+
+
+__all__ = ["build_control_models", "build_env", "build_partner", "run_training"]

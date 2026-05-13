@@ -17,11 +17,19 @@ from __future__ import annotations
 
 import sys
 import time
+from typing import cast
 
 import numpy as np
 import pytest
 
-from concerto.safety.api import Bounds, SafetyState
+from concerto.safety.api import (
+    AgentControlModel,
+    Bounds,
+    DoubleIntegratorControlModel,
+    FloatArray,
+    SafetyMode,
+    SafetyState,
+)
 from concerto.safety.braking import maybe_brake
 from concerto.safety.cbf_qp import AgentSnapshot, ExpCBFQP
 from concerto.safety.conformal import update_lambda_from_predictor
@@ -99,7 +107,17 @@ def test_full_safety_stack_runs_100_steps_without_crash() -> None:  # noqa: PLR0
     v_a = np.array([1.0, 0.0], dtype=np.float64)
     v_b = np.array([-1.0, 0.0], dtype=np.float64)
 
-    cbf = ExpCBFQP(cbf_gamma=2.0)
+    # Explicit CENTRALIZED + per-uid DoubleIntegratorControlModel — the
+    # spike_004A migration shim that preserves the original homogeneous
+    # invariants under the heterogeneity-aware refactor.
+    control_models: dict[str, AgentControlModel] = {}
+    control_models["a"] = DoubleIntegratorControlModel(uid="a", action_dim=2)
+    control_models["b"] = DoubleIntegratorControlModel(uid="b", action_dim=2)
+    cbf = ExpCBFQP(
+        mode=SafetyMode.CENTRALIZED,
+        cbf_gamma=2.0,
+        control_models=control_models,
+    )
     bounds = _bounds(action_norm=5.0)
     state = SafetyState(
         lambda_=np.zeros(1, dtype=np.float64),
@@ -134,19 +152,20 @@ def test_full_safety_stack_runs_100_steps_without_crash() -> None:  # noqa: PLR0
 
         # 1. Braking fallback (per-step backstop; ADR-004 risk-mitigation #1).
         override, fired = maybe_brake(proposed, snaps, bounds=bounds)
-        safe: dict[str, np.ndarray]
+        safe: dict[str, FloatArray]
         if fired and override is not None:
             fallback_fires += 1
             safe = override
         else:
             # 2. Outer CBF-QP (Wang-Ames-Egerstedt 2017).
             try:
-                safe, _info = cbf.filter(
+                raw_safe, _info = cbf.filter(
                     proposed_action=proposed,
                     obs=obs,
                     state=state,
                     bounds=bounds,
                 )
+                safe = cast("dict[str, FloatArray]", raw_safe)
                 qp_calls += 1
                 # 3. Conformal lambda update (Huriot & Sibai 2025 §IV) —
                 # driven by the prediction-gap loss against the

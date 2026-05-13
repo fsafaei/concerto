@@ -24,10 +24,16 @@ single-partner mode when the field is ``None``).
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Protocol, TypedDict, runtime_checkable
+from enum import Enum
+from typing import TYPE_CHECKING, Protocol, TypedDict, runtime_checkable
 
 import numpy as np
 import numpy.typing as npt
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from concerto.safety.cbf_qp import AgentSnapshot
 
 #: Per-agent action vector alias. Public so Protocol signatures stay readable.
 FloatArray = npt.NDArray[np.float64]
@@ -154,6 +160,338 @@ predictor's forecast of the safe set wrong?).
 """
 
 
+class SafetyMode(Enum):
+    """Safety-filter operating mode (ADR-004 §Decision; spike_004A §Three-mode taxonomy).
+
+    Three modes make the filter's *who is being optimised* contract
+    explicit at the constructor site, so callsites cannot accidentally
+    request the oracle solve at deployment (reviewer P0-3):
+
+    - :attr:`EGO_ONLY` — **deployment default.** QP decision variable is
+      the ego agent's action only; the partner's motion enters as a
+      predicted disturbance on the constraint RHS. This is the
+      ad-hoc / black-box-partner setting ADR-006 §Decision pins.
+    - :attr:`CENTRALIZED` — oracle / ablation only. QP decision variable
+      is the concatenation of every uid's action, with per-uid slot
+      widths set by ``control_models[uid].action_dim`` (no implicit
+      "first uid's shape" fallback). Used as the upper-bound baseline
+      in ADR-014's three-table report. Never used at evaluation
+      against ad-hoc partners.
+    - :attr:`SHARED_CONTROL` — lab-only baseline (reviewer P0-3 mode 3).
+      Same shape as :attr:`CENTRALIZED` with an additional
+      ``partner_action_bound`` parameter that restricts the partner's
+      adjustment magnitude. Measures how much of the centralised
+      headroom comes from co-control budget vs from partner
+      co-operation.
+
+    Mode is a **constructor argument**, not a per-call flag: the
+    conformal slack vector ``SafetyState.lambda_`` is sized per pair,
+    and the pair set differs between :attr:`EGO_ONLY` (one row per
+    partner) and :attr:`CENTRALIZED` (full pairwise table). Flipping
+    mode mid-episode would silently invalidate the conformal state.
+    A mode change requires constructing a new filter with a fresh
+    :class:`SafetyState`.
+    """
+
+    EGO_ONLY = "ego_only"
+    CENTRALIZED = "centralized"
+    SHARED_CONTROL = "shared_control"
+
+
+@runtime_checkable
+class AgentControlModel(Protocol):
+    """Per-agent action ↔ Cartesian-acceleration map (ADR-004 §Decision; spike_004A).
+
+    The CBF row generator builds pairwise constraints in Cartesian /
+    safety space, then projects to per-agent action-space coefficients
+    via this Protocol. The Protocol mediates between each agent's
+    *action space* (joint torques for a 7-DOF arm, wheel velocities
+    for a 2-DOF base, Cartesian accelerations for a point mass) and
+    the shared *safety space* (Cartesian acceleration of the agent's
+    safety body).
+
+    Implementations MUST be deterministic on identical ``(state,
+    action)`` inputs (P6; seeding contract) and MUST be consistent
+    with each other: for any ``state`` and any Cartesian acceleration
+    ``a`` in the image of :meth:`action_to_cartesian_accel`,
+    ``action_to_cartesian_accel(state,
+    cartesian_accel_to_action(state, a)) == a`` to within floating-
+    point tolerance. The right-inverse exists by construction for
+    over-actuated agents (Jacobian has more columns than rows); for
+    exactly-actuated agents the right-inverse is the unique inverse.
+
+    Attributes:
+        uid: Unique identifier of the agent whose model this is.
+        action_dim: Dimensionality of the agent's action vector
+            (e.g. 7 for a 7-DOF arm; 2 for a planar double integrator).
+        position_dim: Cartesian dimension of the agent's safety body
+            (typically 2 for the §V toy crossing, 3 for manipulation).
+    """
+
+    @property
+    def uid(self) -> str:
+        """Unique identifier of the agent (ADR-004 §Decision)."""
+        ...
+
+    @property
+    def action_dim(self) -> int:
+        """Dimensionality of the action vector (ADR-004 §Decision)."""
+        ...
+
+    @property
+    def position_dim(self) -> int:
+        """Cartesian dimension of the safety body (ADR-004 §Decision)."""
+        ...
+
+    def action_to_cartesian_accel(self, state: AgentSnapshot, action: FloatArray) -> FloatArray:
+        """Map a control-space action to a Cartesian acceleration (ADR-004 §Decision).
+
+        Args:
+            state: Current :class:`concerto.safety.cbf_qp.AgentSnapshot`.
+                The mapping is state-dependent for any embodiment whose
+                Jacobian depends on configuration (e.g. a 7-DOF arm).
+            action: Action vector of shape ``(action_dim,)``, dtype
+                ``float64``.
+
+        Returns:
+            Cartesian acceleration of shape ``(position_dim,)``, dtype
+            ``float64``.
+        """
+        ...
+
+    def cartesian_accel_to_action(
+        self, state: AgentSnapshot, cartesian_accel: FloatArray
+    ) -> FloatArray:
+        """Right-inverse for QP projection back into action space (ADR-004 §Decision).
+
+        Used by the CBF-QP to express the per-agent action-space slot
+        coefficients of a Cartesian constraint row. For an
+        over-actuated agent the right-inverse selects one of the many
+        actions that realise the same Cartesian acceleration; the
+        damped-least-squares pseudo-inverse is the canonical choice
+        (see :class:`JacobianControlModel`).
+
+        Args:
+            state: Current :class:`concerto.safety.cbf_qp.AgentSnapshot`.
+            cartesian_accel: Cartesian acceleration of shape
+                ``(position_dim,)``, dtype ``float64``.
+
+        Returns:
+            Action vector of shape ``(action_dim,)``, dtype ``float64``.
+        """
+        ...
+
+    def max_cartesian_accel(self, bounds: Bounds) -> float:
+        """Per-agent Cartesian acceleration capacity (ADR-004 §Decision; spike_004A).
+
+        Used by the QP-row generator to size the per-pair
+        ``alpha_pair = alpha_i_cart + alpha_j_cart`` and to drive the
+        proportional Wang-Ames-Egerstedt 2017 §IV budget split for
+        heterogeneous embodiments. For a double-integrator agent
+        whose action space *is* Cartesian acceleration this is just
+        ``bounds.action_norm``.
+
+        Args:
+            bounds: Per-task :class:`Bounds` envelope.
+
+        Returns:
+            Strictly positive scalar acceleration capacity.
+        """
+        ...
+
+
+@dataclass(frozen=True)
+class DoubleIntegratorControlModel:
+    """Identity action ↔ Cartesian-acceleration map (ADR-004 §Decision; spike_004A §Reduction).
+
+    Default :class:`AgentControlModel` for double-integrator agents
+    whose action space coincides with Cartesian acceleration (the
+    Wang-Ames-Egerstedt 2017 §V toy crossing and every Phase-0
+    homogeneous test). The Jacobian ``J_i = d cartesian_accel /
+    d action`` is the identity, so the CBF row coefficients projected
+    through this model are element-wise identical to the rows the
+    pre-refactor ``_pair_constraint_row`` emitted. This is the
+    migration shim: tests that construct homogeneous 2-D pairs pass
+    a :class:`DoubleIntegratorControlModel` per uid and run unchanged
+    through :class:`ExpCBFQP` in :attr:`SafetyMode.CENTRALIZED` mode.
+
+    Attributes:
+        uid: Unique identifier of the agent.
+        action_dim: Dimensionality of the agent's action vector
+            (equal to ``position_dim`` by construction).
+    """
+
+    uid: str
+    action_dim: int
+
+    @property
+    def position_dim(self) -> int:
+        """Cartesian dimension of the safety body (ADR-004 §Decision).
+
+        For a double integrator the action and position spaces have
+        the same dimension by definition.
+        """
+        return self.action_dim
+
+    def action_to_cartesian_accel(self, state: AgentSnapshot, action: FloatArray) -> FloatArray:
+        """Return ``action`` unchanged (ADR-004 §Decision; spike_004A §Reduction).
+
+        The double-integrator identity map.
+        """
+        del state
+        if action.shape != (self.action_dim,):
+            msg = (
+                f"action shape {action.shape} mismatches "
+                f"DoubleIntegratorControlModel(uid={self.uid!r}).action_dim={self.action_dim}"
+            )
+            raise ValueError(msg)
+        return action.astype(np.float64, copy=False)
+
+    def cartesian_accel_to_action(
+        self, state: AgentSnapshot, cartesian_accel: FloatArray
+    ) -> FloatArray:
+        """Return ``cartesian_accel`` unchanged (ADR-004 §Decision; spike_004A §Reduction).
+
+        The double-integrator identity right-inverse.
+        """
+        del state
+        if cartesian_accel.shape != (self.action_dim,):
+            msg = (
+                f"cartesian_accel shape {cartesian_accel.shape} mismatches "
+                f"DoubleIntegratorControlModel(uid={self.uid!r}).position_dim={self.action_dim}"
+            )
+            raise ValueError(msg)
+        return cartesian_accel.astype(np.float64, copy=False)
+
+    def max_cartesian_accel(self, bounds: Bounds) -> float:
+        """Return ``bounds.action_norm`` (ADR-004 §Decision; spike_004A §Per-agent alpha).
+
+        For a double integrator the action-space L-infinity bound *is*
+        the Cartesian acceleration capacity.
+        """
+        return float(bounds.action_norm)
+
+
+#: Default damping parameter for the damped-least-squares pseudo-inverse
+#: in :class:`JacobianControlModel` (Nakamura & Hanafusa 1986). Keeps
+#: the right-inverse well-defined near kinematic singularities; ADR-004
+#: §Decision; spike_004A §Per-agent control model.
+DEFAULT_DLS_DAMPING: float = 1e-3
+
+
+@dataclass
+class JacobianControlModel:
+    """Jacobian-aware action ↔ Cartesian map skeleton (ADR-004 §Decision; ADR-007 Stage 1 AS).
+
+    The 7-DOF arm case for the AS axis. Takes a Jacobian callable
+    ``jacobian_fn(state) -> J`` (Cartesian-to-action shape
+    ``(position_dim, action_dim)``) and a damped-least-squares
+    pseudo-inverse for the right-inverse (Nakamura & Hanafusa 1986;
+    the singularity-robust variant the OSCBF inner filter already
+    relies on per Morton & Pavone 2025 §IV).
+
+    Stage-1 AS spike will exercise this on the 7-DOF arm; the
+    skeleton raises :class:`NotImplementedError` on
+    :meth:`action_to_cartesian_accel` unless a Jacobian callable is
+    supplied via ``jacobian_fn``. The same loud-fail discipline
+    ADR-004 §Risks established for
+    :class:`concerto.safety.emergency.JacobianEmergencyController`
+    applies here: 7-DOF uids must not silently receive a Cartesian-
+    shaped action by accident.
+
+    Attributes:
+        uid: Unique identifier of the agent.
+        action_dim: Dimensionality of the action vector (e.g. 7 for
+            a Franka arm).
+        position_dim: Cartesian dimension of the safety body
+            (typically 3 for manipulation).
+        jacobian_fn: Optional callable mapping
+            :class:`AgentSnapshot` to the Jacobian matrix of shape
+            ``(position_dim, action_dim)``. When :data:`None`, both
+            mapping methods raise :class:`NotImplementedError`.
+        damping: Damped-least-squares parameter; default
+            :data:`DEFAULT_DLS_DAMPING`.
+        max_cartesian_accel_value: Pre-computed scalar capacity
+            (kg-free acceleration units). Defaults to
+            :data:`numpy.nan` so the placeholder fails loudly on
+            attempted use; supply the embodiment-specific value at
+            construction time.
+    """
+
+    uid: str
+    action_dim: int
+    position_dim: int
+    jacobian_fn: Callable[[AgentSnapshot], FloatArray] | None = None
+    damping: float = DEFAULT_DLS_DAMPING
+    max_cartesian_accel_value: float = float("nan")
+
+    def action_to_cartesian_accel(self, state: AgentSnapshot, action: FloatArray) -> FloatArray:
+        """Apply ``J(state) @ action`` (ADR-004 §Decision; ADR-007 Stage 1 AS).
+
+        Raises:
+            NotImplementedError: When ``jacobian_fn`` was not supplied
+                at construction time. Stage-1 AS spike delivers the
+                concrete kinematic model; until then 7-DOF uids fail
+                loudly per ADR-004 §Risks.
+        """
+        if self.jacobian_fn is None:
+            msg = (
+                f"JacobianControlModel(uid={self.uid!r}) has no jacobian_fn; "
+                "Stage-1 AS spike (ADR-007 §Stage 1) supplies the kinematic "
+                "model. Until then 7-DOF uids must not be routed through the "
+                "CBF-QP."
+            )
+            raise NotImplementedError(msg)
+        jac = np.asarray(self.jacobian_fn(state), dtype=np.float64)
+        return (jac @ action.astype(np.float64, copy=False)).astype(np.float64, copy=False)
+
+    def cartesian_accel_to_action(
+        self, state: AgentSnapshot, cartesian_accel: FloatArray
+    ) -> FloatArray:
+        """Apply the damped-least-squares pseudo-inverse (ADR-004 §Decision; ADR-007 Stage 1 AS).
+
+        ``J^T (J J^T + damping^2 I)^{-1} a`` — Nakamura & Hanafusa
+        1986 singularity-robust right-inverse, identical in form to
+        the OSCBF inner filter's Jacobian handling.
+
+        Raises:
+            NotImplementedError: When ``jacobian_fn`` was not supplied
+                at construction time.
+        """
+        if self.jacobian_fn is None:
+            msg = (
+                f"JacobianControlModel(uid={self.uid!r}) has no jacobian_fn; "
+                "Stage-1 AS spike (ADR-007 §Stage 1) supplies the kinematic "
+                "model. Until then 7-DOF uids must not be routed through the "
+                "CBF-QP."
+            )
+            raise NotImplementedError(msg)
+        jac = np.asarray(self.jacobian_fn(state), dtype=np.float64)
+        gram = jac @ jac.T + (self.damping * self.damping) * np.eye(
+            self.position_dim, dtype=np.float64
+        )
+        rhs = cartesian_accel.astype(np.float64, copy=False)
+        return (jac.T @ np.linalg.solve(gram, rhs)).astype(np.float64, copy=False)
+
+    def max_cartesian_accel(self, bounds: Bounds) -> float:
+        """Return the pre-computed Cartesian acceleration capacity (ADR-004 §Decision).
+
+        Raises:
+            ValueError: When ``max_cartesian_accel_value`` was left at
+                its placeholder :data:`numpy.nan`. Stage-1 AS spike
+                supplies the embodiment-specific value.
+        """
+        del bounds
+        if not np.isfinite(self.max_cartesian_accel_value):
+            msg = (
+                f"JacobianControlModel(uid={self.uid!r}).max_cartesian_accel_value "
+                "was not configured. Stage-1 AS spike (ADR-007 §Stage 1) supplies "
+                "the embodiment-specific value."
+            )
+            raise ValueError(msg)
+        return float(self.max_cartesian_accel_value)
+
+
 @runtime_checkable
 class SafetyFilter(Protocol):
     """Contract for the integrated safety-filter pipeline (ADR-004 §Decision).
@@ -217,12 +555,17 @@ class SafetyFilter(Protocol):
 
 
 __all__ = [
+    "DEFAULT_DLS_DAMPING",
     "DEFAULT_EPSILON",
     "DEFAULT_ETA",
     "DEFAULT_WARMUP_STEPS",
+    "AgentControlModel",
     "Bounds",
+    "DoubleIntegratorControlModel",
     "FilterInfo",
     "FloatArray",
+    "JacobianControlModel",
     "SafetyFilter",
+    "SafetyMode",
     "SafetyState",
 ]
