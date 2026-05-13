@@ -1127,6 +1127,17 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#what-conformal-prediction-is" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What conformal prediction is
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#the-three-layer-architecture-plus-braking-fallback" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1347,6 +1358,17 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#what-conformal-prediction-is" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What conformal prediction is
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#the-three-layer-architecture-plus-braking-fallback" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1466,6 +1488,26 @@
 
 
 <h1 id="why-conformal-cbfs">Why conformal CBFs?</h1>
+<h2 id="what-conformal-prediction-is">What conformal prediction is</h2>
+<p>Conformal prediction (CP) is a distribution-free framework for turning
+any black-box predictor into one that returns calibrated prediction
+sets: given a user-chosen miscoverage level ε ∈ (0, 1), CP wraps the
+predictor so its sets contain the true outcome with probability at
+least 1 − ε, with no assumptions on the data distribution beyond
+exchangeability. The canonical reference for the framework and its
+finite-sample coverage proof is Shafer &amp; Vovk 2008 ("A Tutorial on
+Conformal Prediction," JMLR).</p>
+<p>Angelopoulos &amp; Bates 2023 ("Conformal Prediction: A Gentle
+Introduction," Foundations and Trends in Machine Learning) is the
+practical entry point for ML readers — it walks through the
+split-CP, full-CP, and online-CP variants and the regret-style
+guarantees that the online variant enjoys when the data stream is
+non-exchangeable. What Huriot &amp; Sibai 2025 contributes on top is to
+specialise the online-CP update to a CBF safety-filter setting: the
+calibration variable becomes the per-pair conformal slack λ added to
+each CBF constraint, and the resulting ε + o(1) long-term risk bound
+inherits CP's distribution-freeness while binding it to a per-step
+safety filter.</p>
 <p>The exponential CBF-QP backbone (Wang–Ames–Egerstedt 2017) provides
 instantaneous safety guarantees but requires tight a-priori bounds on
 partner behaviour. In heterogeneous ad-hoc teamwork those bounds are
@@ -1747,6 +1789,10 @@ across:</p>
   <a href="../../reference/adrs/">ADR-006</a> (partner-policy assumption set),
   <a href="../../reference/adrs/">ADR-014</a> (three-table reporting).</li>
 </ul>
+<p>For the full bibliography — Ames 2017, Ames 2019, Shafer &amp; Vovk 2008,
+Angelopoulos &amp; Bates 2023, Wang–Ames–Egerstedt 2017, Huriot &amp; Sibai
+2025, and the surrounding canon — see
+<a href="../../reference/literature/#3-conformal-prediction-and-conformal-control">the literature reference page</a>.</p>
 
 
 
