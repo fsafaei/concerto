@@ -84,6 +84,17 @@ KNOWN_CLEAN: frozenset[str] = frozenset(
     {
         "mani_skill==3.0.1",  # Apache-2.0 (verified from source repo)
         "matplotlib-inline==0.2.1",  # BSD-3-Clause (verified from source repo)
+        # arch (transitive dep of rliable, optional ``eval`` extra) ships
+        # under the University of Illinois/NCSA Open Source Licence — an
+        # OSI-approved permissive licence whose grant clauses are
+        # functionally identical to BSD-3-Clause / MIT (the text is the
+        # standard NCSA template: permissive use + attribution +
+        # no-endorsement, no copyleft). The text was verified from arch
+        # 7.2.0's bundled ``LICENSE.md`` before pinning. The project's
+        # open-source rule bans GPL/AGPL but admits OSI-approved
+        # permissive licences (cf. MIT, BSD, ISC, MPL-2.0 in
+        # :data:`ALLOWED`); NCSA falls in the same family.
+        "arch==7.2.0",
     }
 )
 

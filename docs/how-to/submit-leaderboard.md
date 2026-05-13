@@ -22,6 +22,24 @@ the ≥20 pp gap test (reviewer P1-9); `hrs.py` computes the per-axis
 HRS vector and the headline scalar per
 [ADR-008 §Decision](https://github.com/fsafaei/concerto/blob/main/adr/ADR-008-hrs-bundle.md).
 
+## Prerequisites
+
+Install CHAMBER with the `eval` optional extra so the renderer can
+emit the rliable-style performance-profile column alongside the
+native IQM and optimality-gap columns:
+
+```bash
+uv sync --extra eval
+```
+
+The `eval` extra pulls in `rliable` (Agarwal et al. 2021). IQM and
+optimality gap are computed natively in
+[`chamber.evaluation.bootstrap`](../reference/evaluation.md) and do
+not require the extra; only performance profiles do. Without the
+extra, `chamber-render-tables` still produces a valid leaderboard
+row — the performance-profile column is emitted as `None` and a
+`RuntimeWarning` points back here.
+
 ## Protocol
 
 1. Copy the nearest existing pre-registration YAML from

@@ -61,6 +61,17 @@ dev = [
   "ipykernel", "ipython",
 ]
 viz = ["matplotlib>=3.9", "seaborn>=0.13.2"]
+# ADR-008 / ADR-014: rliable-style performance profiles are an optional
+# render path. IQM and optimality gap are computed natively in
+# ``chamber.evaluation.bootstrap``; only performance profiles require
+# the extra. Install with ``uv sync --extra eval``. The ``pandas<3``
+# pin keeps rliable's ``arch`` dependency importable — rliable still
+# bounds ``arch<8.0``, and arch <8.0 raises ``TypeError`` on import
+# under pandas 3.0 (deprecate_kwarg signature change).
+eval = [
+  "rliable>=1.0,<2.0",
+  "pandas>=1.4,<3.0",
+]
 
 [project.scripts]
 concerto                = "concerto.cli:main"            # method-level entry (Phase-0 stub)
