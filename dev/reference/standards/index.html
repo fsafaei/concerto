@@ -961,6 +961,67 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="2. Deterministic networking and 5G-TSN">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#ieee-8021as" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        IEEE 802.1AS
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ieee-8021qbv" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        IEEE 802.1Qbv
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ieee-8021cb" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        IEEE 802.1CB
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3gpp-ts-23501-527" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3GPP TS 23.501 §5.27
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#5g-acia-5g-tsn-integration-white-paper" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5G-ACIA 5G-TSN integration white paper
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -1305,6 +1366,67 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="2. Deterministic networking and 5G-TSN">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#ieee-8021as" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        IEEE 802.1AS
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ieee-8021qbv" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        IEEE 802.1Qbv
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ieee-8021cb" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        IEEE 802.1CB
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3gpp-ts-23501-527" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3GPP TS 23.501 §5.27
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#5g-acia-5g-tsn-integration-white-paper" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5G-ACIA 5G-TSN integration white paper
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -1488,6 +1610,76 @@ evidence sweep linked above).</p>
 </tr>
 </tbody>
 </table>
+<h3 id="ieee-8021as">IEEE 802.1AS</h3>
+<p>IEEE 802.1AS specifies the generalised precision time protocol (gPTP),
+the profile of IEEE 1588 PTPv2 used inside time-sensitive networks. A
+conformant bridge propagates timing information end-to-end through a
+master-slave hierarchy elected by the best-master-clock algorithm
+(BMCA), and the standard normatively requires that path delay and
+residence time at each hop be measured and corrected so that
+participating end-stations share a common time reference accurate to
+sub-microsecond on a single-segment factory deployment. CHAMBER's
+fixed-format channel reads AoI timestamps against this assumed
+shared time-base: without an 802.1AS-grade primitive, AoI is not
+comparable across agents, and the conformal prediction layer's
+input is no longer well-defined.</p>
+<h3 id="ieee-8021qbv">IEEE 802.1Qbv</h3>
+<p>IEEE 802.1Qbv defines time-aware scheduled traffic via gate control
+lists (GCLs) at every bridge output port. Each traffic class is
+assigned an open transmission window inside a repeating cycle, and
+the bridge normatively guarantees that frames belonging to a
+scheduled class are forwarded only during their window, free of
+contention from best-effort traffic. The standard's guarantees apply
+to per-class p99 latency and to microsecond-grade jitter under
+deterministic load. CHAMBER's URLLC degradation profiles
+(<code>chamber.comm.URLLC_3GPP_R17</code>) treat the 802.1Qbv jitter envelope as
+the floor of what a real 5G-TSN deployment can sustain — the
+<code>urllc</code> and <code>factory</code> profiles parameterise jitter against this
+floor; the <code>wifi</code> and <code>saturation</code> profiles deliberately violate it
+to model commodity wireless and overloaded fabrics.</p>
+<h3 id="ieee-8021cb">IEEE 802.1CB</h3>
+<p>IEEE 802.1CB defines frame replication and elimination for reliability
+(FRER). Each protected stream is sequence-numbered at ingress,
+replicated onto multiple disjoint paths through the network, and
+de-duplicated at the egress so that a single-path failure causes no
+frame loss as observed by the receiver. The standard normatively
+requires per-stream sequence-recovery state, a bounded
+sequence-recovery window, and consistent stream identification across
+replication points. CHAMBER references 802.1CB as the formal
+template for a redundancy variant of the comm-degradation wrapper:
+the wrapper can compose any saturation or drop profile with a
+configurable FRER overlay that masks single-path losses up to a
+bound, letting the Stage 2 CM spike isolate whether observed
+violations are intrinsic to the stream or recoverable by redundancy.</p>
+<h3 id="3gpp-ts-23501-527">3GPP TS 23.501 §5.27</h3>
+<p>3GPP TS 23.501 is the canonical 5G-system-architecture specification;
+§5.27 covers the integration of the 5G system with deterministic
+networking. The 5G system is exposed to the TSN domain as a single
+virtual TSN bridge fronted by two translator functions: a device-side
+TT (DS-TT) co-located with the UE and a network-side TT (NW-TT)
+co-located with the UPF. The clause normatively requires that QoS,
+scheduling, and time-synchronisation primitives be mapped
+transparently between TSN streams and 5G QoS flows, so that an
+end-to-end deterministic stream can cross the 5G radio segment
+without losing its TSN guarantees. In CHAMBER, the URLLC profiles
+represent the over-the-air segment within this end-to-end model;
+the AoI timestamp seen at the receiver is the composition of the
+DS-TT-side enqueue time, the radio segment, and the NW-TT-side
+release.</p>
+<h3 id="5g-acia-5g-tsn-integration-white-paper">5G-ACIA 5G-TSN integration white paper</h3>
+<p>The 5G Alliance for Connected Industries and Automation (5G-ACIA)
+publishes the industry-side white papers that translate the 3GPP TS
+23.501 §5.27 integration model and the IEEE 802.1 TSN family into
+deployable factory-floor configurations. The white papers specify
+deployment patterns (single-DS-TT, multi-DS-TT, redundancy
+combinations), parameter ranges measured from industrial trials, and
+reference architectures for time-sensitive control loops over 5G.
+They are not binding standards in the IEEE / 3GPP sense, but they
+are the de facto industry reference for what numeric envelopes are
+actually achievable on the factory floor. CHAMBER's six URLLC
+profiles cross-check their numeric envelopes against the 5G-ACIA
+factory parameterisation; deviations are documented in the
+profile-level comments in <code>chamber.comm.URLLC_3GPP_R17</code>.</p>
 <hr />
 <h2 id="3-standards-and-measurement-stack-diagram">3. Standards-and-measurement stack diagram</h2>
 <p>The flowchart below ties each
@@ -1514,14 +1706,14 @@ implementation staging or ADR-009 partner-zoo construction).</p>
     AS_S[ADR-007 §Stage 1&lt;br/&gt;no binding standard]:::std
     OM_S[ADR-007 §Stage 1&lt;br/&gt;no binding standard]:::std
     CR_S[ADR-007 Open Q #3&lt;br/&gt;chunk-async; no binding standard]:::std
-    CM_S[IEEE 802.1AS + 802.1Qbv&lt;br/&gt;+ 3GPP R17 URLLC + TS 23.501]:::std
+    CM_S[IEEE 802.1AS + 802.1Qbv + 802.1CB&lt;br/&gt;+ 3GPP R17 URLLC + TS 23.501 §5.27]:::std
     PF_S[ADR-009 §partner-zoo&lt;br/&gt;no binding standard]:::std
     SA_S[ISO 10218-2:2025&lt;br/&gt;+ ISO 13849-1:2023]:::std
 
     AS_M[action-space dimensionality;&lt;br/&gt;embodiment-class pair]:::metric
     OM_M[sensor-suite vector;&lt;br/&gt;vision / +F-T / +tactile fusion]:::metric
     CR_M[control-rate ratio;&lt;br/&gt;chunk size]:::metric
-    CM_M[latency p99; jitter; drop rate; AoI]:::metric
+    CM_M[latency p99; AoI;&lt;br/&gt;drop rate p99]:::metric
     PF_M[trained-with vs frozen-novel;&lt;br/&gt;partner-swap transient]:::metric
     SA_M[force/torque peak per joint;&lt;br/&gt;SIL / PL pair]:::metric
 
