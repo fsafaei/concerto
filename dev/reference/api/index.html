@@ -7150,7 +7150,8 @@ three-table reporting format from ADR-014 §Decision.</p>
     <span class="s2">&quot;FilterInfo&quot;</span><span class="p">,</span>
     <span class="p">{</span>
         <span class="s2">&quot;lambda&quot;</span><span class="p">:</span> <span class="n">FloatArray</span><span class="p">,</span>
-        <span class="s2">&quot;loss_k&quot;</span><span class="p">:</span> <span class="n">FloatArray</span><span class="p">,</span>
+        <span class="s2">&quot;constraint_violation&quot;</span><span class="p">:</span> <span class="n">FloatArray</span><span class="p">,</span>
+        <span class="s2">&quot;prediction_gap_loss&quot;</span><span class="p">:</span> <span class="n">FloatArray</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
         <span class="s2">&quot;fallback_fired&quot;</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
         <span class="s2">&quot;qp_solve_ms&quot;</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
     <span class="p">},</span>
@@ -7160,10 +7161,30 @@ three-table reporting format from ADR-014 §Decision.</p>
     <div class="doc doc-contents ">
 
         <p>Telemetry payload returned by :meth:<code>SafetyFilter.filter</code> (ADR-014 §Decision).</p>
-<p>The fields populate the three-table renderer's row data: <code>lambda</code> and
-<code>loss_k</code> feed Table 3 (conservativeness gap λ mean/var vs. oracle
-gt/noLearn), <code>fallback_fired</code> feeds Table 2's "fallback fired" column,
-<code>qp_solve_ms</code> feeds the OSCBF 1 kHz target check (ADR-004 §"OSCBF target").</p>
+<p>The fields populate the three-table renderer's row data:</p>
+<ul>
+<li><code>lambda</code> — current conformal slack vector; feeds Table 3
+  (conservativeness gap λ mean/var vs. oracle gt/noLearn).</li>
+<li><code>constraint_violation</code> — per-pair non-negative violation signal
+  <code>max(0, -h_ij)</code> from the CBF backbone. Zero when the constraint is
+  satisfied; positive when the barrier is in the violated half-space.
+  Counted into Table 2's per-condition violation rates.</li>
+<li><code>prediction_gap_loss</code> — per-pair Huriot &amp; Sibai 2025 §IV.A loss
+  <code>max(0, predicted_h - actual_h)</code> against a partner-trajectory
+  predictor. This is the signal that drives the conformal update
+  (<code>update_lambda</code>); :data:<code>None</code> when no predictor is wired (the
+  CBF backbone alone cannot compute it — see
+  <code>concerto.safety.conformal.update_lambda_from_predictor</code>).</li>
+<li><code>fallback_fired</code> — feeds Table 2's "fallback fired" column.</li>
+<li><code>qp_solve_ms</code> — feeds the OSCBF 1 kHz target check
+  (ADR-004 §"OSCBF target").</li>
+</ul>
+<p>The constraint-violation and prediction-gap loss are reported as
+separate cells of the ADR-014 three-table report because they answer
+different questions: <code>constraint_violation</code> is a per-step CBF gap
+(did the QP keep us in the safe set this step?), and
+<code>prediction_gap_loss</code> is the conformal calibration signal (was the
+predictor's forecast of the safe set wrong?).</p>
 
     </div>
 
@@ -7442,28 +7463,7 @@ black-box-partner setting requires per ADR-006 §Decision).</p>
 
               <details class="mkdocstrings-source">
                 <summary>Source code in <code>src/concerto/safety/api.py</code></summary>
-                <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">136</span>
-<span class="normal">137</span>
-<span class="normal">138</span>
-<span class="normal">139</span>
-<span class="normal">140</span>
-<span class="normal">141</span>
-<span class="normal">142</span>
-<span class="normal">143</span>
-<span class="normal">144</span>
-<span class="normal">145</span>
-<span class="normal">146</span>
-<span class="normal">147</span>
-<span class="normal">148</span>
-<span class="normal">149</span>
-<span class="normal">150</span>
-<span class="normal">151</span>
-<span class="normal">152</span>
-<span class="normal">153</span>
-<span class="normal">154</span>
-<span class="normal">155</span>
-<span class="normal">156</span>
-<span class="normal">157</span>
+                <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">157</span>
 <span class="normal">158</span>
 <span class="normal">159</span>
 <span class="normal">160</span>
@@ -7501,7 +7501,28 @@ black-box-partner setting requires per ADR-006 §Decision).</p>
 <span class="normal">192</span>
 <span class="normal">193</span>
 <span class="normal">194</span>
-<span class="normal">195</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@runtime_checkable</span>
+<span class="normal">195</span>
+<span class="normal">196</span>
+<span class="normal">197</span>
+<span class="normal">198</span>
+<span class="normal">199</span>
+<span class="normal">200</span>
+<span class="normal">201</span>
+<span class="normal">202</span>
+<span class="normal">203</span>
+<span class="normal">204</span>
+<span class="normal">205</span>
+<span class="normal">206</span>
+<span class="normal">207</span>
+<span class="normal">208</span>
+<span class="normal">209</span>
+<span class="normal">210</span>
+<span class="normal">211</span>
+<span class="normal">212</span>
+<span class="normal">213</span>
+<span class="normal">214</span>
+<span class="normal">215</span>
+<span class="normal">216</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@runtime_checkable</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">SafetyFilter</span><span class="p">(</span><span class="n">Protocol</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Contract for the integrated safety-filter pipeline (ADR-004 §Decision).</span>
 
@@ -7717,28 +7738,7 @@ caller MUST route to the braking fallback in this case.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/concerto/safety/api.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">161</span>
-<span class="normal">162</span>
-<span class="normal">163</span>
-<span class="normal">164</span>
-<span class="normal">165</span>
-<span class="normal">166</span>
-<span class="normal">167</span>
-<span class="normal">168</span>
-<span class="normal">169</span>
-<span class="normal">170</span>
-<span class="normal">171</span>
-<span class="normal">172</span>
-<span class="normal">173</span>
-<span class="normal">174</span>
-<span class="normal">175</span>
-<span class="normal">176</span>
-<span class="normal">177</span>
-<span class="normal">178</span>
-<span class="normal">179</span>
-<span class="normal">180</span>
-<span class="normal">181</span>
-<span class="normal">182</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">182</span>
 <span class="normal">183</span>
 <span class="normal">184</span>
 <span class="normal">185</span>
@@ -7751,7 +7751,28 @@ caller MUST route to the braking fallback in this case.</p>
 <span class="normal">192</span>
 <span class="normal">193</span>
 <span class="normal">194</span>
-<span class="normal">195</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">filter</span><span class="p">(</span>
+<span class="normal">195</span>
+<span class="normal">196</span>
+<span class="normal">197</span>
+<span class="normal">198</span>
+<span class="normal">199</span>
+<span class="normal">200</span>
+<span class="normal">201</span>
+<span class="normal">202</span>
+<span class="normal">203</span>
+<span class="normal">204</span>
+<span class="normal">205</span>
+<span class="normal">206</span>
+<span class="normal">207</span>
+<span class="normal">208</span>
+<span class="normal">209</span>
+<span class="normal">210</span>
+<span class="normal">211</span>
+<span class="normal">212</span>
+<span class="normal">213</span>
+<span class="normal">214</span>
+<span class="normal">215</span>
+<span class="normal">216</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">filter</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
     <span class="n">proposed_action</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">FloatArray</span><span class="p">],</span>
     <span class="n">obs</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">object</span><span class="p">],</span>
@@ -7829,17 +7850,17 @@ outputs.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/concerto/safety/api.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">149</span>
-<span class="normal">150</span>
-<span class="normal">151</span>
-<span class="normal">152</span>
-<span class="normal">153</span>
-<span class="normal">154</span>
-<span class="normal">155</span>
-<span class="normal">156</span>
-<span class="normal">157</span>
-<span class="normal">158</span>
-<span class="normal">159</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">reset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">seed</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">170</span>
+<span class="normal">171</span>
+<span class="normal">172</span>
+<span class="normal">173</span>
+<span class="normal">174</span>
+<span class="normal">175</span>
+<span class="normal">176</span>
+<span class="normal">177</span>
+<span class="normal">178</span>
+<span class="normal">179</span>
+<span class="normal">180</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">reset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">seed</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Reset filter state at episode start (ADR-004 §Decision).</span>
 
 <span class="sd">    Args:</span>
