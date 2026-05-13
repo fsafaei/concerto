@@ -69,6 +69,52 @@ Commits to `main` must be GPG- or SSH-signed. Set this up with:
 git config commit.gpgSign true
 ```
 
+## Bibliography hygiene
+
+All public citations resolve through
+[`docs/reference/refs.bib`](docs/reference/refs.bib). Maintainers and
+contributors follow this checklist when touching any document that
+cites a paper, standard, project, or model.
+
+1. **Every acronym in public docs is resolved once.** A reader who
+   searches `docs/reference/refs.bib` should find a full citation for
+   every named method, benchmark, model, or standard appearing in the
+   README, ADRs, explainer pages, or how-to guides.
+
+2. **Foundational + recent.** Every major conceptual claim cites both
+   a foundational work and a recent one. AHT, safety filtering,
+   conformal calibration, and benchmark methodology each carry one
+   canonical citation and one modern citation.
+
+3. **Standards are separated from academic publications.**
+   [`docs/reference/literature.md`](docs/reference/literature.md) is
+   for peer-reviewed material;
+   [`docs/reference/standards.md`](docs/reference/standards.md) is for
+   normative documents; the international-evidence supplement is for
+   industry signal.
+
+4. **Exact edition / year / part number on every standards
+   citation.** No `ISO 10218`; use `ISO 10218-2:2025`. No
+   `Release 17`; use `3GPP TS 23.501 v17.x.y`.
+
+5. **Internal-note references are mirrored publicly or marked
+   internal-only.** Public ADRs never rely on a citation that exists
+   only in a private `notes/` tree. If an ADR cites a reading note,
+   that note's bibliographic record must also be in `refs.bib`.
+
+6. **Benchmark claims disclose evaluation practice.** Seeds, bootstrap
+   CI, rliable aggregate metrics, and pre-registration references are
+   linked from
+   [`docs/reference/evaluation.md`](docs/reference/evaluation.md).
+
+7. **No new citation without a refs.bib entry first.** PRs that add
+   or change a citation in a public doc must add or update the
+   corresponding entry in `docs/reference/refs.bib` in the same PR.
+
+8. **Optional adjacents are not preemptive.** Do not cite FMI, OMG
+   DDS, NIST SP 800-82, or other adjacent specifications until the
+   public scope makes a claim that depends on them.
+
 ## Questions?
 
 Open an [issue](https://github.com/concerto-org/concerto/issues) or start
