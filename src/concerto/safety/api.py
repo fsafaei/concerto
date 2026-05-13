@@ -11,8 +11,14 @@ declares the contracts every layer's caller depends on:
   §IV; ADR-004 risk-mitigation #2 governs the partner-swap warmup).
 - :class:`FilterInfo` — telemetry payload returned alongside the safe
   action; consumed by the three-table renderer (ADR-014 §Decision).
-- :class:`SafetyFilter` — the Protocol the integrated stack implements
-  (``cbf_qp.py`` + ``conformal.py`` + ``oscbf.py`` + ``braking.py``).
+- :class:`EgoOnlySafetyFilter` and :class:`JointSafetyFilter` — the two
+  mode-specific Protocols the integrated stack implements (ADR-004
+  §Public API; spike_004A §Three-mode taxonomy; reviewer P0-2). The
+  EGO_ONLY filter takes a single ego :class:`FloatArray`; the
+  CENTRALIZED / SHARED_CONTROL filters take the joint per-uid dict.
+  The pre-refactor :data:`SafetyFilter` name is preserved as a
+  deprecated union alias; see :func:`__getattr__` for the deprecation
+  trigger and removal target (0.3.0).
 
 The module imports nothing from ``chamber.*`` — the dependency-direction
 rule (plan/10 §2) keeps the method side stand-alone and testable against a
@@ -23,6 +29,7 @@ single-partner mode when the field is ``None``).
 
 from __future__ import annotations
 
+import warnings
 from dataclasses import dataclass
 from enum import Enum
 from typing import TYPE_CHECKING, Protocol, TypedDict, runtime_checkable
@@ -131,7 +138,10 @@ FilterInfo = TypedDict(
         "qp_solve_ms": float,
     },
 )
-"""Telemetry payload returned by :meth:`SafetyFilter.filter` (ADR-014 §Decision).
+"""Telemetry payload returned by the filter Protocols (ADR-014 §Decision).
+
+Returned by :meth:`EgoOnlySafetyFilter.filter` and
+:meth:`JointSafetyFilter.filter`.
 
 The fields populate the three-table renderer's row data:
 
@@ -493,8 +503,16 @@ class JacobianControlModel:
 
 
 @runtime_checkable
-class SafetyFilter(Protocol):
-    """Contract for the integrated safety-filter pipeline (ADR-004 §Decision).
+class EgoOnlySafetyFilter(Protocol):
+    """Contract for an :attr:`SafetyMode.EGO_ONLY` safety-filter pipeline (ADR-004 §Public API).
+
+    The deployment / ad-hoc / black-box-partner mode (ADR-006 §Decision;
+    reviewer P0-3). The QP decides only the ego agent's action; the
+    partner's motion enters as a predicted disturbance on the
+    constraint right-hand side. The structural difference from
+    :class:`JointSafetyFilter` is wire-visible: ``proposed_action`` is a
+    single :class:`FloatArray` (the ego's nominal control), and the
+    return value's first element is likewise an array — never a dict.
 
     Implementations compose the three layers from ADR-004 — exp CBF-QP
     backbone (Wang-Ames-Egerstedt 2017), conformal slack overlay
@@ -503,6 +521,13 @@ class SafetyFilter(Protocol):
     single propose-check-replan boundary that wraps any nominal
     controller without accessing its internals (the property the
     black-box-partner setting requires per ADR-006 §Decision).
+
+    The canonical implementation is
+    :meth:`concerto.safety.cbf_qp.ExpCBFQP.ego_only`; third-party
+    plugin filters that target ego-only deployment SHOULD subclass /
+    structurally-conform to this Protocol so static checkers can
+    catch shape mismatches at construction time (spike_004A
+    §Three-mode taxonomy; reviewer P0-2).
     """
 
     def reset(self, *, seed: int | None = None) -> None:
@@ -519,17 +544,21 @@ class SafetyFilter(Protocol):
 
     def filter(
         self,
-        proposed_action: dict[str, FloatArray],
+        proposed_action: FloatArray,
         obs: dict[str, object],
         state: SafetyState,
         bounds: Bounds,
-    ) -> tuple[dict[str, FloatArray], FilterInfo]:
-        """Project the nominal action onto the safe set (ADR-004 §Decision).
+        *,
+        ego_uid: str,
+        partner_predicted_states: dict[str, AgentSnapshot],
+    ) -> tuple[FloatArray, FilterInfo]:
+        """Project the nominal ego action onto the safe set (ADR-004 §Public API).
 
         Args:
-            proposed_action: Per-agent nominal control inputs, keyed by
-                uid. The QP minimises ``||u - u_hat||^2`` with this as
-                the reference (Wang-Ames-Egerstedt 2017 eq. 9).
+            proposed_action: Ego nominal control input of shape
+                ``(control_models[ego_uid].action_dim,)``. The QP
+                minimises ``||u - u_hat||^2`` with this as the reference
+                (Wang-Ames-Egerstedt 2017 eq. 9).
             obs: Observation dict; the filter reads ``obs["comm"]`` (M2
                 contract — see ``chamber.comm.api.CommPacket``) and
                 ``obs["meta"]["partner_id"]`` (M4 contract; ``None`` ⇒
@@ -539,10 +568,17 @@ class SafetyFilter(Protocol):
             state: Mutable :class:`SafetyState`; updated in place by the
                 conformal layer each control step.
             bounds: Per-task :class:`Bounds` envelope (ADR-006 §Decision).
+            ego_uid: Identifies which uid in ``obs["agent_states"]`` is
+                the ego.
+            partner_predicted_states: Per-partner-uid predicted
+                :class:`concerto.safety.cbf_qp.AgentSnapshot` at the
+                *next* control step, used to evaluate the partner's
+                predicted Cartesian acceleration; this enters the
+                constraint RHS as a known drift term.
 
         Returns:
             A pair ``(safe_action, info)`` where ``safe_action`` is the
-            QP-projected per-agent action and ``info`` is a
+            QP-projected ego action and ``info`` is a
             :class:`FilterInfo` telemetry payload feeding the ADR-014
             three-table renderer.
 
@@ -554,6 +590,114 @@ class SafetyFilter(Protocol):
         ...
 
 
+@runtime_checkable
+class JointSafetyFilter(Protocol):
+    """Joint-action filter contract for CENTRALIZED / SHARED_CONTROL (ADR-004 §Public API).
+
+    The oracle / ablation baseline mode plus the lab-only co-control
+    mode (ADR-014 three-table report upper-bound row; reviewer P0-3
+    mode 3). The QP decides every uid's action; per-uid slot widths
+    come from ``control_models[uid].action_dim`` (no implicit "first
+    uid's shape" fallback per reviewer P0-2). The structural
+    difference from :class:`EgoOnlySafetyFilter` is wire-visible:
+    ``proposed_action`` is a ``dict[uid, FloatArray]``, and the
+    return value's first element is likewise a dict.
+
+    The canonical implementations are
+    :meth:`concerto.safety.cbf_qp.ExpCBFQP.centralized` and
+    :meth:`concerto.safety.cbf_qp.ExpCBFQP.shared_control`.
+    """
+
+    def reset(self, *, seed: int | None = None) -> None:
+        """Reset filter state at episode start (ADR-004 §Decision).
+
+        See :meth:`EgoOnlySafetyFilter.reset` for the determinism
+        contract (P6 seeding).
+        """
+        ...
+
+    def filter(
+        self,
+        proposed_action: dict[str, FloatArray],
+        obs: dict[str, object],
+        state: SafetyState,
+        bounds: Bounds,
+        *,
+        ego_uid: str | None = None,
+        partner_action_bound: float | None = None,
+    ) -> tuple[dict[str, FloatArray], FilterInfo]:
+        """Project the per-uid nominal actions onto the safe set (ADR-004 §Public API).
+
+        Args:
+            proposed_action: Per-agent nominal control inputs, keyed by
+                uid. The QP minimises ``||u - u_hat||^2`` with this as
+                the reference (Wang-Ames-Egerstedt 2017 eq. 9).
+            obs: Observation dict; same contract as
+                :meth:`EgoOnlySafetyFilter.filter`.
+            state: Mutable :class:`SafetyState`; updated in place by the
+                conformal layer each control step.
+            bounds: Per-task :class:`Bounds` envelope (ADR-006 §Decision).
+            ego_uid: Required for :attr:`SafetyMode.SHARED_CONTROL`,
+                ignored for :attr:`SafetyMode.CENTRALIZED`. Identifies
+                which uid in ``proposed_action`` is the ego whose
+                action is unconstrained by ``partner_action_bound``.
+            partner_action_bound: Required for
+                :attr:`SafetyMode.SHARED_CONTROL`, ignored for
+                :attr:`SafetyMode.CENTRALIZED`. Strictly positive
+                L-infinity ball radius around each non-ego uid's
+                proposed action.
+
+        Returns:
+            A pair ``(safe_action, info)`` matching the input shape
+            (one entry per uid in ``proposed_action``).
+
+        Raises:
+            ConcertoSafetyInfeasible: When the QP is infeasible even after
+                slack relaxation (ADR-004 §Decision; ADR-006 §Risks).
+        """
+        ...
+
+
+#: Deprecated union alias preserving the pre-refactor :data:`SafetyFilter`
+#: name (ADR-004 §Public API). Resolves to
+#: ``Union[EgoOnlySafetyFilter, JointSafetyFilter]``; the runtime
+#: deprecation warning is emitted by the module-level :func:`__getattr__`
+#: below. Targeted for removal in 0.3.0.
+_SafetyFilterAlias = EgoOnlySafetyFilter | JointSafetyFilter
+
+_DEPRECATED_NAMES: frozenset[str] = frozenset({"SafetyFilter"})
+
+
+def __getattr__(name: str) -> object:
+    """Emit a :class:`DeprecationWarning` on first use of the legacy alias (ADR-004 §Public API).
+
+    The pre-refactor :data:`SafetyFilter` Protocol was a single
+    dict-in / dict-out contract that the deployment-default
+    :attr:`SafetyMode.EGO_ONLY` implementation did not satisfy
+    (reviewer P0-2). The Protocol now splits into
+    :class:`EgoOnlySafetyFilter` and :class:`JointSafetyFilter`;
+    :data:`SafetyFilter` remains as a deprecated union alias and will
+    be removed in 0.3.0.
+    """
+    if name in _DEPRECATED_NAMES:
+        warnings.warn(
+            "concerto.safety.api.SafetyFilter is deprecated as of the "
+            "ADR-004 §Public API split (spike_004A §Three-mode taxonomy; "
+            "reviewer P0-2); use EgoOnlySafetyFilter or JointSafetyFilter "
+            "instead. Removal target: 0.3.0.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        return _SafetyFilterAlias
+    msg = f"module {__name__!r} has no attribute {name!r}"
+    raise AttributeError(msg)
+
+
+# Note: the deprecated :data:`SafetyFilter` alias is intentionally
+# excluded from ``__all__`` so ``from concerto.safety.api import *``
+# does not silently re-introduce the legacy name into downstream
+# modules. The alias is still importable via the module-level
+# :func:`__getattr__` shim (which emits the :class:`DeprecationWarning`).
 __all__ = [
     "DEFAULT_DLS_DAMPING",
     "DEFAULT_EPSILON",
@@ -562,10 +706,11 @@ __all__ = [
     "AgentControlModel",
     "Bounds",
     "DoubleIntegratorControlModel",
+    "EgoOnlySafetyFilter",
     "FilterInfo",
     "FloatArray",
     "JacobianControlModel",
-    "SafetyFilter",
+    "JointSafetyFilter",
     "SafetyMode",
     "SafetyState",
 ]

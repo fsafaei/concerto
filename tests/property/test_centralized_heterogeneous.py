@@ -30,7 +30,6 @@ from concerto.safety.api import (
     Bounds,
     DoubleIntegratorControlModel,
     FloatArray,
-    SafetyMode,
     SafetyState,
 )
 from concerto.safety.cbf_qp import AgentSnapshot, ExpCBFQP
@@ -121,7 +120,7 @@ def test_centralized_heterogeneous_qp_builds_and_solves(seed: int) -> None:
         uid: rng.uniform(-0.5, 0.5, size=models[uid].action_dim).astype(np.float64)
         for uid in models
     }
-    cbf = ExpCBFQP(mode=SafetyMode.CENTRALIZED, control_models=models, cbf_gamma=2.0)
+    cbf = ExpCBFQP.centralized(control_models=models, cbf_gamma=2.0)
     raw_safe, info = cbf.filter(
         proposed_action=proposed,
         obs={"agent_states": snaps, "meta": {"partner_id": None}},
@@ -156,7 +155,7 @@ def test_centralized_heterogeneous_passes_through_when_well_separated() -> None:
         uid: rng.uniform(-0.3, 0.3, size=models[uid].action_dim).astype(np.float64)
         for uid in models
     }
-    cbf = ExpCBFQP(mode=SafetyMode.CENTRALIZED, control_models=models, cbf_gamma=2.0)
+    cbf = ExpCBFQP.centralized(control_models=models, cbf_gamma=2.0)
     raw_safe, _ = cbf.filter(
         proposed_action=proposed,
         obs={"agent_states": snaps, "meta": {"partner_id": None}},
@@ -178,7 +177,7 @@ def test_centralized_rejects_proposed_action_shape_mismatch() -> None:
         "arm4": np.zeros(5, dtype=np.float64),  # wrong: arm4.action_dim=4
         "arm7": np.zeros(7, dtype=np.float64),
     }
-    cbf = ExpCBFQP(mode=SafetyMode.CENTRALIZED, control_models=models)
+    cbf = ExpCBFQP.centralized(control_models=models)
     with pytest.raises(ValueError, match=r"proposed_action\['arm4'\]"):
         cbf.filter(
             proposed_action=proposed,
@@ -198,7 +197,7 @@ def test_centralized_rejects_uid_not_in_control_models() -> None:
         "base": np.zeros(2, dtype=np.float64),
         "arm4": np.zeros(4, dtype=np.float64),  # not in control_models
     }
-    cbf = ExpCBFQP(mode=SafetyMode.CENTRALIZED, control_models=models)
+    cbf = ExpCBFQP.centralized(control_models=models)
     with pytest.raises(KeyError, match="'arm4'"):
         cbf.filter(
             proposed_action=proposed,

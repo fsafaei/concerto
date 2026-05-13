@@ -30,7 +30,6 @@ def test_why_conformal_walkthrough_example() -> None:
         Bounds,
         DoubleIntegratorControlModel,
         FloatArray,
-        SafetyMode,
         SafetyState,
     )
     from concerto.safety.braking import maybe_brake
@@ -53,12 +52,11 @@ def test_why_conformal_walkthrough_example() -> None:
     # the partner enters as a predicted disturbance. The explicit
     # CENTRALIZED variant below is used here to keep the walkthrough
     # symmetric in both agents (both shown as decision variables);
-    # production deployments use SafetyMode.EGO_ONLY.
+    # production deployments use ExpCBFQP.ego_only(...).
     control_models: dict[str, AgentControlModel] = {}
     control_models["a"] = DoubleIntegratorControlModel(uid="a", action_dim=2)
     control_models["b"] = DoubleIntegratorControlModel(uid="b", action_dim=2)
-    cbf = ExpCBFQP(
-        mode=SafetyMode.CENTRALIZED,
+    cbf = ExpCBFQP.centralized(
         cbf_gamma=2.0,
         control_models=control_models,
     )

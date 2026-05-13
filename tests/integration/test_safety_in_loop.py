@@ -27,7 +27,6 @@ from concerto.safety.api import (
     Bounds,
     DoubleIntegratorControlModel,
     FloatArray,
-    SafetyMode,
     SafetyState,
 )
 from concerto.safety.braking import maybe_brake
@@ -113,8 +112,7 @@ def test_full_safety_stack_runs_100_steps_without_crash() -> None:  # noqa: PLR0
     control_models: dict[str, AgentControlModel] = {}
     control_models["a"] = DoubleIntegratorControlModel(uid="a", action_dim=2)
     control_models["b"] = DoubleIntegratorControlModel(uid="b", action_dim=2)
-    cbf = ExpCBFQP(
-        mode=SafetyMode.CENTRALIZED,
+    cbf = ExpCBFQP.centralized(
         cbf_gamma=2.0,
         control_models=control_models,
     )
