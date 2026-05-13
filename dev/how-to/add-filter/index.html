@@ -675,10 +675,21 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#steps-sketch" class="md-nav__link">
+  <a href="#pick-a-protocol" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Steps (sketch)
+        Pick a Protocol
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#steps" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Steps
       
     </span>
   </a>
@@ -1294,10 +1305,21 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#steps-sketch" class="md-nav__link">
+  <a href="#pick-a-protocol" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Steps (sketch)
+        Pick a Protocol
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#steps" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Steps
       
     </span>
   </a>
@@ -1330,18 +1352,58 @@
 
 
 <h1 id="how-to-add-a-new-safety-filter">How-to: Add a new safety filter</h1>
-<div class="admonition note">
-<p class="admonition-title">Phase-0 placeholder</p>
-<p>Full recipe added once <code>concerto.safety</code> is implemented in M3.</p>
-</div>
-<h2 id="steps-sketch">Steps (sketch)</h2>
+<p>A safety filter consumes a nominal action and an observation and returns
+a <em>projected</em> action that lies in the safe set (ADR-004 §Decision). The
+public surface for third-party filters is split by mode — pick the
+Protocol that matches the filter's intended deployment shape (ADR-004
+§Public API; spike_004A §Three-mode taxonomy).</p>
+<h2 id="pick-a-protocol">Pick a Protocol</h2>
+<p>There are two filter Protocols in <code>concerto.safety.api</code>:</p>
+<ul>
+<li><code>EgoOnlySafetyFilter</code> — <strong>deployment / ad-hoc / black-box-partner.</strong>
+  The QP decides the ego agent's action only; the partner's motion
+  enters as a predicted disturbance on the constraint RHS. <code>filter()</code>
+  takes a single <code>FloatArray</code> ego action plus <code>ego_uid</code> and
+  <code>partner_predicted_states</code>, and returns a <code>FloatArray</code>. This is the
+  Protocol every ADR-009 partner-zoo evaluation uses.</li>
+<li><code>JointSafetyFilter</code> — <strong>oracle / ablation baseline (<code>CENTRALIZED</code>)
+  and lab-only co-control (<code>SHARED_CONTROL</code>).</strong> The QP decides every
+  uid's action; <code>filter()</code> takes a <code>dict[uid, FloatArray]</code> and returns
+  a dict of the same shape. <code>SHARED_CONTROL</code> additionally requires
+  <code>partner_action_bound</code> at call time.</li>
+</ul>
+<p>The pre-refactor single <code>SafetyFilter</code> alias still resolves (as
+<code>Union[EgoOnlySafetyFilter, JointSafetyFilter]</code>) but emits a
+<code>DeprecationWarning</code> on first use. New code targets the typed
+Protocols directly; the alias will be removed in 0.3.0.</p>
+<h2 id="steps">Steps</h2>
 <ol>
-<li>Implement the <code>SafetyFilter</code> protocol from <code>concerto.api.safety</code>.</li>
-<li>Register the filter in <code>concerto.safety.__init__</code>.</li>
-<li>Write a property test verifying the feasibility / objective-bound
-   invariant (see <code>plan/08-quality-and-process.md §3</code>).</li>
+<li>Implement either <code>EgoOnlySafetyFilter</code> or <code>JointSafetyFilter</code> from
+   <code>concerto.safety.api</code>. Both are <code>@runtime_checkable</code>, so a duck-
+   typed class that defines <code>reset</code> and <code>filter</code> with the matching
+   signature is accepted.</li>
+<li>If you are wrapping the built-in exp CBF-QP backbone, construct it
+   via the mode-specific typed classmethod so static checkers narrow
+   the return type to the right Protocol:</li>
 </ol>
-<p><em>(Full content added in M3.)</em></p>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">concerto.safety.cbf_qp</span><span class="w"> </span><span class="kn">import</span> <span class="n">ExpCBFQP</span>
+
+<span class="n">ego_filter</span> <span class="o">=</span> <span class="n">ExpCBFQP</span><span class="o">.</span><span class="n">ego_only</span><span class="p">(</span><span class="n">control_models</span><span class="o">=</span><span class="n">models</span><span class="p">)</span>
+<span class="n">oracle_filter</span> <span class="o">=</span> <span class="n">ExpCBFQP</span><span class="o">.</span><span class="n">centralized</span><span class="p">(</span><span class="n">control_models</span><span class="o">=</span><span class="n">models</span><span class="p">)</span>
+<span class="n">shared_filter</span> <span class="o">=</span> <span class="n">ExpCBFQP</span><span class="o">.</span><span class="n">shared_control</span><span class="p">(</span><span class="n">control_models</span><span class="o">=</span><span class="n">models</span><span class="p">)</span>
+</code></pre></div>
+<ol>
+<li>Register the filter in <code>concerto.safety.__init__</code> if it is shipped
+   as part of the method package; third-party plugins live in their
+   own packages and depend on <code>concerto.safety.api</code> only.</li>
+<li>Write a property test verifying the feasibility / objective-bound
+   invariant (see <code>plan/08-quality-and-process.md §3</code> and the existing
+   <code>tests/property/test_cbf_qp.py</code>).</li>
+</ol>
+<p>The CBF formulation is encapsulated behind the QP constraint-generation
+module per ADR-004 §Reversibility; swapping in HO-CBF or MPC in Phase 3
+only requires reimplementing the per-pair row builder, not the
+Protocol surface.</p>
 
 
 
