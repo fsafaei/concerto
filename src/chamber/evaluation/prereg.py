@@ -22,7 +22,7 @@ import subprocess
 from typing import TYPE_CHECKING, Literal
 
 import yaml
-from pydantic import BaseModel, ConfigDict, Field, PositiveInt
+from pydantic import BaseModel, ConfigDict, Field, PositiveInt, model_validator
 
 from chamber.evaluation.results import (
     ConditionPair,  # noqa: TC001 — Pydantic field type, needs runtime visibility
@@ -39,6 +39,15 @@ BootstrapMethod = Literal["cluster", "hierarchical", "iid"]
 
 #: Permitted failure-policy labels.
 FailurePolicy = Literal["strict", "best_effort"]
+
+#: Permitted run-purpose labels (reviewer P1-5).
+#:
+#: ``leaderboard`` is the default and forbids the pooled IID bootstrap;
+#: ``power`` runs are exempt because power calculations frequently want
+#: the IID variance baseline against which to size cluster-aware
+#: bootstraps; ``debug`` runs are exempt because they are not admitted
+#: to the leaderboard at all.
+RunPurpose = Literal["power", "leaderboard", "debug"]
 
 
 class PreregistrationSpec(BaseModel):
@@ -64,7 +73,8 @@ class PreregistrationSpec(BaseModel):
         bootstrap_method: Default ``"cluster"`` (reviewer P1-9);
             ``"hierarchical"`` is an alias accepted for back-compat;
             ``"iid"`` is allowed only for power calculations, not
-            leaderboard entries.
+            leaderboard entries (reviewer P1-5, enforced by
+            :meth:`_check_bootstrap_policy`).
         failure_policy: ``"strict"`` (the spike fails if any seed
             errors) or ``"best_effort"`` (errored seeds are dropped
             and reported).
@@ -72,6 +82,11 @@ class PreregistrationSpec(BaseModel):
             (ADR-007 §Discipline; verified by
             :func:`verify_git_tag`).
         notes: Free-form notes carried into the leaderboard entry.
+        run_purpose: ``"leaderboard"`` (default), ``"power"``, or
+            ``"debug"`` (reviewer P1-5). Only ``"leaderboard"`` runs
+            are admitted to the public ranking; the other two values
+            relax the iid-bootstrap ban so power calculations and
+            local debug runs can still use a pooled iid baseline.
     """
 
     model_config = ConfigDict(extra="forbid", frozen=True)
@@ -85,6 +100,25 @@ class PreregistrationSpec(BaseModel):
     failure_policy: FailurePolicy = "strict"
     git_tag: str
     notes: str = Field(default="")
+    run_purpose: RunPurpose = "leaderboard"
+
+    @model_validator(mode="after")
+    def _check_bootstrap_policy(self) -> PreregistrationSpec:
+        """Enforce the iid-not-allowed-for-leaderboard rule (reviewer P1-5).
+
+        The pooled IID bootstrap on seed-clustered episode data
+        understates CI width; admitting it to the leaderboard would
+        let entries claim tighter intervals than the data supports.
+        Power-analysis and debug runs are exempt because they are not
+        published.
+        """
+        if self.run_purpose == "leaderboard" and self.bootstrap_method == "iid":
+            msg = (
+                "iid bootstrap is not permitted for leaderboard "
+                "entries; use cluster (default) or hierarchical."
+            )
+            raise ValueError(msg)
+        return self
 
     def normalised_axis(self) -> str:
         """Return the validated ADR-007 axis label (ADR-007 §Decision).
@@ -216,6 +250,7 @@ __all__ = [
     "FailurePolicy",
     "PreregistrationError",
     "PreregistrationSpec",
+    "RunPurpose",
     "load_prereg",
     "verify_git_tag",
 ]
