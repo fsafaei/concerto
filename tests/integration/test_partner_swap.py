@@ -182,8 +182,9 @@ def test_partner_swap_update_lambda_mismatch_after_pair_count_change_raises() ->
 
     If a caller forgets to call :func:`reset_on_partner_swap` after a
     partner-set change, the next ``update_lambda`` call sees a shape
-    mismatch between ``state.lambda_`` and ``loss_k`` and raises
-    ValueError so the bug doesn't silently corrupt the conformal state.
+    mismatch between ``state.lambda_`` and the supplied per-pair loss
+    vector and raises ValueError so the bug doesn't silently corrupt
+    the conformal state.
     """
     state = SafetyState(
         lambda_=np.zeros(2, dtype=np.float64),  # 2 pairs

@@ -84,6 +84,47 @@ class AgentSnapshot:
     radius: float
 
 
+def pair_h_value(
+    snap_i: AgentSnapshot,
+    snap_j: AgentSnapshot,
+    *,
+    alpha_pair: float,
+) -> float:
+    """Wang-Ames-Egerstedt 2017 §III pairwise barrier value ``h_ij`` (ADR-004 §Decision).
+
+    Computes the relative-degree-1 safety barrier
+    ``h_ij = sqrt(2 * alpha_pair * max(|Dp| - D_s, 0)) + (Dp^T / |Dp|) Dv``
+    for one pair. Exposed (rather than kept under a leading underscore)
+    so the conformal layer
+    (:func:`concerto.safety.conformal.compute_prediction_gap_for_pairs`)
+    can compute predicted vs. actual barrier values using the identical
+    geometry the CBF-QP rows are built from. Intended for cross-module
+    use within :mod:`concerto.safety`; external callers should reach for
+    the higher-level conformal helpers instead.
+
+    In the penetration regime (``|Dp| <= D_s``) the returned value is
+    the negative-saturation surrogate ``-safety_distance`` (coincident-
+    centre case) or ``closing_inner`` alone (within-radius case),
+    matching the rows the QP would emit.
+    """
+    delta_p = snap_i.position - snap_j.position
+    delta_v = snap_i.velocity - snap_j.velocity
+    safety_distance = snap_i.radius + snap_j.radius
+    norm_dp = float(np.linalg.norm(delta_p))
+
+    if norm_dp < _NORM_FLOOR:
+        return -safety_distance
+
+    n_hat = (delta_p / norm_dp).astype(np.float64, copy=False)
+    excess = norm_dp - safety_distance
+    closing_inner = float(np.dot(n_hat, delta_v))
+    if excess <= 0.0:
+        return closing_inner
+    psi = float(np.sqrt(2.0 * alpha_pair * excess))
+    psi = max(psi, _PSI_FLOOR)
+    return psi + closing_inner
+
+
 def _pair_constraint_row(
     snap_i: AgentSnapshot,
     snap_j: AgentSnapshot,
@@ -101,8 +142,7 @@ def _pair_constraint_row(
     Returns ``(row, rhs, h_ij)`` where ``row`` is the constraint vector
     (length ``n_total``), ``rhs`` is the right-hand-side scalar including
     the conformal slack ``lambda_ij``, and ``h_ij`` is the barrier value
-    used by the conformal layer to compute the per-pair loss
-    (Huriot & Sibai 2025 §IV.A).
+    matching :func:`pair_h_value`.
     """
     delta_p = snap_i.position - snap_j.position
     delta_v = snap_i.velocity - snap_j.velocity
@@ -163,10 +203,16 @@ class ExpCBFQP:
     ``state.lambda_`` is added per-pair to the right-hand side
     (Huriot & Sibai 2025 §IV; ADR-004 §Decision).
 
-    Implementations of the conformal-update layer (PR6 ``conformal.py``)
-    consume the per-pair barrier values returned in
-    :class:`FilterInfo` ``loss_k`` slot to drive
-    ``lambda_{k+1} = lambda_k + eta * (eps - l_k)``.
+    This module computes the per-step CBF gap and emits it as
+    :class:`FilterInfo` ``"constraint_violation"`` (per pair,
+    ``max(0, -h_ij)``). It does NOT compute the Huriot & Sibai §IV.A
+    prediction-gap loss that drives the conformal update — that signal
+    requires a partner-trajectory predictor and lives in
+    ``concerto.safety.conformal`` (see
+    :func:`concerto.safety.conformal.update_lambda_from_predictor` and
+    :func:`concerto.safety.conformal.compute_prediction_gap_for_pairs`).
+    ``FilterInfo["prediction_gap_loss"]`` is left :data:`None` here;
+    callers wiring a predictor populate it via the conformal helpers.
     """
 
     def __init__(
@@ -226,11 +272,14 @@ class ExpCBFQP:
 
         Returns:
             ``(safe_action, info)`` — the QP-projected per-agent actions
-            and a :class:`FilterInfo` payload (``"lambda"`` carries the
-            current slack vector, ``"loss_k"`` carries the per-pair
-            barrier values feeding the conformal update,
+            and a :class:`FilterInfo` payload. ``"lambda"`` carries the
+            current slack vector. ``"constraint_violation"`` carries the
+            per-pair non-negative CBF gap ``max(0, -h_ij)`` (zero when
+            the barrier holds; positive when it does not).
+            ``"prediction_gap_loss"`` is :data:`None` here — the
+            conformal layer (PR6) populates it from a predictor.
             ``"fallback_fired"`` is False here — PR7 wires the braking
-            fallback, ``"qp_solve_ms"`` reports the solver time).
+            fallback. ``"qp_solve_ms"`` reports the solver time.
 
         Raises:
             ConcertoSafetyInfeasible: When the QP is infeasible. The
@@ -268,7 +317,7 @@ class ExpCBFQP:
 
         rows: list[FloatArray] = []
         rhs_list: list[float] = []
-        loss_per_pair = np.zeros(n_pairs, dtype=np.float64)
+        constraint_violation = np.zeros(n_pairs, dtype=np.float64)
         pair_idx = 0
         # alpha_pair is the joint braking capacity (alpha_i + alpha_j) per
         # Wang-Ames-Egerstedt 2017 §III; symmetric agents share action_norm.
@@ -288,9 +337,11 @@ class ExpCBFQP:
                 )
                 rows.append(row)
                 rhs_list.append(rhs)
-                # Loss = -h (Huriot-Sibai §IV.A: l_k is positive when the
-                # constraint is violated; gap is -h on the active side).
-                loss_per_pair[pair_idx] = -h_ij
+                # Per-step CBF gap: max(0, -h_ij). This is the
+                # constraint-violation signal (zero when h >= 0), NOT
+                # the Huriot-Sibai §IV.A prediction-gap loss that drives
+                # the conformal update — see module docstring.
+                constraint_violation[pair_idx] = max(0.0, -h_ij)
                 pair_idx += 1
 
         # Per-agent L-infinity bounds on u: -alpha <= u[k] <= alpha,
@@ -327,7 +378,8 @@ class ExpCBFQP:
 
         info: FilterInfo = {
             "lambda": state.lambda_.copy(),
-            "loss_k": loss_per_pair,
+            "constraint_violation": constraint_violation,
+            "prediction_gap_loss": None,
             "fallback_fired": False,
             "qp_solve_ms": qp_solve_ms,
         }
@@ -338,4 +390,5 @@ __all__ = [
     "DEFAULT_CBF_GAMMA",
     "AgentSnapshot",
     "ExpCBFQP",
+    "pair_h_value",
 ]

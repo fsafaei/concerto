@@ -63,12 +63,27 @@ def test_concerto_safety_infeasible_is_runtime_error() -> None:
 def test_filter_info_typed_dict_carries_lambda_key() -> None:
     info: FilterInfo = {
         "lambda": np.zeros(2, dtype=np.float64),
-        "loss_k": np.zeros(2, dtype=np.float64),
+        "constraint_violation": np.zeros(2, dtype=np.float64),
+        "prediction_gap_loss": None,
         "fallback_fired": False,
         "qp_solve_ms": 0.05,
     }
     assert "lambda" in info
     assert info["fallback_fired"] is False
+    assert info["prediction_gap_loss"] is None
+
+
+def test_filter_info_typed_dict_admits_prediction_gap_loss_array() -> None:
+    info: FilterInfo = {
+        "lambda": np.zeros(2, dtype=np.float64),
+        "constraint_violation": np.zeros(2, dtype=np.float64),
+        "prediction_gap_loss": np.array([0.1, 0.0], dtype=np.float64),
+        "fallback_fired": False,
+        "qp_solve_ms": 0.05,
+    }
+    gap = info["prediction_gap_loss"]
+    assert gap is not None
+    assert gap.shape == (2,)
 
 
 class _StubFilter:
@@ -87,7 +102,8 @@ class _StubFilter:
         del obs, bounds
         info: FilterInfo = {
             "lambda": state.lambda_.copy(),
-            "loss_k": np.zeros_like(state.lambda_),
+            "constraint_violation": np.zeros_like(state.lambda_),
+            "prediction_gap_loss": None,
             "fallback_fired": False,
             "qp_solve_ms": 0.0,
         }

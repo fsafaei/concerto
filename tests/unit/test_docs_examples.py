@@ -25,8 +25,9 @@ def test_why_conformal_walkthrough_example() -> None:
     from concerto.safety.api import Bounds, SafetyState
     from concerto.safety.braking import maybe_brake
     from concerto.safety.cbf_qp import AgentSnapshot, ExpCBFQP
-    from concerto.safety.conformal import update_lambda
+    from concerto.safety.conformal import update_lambda_from_predictor
 
+    dt = 0.05
     bounds = Bounds(
         action_norm=5.0,
         action_rate=0.5,
@@ -52,6 +53,16 @@ def test_why_conformal_walkthrough_example() -> None:
             radius=0.2,
         ),
     }
+    # Snapshots from one control step ago, used to score the constant-velocity
+    # predictor against the actual ``agents`` state — Huriot & Sibai 2025 §IV.A.
+    agents_prev = {
+        uid: AgentSnapshot(
+            position=snap.position - snap.velocity * dt,
+            velocity=snap.velocity.copy(),
+            radius=snap.radius,
+        )
+        for uid, snap in agents.items()
+    }
     nominal = {
         "a": np.zeros(2, dtype=np.float64),
         "b": np.zeros(2, dtype=np.float64),
@@ -69,9 +80,25 @@ def test_why_conformal_walkthrough_example() -> None:
             state=state,
             bounds=bounds,
         )
+        # `info["constraint_violation"]` is the per-step CBF gap; it goes
+        # into Table 2 of the ADR-014 three-table report but does NOT
+        # drive the conformal update.
+        per_step_violation = info["constraint_violation"]
         # 3. Conformal lambda update (Huriot & Sibai 2025 §IV).
-        update_lambda(state, info["loss_k"], in_warmup=False)
-    # --- END: code block from docs/explanation/why-conformal.md ---
+        prediction_gap = update_lambda_from_predictor(
+            state,
+            snaps_now=agents,
+            snaps_prev=agents_prev,
+            alpha_pair=2.0 * bounds.action_norm,
+            gamma=2.0,
+            dt=dt,
+            in_warmup=False,
+        )
+        # --- END: code block from docs/explanation/why-conformal.md ---
+        # The two telemetry handles must be live arrays of the right
+        # shape so the doc's claim about them is checked here.
+        assert per_step_violation.shape == (1,)
+        assert prediction_gap.shape == (1,)
 
     # The example runs without exception; verify the safe action is
     # well-shaped and finite so a reader can trust the doc's claim
