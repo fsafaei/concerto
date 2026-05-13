@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: Apache-2.0
 """Unit tests for ``concerto.safety`` public API (T3.1).
 
-Covers ADR-004 §Decision (Bounds, SafetyState, SafetyFilter Protocol),
+Covers ADR-004 §Decision (Bounds, SafetyState, JointSafetyFilter Protocol),
 ADR-006 §Decision Option C (per-task numeric bounds), and the
 :class:`ConcertoSafetyInfeasible` error contract from ADR-004 §Decision.
 """
@@ -21,7 +21,7 @@ from concerto.safety import (
     Bounds,
     ConcertoSafetyInfeasible,
     FilterInfo,
-    SafetyFilter,
+    JointSafetyFilter,
     SafetyState,
 )
 
@@ -111,7 +111,7 @@ class _StubFilter:
 
 
 def test_safety_filter_protocol_runtime_checkable() -> None:
-    assert isinstance(_StubFilter(), SafetyFilter)
+    assert isinstance(_StubFilter(), JointSafetyFilter)
 
 
 def test_safety_filter_stub_round_trip_returns_typed_payload() -> None:

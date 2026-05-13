@@ -149,14 +149,13 @@ def test_partner_swap_consumer_gates_on_partner_id_none() -> None:
         AgentControlModel,
         Bounds,
         DoubleIntegratorControlModel,
-        SafetyMode,
     )
     from concerto.safety.cbf_qp import AgentSnapshot, ExpCBFQP
 
     control_models: dict[str, AgentControlModel] = {}
     control_models["a"] = DoubleIntegratorControlModel(uid="a", action_dim=2)
     control_models["b"] = DoubleIntegratorControlModel(uid="b", action_dim=2)
-    cbf = ExpCBFQP(mode=SafetyMode.CENTRALIZED, control_models=control_models)
+    cbf = ExpCBFQP.centralized(control_models=control_models)
     bounds = Bounds(action_norm=2.0, action_rate=0.5, comm_latency_ms=1.0, force_limit=20.0)
     snaps = {
         "a": AgentSnapshot(

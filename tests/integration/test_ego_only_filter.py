@@ -30,7 +30,6 @@ from concerto.safety.api import (
     Bounds,
     DoubleIntegratorControlModel,
     FloatArray,
-    SafetyMode,
     SafetyState,
 )
 from concerto.safety.cbf_qp import AgentSnapshot, ExpCBFQP
@@ -105,7 +104,7 @@ def _snaps_head_on() -> dict[str, AgentSnapshot]:
 
 def test_ego_only_safe_action_shape_matches_ego_action_dim() -> None:
     """spike_004A §Three-mode taxonomy: EGO_ONLY returns ego-shape, not concatenated."""
-    cbf = ExpCBFQP(mode=SafetyMode.EGO_ONLY, control_models=_models(), cbf_gamma=2.0)
+    cbf = ExpCBFQP.ego_only(control_models=_models(), cbf_gamma=2.0)
     snaps = _snaps_head_on()
     raw_safe, _ = cbf.filter(
         proposed_action=np.zeros(4, dtype=np.float64),
@@ -123,7 +122,7 @@ def test_ego_only_safe_action_shape_matches_ego_action_dim() -> None:
 
 def test_ego_only_constraint_violation_has_one_entry_per_partner() -> None:
     """One pairwise CBF row per ego-partner pair; constraint_violation matches."""
-    cbf = ExpCBFQP(mode=SafetyMode.EGO_ONLY, control_models=_models())
+    cbf = ExpCBFQP.ego_only(control_models=_models())
     snaps = _snaps_head_on()
     _, info = cbf.filter(
         proposed_action=np.zeros(4, dtype=np.float64),
@@ -161,7 +160,7 @@ def test_ego_only_partner_disturbance_enters_via_rhs_not_variable() -> None:
             radius=snap.radius,
         )
 
-    cbf = ExpCBFQP(mode=SafetyMode.EGO_ONLY, control_models=_models(), cbf_gamma=2.0)
+    cbf = ExpCBFQP.ego_only(control_models=_models(), cbf_gamma=2.0)
     # Pick a proposed action large enough that the CBF binds in both
     # configurations — otherwise the QP trivially returns u_hat and the
     # baseline / shifted outputs would agree regardless of contract.
@@ -201,7 +200,7 @@ def test_ego_only_partner_disturbance_enters_via_rhs_not_variable() -> None:
 
 def test_ego_only_lambda_shape_is_partner_count() -> None:
     """state.lambda_ shape must equal the number of partners (one row per pair)."""
-    cbf = ExpCBFQP(mode=SafetyMode.EGO_ONLY, control_models=_models())
+    cbf = ExpCBFQP.ego_only(control_models=_models())
     snaps = _snaps_head_on()
     state_wrong = SafetyState(lambda_=np.zeros(2, dtype=np.float64))  # one partner; expect (1,)
     with pytest.raises(ValueError, match="lambda_ shape"):
@@ -227,11 +226,7 @@ def test_ego_only_smoke_50_step_rollout_no_collision() -> None:
     dt = 0.05
     n_steps = 50
     radius = 0.2
-    cbf = ExpCBFQP(
-        mode=SafetyMode.EGO_ONLY,
-        control_models=_models(),
-        cbf_gamma=2.0,
-    )
+    cbf = ExpCBFQP.ego_only(control_models=_models(), cbf_gamma=2.0)
 
     p_ego = np.array([-2.0, 0.0], dtype=np.float64)
     v_ego = np.array([1.0, 0.0], dtype=np.float64)
@@ -299,7 +294,7 @@ def test_ego_only_three_agents_one_ego_two_partners() -> None:
     models["ego"] = _FourDArmLikeModel(uid="ego")
     models["p1"] = DoubleIntegratorControlModel(uid="p1", action_dim=2)
     models["p2"] = DoubleIntegratorControlModel(uid="p2", action_dim=2)
-    cbf = ExpCBFQP(mode=SafetyMode.EGO_ONLY, control_models=models, cbf_gamma=2.0)
+    cbf = ExpCBFQP.ego_only(control_models=models, cbf_gamma=2.0)
     snaps = {
         "ego": AgentSnapshot(
             position=np.array([0.0, 0.0], dtype=np.float64),

@@ -32,6 +32,7 @@ from concerto.safety.api import (
     Bounds,
     DoubleIntegratorControlModel,
     FloatArray,
+    JointSafetyFilter,
     SafetyMode,
     SafetyState,
 )
@@ -67,13 +68,9 @@ def _models(uids: tuple[str, ...], dim: int = 2) -> dict[str, AgentControlModel]
     return out
 
 
-def _centralized(uids: tuple[str, ...], *, gamma: float = 5.0) -> ExpCBFQP:
-    """Build a CENTRALIZED-mode filter for the legacy dict-of-actions tests."""
-    return ExpCBFQP(
-        mode=SafetyMode.CENTRALIZED,
-        cbf_gamma=gamma,
-        control_models=_models(uids),
-    )
+def _centralized(uids: tuple[str, ...], *, gamma: float = 5.0) -> JointSafetyFilter:
+    """Build a CENTRALIZED-mode filter via the typed constructor (ADR-004 §Public API)."""
+    return ExpCBFQP.centralized(cbf_gamma=gamma, control_models=_models(uids))
 
 
 def test_well_separated_agents_pass_through_proposed_action() -> None:
@@ -323,20 +320,23 @@ def test_centralized_requires_dict_action() -> None:
 def test_ego_only_requires_ego_uid_and_partner_predicted_states() -> None:
     """EGO_ONLY mode raises on the partner-disturbance and ego-uid arguments missing."""
     snaps = {"a": _snap(0.0, 0.0, 0.0, 0.0), "b": _snap(10.0, 0.0, 0.0, 0.0)}
+    # Use the low-level constructor so we can exercise the missing-kwarg
+    # validation guards without tripping the typed overload's required
+    # ``ego_uid`` / ``partner_predicted_states`` signature.
     cbf = ExpCBFQP(
         mode=SafetyMode.EGO_ONLY,
         control_models=_models(("a", "b")),
     )
     with pytest.raises(ValueError, match="ego_uid is required"):
         cbf.filter(
-            proposed_action=np.zeros(2, dtype=np.float64),
+            proposed_action=np.zeros(2, dtype=np.float64),  # pyright: ignore[reportArgumentType]
             obs={"agent_states": snaps},
             state=_state(1),
             bounds=_bounds(),
         )
     with pytest.raises(ValueError, match="partner_predicted_states"):
         cbf.filter(
-            proposed_action=np.zeros(2, dtype=np.float64),
+            proposed_action=np.zeros(2, dtype=np.float64),  # pyright: ignore[reportArgumentType]
             obs={"agent_states": snaps},
             state=_state(1),
             bounds=_bounds(),
@@ -347,10 +347,7 @@ def test_ego_only_requires_ego_uid_and_partner_predicted_states() -> None:
 def test_shared_control_requires_partner_action_bound() -> None:
     """SHARED_CONTROL mode raises when partner_action_bound is missing."""
     snaps = {"a": _snap(0.0, 0.0, 0.0, 0.0), "b": _snap(10.0, 0.0, 0.0, 0.0)}
-    cbf = ExpCBFQP(
-        mode=SafetyMode.SHARED_CONTROL,
-        control_models=_models(("a", "b")),
-    )
+    cbf = ExpCBFQP.shared_control(control_models=_models(("a", "b")))
     proposed = {"a": np.zeros(2, dtype=np.float64), "b": np.zeros(2, dtype=np.float64)}
     with pytest.raises(ValueError, match="partner_action_bound"):
         cbf.filter(

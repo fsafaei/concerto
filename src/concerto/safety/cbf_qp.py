@@ -48,7 +48,7 @@ from __future__ import annotations
 
 import time
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING, cast, overload
 
 import numpy as np
 
@@ -62,8 +62,10 @@ if TYPE_CHECKING:
     from concerto.safety.api import (
         AgentControlModel,
         Bounds,
+        EgoOnlySafetyFilter,
         FilterInfo,
         FloatArray,
+        JointSafetyFilter,
         SafetyState,
     )
     from concerto.safety.solvers import QPSolver
@@ -357,7 +359,19 @@ class ExpCBFQP:
         solver: QPSolver | None = None,
         cbf_gamma: float = DEFAULT_CBF_GAMMA,
     ) -> None:
-        """Construct an exp CBF-QP filter (ADR-004 §Decision; spike_004A).
+        """Low-level constructor (ADR-004 §Decision; spike_004A).
+
+        Prefer the mode-specific typed constructors
+        :meth:`ExpCBFQP.ego_only`, :meth:`ExpCBFQP.centralized`, and
+        :meth:`ExpCBFQP.shared_control` when invoking from typed code
+        — their return-type annotations resolve to
+        :class:`~concerto.safety.api.EgoOnlySafetyFilter` /
+        :class:`~concerto.safety.api.JointSafetyFilter` respectively,
+        so static checkers (pyright strict) can see the
+        :meth:`filter` signature that matches the constructor's mode.
+        This direct ``__init__`` is retained as the low-level entry
+        point for tooling, deserialisation, and tests that need to
+        exercise the constructor's preconditions directly.
 
         Args:
             control_models: Per-uid :class:`AgentControlModel` map.
@@ -398,6 +412,105 @@ class ExpCBFQP:
         self._cbf_gamma: float = cbf_gamma
         self._budget_split = ProportionalBudgetSplit()
 
+    @classmethod
+    def ego_only(
+        cls,
+        *,
+        control_models: Mapping[str, AgentControlModel],
+        solver: QPSolver | None = None,
+        cbf_gamma: float = DEFAULT_CBF_GAMMA,
+    ) -> EgoOnlySafetyFilter:
+        """Typed constructor for :attr:`SafetyMode.EGO_ONLY` (ADR-004 §Public API; spike_004A).
+
+        Returns the filter through the
+        :class:`~concerto.safety.api.EgoOnlySafetyFilter` Protocol so
+        callers get the mode-specific :meth:`filter` signature (single
+        :class:`FloatArray` ego action + ``partner_predicted_states``)
+        at static-check time. This is the deployment / ad-hoc /
+        black-box-partner default (ADR-006 §Decision; reviewer P0-3).
+
+        Args:
+            control_models: See :meth:`__init__`.
+            solver: See :meth:`__init__`.
+            cbf_gamma: See :meth:`__init__`.
+
+        Returns:
+            An :class:`ExpCBFQP` instance whose static type narrows
+            to :class:`~concerto.safety.api.EgoOnlySafetyFilter`.
+        """
+        return cls(
+            control_models=control_models,
+            mode=SafetyMode.EGO_ONLY,
+            solver=solver,
+            cbf_gamma=cbf_gamma,
+        )
+
+    @classmethod
+    def centralized(
+        cls,
+        *,
+        control_models: Mapping[str, AgentControlModel],
+        solver: QPSolver | None = None,
+        cbf_gamma: float = DEFAULT_CBF_GAMMA,
+    ) -> JointSafetyFilter:
+        """Typed constructor for :attr:`SafetyMode.CENTRALIZED` (ADR-004 §Public API; spike_004A).
+
+        Returns the filter through the
+        :class:`~concerto.safety.api.JointSafetyFilter` Protocol so
+        callers get the joint-action :meth:`filter` signature
+        (per-uid ``dict[uid, FloatArray]`` in and out). Oracle /
+        ablation baseline only — never used at evaluation against
+        ad-hoc partners (ADR-006 §Decision; ADR-014 §Decision).
+
+        Args:
+            control_models: See :meth:`__init__`.
+            solver: See :meth:`__init__`.
+            cbf_gamma: See :meth:`__init__`.
+
+        Returns:
+            An :class:`ExpCBFQP` instance whose static type narrows
+            to :class:`~concerto.safety.api.JointSafetyFilter`.
+        """
+        return cls(
+            control_models=control_models,
+            mode=SafetyMode.CENTRALIZED,
+            solver=solver,
+            cbf_gamma=cbf_gamma,
+        )
+
+    @classmethod
+    def shared_control(
+        cls,
+        *,
+        control_models: Mapping[str, AgentControlModel],
+        solver: QPSolver | None = None,
+        cbf_gamma: float = DEFAULT_CBF_GAMMA,
+    ) -> JointSafetyFilter:
+        """Typed constructor for :attr:`SafetyMode.SHARED_CONTROL` (ADR-004 §Public API).
+
+        Returns the filter through the
+        :class:`~concerto.safety.api.JointSafetyFilter` Protocol; the
+        ``partner_action_bound`` argument to :meth:`filter` is
+        required at call time. Lab-only baseline measuring how much
+        of the centralised headroom comes from co-control budget vs
+        partner co-operation (reviewer P0-3 mode 3).
+
+        Args:
+            control_models: See :meth:`__init__`.
+            solver: See :meth:`__init__`.
+            cbf_gamma: See :meth:`__init__`.
+
+        Returns:
+            An :class:`ExpCBFQP` instance whose static type narrows
+            to :class:`~concerto.safety.api.JointSafetyFilter`.
+        """
+        return cls(
+            control_models=control_models,
+            mode=SafetyMode.SHARED_CONTROL,
+            solver=solver,
+            cbf_gamma=cbf_gamma,
+        )
+
     @property
     def mode(self) -> SafetyMode:
         """Current safety mode (ADR-004 §Decision; spike_004A §Three-mode taxonomy)."""
@@ -411,6 +524,32 @@ class ExpCBFQP:
         it is reset via :class:`SafetyState` directly.
         """
         del seed
+
+    @overload
+    def filter(  # noqa: D418  # ADR-004 §Public API typed overload; impl below.
+        self,
+        proposed_action: FloatArray,
+        obs: dict[str, object],
+        state: SafetyState,
+        bounds: Bounds,
+        *,
+        ego_uid: str,
+        partner_predicted_states: dict[str, AgentSnapshot],
+    ) -> tuple[FloatArray, FilterInfo]:
+        """EGO_ONLY overload (ADR-004 §Public API; spike_004A §Three-mode taxonomy)."""
+
+    @overload
+    def filter(  # noqa: D418  # ADR-004 §Public API typed overload; impl below.
+        self,
+        proposed_action: dict[str, FloatArray],
+        obs: dict[str, object],
+        state: SafetyState,
+        bounds: Bounds,
+        *,
+        ego_uid: str | None = ...,
+        partner_action_bound: float | None = ...,
+    ) -> tuple[dict[str, FloatArray], FilterInfo]:
+        """CENTRALIZED / SHARED_CONTROL overload (ADR-004 §Public API; spike_004A)."""
 
     def filter(
         self,

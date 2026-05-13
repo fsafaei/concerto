@@ -11,7 +11,11 @@ Public surface (see :mod:`concerto.safety.api` for full docstrings):
 - :class:`Bounds` — per-task numeric envelope (ADR-006).
 - :class:`SafetyState` — mutable conformal-CBF state (ADR-004).
 - :class:`FilterInfo` — telemetry payload (ADR-014).
-- :class:`SafetyFilter` — integrated-stack Protocol (ADR-004).
+- :class:`EgoOnlySafetyFilter`, :class:`JointSafetyFilter` — typed
+  Protocols for the two filter shapes (ADR-004 §Public API;
+  spike_004A §Three-mode taxonomy). The legacy single
+  :data:`SafetyFilter` alias remains importable but emits a
+  :class:`DeprecationWarning` on first use; removal target 0.3.0.
 - :class:`ConcertoSafetyInfeasible` — QP-infeasibility error (ADR-004).
 - :class:`EmergencyController` — per-uid embodiment hook for the hard
   braking fallback (ADR-004 risk-mitigation #1).
@@ -29,6 +33,7 @@ from __future__ import annotations
 
 import numpy as np
 
+from concerto.safety import api as _api
 from concerto.safety.api import (
     DEFAULT_DLS_DAMPING,
     DEFAULT_EPSILON,
@@ -37,10 +42,11 @@ from concerto.safety.api import (
     AgentControlModel,
     Bounds,
     DoubleIntegratorControlModel,
+    EgoOnlySafetyFilter,
     FilterInfo,
     FloatArray,
     JacobianControlModel,
-    SafetyFilter,
+    JointSafetyFilter,
     SafetyMode,
     SafetyState,
 )
@@ -103,6 +109,28 @@ def solve_qp_stub(*args: object, **kwargs: object) -> tuple[float, float]:
     return float(np.linalg.norm(x)), ms / 1000.0
 
 
+_DEPRECATED_NAMES: frozenset[str] = frozenset({"SafetyFilter"})
+
+
+def __getattr__(name: str) -> object:
+    """Re-export the deprecated :data:`SafetyFilter` alias from the api submodule.
+
+    Forwards the lookup so ``from concerto.safety import SafetyFilter``
+    surfaces the same :class:`DeprecationWarning` as ``from
+    concerto.safety.api import SafetyFilter``. ADR-004 §Public API;
+    spike_004A §Three-mode taxonomy.
+    """
+    if name in _DEPRECATED_NAMES:
+        return getattr(_api, name)
+    msg = f"module {__name__!r} has no attribute {name!r}"
+    raise AttributeError(msg)
+
+
+# Note: the deprecated :data:`SafetyFilter` alias is intentionally
+# excluded from ``__all__`` for the same reason as in
+# :mod:`concerto.safety.api`; the package-level :func:`__getattr__`
+# above still routes ``from concerto.safety import SafetyFilter``
+# through the deprecation shim.
 __all__ = [
     "DEFAULT_DLS_DAMPING",
     "DEFAULT_EPSILON",
@@ -113,11 +141,12 @@ __all__ = [
     "CartesianAccelEmergencyController",
     "ConcertoSafetyInfeasible",
     "DoubleIntegratorControlModel",
+    "EgoOnlySafetyFilter",
     "EmergencyController",
     "FilterInfo",
     "FloatArray",
     "JacobianControlModel",
-    "SafetyFilter",
+    "JointSafetyFilter",
     "SafetyMode",
     "SafetyState",
     "solve_qp_stub",
