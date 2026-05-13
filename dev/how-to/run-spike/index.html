@@ -1485,6 +1485,10 @@ other axes get their own walkthroughs as they ship.</p>
 <li>Copy the nearest existing pre-registration YAML from
    <code>spikes/preregistration/</code> as a template.</li>
 <li>Edit the hypothesis, threshold, and comparison conditions.</li>
+<li>Set <code>run_purpose</code> explicitly to one of <code>leaderboard</code> (default),
+   <code>power</code>, or <code>debug</code>. Leaderboard runs may not use
+   <code>bootstrap_method: iid</code>; see
+   <a href="../../reference/evaluation/#33-run-purpose-and-bootstrap-policy"><code>evaluation.md</code> §3.3</a>.</li>
 <li>Commit the YAML and create a git tag (<code>stage&lt;n&gt;-&lt;axis&gt;-&lt;date&gt;</code>).</li>
 <li>Run <code>chamber-spike run --axis &lt;axis&gt;</code>.</li>
 </ol>

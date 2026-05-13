@@ -1047,6 +1047,23 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="3. Pre-registration and statistical guard rails">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#33-run-purpose-and-bootstrap-policy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.3 Run purpose and bootstrap policy
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -1391,6 +1408,23 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="3. Pre-registration and statistical guard rails">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#33-run-purpose-and-bootstrap-policy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.3 Run purpose and bootstrap policy
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -1583,6 +1617,50 @@ hypothesis, the analysis formula, and the threshold — lives in
 <a href="https://github.com/fsafaei/concerto/tree/main/spikes/preregistration"><code>spikes/preregistration/</code></a>;
 see the
 <a href="../../how-to/run-spike/">run-spike how-to</a> for the operational flow.</p>
+<h3 id="33-run-purpose-and-bootstrap-policy">3.3 Run purpose and bootstrap policy</h3>
+<p>Each pre-registration YAML declares a <code>run_purpose</code>, one of:</p>
+<table>
+<thead>
+<tr>
+<th><code>run_purpose</code></th>
+<th>Meaning</th>
+<th><code>bootstrap_method: iid</code> allowed?</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>leaderboard</code></td>
+<td>Default. Admitted to the public CHAMBER ranking and the HRS bundle.</td>
+<td><strong>No</strong> — rejected at load time.</td>
+</tr>
+<tr>
+<td><code>power</code></td>
+<td>Power-analysis run used to size cluster-aware bootstraps; not admitted to the leaderboard.</td>
+<td>Yes.</td>
+</tr>
+<tr>
+<td><code>debug</code></td>
+<td>Local debug / smoke run; not admitted to the leaderboard.</td>
+<td>Yes.</td>
+</tr>
+</tbody>
+</table>
+<p><code>run_purpose</code> defaults to <code>leaderboard</code> when the field is omitted, so
+every existing YAML is treated as a leaderboard entry and inherits the
+strictest bootstrap rules without explicit migration. New YAMLs <strong>must</strong>
+set <code>run_purpose</code> explicitly — copy the value from the
+<code>run-spike</code> how-to template — so reviewers can tell at a glance whether
+a run is bound for the leaderboard.</p>
+<p>The iid-not-allowed rule is enforced in
+<a href="https://github.com/fsafaei/concerto/blob/main/src/chamber/evaluation/prereg.py"><code>chamber.evaluation.prereg.PreregistrationSpec</code></a>
+by a Pydantic <code>model_validator</code>: a YAML that pairs
+<code>run_purpose: leaderboard</code> with <code>bootstrap_method: iid</code> fails to load
+with a <code>ValidationError</code> quoting <em>"iid bootstrap is not permitted for
+leaderboard entries; use cluster (default) or hierarchical."</em> The rule
+is the same one stated in §1 — a pooled iid bootstrap on
+seed-clustered episode data understates the CI width — restated at the
+schema layer so an incorrectly configured spike refuses to launch
+rather than silently producing a CI that cannot be admitted.</p>
 <hr />
 <h2 id="34-stewardship-and-machine-readability">3.4 Stewardship and machine-readability</h2>
 <blockquote>

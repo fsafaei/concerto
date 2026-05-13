@@ -35364,8 +35364,8 @@ matched pairs rather than on pooled means (reviewer P1-9).</p>
 
               <details class="mkdocstrings-source">
                 <summary>Source code in <code>src/chamber/evaluation/prereg.py</code></summary>
-                <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">105</span>
-<span class="normal">106</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">PreregistrationError</span><span class="p">(</span><span class="ne">RuntimeError</span><span class="p">):</span>
+                <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">139</span>
+<span class="normal">140</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">PreregistrationError</span><span class="p">(</span><span class="ne">RuntimeError</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Raised when a pre-registration fails the ADR-007 §Discipline check (ADR-007 §Discipline).&quot;&quot;&quot;</span>
 </code></pre></div></td></tr></table></div>
               </details>
@@ -35454,7 +35454,8 @@ cell.</p>
             <p>Default <code>"cluster"</code> (reviewer P1-9);
 <code>"hierarchical"</code> is an alias accepted for back-compat;
 <code>"iid"</code> is allowed only for power calculations, not
-leaderboard entries.</p>
+leaderboard entries (reviewer P1-5, enforced by
+:meth:<code>_check_bootstrap_policy</code>).</p>
           </div>
         </li>
         <li class="doc-section-item field-body">
@@ -35485,6 +35486,18 @@ and reported).</p>
             <p>Free-form notes carried into the leaderboard entry.</p>
           </div>
         </li>
+        <li class="doc-section-item field-body">
+          <b><code><span title="chamber.evaluation.PreregistrationSpec.run_purpose">run_purpose</span></code></b>
+              (<code><span title="chamber.evaluation.prereg.RunPurpose">RunPurpose</span></code>)
+          –
+          <div class="doc-md-description">
+            <p><code>"leaderboard"</code> (default), <code>"power"</code>, or
+<code>"debug"</code> (reviewer P1-5). Only <code>"leaderboard"</code> runs
+are admitted to the public ranking; the other two values
+relax the iid-bootstrap ban so power calculations and
+local debug runs can still use a pooled iid baseline.</p>
+          </div>
+        </li>
     </ul>
 
 
@@ -35496,16 +35509,7 @@ and reported).</p>
 
               <details class="mkdocstrings-source">
                 <summary>Source code in <code>src/chamber/evaluation/prereg.py</code></summary>
-                <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 44</span>
-<span class="normal"> 45</span>
-<span class="normal"> 46</span>
-<span class="normal"> 47</span>
-<span class="normal"> 48</span>
-<span class="normal"> 49</span>
-<span class="normal"> 50</span>
-<span class="normal"> 51</span>
-<span class="normal"> 52</span>
-<span class="normal"> 53</span>
+                <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 53</span>
 <span class="normal"> 54</span>
 <span class="normal"> 55</span>
 <span class="normal"> 56</span>
@@ -35554,7 +35558,41 @@ and reported).</p>
 <span class="normal"> 99</span>
 <span class="normal">100</span>
 <span class="normal">101</span>
-<span class="normal">102</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">PreregistrationSpec</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+<span class="normal">102</span>
+<span class="normal">103</span>
+<span class="normal">104</span>
+<span class="normal">105</span>
+<span class="normal">106</span>
+<span class="normal">107</span>
+<span class="normal">108</span>
+<span class="normal">109</span>
+<span class="normal">110</span>
+<span class="normal">111</span>
+<span class="normal">112</span>
+<span class="normal">113</span>
+<span class="normal">114</span>
+<span class="normal">115</span>
+<span class="normal">116</span>
+<span class="normal">117</span>
+<span class="normal">118</span>
+<span class="normal">119</span>
+<span class="normal">120</span>
+<span class="normal">121</span>
+<span class="normal">122</span>
+<span class="normal">123</span>
+<span class="normal">124</span>
+<span class="normal">125</span>
+<span class="normal">126</span>
+<span class="normal">127</span>
+<span class="normal">128</span>
+<span class="normal">129</span>
+<span class="normal">130</span>
+<span class="normal">131</span>
+<span class="normal">132</span>
+<span class="normal">133</span>
+<span class="normal">134</span>
+<span class="normal">135</span>
+<span class="normal">136</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">PreregistrationSpec</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Schema for an ADR-007 pre-registration YAML (ADR-007 §Discipline).</span>
 
 <span class="sd">    Required fields mirror the operational contract in</span>
@@ -35577,7 +35615,8 @@ and reported).</p>
 <span class="sd">        bootstrap_method: Default ``&quot;cluster&quot;`` (reviewer P1-9);</span>
 <span class="sd">            ``&quot;hierarchical&quot;`` is an alias accepted for back-compat;</span>
 <span class="sd">            ``&quot;iid&quot;`` is allowed only for power calculations, not</span>
-<span class="sd">            leaderboard entries.</span>
+<span class="sd">            leaderboard entries (reviewer P1-5, enforced by</span>
+<span class="sd">            :meth:`_check_bootstrap_policy`).</span>
 <span class="sd">        failure_policy: ``&quot;strict&quot;`` (the spike fails if any seed</span>
 <span class="sd">            errors) or ``&quot;best_effort&quot;`` (errored seeds are dropped</span>
 <span class="sd">            and reported).</span>
@@ -35585,6 +35624,11 @@ and reported).</p>
 <span class="sd">            (ADR-007 §Discipline; verified by</span>
 <span class="sd">            :func:`verify_git_tag`).</span>
 <span class="sd">        notes: Free-form notes carried into the leaderboard entry.</span>
+<span class="sd">        run_purpose: ``&quot;leaderboard&quot;`` (default), ``&quot;power&quot;``, or</span>
+<span class="sd">            ``&quot;debug&quot;`` (reviewer P1-5). Only ``&quot;leaderboard&quot;`` runs</span>
+<span class="sd">            are admitted to the public ranking; the other two values</span>
+<span class="sd">            relax the iid-bootstrap ban so power calculations and</span>
+<span class="sd">            local debug runs can still use a pooled iid baseline.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">model_config</span> <span class="o">=</span> <span class="n">ConfigDict</span><span class="p">(</span><span class="n">extra</span><span class="o">=</span><span class="s2">&quot;forbid&quot;</span><span class="p">,</span> <span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
@@ -35598,6 +35642,25 @@ and reported).</p>
     <span class="n">failure_policy</span><span class="p">:</span> <span class="n">FailurePolicy</span> <span class="o">=</span> <span class="s2">&quot;strict&quot;</span>
     <span class="n">git_tag</span><span class="p">:</span> <span class="nb">str</span>
     <span class="n">notes</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+    <span class="n">run_purpose</span><span class="p">:</span> <span class="n">RunPurpose</span> <span class="o">=</span> <span class="s2">&quot;leaderboard&quot;</span>
+
+    <span class="nd">@model_validator</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s2">&quot;after&quot;</span><span class="p">)</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_check_bootstrap_policy</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">PreregistrationSpec</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Enforce the iid-not-allowed-for-leaderboard rule (reviewer P1-5).</span>
+
+<span class="sd">        The pooled IID bootstrap on seed-clustered episode data</span>
+<span class="sd">        understates CI width; admitting it to the leaderboard would</span>
+<span class="sd">        let entries claim tighter intervals than the data supports.</span>
+<span class="sd">        Power-analysis and debug runs are exempt because they are not</span>
+<span class="sd">        published.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">run_purpose</span> <span class="o">==</span> <span class="s2">&quot;leaderboard&quot;</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">bootstrap_method</span> <span class="o">==</span> <span class="s2">&quot;iid&quot;</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="s2">&quot;iid bootstrap is not permitted for leaderboard &quot;</span>
+                <span class="s2">&quot;entries; use cluster (default) or hierarchical.&quot;</span>
+            <span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">normalised_axis</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the validated ADR-007 axis label (ADR-007 §Decision).</span>
@@ -35660,20 +35723,20 @@ and reported).</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/chamber/evaluation/prereg.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 89</span>
-<span class="normal"> 90</span>
-<span class="normal"> 91</span>
-<span class="normal"> 92</span>
-<span class="normal"> 93</span>
-<span class="normal"> 94</span>
-<span class="normal"> 95</span>
-<span class="normal"> 96</span>
-<span class="normal"> 97</span>
-<span class="normal"> 98</span>
-<span class="normal"> 99</span>
-<span class="normal">100</span>
-<span class="normal">101</span>
-<span class="normal">102</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">normalised_axis</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">123</span>
+<span class="normal">124</span>
+<span class="normal">125</span>
+<span class="normal">126</span>
+<span class="normal">127</span>
+<span class="normal">128</span>
+<span class="normal">129</span>
+<span class="normal">130</span>
+<span class="normal">131</span>
+<span class="normal">132</span>
+<span class="normal">133</span>
+<span class="normal">134</span>
+<span class="normal">135</span>
+<span class="normal">136</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">normalised_axis</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Return the validated ADR-007 axis label (ADR-007 §Decision).</span>
 
 <span class="sd">    Raises:</span>
@@ -36684,27 +36747,27 @@ the ADR-007 §3.4 shortlist.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/chamber/evaluation/prereg.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">109</span>
-<span class="normal">110</span>
-<span class="normal">111</span>
-<span class="normal">112</span>
-<span class="normal">113</span>
-<span class="normal">114</span>
-<span class="normal">115</span>
-<span class="normal">116</span>
-<span class="normal">117</span>
-<span class="normal">118</span>
-<span class="normal">119</span>
-<span class="normal">120</span>
-<span class="normal">121</span>
-<span class="normal">122</span>
-<span class="normal">123</span>
-<span class="normal">124</span>
-<span class="normal">125</span>
-<span class="normal">126</span>
-<span class="normal">127</span>
-<span class="normal">128</span>
-<span class="normal">129</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">load_prereg</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">PreregistrationSpec</span><span class="p">:</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">143</span>
+<span class="normal">144</span>
+<span class="normal">145</span>
+<span class="normal">146</span>
+<span class="normal">147</span>
+<span class="normal">148</span>
+<span class="normal">149</span>
+<span class="normal">150</span>
+<span class="normal">151</span>
+<span class="normal">152</span>
+<span class="normal">153</span>
+<span class="normal">154</span>
+<span class="normal">155</span>
+<span class="normal">156</span>
+<span class="normal">157</span>
+<span class="normal">158</span>
+<span class="normal">159</span>
+<span class="normal">160</span>
+<span class="normal">161</span>
+<span class="normal">162</span>
+<span class="normal">163</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">load_prereg</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">PreregistrationSpec</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Load and validate a pre-registration YAML (ADR-007 §Discipline).</span>
 
 <span class="sd">    Args:</span>
@@ -37398,41 +37461,7 @@ outside the repo, or the blob SHAs disagree.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/chamber/evaluation/prereg.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">162</span>
-<span class="normal">163</span>
-<span class="normal">164</span>
-<span class="normal">165</span>
-<span class="normal">166</span>
-<span class="normal">167</span>
-<span class="normal">168</span>
-<span class="normal">169</span>
-<span class="normal">170</span>
-<span class="normal">171</span>
-<span class="normal">172</span>
-<span class="normal">173</span>
-<span class="normal">174</span>
-<span class="normal">175</span>
-<span class="normal">176</span>
-<span class="normal">177</span>
-<span class="normal">178</span>
-<span class="normal">179</span>
-<span class="normal">180</span>
-<span class="normal">181</span>
-<span class="normal">182</span>
-<span class="normal">183</span>
-<span class="normal">184</span>
-<span class="normal">185</span>
-<span class="normal">186</span>
-<span class="normal">187</span>
-<span class="normal">188</span>
-<span class="normal">189</span>
-<span class="normal">190</span>
-<span class="normal">191</span>
-<span class="normal">192</span>
-<span class="normal">193</span>
-<span class="normal">194</span>
-<span class="normal">195</span>
-<span class="normal">196</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">196</span>
 <span class="normal">197</span>
 <span class="normal">198</span>
 <span class="normal">199</span>
@@ -37447,7 +37476,41 @@ outside the repo, or the blob SHAs disagree.</p>
 <span class="normal">208</span>
 <span class="normal">209</span>
 <span class="normal">210</span>
-<span class="normal">211</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">verify_git_tag</span><span class="p">(</span>
+<span class="normal">211</span>
+<span class="normal">212</span>
+<span class="normal">213</span>
+<span class="normal">214</span>
+<span class="normal">215</span>
+<span class="normal">216</span>
+<span class="normal">217</span>
+<span class="normal">218</span>
+<span class="normal">219</span>
+<span class="normal">220</span>
+<span class="normal">221</span>
+<span class="normal">222</span>
+<span class="normal">223</span>
+<span class="normal">224</span>
+<span class="normal">225</span>
+<span class="normal">226</span>
+<span class="normal">227</span>
+<span class="normal">228</span>
+<span class="normal">229</span>
+<span class="normal">230</span>
+<span class="normal">231</span>
+<span class="normal">232</span>
+<span class="normal">233</span>
+<span class="normal">234</span>
+<span class="normal">235</span>
+<span class="normal">236</span>
+<span class="normal">237</span>
+<span class="normal">238</span>
+<span class="normal">239</span>
+<span class="normal">240</span>
+<span class="normal">241</span>
+<span class="normal">242</span>
+<span class="normal">243</span>
+<span class="normal">244</span>
+<span class="normal">245</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">verify_git_tag</span><span class="p">(</span>
     <span class="n">spec</span><span class="p">:</span> <span class="n">PreregistrationSpec</span><span class="p">,</span>
     <span class="n">prereg_path</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span>
     <span class="o">*</span><span class="p">,</span>
