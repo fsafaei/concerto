@@ -55,6 +55,7 @@ nav:
       - Add a new partner class: how-to/add-partner.md
       - Add a new safety filter: how-to/add-filter.md
       - Run a spike with a custom hypothesis: how-to/run-spike.md
+      - Submit a leaderboard entry: how-to/submit-leaderboard.md
       - Run on a GPU host: how-to/run-on-gpu.md
   - Reference:
       - API: reference/api.md
