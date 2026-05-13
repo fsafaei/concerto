@@ -72,20 +72,24 @@ _DEFAULT_ARTIFACTS_ROOT: str = "./artifacts"
 #: :meth:`chamber.benchmarks.ego_ppo_trainer.EgoPPOTrainer.state_dict`).
 #:
 #: The Phase-0 MAPPO checkpoint format is ``{"actor": <flat_state_dict>}``
-#: so the on-disk shape stays compatible with the HARL-side B2 checkpoint
-#: (whose ``state_dict`` also nests under ``"actor"``). Direct (un-nested)
-#: state-dicts are also accepted — see :meth:`FrozenMAPPOPartner._load_state_dict`.
+#: — the same outer shape as the HARL-side trainer's ``state_dict`` so
+#: the two frozen-RL adapters share a wire format. Direct (un-nested)
+#: state-dicts are rejected (ADR-002 §Decisions: one canonical wire
+#: format per checkpoint type).
 _ACTOR_KEY: str = "actor"
 
-#: Layer-name prefixes the wrapper recognises in the loaded state-dict.
+#: Weight-tensor keys the wrapper inspects to infer layer widths.
 #:
-#: A MAPPO actor saved by this module produces keys ``fc1.weight``,
+#: A MAPPO actor saved by this module produces ``fc1.weight``,
 #: ``fc1.bias``, ``fc2.weight``, ``fc2.bias``, ``head.weight``,
-#: ``head.bias``. Tied to the module names in :class:`_MAPPOActor` —
-#: changing one without the other is a serialisation break.
-_INPUT_LAYER_KEY: str = "fc1.weight"
-_HIDDEN_LAYER_KEY: str = "fc2.weight"
-_OUTPUT_LAYER_KEY: str = "head.weight"
+#: ``head.bias`` per :class:`_MAPPOActor`. The bias tensors are
+#: required by :meth:`torch.nn.Module.load_state_dict`; the constants
+#: below only name the weight keys because shape inference uses
+#: ``fc1.weight.shape`` and ``head.weight.shape``. Renaming a layer in
+#: :class:`_MAPPOActor` is a serialisation break — update both sides.
+_FC1_WEIGHT_KEY: str = "fc1.weight"
+_FC2_WEIGHT_KEY: str = "fc2.weight"
+_HEAD_WEIGHT_KEY: str = "head.weight"
 
 
 class _MAPPOActor(nn.Module):
@@ -280,9 +284,9 @@ class FrozenMAPPOPartner(PartnerBase):
         """
         state_dict = _extract_actor_state_dict(loaded)
         try:
-            fc1_weight = state_dict[_INPUT_LAYER_KEY]
-            fc2_weight = state_dict[_HIDDEN_LAYER_KEY]
-            head_weight = state_dict[_OUTPUT_LAYER_KEY]
+            fc1_weight = state_dict[_FC1_WEIGHT_KEY]
+            fc2_weight = state_dict[_FC2_WEIGHT_KEY]
+            head_weight = state_dict[_HEAD_WEIGHT_KEY]
         except KeyError as exc:
             msg = (
                 f"FrozenMAPPOPartner: loaded actor state-dict is missing required "
@@ -325,35 +329,32 @@ class FrozenMAPPOPartner(PartnerBase):
 
 def _extract_actor_state_dict(
     loaded: Mapping[str, object],
-) -> Mapping[str, torch.Tensor]:
+) -> Mapping[str, object]:
     """Pull the actor sub-dict out of a loaded checkpoint (plan/04 §3.5).
 
     The canonical Phase-0 layout is ``{"actor": <flat_state_dict>}`` —
     matching the HARL-side B2 checkpoint shape and the
-    :meth:`EgoPPOTrainer.state_dict` keying. A flat layout (where the
-    top-level keys are already ``"fc1.weight"`` etc.) is accepted too,
-    so a hand-rolled fixture or a tiny manual save does not need to
-    nest under ``"actor"``.
+    :meth:`EgoPPOTrainer.state_dict` keying. Non-tensor entries are
+    NOT filtered out — :meth:`FrozenMAPPOPartner._build_actor_from_state_dict`
+    flags them with the correct error message ("layer values must be
+    torch.Tensor") instead of pretending the key was absent.
 
     Args:
         loaded: The dict :func:`load_checkpoint` returned.
 
     Returns:
-        The actor's flat state-dict.
+        The actor's state-dict (the value of ``loaded["actor"]``).
 
     Raises:
-        ValueError: If the layout is neither nested-under-``"actor"`` nor
-            flat ``fc1/fc2/head``.
+        ValueError: When ``loaded`` does not carry an ``"actor"`` key
+            that maps to a dict.
     """
     inner = loaded.get(_ACTOR_KEY)
     if isinstance(inner, dict):
-        return {k: v for k, v in inner.items() if isinstance(v, torch.Tensor)}
-    if _INPUT_LAYER_KEY in loaded:
-        return {k: v for k, v in loaded.items() if isinstance(v, torch.Tensor)}
+        return inner
     msg = (
-        f"FrozenMAPPOPartner: loaded checkpoint does not contain an 'actor' "
-        f"sub-dict or a flat fc1/fc2/head layout. Got top-level keys: "
-        f"{sorted(loaded.keys())}."
+        f"FrozenMAPPOPartner: loaded checkpoint does not contain a dict under "
+        f"the {_ACTOR_KEY!r} key. Got top-level keys: {sorted(loaded.keys())}."
     )
     raise ValueError(msg)
 

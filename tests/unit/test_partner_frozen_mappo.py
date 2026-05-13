@@ -24,7 +24,11 @@ import pytest
 import torch
 
 from chamber.partners.api import PartnerSpec
-from chamber.partners.frozen_mappo import FrozenMAPPOPartner, _MAPPOActor
+from chamber.partners.frozen_mappo import (
+    _FC1_WEIGHT_KEY,
+    FrozenMAPPOPartner,
+    _MAPPOActor,
+)
 from concerto.training.checkpoints import (
     CheckpointError,
     CheckpointMetadata,
@@ -57,14 +61,26 @@ def _stage_checkpoint(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
     state_dict: dict[str, torch.Tensor] | None = None,
-    nest_under_actor: bool = True,
+    payload_override: dict[str, object] | None = None,
 ) -> Path:
-    """Write a fixture .pt + sidecar under tmp_path and point the env var at it."""
-    if state_dict is None:
-        state_dict = _make_actor_state_dict()
-    payload: dict[str, object] = (
-        {"actor": dict(state_dict)} if nest_under_actor else dict(state_dict)
-    )
+    """Write a fixture .pt + sidecar under tmp_path and point the env var at it.
+
+    Args:
+        tmp_path: Pytest tmp_path fixture for the artefact root.
+        monkeypatch: Pytest monkeypatch fixture for the env var.
+        state_dict: Actor tensors to wrap under the canonical
+            ``{"actor": ...}`` layout. Mutually exclusive with
+            ``payload_override``.
+        payload_override: Drop-in payload dict bypassing the canonical
+            nesting — used by malformed-layout tests to verify the
+            error path. Mutually exclusive with ``state_dict``.
+    """
+    if payload_override is not None:
+        payload: dict[str, object] = payload_override
+    else:
+        if state_dict is None:
+            state_dict = _make_actor_state_dict()
+        payload = {"actor": dict(state_dict)}
     metadata = CheckpointMetadata(
         run_id="0" * 16,
         seed=42,
@@ -252,11 +268,7 @@ class TestLoadFailures:
     ) -> None:
         """plan/04 §3.5: unrecognised layer keys → ValueError, not silent fall-through."""
         bogus = {"alien.weight": torch.zeros(2, 2), "alien.bias": torch.zeros(2)}
-        _stage_checkpoint(
-            tmp_path=tmp_path,
-            monkeypatch=monkeypatch,
-            state_dict=bogus,
-        )
+        _stage_checkpoint(tmp_path=tmp_path, monkeypatch=monkeypatch, state_dict=bogus)
         partner = FrozenMAPPOPartner(_spec())
         with pytest.raises(ValueError, match="fc1/fc2/head"):
             partner.reset(seed=0)
@@ -282,38 +294,63 @@ class TestLoadFailures:
 
 
 # ---------------------------------------------------------------------------
-# Layout flexibility (flat vs nested under "actor")
+# Canonical layout (nested under "actor")
 # ---------------------------------------------------------------------------
 
 
-class TestLayoutFlexibility:
-    def test_flat_state_dict_layout_loads(
+class TestCanonicalLayout:
+    def test_nested_state_dict_layout_loads(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        """plan/04 §3.5: flat (un-nested) state dicts are accepted for hand-rolled fixtures."""
-        _stage_checkpoint(
-            tmp_path=tmp_path,
-            monkeypatch=monkeypatch,
-            nest_under_actor=False,
-        )
+        """plan/04 §3.5: ``{"actor": ...}`` is the canonical (and only) wire format."""
+        _stage_checkpoint(tmp_path=tmp_path, monkeypatch=monkeypatch)
         partner = FrozenMAPPOPartner(_spec())
         obs = {"agent": {"panda_wristcam": {"state": np.zeros(_OBS_DIM, dtype=np.float32)}}}
         action = partner.act(obs)
         assert action.shape == (_ACTION_DIM,)
 
-    def test_nested_state_dict_layout_loads(
+    def test_missing_actor_key_raises(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        """plan/04 §3.5: the canonical layout is ``{"actor": ...}``."""
+        """plan/04 §3.5: a .pt without an ``"actor"`` key is rejected loudly."""
+        flat = _make_actor_state_dict()
         _stage_checkpoint(
             tmp_path=tmp_path,
             monkeypatch=monkeypatch,
-            nest_under_actor=True,
+            payload_override=dict(flat),
         )
         partner = FrozenMAPPOPartner(_spec())
-        obs = {"agent": {"panda_wristcam": {"state": np.zeros(_OBS_DIM, dtype=np.float32)}}}
-        action = partner.act(obs)
-        assert action.shape == (_ACTION_DIM,)
+        with pytest.raises(ValueError, match="'actor'"):
+            partner.reset(seed=0)
+
+    def test_actor_key_not_dict_raises(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """plan/04 §3.5: ``loaded["actor"]`` must be a dict, not a bare tensor."""
+        _stage_checkpoint(
+            tmp_path=tmp_path,
+            monkeypatch=monkeypatch,
+            payload_override={"actor": torch.zeros(2, 2)},
+        )
+        partner = FrozenMAPPOPartner(_spec())
+        with pytest.raises(ValueError, match="'actor'"):
+            partner.reset(seed=0)
+
+    def test_non_tensor_layer_value_raises(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """plan/04 §3.5: a non-tensor value at a layer key is flagged with the right error."""
+        good = _make_actor_state_dict()
+        tampered = dict(good)
+        tampered[_FC1_WEIGHT_KEY] = "not-a-tensor"  # type: ignore[assignment]
+        _stage_checkpoint(
+            tmp_path=tmp_path,
+            monkeypatch=monkeypatch,
+            payload_override={"actor": tampered},
+        )
+        partner = FrozenMAPPOPartner(_spec())
+        with pytest.raises(ValueError, match=r"must be torch\.Tensor"):
+            partner.reset(seed=0)
 
 
 # ---------------------------------------------------------------------------
@@ -389,18 +426,3 @@ class TestObservationErrors:
         state = np.zeros((_OBS_DIM, 2), dtype=np.float32)
         with pytest.raises(ValueError, match="1-D"):
             partner.act({"agent": {"panda_wristcam": {"state": state}}})
-
-    def test_checkpoint_with_no_recognised_layout_raises(
-        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
-        """plan/04 §3.5: a .pt with neither nested 'actor' nor flat 'fc1.weight' fails loudly."""
-        bogus = {"random.thing": torch.zeros(1, 1)}
-        _stage_checkpoint(
-            tmp_path=tmp_path,
-            monkeypatch=monkeypatch,
-            state_dict=bogus,
-            nest_under_actor=False,
-        )
-        partner = FrozenMAPPOPartner(_spec())
-        with pytest.raises(ValueError, match="does not contain"):
-            partner.reset(seed=0)
