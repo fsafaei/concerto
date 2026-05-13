@@ -202,6 +202,11 @@ def render_leaderboard(entries: Sequence[LeaderboardEntry]) -> str:
     *unconditional* per reviewer P1-8 — entries lacking an HRSVector
     raise :class:`ValueError`.
 
+    Entries built from a single spike-run archive are tagged
+    ``[PARTIAL: <axis>]`` in front of the method name (reviewer P1-3)
+    so a one-axis row is never mistaken for a complete HRS-bundle row
+    (ADR-008 §Decision binds the bundle to the surviving-axis set).
+
     Args:
         entries: Sequence of :class:`LeaderboardEntry` records.
 
@@ -229,8 +234,13 @@ def render_leaderboard(entries: Sequence[LeaderboardEntry]) -> str:
         "| --- | --- | ---: | ---: | ---: |",
     ]
     for rank, entry in enumerate(sorted_entries, start=1):
+        if len(entry.spike_runs) == 1:
+            partial_axis = entry.hrs_vector.entries[0].axis
+            method_label = f"[PARTIAL: {partial_axis}] `{entry.method_id}`"
+        else:
+            method_label = f"`{entry.method_id}`"
         lines.append(
-            f"| {rank} | `{entry.method_id}` | {entry.hrs_scalar:.3f} "
+            f"| {rank} | {method_label} | {entry.hrs_scalar:.3f} "
             f"| {_fmt_pct(entry.violation_rate)} "
             f"| {_fmt_pct(entry.fallback_rate)} |"
         )
