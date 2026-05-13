@@ -731,10 +731,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#protocol-sketch" class="md-nav__link">
+  <a href="#protocol" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Protocol (sketch)
+        Protocol
       
     </span>
   </a>
@@ -1294,10 +1294,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#protocol-sketch" class="md-nav__link">
+  <a href="#protocol" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Protocol (sketch)
+        Protocol
       
     </span>
   </a>
@@ -1341,21 +1341,51 @@ contract used by the in-tree spikes.</p>
 other spike in the project: the hypothesis, threshold, and comparison
 conditions are committed before the run starts, the YAML is tagged in
 git, and the resulting rows are rendered into the leaderboard table by
-<code>chamber-render-tables</code>.</p>
-<h2 id="protocol-sketch">Protocol (sketch)</h2>
+<code>chamber-render-tables</code>. The pre-registration YAML schema, the result
+archive schema, and the bootstrap / HRS pipeline live in
+<a href="../../reference/api/"><code>chamber.evaluation</code></a>:
+<code>results.py</code> defines the Pydantic models for <code>SpikeRun</code> /
+<code>EpisodeResult</code> / <code>LeaderboardEntry</code>; <code>prereg.py</code> validates the YAML
+and verifies the git-tag SHA per
+<a href="https://github.com/fsafaei/concerto/blob/main/adr/ADR-007-heterogeneity-axis-selection.md">ADR-007 §Discipline</a>;
+<code>bootstrap.py</code> ships the cluster + paired-cluster bootstrap used for
+the ≥20 pp gap test (reviewer P1-9); <code>hrs.py</code> computes the per-axis
+HRS vector and the headline scalar per
+<a href="https://github.com/fsafaei/concerto/blob/main/adr/ADR-008-hrs-bundle.md">ADR-008 §Decision</a>.</p>
+<h2 id="protocol">Protocol</h2>
 <ol>
 <li>Copy the nearest existing pre-registration YAML from
-   <code>spikes/preregistration/</code> as a template for your method's entry.</li>
+   <code>spikes/preregistration/</code> as a template for your method's entry.
+   The YAML schema is validated by
+   <code>chamber.evaluation.prereg.load_prereg</code>; the required fields are
+   <code>axis</code>, <code>condition_pair</code> (homogeneous / heterogeneous ids),
+   <code>seeds</code>, <code>episodes_per_seed</code>, <code>estimator</code>, <code>bootstrap_method</code>
+   (defaults to <code>cluster</code>), <code>failure_policy</code>, and <code>git_tag</code>.</li>
 <li>Edit the hypothesis, threshold, comparison conditions, and the
-   <code>method:</code> name that will appear in the leaderboard row.</li>
+   <code>method:</code> name that will appear in the leaderboard row. Set
+   <code>bootstrap_method: cluster</code> unless you have a written reason to
+   use <code>hierarchical</code> (alias) or <code>iid</code> (power-calc only — not
+   admitted to the leaderboard).</li>
 <li>Commit the YAML and create a signed git tag of the form
    <code>leaderboard-&lt;method&gt;-&lt;stage&gt;-&lt;date&gt;</code>. <strong>Editing the YAML after
-   the tag exists is a project anti-pattern</strong> — re-tag with a new YAML
-   instead.</li>
+   the tag exists is a project anti-pattern</strong> —
+   <code>chamber.evaluation.prereg.verify_git_tag</code> refuses any submission
+   whose on-disk blob SHA disagrees with the SHA stored at the tag,
+   so re-tag with a new YAML instead.</li>
 <li>Run the spike via <code>chamber-spike run --axis &lt;axis&gt;</code> against the
    tagged YAML. See <a href="../run-spike/">Run a spike with a custom
    hypothesis</a> for the end-to-end flow, including the
    M2 comm-degradation surface that the Stage-2 CM rows consume.</li>
+<li>Compose the leaderboard entry with <code>chamber-eval &lt;spike_run.json&gt;
+   --method-id &lt;id&gt; --output entry.json</code>. The pipeline (cluster
+   bootstrap → paired-cluster gap test → HRS vector → HRS scalar)
+   uses <code>concerto.training.seeding.derive_substream</code> for deterministic
+   resampling; identical inputs and seed produce byte-identical
+   outputs.</li>
+<li>Render the headline tables with <code>chamber-render-tables
+   --leaderboard entry.json</code> and (if your spike emits the ADR-014
+   three-table safety report) <code>chamber-render-tables --safety-report
+   three_tables.json [--fmt latex]</code>.</li>
 <li>Open a PR that adds the tagged YAML and the result archive under
    <code>spikes/results/</code>. The CI gate re-renders the leaderboard table
    from the tagged result archives; no hand-edit of the README is
@@ -1364,9 +1394,10 @@ git, and the resulting rows are rendered into the leaderboard table by
 <p>External contributors who do not have write access to the upstream
 repository can attach the signed result archive to a PR as a release
 asset and reference it from the preregistration YAML.</p>
-<p><em>(Full content — submission template, JSON schema for the result
-archive, and the rliable-style aggregate reporting contract — added
-in M5.)</em></p>
+<p>The HRS vector is emitted alongside the scalar on every entry per
+ADR-008 §Decision (reviewer P1-8); the renderer refuses entries that
+carry only the scalar, so consumers can always recompute the headline
+under a different weighting without re-running the spikes.</p>
 
 
 

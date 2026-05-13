@@ -1008,6 +1008,23 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="1. Seeds and reporting">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#11-homogeneous-vs-heterogeneous-pairing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.1 Homogeneous-vs-heterogeneous pairing
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -1335,6 +1352,23 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="1. Seeds and reporting">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#11-homogeneous-vs-heterogeneous-pairing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.1 Homogeneous-vs-heterogeneous pairing
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -1409,9 +1443,14 @@ rationale anchors are
 <a href="../literature/">literature page</a> §5.</p>
 <hr />
 <h2 id="1-seeds-and-reporting">1. Seeds and reporting</h2>
-<p>CHAMBER leaderboard entries report multi-seed runs with 95% bootstrap
-confidence intervals on every published metric. The minimum seed
-counts are:</p>
+<p>CHAMBER leaderboard entries report multi-seed runs with 95%
+<strong>cluster bootstrap</strong> confidence intervals on every published metric.
+Episodes within a seed are correlated (same partner roll-out, same
+env-reset stream), so a pooled iid bootstrap understates the CI; the
+implementation in
+<a href="https://github.com/fsafaei/concerto/blob/main/src/chamber/evaluation/bootstrap.py"><code>src/chamber/evaluation/bootstrap.py</code></a>
+resamples seeds (the cluster level) with replacement, then resamples
+episodes within each resampled seed. The minimum seed counts are:</p>
 <table>
 <thead>
 <tr>
@@ -1440,9 +1479,23 @@ counts are:</p>
 </table>
 <p>Each metric — episode success rate, violation rate, conformal λ mean,
 inter-robot-collision rate, force-limit violation rate — is reported
-as point estimate with a 95% bootstrap CI computed across the seed
-budget above. Submissions that report fewer seeds or omit the CI are
-not admitted to the leaderboard.</p>
+as point estimate with a 95% <strong>cluster-bootstrap</strong> CI computed across
+the seed budget above. Submissions that report fewer seeds, omit the
+CI, or use a pooled iid bootstrap on episode-level data are not
+admitted to the leaderboard.</p>
+<h3 id="11-homogeneous-vs-heterogeneous-pairing">1.1 Homogeneous-vs-heterogeneous pairing</h3>
+<p>The ≥20pp gap test from
+<a href="https://github.com/fsafaei/concerto/blob/main/adr/ADR-007-heterogeneity-axis-selection.md">ADR-007 §Validation criteria</a>
+is computed on <strong>matched pairs</strong>, not on pooled means.
+<a href="https://github.com/fsafaei/concerto/blob/main/src/chamber/evaluation/bootstrap.py"><code>chamber.evaluation.bootstrap.pacluster_bootstrap</code></a>
+takes an iterable of paired episodes — homogeneous and heterogeneous
+rollouts sharing <code>(seed, episode_idx, initial_state_seed)</code> — and
+resamples first at the seed (cluster) level, then within each
+resampled seed at the paired-episode level. Pairing by initial state
+seed plus partner seed removes the dominant source of cross-condition
+variance (different initial configurations being rolled out for
+homogeneous vs heterogeneous): the gap statistic is the within-pair
+delta, not the cross-pool mean difference.</p>
 <p>This page exists, in part, because Henderson et al. (2018)
 [<code>henderson2018matters</code>] catalogued a set of evaluation anti-patterns
 the project explicitly refuses to fall into:</p>
@@ -1491,6 +1544,12 @@ implementation work that closes this contract, scheduled as a
 Phase-1 follow-up (see
 <a href="https://github.com/fsafaei/concerto/blob/main/adr/ADR-014-safety-reporting.md"><code>ADR-014</code></a>
 for the three-table-format scaffold the renderer fills in).</p>
+<p><a href="https://github.com/fsafaei/concerto/blob/main/src/chamber/evaluation/bootstrap.py"><code>chamber.evaluation.bootstrap.aggregate_metrics</code></a>
+computes IQM and optimality gap natively (rliable-compatible
+definitions) so the leaderboard remains renderable without the
+optional extra; performance profiles delegate to <code>rliable</code> when the
+extra is installed and return <code>None</code> with a <code>RuntimeWarning</code>
+otherwise.</p>
 <p>See <code>agarwal2021precipice</code> in <a href="../literature/"><code>literature.md §5</code></a>
 for the citation.</p>
 <hr />
