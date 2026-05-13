@@ -243,6 +243,53 @@ def _build_cartesian_pair_row(
     )
 
 
+# _internal: not part of the public surface — see ADR-004 §Risks #4.
+def _build_ego_only_row(
+    ego_snap: AgentSnapshot,
+    partner_snap: AgentSnapshot,
+    partner_predicted_accel: FloatArray,
+    *,
+    alpha_pair: float,
+    gamma: float,
+    lambda_ij: float,
+) -> tuple[FloatArray, float, float]:
+    """Assemble the Cartesian CBF row + RHS + ``h_ij`` for one EGO_ONLY pair (ADR-004 §Risks #4).
+
+    Internal seam exposed for the analytic sign-convention test suite
+    (``tests/unit/test_cbf_qp_ego_only_signs.py``). A sign error in any
+    of three sensitive transformations — the ego-acceleration row sign,
+    the partner-disturbance subtraction on the RHS, or the closing-
+    velocity sign in ``h_ij`` — would silently invert the pairwise
+    constraint and make the entire safety filter unsafe (reviewer
+    P0-3). Tests pin each sign analytically against the closed-form
+    row rather than running the QP solve, sidestepping solver
+    tolerance noise.
+
+    The returned ``row`` is the coefficient on the ego's *Cartesian*
+    acceleration variable: ``-n_hat``. For
+    :class:`~concerto.safety.api.DoubleIntegratorControlModel` (whose
+    action space coincides with Cartesian acceleration) this is the
+    action-space row the QP stacker uses; for Jacobian-mediated
+    embodiments the caller composes the row with the ego's
+    :class:`~concerto.safety.api.AgentControlModel` Jacobian.
+    :meth:`ExpCBFQP._filter_ego_only` consumes this helper directly,
+    so the row coefficients tested here are the same ones the QP sees.
+    """
+    pair_row = _build_cartesian_pair_row(
+        snap_i=ego_snap,
+        snap_j=partner_snap,
+        alpha_pair=alpha_pair,
+        gamma=gamma,
+        lambda_ij=lambda_ij,
+    )
+    partner_disturbance = float(
+        pair_row.n_hat @ partner_predicted_accel.astype(np.float64, copy=False)
+    )
+    row: FloatArray = (-pair_row.n_hat).astype(np.float64, copy=True)
+    rhs = pair_row.rhs - partner_disturbance
+    return row, rhs, pair_row.h_ij
+
+
 def _project_cartesian_row_to_action(
     pair_row: _CartesianPairRow,
     *,
@@ -742,14 +789,6 @@ class ExpCBFQP:
             partner_max_cart = partner_model.max_cartesian_accel(bounds)
             alpha_pair = ego_max_cart + partner_max_cart
 
-            pair_row = _build_cartesian_pair_row(
-                snap_i=snaps[ego_uid],
-                snap_j=snaps[partner_uid],
-                alpha_pair=alpha_pair,
-                gamma=self._cbf_gamma,
-                lambda_ij=float(state.lambda_[pair_idx]),
-            )
-
             # Partner's predicted Cartesian acceleration enters as a
             # known drift term: the row becomes
             # -n_hat^T ddot p_ego <= -RHS - n_hat^T ddot p_partner_pred.
@@ -757,25 +796,25 @@ class ExpCBFQP:
                 snap_now=snaps[partner_uid],
                 snap_pred=partner_predicted_states[partner_uid],
             )
-            partner_disturbance = float(pair_row.n_hat @ partner_pred_accel)
-
-            action_row = _project_cartesian_row_to_action(
-                pair_row,
-                snap_i=snaps[ego_uid],
-                snap_j=snaps[partner_uid],
-                model_i=ego_model,
-                model_j=None,
-                n_total=n_total,
-                slot_i=0,
-                slot_j=None,
+            cart_row, rhs, h_ij = _build_ego_only_row(
+                ego_snap=snaps[ego_uid],
+                partner_snap=snaps[partner_uid],
+                partner_predicted_accel=partner_pred_accel,
+                alpha_pair=alpha_pair,
+                gamma=self._cbf_gamma,
+                lambda_ij=float(state.lambda_[pair_idx]),
             )
+            # Project the Cartesian row to action space via the ego's
+            # control-model Jacobian. ``cart_row == -n_hat``; for
+            # DoubleIntegratorControlModel J_ego is the identity and
+            # ``cart_row @ J_ego`` equals ``cart_row`` unchanged, matching
+            # the pre-refactor row coefficients byte-for-byte.
+            j_ego = _agent_jacobian(ego_model, snaps[ego_uid])
+            action_row: FloatArray = np.zeros(n_total, dtype=np.float64)
+            action_row[: ego_model.action_dim] = cart_row @ j_ego
             rows.append(action_row)
-            # Sign convention: the Cartesian CBF condition rearranges to
-            #   -n_hat^T (a_ego - a_partner) <= drift + gamma*h + lambda.
-            # Moving the known partner-disturbance term to the RHS gives
-            #   -n_hat^T a_ego <= pair_row.rhs - n_hat^T a_partner_pred.
-            rhs_list.append(pair_row.rhs - partner_disturbance)
-            constraint_violation[pair_idx] = max(0.0, -pair_row.h_ij)
+            rhs_list.append(rhs)
+            constraint_violation[pair_idx] = max(0.0, -h_ij)
 
         # Per-component action-space L-infinity bound; the Cartesian
         # capacity drives ``alpha_pair`` only — the action-space envelope
