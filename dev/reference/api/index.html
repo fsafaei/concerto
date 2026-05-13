@@ -3581,6 +3581,56 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#chamber.partners.FrozenHARLPartner" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        FrozenHARLPartner
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="FrozenHARLPartner">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#chamber.partners.FrozenHARLPartner.__init__" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        __init__
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#chamber.partners.FrozenHARLPartner.act" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        act
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#chamber.partners.FrozenHARLPartner.reset" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        reset
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#chamber.partners.FrozenMAPPOPartner" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -7474,6 +7524,56 @@
         
           <li class="md-nav__item">
   <a href="#chamber.partners.CrossFormerPartner.reset" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        reset
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#chamber.partners.FrozenHARLPartner" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        FrozenHARLPartner
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="FrozenHARLPartner">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#chamber.partners.FrozenHARLPartner.__init__" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        __init__
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#chamber.partners.FrozenHARLPartner.act" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        act
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#chamber.partners.FrozenHARLPartner.reset" class="md-nav__link">
     <span class="md-ellipsis">
       
         reset
@@ -31261,14 +31361,20 @@ plan/04 §3 (architecture). Phase-0 ships:</p>
   :mod:<code>chamber.partners.frozen_mappo</code>). Loads a torch state-dict via
   :func:<code>concerto.training.checkpoints.load_checkpoint</code>, freezes every
   parameter, runs inference under :func:<code>torch.no_grad</code>.</li>
+<li>:class:<code>FrozenHARLPartner</code> — Stage-3 draft-zoo entry #3 (T4.6;
+  :mod:<code>chamber.partners.frozen_harl</code>). Loads the HARL HAPPO actor
+  checkpoint produced by
+  :class:<code>chamber.benchmarks.ego_ppo_trainer.EgoPPOTrainer</code>, rebuilds
+  the :class:<code>StochasticPolicy</code> with the same args, freezes every
+  parameter, runs <code>deterministic=True</code> inference under
+  :func:<code>torch.no_grad</code>.</li>
 <li>:class:<code>OpenVLAPartner</code> and :class:<code>CrossFormerPartner</code> Phase-1 stubs
   (:mod:<code>chamber.partners.stubs</code>) — ADR-010 §Decision Option B; both
   raise :class:<code>NotImplementedError</code> referencing the Phase-1 ticket.</li>
 <li>The Phase-0 :func:<code>make_phase0_draft_zoo</code> (real) and the Phase-1
   :func:<code>select_zoo</code> stub (:mod:<code>chamber.partners.selection</code>).</li>
 </ul>
-<p>The Phase-1 :class:<code>FrozenHARLPartner</code> (T4.6) and the M4-gate
-integration test (T4.9) land in follow-up PRs (plan/04 §1).</p>
+<p>The M4-gate integration test (T4.9) lands in a follow-up PR (plan/04 §1).</p>
 
 
 
@@ -31600,6 +31706,778 @@ harness is Phase-1 work.</p>
     <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
         <span class="sa">f</span><span class="s2">&quot;CrossFormerPartner.reset is Phase-1 work; see ADR-010 §Decision and </span><span class="si">{</span><span class="n">_PHASE1_TICKET</span><span class="si">}</span><span class="s2">.&quot;</span>
     <span class="p">)</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+
+
+  </div>
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-class">
+
+
+
+<h2 id="chamber.partners.FrozenHARLPartner" class="doc doc-heading">
+            <span class="doc doc-object-name doc-class-name">FrozenHARLPartner</span>
+
+
+</h2>
+
+
+    <div class="doc doc-contents ">
+            <p class="doc doc-class-bases">
+              Bases: <code><a class="autorefs autorefs-internal" title="PartnerBase (chamber.partners.interface.PartnerBase)" href="#chamber.partners.PartnerBase">PartnerBase</a></code></p>
+
+
+
+        <p>Frozen HARL HAPPO partner (ADR-009 §Decision; plan/04 §3.6).</p>
+<p>Loads a HARL :class:<code>StochasticPolicy</code> checkpoint via
+:func:<code>concerto.training.checkpoints.load_checkpoint</code> (which verifies
+the sidecar SHA-256), freezes every parameter
+(<code>requires_grad=False</code>), and runs inference under
+:func:<code>torch.no_grad</code> with <code>deterministic=True</code>. The actor's layer
+widths are inferred from the loaded state-dict tensor shapes.</p>
+<p>Spec contract (plan/04 §3.6; ADR-009 §Decision):</p>
+<ul>
+<li><code>spec.class_name == "frozen_harl"</code>.</li>
+<li><code>spec.weights_uri</code> is the <code>local://artifacts/&lt;name&gt;.pt</code> URI.</li>
+<li><code>spec.extra["uid"]</code> is the env-side uid the partner acts on;
+  it indexes <code>obs["agent"][uid]["state"]</code> at action time.</li>
+</ul>
+<p>Statefulness (plan/04 §2): the partner is stateless across episodes;
+:meth:<code>reset</code> is a no-op once the checkpoint is loaded. Loading is
+deferred to the first :meth:<code>reset</code> / :meth:<code>act</code> call so the
+registry lookup in :func:<code>chamber.partners.registry.load_partner</code>
+stays cheap.</p>
+<p>Device placement (Phase-0): inference runs on CPU. HAPPO actor
+forward passes are microseconds-scale and not the project's
+throughput bottleneck (the OpenVLA partner stratum is); partner-side
+GPU placement is deferred to a future partner-config plane and would
+need its own ADR amendment.</p>
+
+
+
+
+
+
+
+
+              <details class="mkdocstrings-source">
+                <summary>Source code in <code>src/chamber/partners/frozen_harl.py</code></summary>
+                <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">138</span>
+<span class="normal">139</span>
+<span class="normal">140</span>
+<span class="normal">141</span>
+<span class="normal">142</span>
+<span class="normal">143</span>
+<span class="normal">144</span>
+<span class="normal">145</span>
+<span class="normal">146</span>
+<span class="normal">147</span>
+<span class="normal">148</span>
+<span class="normal">149</span>
+<span class="normal">150</span>
+<span class="normal">151</span>
+<span class="normal">152</span>
+<span class="normal">153</span>
+<span class="normal">154</span>
+<span class="normal">155</span>
+<span class="normal">156</span>
+<span class="normal">157</span>
+<span class="normal">158</span>
+<span class="normal">159</span>
+<span class="normal">160</span>
+<span class="normal">161</span>
+<span class="normal">162</span>
+<span class="normal">163</span>
+<span class="normal">164</span>
+<span class="normal">165</span>
+<span class="normal">166</span>
+<span class="normal">167</span>
+<span class="normal">168</span>
+<span class="normal">169</span>
+<span class="normal">170</span>
+<span class="normal">171</span>
+<span class="normal">172</span>
+<span class="normal">173</span>
+<span class="normal">174</span>
+<span class="normal">175</span>
+<span class="normal">176</span>
+<span class="normal">177</span>
+<span class="normal">178</span>
+<span class="normal">179</span>
+<span class="normal">180</span>
+<span class="normal">181</span>
+<span class="normal">182</span>
+<span class="normal">183</span>
+<span class="normal">184</span>
+<span class="normal">185</span>
+<span class="normal">186</span>
+<span class="normal">187</span>
+<span class="normal">188</span>
+<span class="normal">189</span>
+<span class="normal">190</span>
+<span class="normal">191</span>
+<span class="normal">192</span>
+<span class="normal">193</span>
+<span class="normal">194</span>
+<span class="normal">195</span>
+<span class="normal">196</span>
+<span class="normal">197</span>
+<span class="normal">198</span>
+<span class="normal">199</span>
+<span class="normal">200</span>
+<span class="normal">201</span>
+<span class="normal">202</span>
+<span class="normal">203</span>
+<span class="normal">204</span>
+<span class="normal">205</span>
+<span class="normal">206</span>
+<span class="normal">207</span>
+<span class="normal">208</span>
+<span class="normal">209</span>
+<span class="normal">210</span>
+<span class="normal">211</span>
+<span class="normal">212</span>
+<span class="normal">213</span>
+<span class="normal">214</span>
+<span class="normal">215</span>
+<span class="normal">216</span>
+<span class="normal">217</span>
+<span class="normal">218</span>
+<span class="normal">219</span>
+<span class="normal">220</span>
+<span class="normal">221</span>
+<span class="normal">222</span>
+<span class="normal">223</span>
+<span class="normal">224</span>
+<span class="normal">225</span>
+<span class="normal">226</span>
+<span class="normal">227</span>
+<span class="normal">228</span>
+<span class="normal">229</span>
+<span class="normal">230</span>
+<span class="normal">231</span>
+<span class="normal">232</span>
+<span class="normal">233</span>
+<span class="normal">234</span>
+<span class="normal">235</span>
+<span class="normal">236</span>
+<span class="normal">237</span>
+<span class="normal">238</span>
+<span class="normal">239</span>
+<span class="normal">240</span>
+<span class="normal">241</span>
+<span class="normal">242</span>
+<span class="normal">243</span>
+<span class="normal">244</span>
+<span class="normal">245</span>
+<span class="normal">246</span>
+<span class="normal">247</span>
+<span class="normal">248</span>
+<span class="normal">249</span>
+<span class="normal">250</span>
+<span class="normal">251</span>
+<span class="normal">252</span>
+<span class="normal">253</span>
+<span class="normal">254</span>
+<span class="normal">255</span>
+<span class="normal">256</span>
+<span class="normal">257</span>
+<span class="normal">258</span>
+<span class="normal">259</span>
+<span class="normal">260</span>
+<span class="normal">261</span>
+<span class="normal">262</span>
+<span class="normal">263</span>
+<span class="normal">264</span>
+<span class="normal">265</span>
+<span class="normal">266</span>
+<span class="normal">267</span>
+<span class="normal">268</span>
+<span class="normal">269</span>
+<span class="normal">270</span>
+<span class="normal">271</span>
+<span class="normal">272</span>
+<span class="normal">273</span>
+<span class="normal">274</span>
+<span class="normal">275</span>
+<span class="normal">276</span>
+<span class="normal">277</span>
+<span class="normal">278</span>
+<span class="normal">279</span>
+<span class="normal">280</span>
+<span class="normal">281</span>
+<span class="normal">282</span>
+<span class="normal">283</span>
+<span class="normal">284</span>
+<span class="normal">285</span>
+<span class="normal">286</span>
+<span class="normal">287</span>
+<span class="normal">288</span>
+<span class="normal">289</span>
+<span class="normal">290</span>
+<span class="normal">291</span>
+<span class="normal">292</span>
+<span class="normal">293</span>
+<span class="normal">294</span>
+<span class="normal">295</span>
+<span class="normal">296</span>
+<span class="normal">297</span>
+<span class="normal">298</span>
+<span class="normal">299</span>
+<span class="normal">300</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@register_partner</span><span class="p">(</span><span class="s2">&quot;frozen_harl&quot;</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">FrozenHARLPartner</span><span class="p">(</span><span class="n">PartnerBase</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Frozen HARL HAPPO partner (ADR-009 §Decision; plan/04 §3.6).</span>
+
+<span class="sd">    Loads a HARL :class:`StochasticPolicy` checkpoint via</span>
+<span class="sd">    :func:`concerto.training.checkpoints.load_checkpoint` (which verifies</span>
+<span class="sd">    the sidecar SHA-256), freezes every parameter</span>
+<span class="sd">    (``requires_grad=False``), and runs inference under</span>
+<span class="sd">    :func:`torch.no_grad` with ``deterministic=True``. The actor&#39;s layer</span>
+<span class="sd">    widths are inferred from the loaded state-dict tensor shapes.</span>
+
+<span class="sd">    Spec contract (plan/04 §3.6; ADR-009 §Decision):</span>
+
+<span class="sd">    - ``spec.class_name == &quot;frozen_harl&quot;``.</span>
+<span class="sd">    - ``spec.weights_uri`` is the ``local://artifacts/&lt;name&gt;.pt`` URI.</span>
+<span class="sd">    - ``spec.extra[&quot;uid&quot;]`` is the env-side uid the partner acts on;</span>
+<span class="sd">      it indexes ``obs[&quot;agent&quot;][uid][&quot;state&quot;]`` at action time.</span>
+
+<span class="sd">    Statefulness (plan/04 §2): the partner is stateless across episodes;</span>
+<span class="sd">    :meth:`reset` is a no-op once the checkpoint is loaded. Loading is</span>
+<span class="sd">    deferred to the first :meth:`reset` / :meth:`act` call so the</span>
+<span class="sd">    registry lookup in :func:`chamber.partners.registry.load_partner`</span>
+<span class="sd">    stays cheap.</span>
+
+<span class="sd">    Device placement (Phase-0): inference runs on CPU. HAPPO actor</span>
+<span class="sd">    forward passes are microseconds-scale and not the project&#39;s</span>
+<span class="sd">    throughput bottleneck (the OpenVLA partner stratum is); partner-side</span>
+<span class="sd">    GPU placement is deferred to a future partner-config plane and would</span>
+<span class="sd">    need its own ADR amendment.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">spec</span><span class="p">:</span> <span class="n">PartnerSpec</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Bind the spec; defer checkpoint I/O (ADR-009 §Decision; plan/04 §3.3).</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            spec: Identity-bearing handle. Reads ``spec.extra[&quot;uid&quot;]``</span>
+<span class="sd">                for the env-side agent uid and ``spec.weights_uri`` for</span>
+<span class="sd">                the checkpoint URI. Construction does not touch disk.</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            ValueError: If ``spec.weights_uri`` is ``None`` or</span>
+<span class="sd">                ``spec.extra[&quot;uid&quot;]`` is missing / empty.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">spec</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">spec</span><span class="o">.</span><span class="n">weights_uri</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;FrozenHARLPartner requires spec.weights_uri (ADR-009 §Decision); &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;got None on spec </span><span class="si">{</span><span class="n">spec</span><span class="o">.</span><span class="n">class_name</span><span class="si">!r}</span><span class="s2">.&quot;</span>
+            <span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+        <span class="n">uid</span> <span class="o">=</span> <span class="n">spec</span><span class="o">.</span><span class="n">extra</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;uid&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">uid</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="s2">&quot;FrozenHARLPartner requires spec.extra[&#39;uid&#39;] (the env-side agent uid; &quot;</span>
+                <span class="s2">&quot;plan/04 §3.6).&quot;</span>
+            <span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_uid</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">uid</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_weights_uri</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">spec</span><span class="o">.</span><span class="n">weights_uri</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_actor</span><span class="p">:</span> <span class="n">StochasticPolicy</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_obs_dim</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_action_dim</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_hidden_dim</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">reset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">seed</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Ensure the checkpoint is loaded; no per-episode state (ADR-009 §Decision; plan/04 §2).</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            seed: Accepted for</span>
+<span class="sd">                :class:`~chamber.partners.api.FrozenPartner` Protocol</span>
+<span class="sd">                conformance. The partner is fully deterministic given</span>
+<span class="sd">                the loaded weights and ``obs``; seed is ignored.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">del</span> <span class="n">seed</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_ensure_loaded</span><span class="p">()</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">act</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">obs</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">object</span><span class="p">],</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">deterministic</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">floating</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Greedy HARL-actor forward pass under no-grad (ADR-009 §Decision).</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            obs: Gymnasium observation mapping. Reads the ego&#39;s flat state</span>
+<span class="sd">                from ``obs[&quot;agent&quot;][uid][&quot;state&quot;]`` (plan/04 §3.4); other</span>
+<span class="sd">                keys are ignored.</span>
+<span class="sd">            deterministic: Accepted for Protocol conformance but ignored.</span>
+<span class="sd">                Phase-0 pins the partner to the distribution mode so a</span>
+<span class="sd">                frozen partner&#39;s actions stay decoupled from torch&#39;s</span>
+<span class="sd">                global RNG (see module docstring).</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            ``np.float32`` action vector of length ``action_dim`` (the</span>
+<span class="sd">            mean head&#39;s output dimension, inferred from the loaded</span>
+<span class="sd">            checkpoint).</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            ValueError: If ``obs[&quot;agent&quot;][uid][&quot;state&quot;]`` is missing or</span>
+<span class="sd">                its length disagrees with the loaded actor&#39;s input</span>
+<span class="sd">                dimension.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">del</span> <span class="n">deterministic</span>
+        <span class="n">actor</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ensure_loaded</span><span class="p">()</span>
+        <span class="n">state</span> <span class="o">=</span> <span class="n">_read_flat_state</span><span class="p">(</span><span class="n">obs</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_uid</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">state</span><span class="o">.</span><span class="n">shape</span> <span class="o">!=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_obs_dim</span><span class="p">,):</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;FrozenHARLPartner: obs[&#39;agent&#39;][</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_uid</span><span class="si">!r}</span><span class="s2">][&#39;state&#39;] has shape &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="nb">tuple</span><span class="p">(</span><span class="n">state</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span><span class="si">}</span><span class="s2">, expected (</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_obs_dim</span><span class="si">}</span><span class="s2">,) matching the loaded &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;actor&#39;s input dim.&quot;</span>
+            <span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+        <span class="c1"># HARL&#39;s StochasticPolicy.forward signature is</span>
+        <span class="c1"># ``(obs, rnn_states, masks, available_actions, deterministic)``.</span>
+        <span class="c1"># rnn_states + masks are placeholders since use_recurrent_policy=False;</span>
+        <span class="c1"># we pass shape-correct zeros / ones so HARL&#39;s internal ``check`` call</span>
+        <span class="c1"># accepts them. Mirrors EgoPPOTrainer.act&#39;s call site.</span>
+        <span class="n">obs_t</span> <span class="o">=</span> <span class="n">state</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">rnn_states</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_hidden_dim</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+        <span class="n">masks</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+        <span class="k">with</span> <span class="n">torch</span><span class="o">.</span><span class="n">no_grad</span><span class="p">():</span>
+            <span class="n">action_t</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">actor</span><span class="p">(</span><span class="n">obs_t</span><span class="p">,</span> <span class="n">rnn_states</span><span class="p">,</span> <span class="n">masks</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">action_t</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_ensure_loaded</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">StochasticPolicy</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Load + freeze the HARL actor on first use; idempotent (plan/04 §3.3).</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            The loaded :class:`StochasticPolicy` (cached after first call).</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            CheckpointError: Propagated from</span>
+<span class="sd">                :func:`concerto.training.checkpoints.load_checkpoint`</span>
+<span class="sd">                when the sidecar is missing, malformed, or the SHA-256</span>
+<span class="sd">                disagrees with the on-disk payload.</span>
+<span class="sd">            ValueError: When the loaded state-dict does not match the</span>
+<span class="sd">                expected HARL HAPPO actor layout.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_actor</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_actor</span>
+        <span class="n">artifacts_root</span> <span class="o">=</span> <span class="n">_resolve_artifacts_root</span><span class="p">()</span>
+        <span class="n">loaded</span><span class="p">,</span> <span class="n">_meta</span> <span class="o">=</span> <span class="n">load_checkpoint</span><span class="p">(</span><span class="n">uri</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_weights_uri</span><span class="p">,</span> <span class="n">artifacts_root</span><span class="o">=</span><span class="n">artifacts_root</span><span class="p">)</span>
+        <span class="n">actor_sd</span> <span class="o">=</span> <span class="n">_extract_actor_state_dict</span><span class="p">(</span><span class="n">loaded</span><span class="p">)</span>
+        <span class="n">obs_dim</span><span class="p">,</span> <span class="n">hidden_dim</span><span class="p">,</span> <span class="n">action_dim</span> <span class="o">=</span> <span class="n">_infer_shape</span><span class="p">(</span><span class="n">actor_sd</span><span class="p">)</span>
+        <span class="n">args</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">_HARL_INFERENCE_ARGS</span><span class="p">)</span>
+        <span class="n">args</span><span class="p">[</span><span class="s2">&quot;hidden_sizes&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">hidden_dim</span><span class="p">,</span> <span class="n">hidden_dim</span><span class="p">]</span>
+        <span class="n">obs_space</span> <span class="o">=</span> <span class="n">gym</span><span class="o">.</span><span class="n">spaces</span><span class="o">.</span><span class="n">Box</span><span class="p">(</span><span class="n">low</span><span class="o">=-</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span> <span class="n">high</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span> <span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="n">obs_dim</span><span class="p">,),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+        <span class="n">act_space</span> <span class="o">=</span> <span class="n">gym</span><span class="o">.</span><span class="n">spaces</span><span class="o">.</span><span class="n">Box</span><span class="p">(</span><span class="n">low</span><span class="o">=-</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">high</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="n">action_dim</span><span class="p">,),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+        <span class="n">actor</span> <span class="o">=</span> <span class="n">StochasticPolicy</span><span class="p">(</span><span class="n">args</span><span class="p">,</span> <span class="n">obs_space</span><span class="p">,</span> <span class="n">act_space</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s2">&quot;cpu&quot;</span><span class="p">))</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">actor</span><span class="o">.</span><span class="n">load_state_dict</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span><span class="n">actor_sd</span><span class="p">))</span>
+        <span class="k">except</span> <span class="ne">RuntimeError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;FrozenHARLPartner: load_state_dict failed for </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_weights_uri</span><span class="si">!r}</span><span class="s2">: </span><span class="si">{</span><span class="n">exc</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">exc</span>
+        <span class="k">for</span> <span class="n">param</span> <span class="ow">in</span> <span class="n">actor</span><span class="o">.</span><span class="n">parameters</span><span class="p">():</span>
+            <span class="n">param</span><span class="o">.</span><span class="n">requires_grad</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="n">actor</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_actor</span> <span class="o">=</span> <span class="n">actor</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_obs_dim</span> <span class="o">=</span> <span class="n">obs_dim</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_action_dim</span> <span class="o">=</span> <span class="n">action_dim</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_hidden_dim</span> <span class="o">=</span> <span class="n">hidden_dim</span>
+        <span class="k">return</span> <span class="n">actor</span>
+</code></pre></div></td></tr></table></div>
+              </details>
+
+
+
+<div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="chamber.partners.FrozenHARLPartner.__init__" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">__init__</span>
+
+
+</h3>
+<div class="doc-signature highlight"><pre><span></span><code><span class="nf">__init__</span><span class="p">(</span><span class="n">spec</span><span class="p">:</span> <span class="n">PartnerSpec</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Bind the spec; defer checkpoint I/O (ADR-009 §Decision; plan/04 §3.3).</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <ul>
+        <li class="doc-section-item field-body">
+            <b><code>spec</code></b>
+              (<code><a class="autorefs autorefs-internal" title="PartnerSpec
+
+
+  
+      dataclass
+   (chamber.partners.api.PartnerSpec)" href="#chamber.partners.PartnerSpec">PartnerSpec</a></code>)
+          –
+          <div class="doc-md-description">
+            <p>Identity-bearing handle. Reads <code>spec.extra["uid"]</code>
+for the env-side agent uid and <code>spec.weights_uri</code> for
+the checkpoint URI. Construction does not touch disk.</p>
+          </div>
+        </li>
+    </ul>
+
+
+<p><span class="doc-section-title">Raises:</span></p>
+    <ul>
+        <li class="doc-section-item field-body">
+              <code><span title="ValueError">ValueError</span></code>
+            –
+          <div class="doc-md-description">
+            <p>If <code>spec.weights_uri</code> is <code>None</code> or
+<code>spec.extra["uid"]</code> is missing / empty.</p>
+          </div>
+        </li>
+    </ul>
+
+
+            <details class="mkdocstrings-source">
+              <summary>Source code in <code>src/chamber/partners/frozen_harl.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">169</span>
+<span class="normal">170</span>
+<span class="normal">171</span>
+<span class="normal">172</span>
+<span class="normal">173</span>
+<span class="normal">174</span>
+<span class="normal">175</span>
+<span class="normal">176</span>
+<span class="normal">177</span>
+<span class="normal">178</span>
+<span class="normal">179</span>
+<span class="normal">180</span>
+<span class="normal">181</span>
+<span class="normal">182</span>
+<span class="normal">183</span>
+<span class="normal">184</span>
+<span class="normal">185</span>
+<span class="normal">186</span>
+<span class="normal">187</span>
+<span class="normal">188</span>
+<span class="normal">189</span>
+<span class="normal">190</span>
+<span class="normal">191</span>
+<span class="normal">192</span>
+<span class="normal">193</span>
+<span class="normal">194</span>
+<span class="normal">195</span>
+<span class="normal">196</span>
+<span class="normal">197</span>
+<span class="normal">198</span>
+<span class="normal">199</span>
+<span class="normal">200</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">spec</span><span class="p">:</span> <span class="n">PartnerSpec</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Bind the spec; defer checkpoint I/O (ADR-009 §Decision; plan/04 §3.3).</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        spec: Identity-bearing handle. Reads ``spec.extra[&quot;uid&quot;]``</span>
+<span class="sd">            for the env-side agent uid and ``spec.weights_uri`` for</span>
+<span class="sd">            the checkpoint URI. Construction does not touch disk.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">        ValueError: If ``spec.weights_uri`` is ``None`` or</span>
+<span class="sd">            ``spec.extra[&quot;uid&quot;]`` is missing / empty.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">spec</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">spec</span><span class="o">.</span><span class="n">weights_uri</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;FrozenHARLPartner requires spec.weights_uri (ADR-009 §Decision); &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;got None on spec </span><span class="si">{</span><span class="n">spec</span><span class="o">.</span><span class="n">class_name</span><span class="si">!r}</span><span class="s2">.&quot;</span>
+        <span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+    <span class="n">uid</span> <span class="o">=</span> <span class="n">spec</span><span class="o">.</span><span class="n">extra</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;uid&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">uid</span><span class="p">:</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="s2">&quot;FrozenHARLPartner requires spec.extra[&#39;uid&#39;] (the env-side agent uid; &quot;</span>
+            <span class="s2">&quot;plan/04 §3.6).&quot;</span>
+        <span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_uid</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">uid</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_weights_uri</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">spec</span><span class="o">.</span><span class="n">weights_uri</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_actor</span><span class="p">:</span> <span class="n">StochasticPolicy</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_obs_dim</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_action_dim</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_hidden_dim</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="chamber.partners.FrozenHARLPartner.act" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">act</span>
+
+
+</h3>
+<div class="doc-signature highlight"><pre><span></span><code><span class="nf">act</span><span class="p">(</span>
+    <span class="n">obs</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">object</span><span class="p">],</span> <span class="o">*</span><span class="p">,</span> <span class="n">deterministic</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">floating</span><span class="p">]</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Greedy HARL-actor forward pass under no-grad (ADR-009 §Decision).</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <ul>
+        <li class="doc-section-item field-body">
+            <b><code>obs</code></b>
+              (<code><span title="collections.abc.Mapping">Mapping</span>[<span title="str">str</span>, <span title="object">object</span>]</code>)
+          –
+          <div class="doc-md-description">
+            <p>Gymnasium observation mapping. Reads the ego's flat state
+from <code>obs["agent"][uid]["state"]</code> (plan/04 §3.4); other
+keys are ignored.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+            <b><code>deterministic</code></b>
+              (<code><span title="bool">bool</span></code>, default:
+                  <code>True</code>
+)
+          –
+          <div class="doc-md-description">
+            <p>Accepted for Protocol conformance but ignored.
+Phase-0 pins the partner to the distribution mode so a
+frozen partner's actions stay decoupled from torch's
+global RNG (see module docstring).</p>
+          </div>
+        </li>
+    </ul>
+
+
+<p><span class="doc-section-title">Returns:</span></p>
+    <ul>
+        <li class="doc-section-item field-body">
+              <code><span title="numpy.typing.NDArray">NDArray</span>[<span title="numpy.floating">floating</span>]</code>
+          –
+          <div class="doc-md-description">
+            <p><code>np.float32</code> action vector of length <code>action_dim</code> (the</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+              <code><span title="numpy.typing.NDArray">NDArray</span>[<span title="numpy.floating">floating</span>]</code>
+          –
+          <div class="doc-md-description">
+            <p>mean head's output dimension, inferred from the loaded</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+              <code><span title="numpy.typing.NDArray">NDArray</span>[<span title="numpy.floating">floating</span>]</code>
+          –
+          <div class="doc-md-description">
+            <p>checkpoint).</p>
+          </div>
+        </li>
+    </ul>
+
+
+<p><span class="doc-section-title">Raises:</span></p>
+    <ul>
+        <li class="doc-section-item field-body">
+              <code><span title="ValueError">ValueError</span></code>
+            –
+          <div class="doc-md-description">
+            <p>If <code>obs["agent"][uid]["state"]</code> is missing or
+its length disagrees with the loaded actor's input
+dimension.</p>
+          </div>
+        </li>
+    </ul>
+
+
+            <details class="mkdocstrings-source">
+              <summary>Source code in <code>src/chamber/partners/frozen_harl.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">214</span>
+<span class="normal">215</span>
+<span class="normal">216</span>
+<span class="normal">217</span>
+<span class="normal">218</span>
+<span class="normal">219</span>
+<span class="normal">220</span>
+<span class="normal">221</span>
+<span class="normal">222</span>
+<span class="normal">223</span>
+<span class="normal">224</span>
+<span class="normal">225</span>
+<span class="normal">226</span>
+<span class="normal">227</span>
+<span class="normal">228</span>
+<span class="normal">229</span>
+<span class="normal">230</span>
+<span class="normal">231</span>
+<span class="normal">232</span>
+<span class="normal">233</span>
+<span class="normal">234</span>
+<span class="normal">235</span>
+<span class="normal">236</span>
+<span class="normal">237</span>
+<span class="normal">238</span>
+<span class="normal">239</span>
+<span class="normal">240</span>
+<span class="normal">241</span>
+<span class="normal">242</span>
+<span class="normal">243</span>
+<span class="normal">244</span>
+<span class="normal">245</span>
+<span class="normal">246</span>
+<span class="normal">247</span>
+<span class="normal">248</span>
+<span class="normal">249</span>
+<span class="normal">250</span>
+<span class="normal">251</span>
+<span class="normal">252</span>
+<span class="normal">253</span>
+<span class="normal">254</span>
+<span class="normal">255</span>
+<span class="normal">256</span>
+<span class="normal">257</span>
+<span class="normal">258</span>
+<span class="normal">259</span>
+<span class="normal">260</span>
+<span class="normal">261</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">act</span><span class="p">(</span>
+    <span class="bp">self</span><span class="p">,</span>
+    <span class="n">obs</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">object</span><span class="p">],</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">deterministic</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">floating</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Greedy HARL-actor forward pass under no-grad (ADR-009 §Decision).</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        obs: Gymnasium observation mapping. Reads the ego&#39;s flat state</span>
+<span class="sd">            from ``obs[&quot;agent&quot;][uid][&quot;state&quot;]`` (plan/04 §3.4); other</span>
+<span class="sd">            keys are ignored.</span>
+<span class="sd">        deterministic: Accepted for Protocol conformance but ignored.</span>
+<span class="sd">            Phase-0 pins the partner to the distribution mode so a</span>
+<span class="sd">            frozen partner&#39;s actions stay decoupled from torch&#39;s</span>
+<span class="sd">            global RNG (see module docstring).</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        ``np.float32`` action vector of length ``action_dim`` (the</span>
+<span class="sd">        mean head&#39;s output dimension, inferred from the loaded</span>
+<span class="sd">        checkpoint).</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">        ValueError: If ``obs[&quot;agent&quot;][uid][&quot;state&quot;]`` is missing or</span>
+<span class="sd">            its length disagrees with the loaded actor&#39;s input</span>
+<span class="sd">            dimension.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">del</span> <span class="n">deterministic</span>
+    <span class="n">actor</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ensure_loaded</span><span class="p">()</span>
+    <span class="n">state</span> <span class="o">=</span> <span class="n">_read_flat_state</span><span class="p">(</span><span class="n">obs</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_uid</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">state</span><span class="o">.</span><span class="n">shape</span> <span class="o">!=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_obs_dim</span><span class="p">,):</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;FrozenHARLPartner: obs[&#39;agent&#39;][</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_uid</span><span class="si">!r}</span><span class="s2">][&#39;state&#39;] has shape &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="nb">tuple</span><span class="p">(</span><span class="n">state</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span><span class="si">}</span><span class="s2">, expected (</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_obs_dim</span><span class="si">}</span><span class="s2">,) matching the loaded &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;actor&#39;s input dim.&quot;</span>
+        <span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+    <span class="c1"># HARL&#39;s StochasticPolicy.forward signature is</span>
+    <span class="c1"># ``(obs, rnn_states, masks, available_actions, deterministic)``.</span>
+    <span class="c1"># rnn_states + masks are placeholders since use_recurrent_policy=False;</span>
+    <span class="c1"># we pass shape-correct zeros / ones so HARL&#39;s internal ``check`` call</span>
+    <span class="c1"># accepts them. Mirrors EgoPPOTrainer.act&#39;s call site.</span>
+    <span class="n">obs_t</span> <span class="o">=</span> <span class="n">state</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">rnn_states</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_hidden_dim</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+    <span class="n">masks</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+    <span class="k">with</span> <span class="n">torch</span><span class="o">.</span><span class="n">no_grad</span><span class="p">():</span>
+        <span class="n">action_t</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">actor</span><span class="p">(</span><span class="n">obs_t</span><span class="p">,</span> <span class="n">rnn_states</span><span class="p">,</span> <span class="n">masks</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">action_t</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="chamber.partners.FrozenHARLPartner.reset" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">reset</span>
+
+
+</h3>
+<div class="doc-signature highlight"><pre><span></span><code><span class="nf">reset</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n">seed</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Ensure the checkpoint is loaded; no per-episode state (ADR-009 §Decision; plan/04 §2).</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <ul>
+        <li class="doc-section-item field-body">
+            <b><code>seed</code></b>
+              (<code><span title="int">int</span> | None</code>, default:
+                  <code>None</code>
+)
+          –
+          <div class="doc-md-description">
+            <p>Accepted for
+:class:<code>~chamber.partners.api.FrozenPartner</code> Protocol
+conformance. The partner is fully deterministic given
+the loaded weights and <code>obs</code>; seed is ignored.</p>
+          </div>
+        </li>
+    </ul>
+
+
+            <details class="mkdocstrings-source">
+              <summary>Source code in <code>src/chamber/partners/frozen_harl.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">202</span>
+<span class="normal">203</span>
+<span class="normal">204</span>
+<span class="normal">205</span>
+<span class="normal">206</span>
+<span class="normal">207</span>
+<span class="normal">208</span>
+<span class="normal">209</span>
+<span class="normal">210</span>
+<span class="normal">211</span>
+<span class="normal">212</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">reset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">seed</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Ensure the checkpoint is loaded; no per-episode state (ADR-009 §Decision; plan/04 §2).</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        seed: Accepted for</span>
+<span class="sd">            :class:`~chamber.partners.api.FrozenPartner` Protocol</span>
+<span class="sd">            conformance. The partner is fully deterministic given</span>
+<span class="sd">            the loaded weights and ``obs``; seed is ignored.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">del</span> <span class="n">seed</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_ensure_loaded</span><span class="p">()</span>
 </code></pre></div></td></tr></table></div>
             </details>
     </div>
@@ -34531,13 +35409,14 @@ instrument the partner-swap λ-reset transient (ADR-006 risk #3 / ADR-004
 they share an env shape; the per-partner <code>uid</code> matches the ADR-001
 smoke robot tuple (panda_wristcam / fetch / allegro_hand_right).</p>
 <p>The frozen-RL checkpoint URIs (<code>local://artifacts/...</code>) are produced
-by M4b training runs. The :class:<code>~chamber.partners.frozen_mappo.FrozenMAPPOPartner</code>
-adapter (T4.5) is registered as <code>frozen_mappo</code> and loads the second
-spec via :func:<code>chamber.partners.registry.load_partner</code>. The
-<code>FrozenHARLPartner</code> adapter (T4.6) for the third spec lands in a
-follow-up PR; calling <code>load_partner</code> on that spec raises
-:class:<code>KeyError</code> in the interim — by design (loud failure surfaces the
-deferral) per plan/04 §1.</p>
+by M4b training runs. Both
+:class:<code>~chamber.partners.frozen_mappo.FrozenMAPPOPartner</code> (T4.5,
+registered as <code>frozen_mappo</code>) and
+:class:<code>~chamber.partners.frozen_harl.FrozenHARLPartner</code> (T4.6,
+registered as <code>frozen_harl</code>) load their specs via
+:func:<code>chamber.partners.registry.load_partner</code>. The full M4 gate
+(plan/04 §6 #1, T4.9 draft-zoo round-trip integration test) lands in
+a follow-up PR.</p>
 
 
 <p><span class="doc-section-title">Returns:</span></p>
@@ -34641,7 +35520,8 @@ deferral) per plan/04 §1.</p>
 <span class="normal">78</span>
 <span class="normal">79</span>
 <span class="normal">80</span>
-<span class="normal">81</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">make_phase0_draft_zoo</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">PartnerSpec</span><span class="p">]:</span>
+<span class="normal">81</span>
+<span class="normal">82</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">make_phase0_draft_zoo</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">PartnerSpec</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Return the 3-partner Stage-3 draft zoo (ADR-009 §Consequences &quot;draft-zoo scoping&quot;).</span>
 
 <span class="sd">    The draft zoo is the minimum viable zoo that lets the ADR-007 rev-3</span>
@@ -34652,13 +35532,14 @@ deferral) per plan/04 §1.</p>
 <span class="sd">    smoke robot tuple (panda_wristcam / fetch / allegro_hand_right).</span>
 
 <span class="sd">    The frozen-RL checkpoint URIs (``local://artifacts/...``) are produced</span>
-<span class="sd">    by M4b training runs. The :class:`~chamber.partners.frozen_mappo.FrozenMAPPOPartner`</span>
-<span class="sd">    adapter (T4.5) is registered as ``frozen_mappo`` and loads the second</span>
-<span class="sd">    spec via :func:`chamber.partners.registry.load_partner`. The</span>
-<span class="sd">    ``FrozenHARLPartner`` adapter (T4.6) for the third spec lands in a</span>
-<span class="sd">    follow-up PR; calling ``load_partner`` on that spec raises</span>
-<span class="sd">    :class:`KeyError` in the interim — by design (loud failure surfaces the</span>
-<span class="sd">    deferral) per plan/04 §1.</span>
+<span class="sd">    by M4b training runs. Both</span>
+<span class="sd">    :class:`~chamber.partners.frozen_mappo.FrozenMAPPOPartner` (T4.5,</span>
+<span class="sd">    registered as ``frozen_mappo``) and</span>
+<span class="sd">    :class:`~chamber.partners.frozen_harl.FrozenHARLPartner` (T4.6,</span>
+<span class="sd">    registered as ``frozen_harl``) load their specs via</span>
+<span class="sd">    :func:`chamber.partners.registry.load_partner`. The full M4 gate</span>
+<span class="sd">    (plan/04 §6 #1, T4.9 draft-zoo round-trip integration test) lands in</span>
+<span class="sd">    a follow-up PR.</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        A fresh list of 3 :class:`~chamber.partners.api.PartnerSpec`</span>
@@ -34901,8 +35782,7 @@ admission filter (ADR-009 §Validation criteria "By Phase-1 end").</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/chamber/partners/selection.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 84</span>
-<span class="normal"> 85</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 85</span>
 <span class="normal"> 86</span>
 <span class="normal"> 87</span>
 <span class="normal"> 88</span>
@@ -34921,7 +35801,8 @@ admission filter (ADR-009 §Validation criteria "By Phase-1 end").</p>
 <span class="normal">101</span>
 <span class="normal">102</span>
 <span class="normal">103</span>
-<span class="normal">104</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">select_zoo</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="nb">object</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="nb">object</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NoReturn</span><span class="p">:</span>
+<span class="normal">104</span>
+<span class="normal">105</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">select_zoo</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="nb">object</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="nb">object</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NoReturn</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;FCP/MEP-style zoo construction — Phase-1 stub (ADR-009 §Decision).</span>
 
 <span class="sd">    The Phase-1 implementation is the three-axis pipeline (policy class x</span>
