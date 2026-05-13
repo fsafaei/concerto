@@ -36981,6 +36981,10 @@ violation / fallback rates, and a sub-row showing the HRS
 vector as <code>axis: score (weight)</code> pairs. The vector sub-row is
 <em>unconditional</em> per reviewer P1-8 — entries lacking an HRSVector
 raise :class:<code>ValueError</code>.</p>
+<p>Entries built from a single spike-run archive are tagged
+<code>[PARTIAL: &lt;axis&gt;]</code> in front of the method name (reviewer P1-3)
+so a one-axis row is never mistaken for a complete HRS-bundle row
+(ADR-008 §Decision binds the bundle to the surviving-axis set).</p>
 
 
 <p><span class="doc-section-title">Parameters:</span></p>
@@ -37077,7 +37081,17 @@ that did not produce a HRS vector per reviewer P1-8.</p>
 <span class="normal">238</span>
 <span class="normal">239</span>
 <span class="normal">240</span>
-<span class="normal">241</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">render_leaderboard</span><span class="p">(</span><span class="n">entries</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">LeaderboardEntry</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="normal">241</span>
+<span class="normal">242</span>
+<span class="normal">243</span>
+<span class="normal">244</span>
+<span class="normal">245</span>
+<span class="normal">246</span>
+<span class="normal">247</span>
+<span class="normal">248</span>
+<span class="normal">249</span>
+<span class="normal">250</span>
+<span class="normal">251</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">render_leaderboard</span><span class="p">(</span><span class="n">entries</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">LeaderboardEntry</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Render the CHAMBER leaderboard (ADR-008 §Decision; reviewer P1-8).</span>
 
 <span class="sd">    Entries are sorted by ``hrs_scalar`` descending. Each method has</span>
@@ -37086,6 +37100,11 @@ that did not produce a HRS vector per reviewer P1-8.</p>
 <span class="sd">    vector as ``axis: score (weight)`` pairs. The vector sub-row is</span>
 <span class="sd">    *unconditional* per reviewer P1-8 — entries lacking an HRSVector</span>
 <span class="sd">    raise :class:`ValueError`.</span>
+
+<span class="sd">    Entries built from a single spike-run archive are tagged</span>
+<span class="sd">    ``[PARTIAL: &lt;axis&gt;]`` in front of the method name (reviewer P1-3)</span>
+<span class="sd">    so a one-axis row is never mistaken for a complete HRS-bundle row</span>
+<span class="sd">    (ADR-008 §Decision binds the bundle to the surviving-axis set).</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        entries: Sequence of :class:`LeaderboardEntry` records.</span>
@@ -37114,8 +37133,13 @@ that did not produce a HRS vector per reviewer P1-8.</p>
         <span class="s2">&quot;| --- | --- | ---: | ---: | ---: |&quot;</span><span class="p">,</span>
     <span class="p">]</span>
     <span class="k">for</span> <span class="n">rank</span><span class="p">,</span> <span class="n">entry</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">sorted_entries</span><span class="p">,</span> <span class="n">start</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">entry</span><span class="o">.</span><span class="n">spike_runs</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">partial_axis</span> <span class="o">=</span> <span class="n">entry</span><span class="o">.</span><span class="n">hrs_vector</span><span class="o">.</span><span class="n">entries</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">axis</span>
+            <span class="n">method_label</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;[PARTIAL: </span><span class="si">{</span><span class="n">partial_axis</span><span class="si">}</span><span class="s2">] `</span><span class="si">{</span><span class="n">entry</span><span class="o">.</span><span class="n">method_id</span><span class="si">}</span><span class="s2">`&quot;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">method_label</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;`</span><span class="si">{</span><span class="n">entry</span><span class="o">.</span><span class="n">method_id</span><span class="si">}</span><span class="s2">`&quot;</span>
         <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-            <span class="sa">f</span><span class="s2">&quot;| </span><span class="si">{</span><span class="n">rank</span><span class="si">}</span><span class="s2"> | `</span><span class="si">{</span><span class="n">entry</span><span class="o">.</span><span class="n">method_id</span><span class="si">}</span><span class="s2">` | </span><span class="si">{</span><span class="n">entry</span><span class="o">.</span><span class="n">hrs_scalar</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2"> &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;| </span><span class="si">{</span><span class="n">rank</span><span class="si">}</span><span class="s2"> | </span><span class="si">{</span><span class="n">method_label</span><span class="si">}</span><span class="s2"> | </span><span class="si">{</span><span class="n">entry</span><span class="o">.</span><span class="n">hrs_scalar</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2"> &quot;</span>
             <span class="sa">f</span><span class="s2">&quot;| </span><span class="si">{</span><span class="n">_fmt_pct</span><span class="p">(</span><span class="n">entry</span><span class="o">.</span><span class="n">violation_rate</span><span class="p">)</span><span class="si">}</span><span class="s2"> &quot;</span>
             <span class="sa">f</span><span class="s2">&quot;| </span><span class="si">{</span><span class="n">_fmt_pct</span><span class="p">(</span><span class="n">entry</span><span class="o">.</span><span class="n">fallback_rate</span><span class="p">)</span><span class="si">}</span><span class="s2"> |&quot;</span>
         <span class="p">)</span>

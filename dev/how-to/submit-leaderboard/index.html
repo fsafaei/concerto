@@ -1376,20 +1376,36 @@ HRS vector and the headline scalar per
    tagged YAML. See <a href="../run-spike/">Run a spike with a custom
    hypothesis</a> for the end-to-end flow, including the
    M2 comm-degradation surface that the Stage-2 CM rows consume.</li>
-<li>Compose the leaderboard entry with <code>chamber-eval &lt;spike_run.json&gt;
-   --method-id &lt;id&gt; --output entry.json</code>. The pipeline (cluster
-   bootstrap → paired-cluster gap test → HRS vector → HRS scalar)
-   uses <code>concerto.training.seeding.derive_substream</code> for deterministic
-   resampling; identical inputs and seed produce byte-identical
-   outputs.</li>
-<li>Render the headline tables with <code>chamber-render-tables
+<li>
+<p>Compose the leaderboard entry with <code>chamber-eval</code>. The HRS bundle
+   per <a href="https://github.com/fsafaei/concerto/blob/main/adr/ADR-008-hrs-bundle.md">ADR-008 §Decision</a>
+   covers the surviving ADR-007 axes, so pass one spike-run archive
+   per surviving axis in a single invocation — the CLI builds the
+   full HRS vector + scalar over the union (reviewer P1-3). Example:</p>
+<div class="highlight"><pre><span></span><code>chamber-eval<span class="w"> </span>stage1_as.json<span class="w"> </span>stage1_om.json<span class="w"> </span>stage2_cm.json<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--method-id<span class="w"> </span>concerto<span class="w"> </span>--output<span class="w"> </span>entry.json
+</code></pre></div>
+<p>Passing a single spike-run archive is still supported, but the
+rendered row is tagged <code>[PARTIAL: &lt;axis&gt;]</code> so a one-axis result
+is never mistaken for a complete HRS-bundle row. If your run
+legitimately covers the same axis twice (e.g. two AS spikes with
+different control rates), pass <code>--allow-duplicate-axes</code> and the
+axis name is suffixed with the <code>spike_id</code> in the rendered output
+for disambiguation; without the flag the CLI exits with status 2.
+The pipeline (cluster bootstrap → paired-cluster gap test → HRS
+vector → HRS scalar) uses
+<code>concerto.training.seeding.derive_substream</code> for deterministic
+resampling; identical inputs and seed produce byte-identical
+outputs.
+6. Render the headline tables with <code>chamber-render-tables
    --leaderboard entry.json</code> and (if your spike emits the ADR-014
    three-table safety report) <code>chamber-render-tables --safety-report
-   three_tables.json [--fmt latex]</code>.</li>
-<li>Open a PR that adds the tagged YAML and the result archive under
+   three_tables.json [--fmt latex]</code>.
+7. Open a PR that adds the tagged YAML and the result archive under
    <code>spikes/results/</code>. The CI gate re-renders the leaderboard table
    from the tagged result archives; no hand-edit of the README is
-   required.</li>
+   required.</p>
+</li>
 </ol>
 <p>External contributors who do not have write access to the upstream
 repository can attach the signed result archive to a PR as a release
