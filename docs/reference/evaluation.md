@@ -76,11 +76,17 @@ the citation.
 Beyond mean ± 95% CI, the CHAMBER leaderboard reports the
 rliable-style robust aggregate metrics introduced by Agarwal et al.
 (2021) [`agarwal2021precipice`]: interquartile mean (IQM),
-optimality gap, and performance profiles. IQM is the median of the middle 50% of scores, robust to
-outliers in either tail; optimality gap reports the proportion of the
-score distribution below a target threshold; performance profiles
-visualise the full score distribution as a CDF, surfacing dispersion
-that point estimates hide.
+optimality gap, and performance profiles. IQM is the median of the
+middle 50% of scores, robust to outliers in either tail.
+
+Optimality gap reports the **expected shortfall** below a target
+threshold: `optimality_gap(X, τ) = E[max(τ - X, 0)]`. This is the
+Agarwal et al. 2021 / rliable definition: not the empirical CDF
+at τ, but the average amount by which the distribution falls
+short of τ.
+
+Performance profiles visualise the full score distribution as a CDF,
+surfacing dispersion that point estimates hide.
 
 The rliable contract is pinned in
 [`ADR-014`](https://github.com/fsafaei/concerto/blob/main/adr/ADR-014-safety-reporting.md)
@@ -113,6 +119,10 @@ definitions) so the leaderboard remains renderable without the
 optional extra; performance profiles delegate to `rliable` when the
 extra is installed and return `None` with a `RuntimeWarning`
 otherwise.
+
+Native IQM and optimality gap are computed without optional
+dependencies. Performance profiles delegate to rliable; install via
+`uv sync --extra eval` to enable them.
 
 See `agarwal2021precipice` in [`literature.md §5`](literature.md)
 for the citation.
