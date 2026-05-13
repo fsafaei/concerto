@@ -98,29 +98,29 @@ class TestPhase1SelectZooStub:
             select_zoo("alpha", n=42, target="stage0_smoke")
 
 
-class TestDeferredFrozenRLLoad:
-    """Pin the deferral as intentional: load_partner on specs [1] and [2] raises KeyError.
+class TestFrozenRLRegistrationStatus:
+    """Pin which draft-zoo specs ``load_partner`` resolves (ADR-009 §Decision).
 
-    ADR-009 §Decision; plan/04 §1: the ``frozen_mappo`` and ``frozen_harl``
-    classes referenced in the draft-zoo specs are deferred to M4 Phase 3 (T4.5
-    / T4.6 / T4.9 are blocked-by M4b which produces the ``.pt`` checkpoints).
-    Until those classes are registered, calling
-    :func:`chamber.partners.registry.load_partner` on the second / third spec
-    raises :class:`KeyError` listing the currently-registered keys. The
-    failure is loud by design — silent fall-back would hide the deferral.
-    Once M4 Phase 3 lands, this test will start failing and is the natural
-    tripwire for the registration follow-up.
+    Plan/04 §1: the heuristic (T4.4) + frozen-MAPPO (T4.5) adapters are
+    registered in M4 Phase 1/2; the frozen-HARL adapter (T4.6) lands in a
+    follow-up PR. Until then, calling
+    :func:`chamber.partners.registry.load_partner` on the third spec
+    raises :class:`KeyError` listing the registered keys — loud failure
+    surfaces the deferral. Once T4.6 lands, the
+    :meth:`test_load_frozen_harl_spec_raises_until_phase3` assertion
+    flips and the M4-gate integration test (T4.9) takes over.
     """
 
-    def test_load_frozen_mappo_spec_raises_until_phase3(self) -> None:
-        """T4.5 deferred: ``frozen_mappo`` is not registered in M4a Phase 1."""
+    def test_load_frozen_mappo_spec_succeeds(self) -> None:
+        """T4.5: ``frozen_mappo`` is registered and ``load_partner`` returns the wrapper."""
+        from chamber.partners.frozen_mappo import FrozenMAPPOPartner
         from chamber.partners.registry import load_partner
 
-        with pytest.raises(KeyError, match="frozen_mappo"):
-            load_partner(make_phase0_draft_zoo()[1])
+        partner = load_partner(make_phase0_draft_zoo()[1])
+        assert isinstance(partner, FrozenMAPPOPartner)
 
     def test_load_frozen_harl_spec_raises_until_phase3(self) -> None:
-        """T4.6 deferred: ``frozen_harl`` is not registered in M4a Phase 1."""
+        """T4.6 deferred: ``frozen_harl`` is not registered until the follow-up PR."""
         from chamber.partners.registry import load_partner
 
         with pytest.raises(KeyError, match="frozen_harl"):
