@@ -1,6 +1,6 @@
 # ADR-010: Foundation-model partner selection
 
-**Status.** Proposed
+**Status.** Accepted (2026-05-13)
 **Authors.** Farhad Safaei
 **Reviewers.** _to fill_
 **Tags.** v0.2 §3.5
@@ -56,3 +56,8 @@ By Phase-1 end: the OpenVLA LoRA-adapted partner achieves ≥ 50% task success o
 1. **Note 31 (Octo) pending.** Does Octo offer a structurally distinct third FM stratum or overlap with CrossFormer's co-trained generalist role? Option B → C upgrade decision deferred until note 31 is complete.
 2. **#verify:** Can CrossFormer's masked-modality interface be applied to bimanual tasks (two separate readout tokens, one per arm) without modifying the frozen checkpoint? No evidence in either manuscript (note 32 or 33).
 3. **#design-decision:** CBF interception for CrossFormer's 100-action chunks at 20 Hz — intercept per-chunk before execution (cheaper but coarser granularity) or per-action within the chunk (safer but requires chunk decomposition)? Not resolvable from current notes alone; requires §6 design spike.
+
+## Revision history
+
+- 2026-05-13 status re-classification: status changed from Proposed to **RFC** under the new ADR status taxonomy (see [ADR-INDEX §Status taxonomy](ADR-INDEX.md#status-taxonomy)); Phase-1 lock pending; no Decision content is altered.
+- 2026-05-13 lock: promoted to **Accepted (2026-05-13)** under the solo-developer working policy in ADR-INDEX (Option B — OpenVLA + CrossFormer — is the committed Phase-1 FM stratum); no Decision content is altered.

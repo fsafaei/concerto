@@ -1,6 +1,6 @@
 # ADR-011: Baseline set — which of B1–B7 ship in Phase 1
 
-**Status.** Proposed (dependency update 2026-05-08 in light of ADR-007 rev 3 staged rollout)
+**Status.** Accepted (2026-05-13) (dependency update 2026-05-08 in light of ADR-007 rev 3 staged rollout)
 **Authors.** Farhad Safaei
 **Reviewers.** _to fill_
 **Tags.** v0.2 §3.10 + Phase 1
@@ -55,3 +55,8 @@ By Phase 1 end: (1) all five shipped baselines (B1, B2, B3, B6, B7) reproduce ta
 - #design-decision (from `notes/tier1/25_harl.md`): Is HATD3 or HAPPO preferred as the B5 implementation? HATD3 has better sample efficiency on continuous tasks (§5.2) but a replay buffer complicates AHT adaptation; HAPPO is simpler to freeze-partner.
 - #verify (from `notes/tier1/25_harl.md`): Do the Bi-DexHands tasks (two identical Shadow Hands) constitute heterogeneous-embodiment cooperation for our purposes? If both embodiments are identical, HARL's Bi-DexHands result does not represent the mobile-base × fixed-arm setting and the comparison must use a different HARL benchmark.
 - #verify (from `notes/tier1/23_hetgppo.md`): Is the DTDE GNN architecture compatible with a frozen-partner AHT setup — can only the ego agent's parameters be updated while the partner's GNN encoder/decoder are frozen and its communication outputs treated as observations?
+
+## Revision history
+
+- 2026-05-13 status re-classification: status changed from Proposed to **RFC** under the new ADR status taxonomy (see [ADR-INDEX §Status taxonomy](ADR-INDEX.md#status-taxonomy)); Phase-1 lock pending; no Decision content is altered.
+- 2026-05-13 lock: promoted to **Accepted (2026-05-13)** under the solo-developer working policy in ADR-INDEX (Option A — ship B1, B2, B3, B6, B7 in Phase 1, defer B5 — is the committed scope); no Decision content is altered.

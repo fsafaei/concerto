@@ -1,6 +1,7 @@
 # ADR-015: Tier-task scope freeze
 
-**Status.** Proposed
+**Status.** RFC
+**Open work.** No tier-task scope locked; waiting on Phase-0 customer-discovery synthesis. ADR remains RFC until a Decision is written. See [ADR-INDEX footnote e](ADR-INDEX.md#open-work-flags).
 **Authors.** Farhad Safaei
 **Reviewers.** _to fill_
 **Tags.** v0.2 §3.3 + §7.3
@@ -52,3 +53,8 @@ By Phase-1 end (Month-7 gate): (1) each confirmed tier has a documented integrat
 - Does customer-discovery synthesis confirm, reduce, or replace the plan-default task tiers? (primary blocker for Decision; resolves at Month-3/7 review gate — no ADR split needed if Option A is confirmed)
 - Is Tier-3 long-object co-manipulation achievable in ManiSkill2 without custom contact-simulation extensions? (#design-decision; defers to ADR-001 benchmark-fork decision and ADR-005 simulator-base selection)
 - What partner-capability gap is required between tiers to ensure cooperation patterns are pedagogically distinct and not collinear in behavior space? (#verify against BiGym difficulty-ladder ACT calibration, notes/tier2/57_bigym.md, at Phase-1 benchmark-spec review)
+
+## Revision history
+
+- 2026-05-13 status re-classification: status changed from Proposed to **RFC** under the new ADR status taxonomy (see [ADR-INDEX §Status taxonomy](ADR-INDEX.md#status-taxonomy)); Phase-1 lock pending DACH customer-discovery synthesis; no Decision content is altered.
+- 2026-05-13 lock review: ADR is held at **RFC** under the solo-developer working policy in ADR-INDEX. Unlike the 13 ADRs that promoted to Accepted on the same date, this ADR's Decision section is still "pending Phase-0 customer-discovery synthesis" — there is nothing to lock; promotion to Accepted is gated on writing a real Decision.

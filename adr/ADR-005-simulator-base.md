@@ -1,6 +1,6 @@
 # ADR-005: Simulator base — Isaac Lab, MuJoCo, PyBullet, ManiSkill
 
-**Status.** Proposed
+**Status.** Accepted (2026-05-13)
 **Authors.** Farhad Safaei
 **Reviewers.** _to fill_
 **Tags.** v0.2 §3.1, §3.9, BENCH
@@ -56,3 +56,8 @@ Resolved as a corollary of ADR-001's Phase-0 acceptance test: the 50-line smoke 
 
 - Whether Warp-MPM soft-body support is needed for any §3.2 tasks — if not, the Warp dependency can be dropped at install time. Human decision at ADR-015 (tier-task scope freeze).
 - SAPIEN vs. MuJoCo contact-calibration delta for dexterous-hand tasks — defer to §3.2 task implementation; not an ADR-level concern unless the delta exceeds 10 pp at the Phase-1 gate.
+
+## Revision history
+
+- 2026-05-13 status re-classification: status changed from Proposed to **Provisional** under the new ADR status taxonomy (see [ADR-INDEX §Status taxonomy](ADR-INDEX.md#status-taxonomy)); no Decision content is altered.
+- 2026-05-13 lock: promoted to **Accepted (2026-05-13)** under the solo-developer working policy in ADR-INDEX (corollary of ADR-001; SAPIEN inherited via the merged ManiSkill v3 install); no Decision content is altered.

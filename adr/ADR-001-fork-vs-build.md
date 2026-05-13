@@ -1,6 +1,6 @@
 # ADR-001: Fork ManiSkill2 vs. build standalone benchmark
 
-**Status.** Proposed
+**Status.** Accepted (2026-05-13)
 **Authors.** Farhad Safaei
 **Reviewers.** _to fill_
 **Tags.** v0.2 §3.1, BENCH, infrastructure
@@ -58,3 +58,8 @@ Phase-0 acceptance test (≤2 days): a 50-line script that (i) instantiates an e
 - ADR-005 must be updated to reflect Isaac Lab is no longer a live primary alternative; defer if multi-GPU rollout benchmarking between ManiSkill v3 and Isaac Lab is requested before Phase-1 lock.
 - Whether `build_separate=True` at ≥8 heterogeneous `robot_uids` introduces silent rendering artefacts or physics drift — flagged as a smoke-test verification item above.
 - Lit-review update to "ManiSkill v3" throughout §3 of v0.2 plan — human decision after smoke test passes; not an ADR concern.
+
+## Revision history
+
+- 2026-05-13 status re-classification: status changed from Proposed to **Provisional** under the new ADR status taxonomy (see [ADR-INDEX §Status taxonomy](ADR-INDEX.md#status-taxonomy)); no Decision content is altered.
+- 2026-05-13 lock: promoted to **Accepted (2026-05-13)** under the solo-developer working policy in ADR-INDEX (Decision is implemented on `main` and the Phase-0 smoke test is green); no Decision content is altered.
