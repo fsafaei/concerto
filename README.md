@@ -244,6 +244,9 @@ Full documentation: [**fsafaei.github.io/concerto**](https://fsafaei.github.io/c
 - [**API reference**](https://fsafaei.github.io/concerto/latest/reference/api/) &mdash; generated from docstrings.
 - [**ADR index**](https://fsafaei.github.io/concerto/latest/reference/adrs/) &mdash; 15 design decisions with full rationale.
 - [**Glossary**](https://fsafaei.github.io/concerto/latest/reference/glossary/) &mdash; HRS, AoI, OSCBF, FCP/MEP, all defined.
+- [**Literature**](https://fsafaei.github.io/concerto/latest/reference/literature/) &mdash; five-cluster bibliography (AHT/ZSC, safe control, conformal prediction, benchmarks, reproducibility).
+- [**Standards**](https://fsafaei.github.io/concerto/latest/reference/standards/) &mdash; ISO 10218-2:2025 + IEC 62061 + IEEE TSN + 3GPP R17 references, with the axis &rarr; standard &rarr; metric &rarr; report-table flowchart.
+- [**Evaluation**](https://fsafaei.github.io/concerto/latest/reference/evaluation/) &mdash; the multi-seed and rliable reporting contract for the leaderboard.
 
 ---
 

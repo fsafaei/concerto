@@ -36,7 +36,11 @@ plugins:
 
 markdown_extensions:
   - admonition
-  - pymdownx.superfences
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
   - pymdownx.details
   - pymdownx.snippets
   - pymdownx.tabbed:
@@ -56,6 +60,9 @@ nav:
       - API: reference/api.md
       - ADRs: reference/adrs.md
       - Glossary: reference/glossary.md
+      - Literature: reference/literature.md
+      - Standards: reference/standards.md
+      - Evaluation: reference/evaluation.md
   - Explanation:
       - Why heterogeneous AHT?: explanation/why-aht.md
       - Why fork ManiSkill v3?: explanation/why-maniskill.md
