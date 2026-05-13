@@ -33,7 +33,7 @@ from typing import TYPE_CHECKING
 import numpy as np
 
 from concerto.safety.api import DEFAULT_WARMUP_STEPS
-from concerto.safety.cbf_qp import AgentSnapshot
+from concerto.safety.cbf_qp import AgentSnapshot, pair_h_value
 
 if TYPE_CHECKING:
     from concerto.safety.api import FloatArray, SafetyState
@@ -55,19 +55,30 @@ def update_lambda(
     """Conformal slack update (Huriot & Sibai 2025 §IV; ADR-004 §Decision).
 
     Applies Theorem 3's rule ``lambda_{k+1} = lambda_k + eta * (eps - l_k)``
-    in place on ``state.lambda_``. During the partner-swap warmup window
-    (``in_warmup=True``), ``eps`` is multiplied by
-    :data:`_WARMUP_EPSILON_FACTOR` so the constraint stays tighter than
-    the steady-state target (ADR-004 risk-mitigation #2). The
-    ``warmup_steps_remaining`` counter decrements each warmup step
-    (clamped to zero).
+    in place on ``state.lambda_``. This is the low-level primitive:
+    callers MUST supply ``loss_k`` as the Huriot & Sibai §IV.A
+    prediction-gap loss — i.e. the output of
+    :func:`compute_per_pair_loss` against a partner-trajectory
+    predictor — and NOT the constraint-violation signal ``-h`` from the
+    CBF backbone. Theorem 3's risk bound holds for the prediction gap
+    only; driving the update from ``-h`` would conflate per-step
+    constraint violations with predictor error and break the cited
+    guarantee. For the wired-up form that consumes a predictor stub
+    directly, use :func:`update_lambda_from_predictor`.
+
+    During the partner-swap warmup window (``in_warmup=True``), ``eps``
+    is multiplied by :data:`_WARMUP_EPSILON_FACTOR` so the constraint
+    stays tighter than the steady-state target (ADR-004
+    risk-mitigation #2). The ``warmup_steps_remaining`` counter
+    decrements each warmup step (clamped to zero).
 
     Args:
         state: Mutable :class:`concerto.safety.api.SafetyState`;
             ``lambda_`` is updated in place.
-        loss_k: Per-pair loss ``l_k``, shape ``(N_pairs,)`` matching
-            ``state.lambda_``. Computed from the pairwise CBF gap by
-            :func:`compute_per_pair_loss` (Huriot & Sibai §IV.A).
+        loss_k: Per-pair prediction-gap loss ``l_k = max(0, predicted_h -
+            actual_h)``, shape ``(N_pairs,)`` matching ``state.lambda_``.
+            Derived from :func:`compute_per_pair_loss` (Huriot &
+            Sibai §IV.A), not from ``FilterInfo["constraint_violation"]``.
         in_warmup: When True, narrow ``eps`` and decrement
             ``warmup_steps_remaining`` (ADR-004 risk-mitigation #2).
 
@@ -103,6 +114,137 @@ def constant_velocity_predict(snap: AgentSnapshot, dt: float) -> AgentSnapshot:
         velocity=snap.velocity.copy(),
         radius=snap.radius,
     )
+
+
+def compute_prediction_gap_for_pairs(
+    snaps_now: dict[str, AgentSnapshot],
+    snaps_predicted: dict[str, AgentSnapshot],
+    *,
+    alpha_pair: float,
+    gamma: float,
+) -> FloatArray:
+    """Per-pair Huriot & Sibai §IV.A prediction-gap loss from snapshot pairs (ADR-004 §Decision).
+
+    Evaluates the Wang-Ames-Egerstedt 2017 §III pairwise barrier value
+    on both ``snaps_now`` (the actual current state) and
+    ``snaps_predicted`` (the prediction made at the previous step under
+    a partner-trajectory predictor, e.g. :func:`constant_velocity_predict`)
+    and returns the per-pair loss
+    ``l_k = max(0, predicted_h - actual_h)`` — positive when the
+    predictor over-estimated the safe set, zero otherwise.
+
+    Args:
+        snaps_now: Per-agent snapshots at the current step ``k+1``.
+        snaps_predicted: Per-agent snapshots predicted for step ``k+1``
+            from the previous step's state.
+        alpha_pair: Joint braking capacity used in the barrier
+            ``h_ij = sqrt(2 * alpha_pair * max(|Dp| - D_s, 0)) +
+            (Dp^T/|Dp|) Dv`` (Wang-Ames-Egerstedt 2017 §III). Typically
+            ``2 * bounds.action_norm`` for symmetric agents.
+        gamma: Class-K function gain. Accepted for forward
+            compatibility with drift-aware variants; the
+            relative-degree-1 barrier value itself does not depend on
+            ``gamma``.
+
+    Returns:
+        Per-pair loss, shape ``(N_pairs,)``, dtype ``float64``. Pair
+        order is the upper-triangular iteration ``(i, j) with i < j``
+        over the shared key order of ``snaps_now``.
+
+    Raises:
+        ValueError: If the two snapshot dicts do not share identical
+            key order (the pair-index alignment with
+            ``state.lambda_`` depends on it).
+    """
+    del gamma  # currently unused; kept on the signature for forward compat
+    uids_now = list(snaps_now.keys())
+    uids_pred = list(snaps_predicted.keys())
+    if uids_now != uids_pred:
+        msg = (
+            "snaps_now and snaps_predicted must share identical key order; "
+            f"got {uids_now!r} vs {uids_pred!r}"
+        )
+        raise ValueError(msg)
+    n = len(uids_now)
+    n_pairs = (n * (n - 1)) // 2
+    predicted_h = np.zeros(n_pairs, dtype=np.float64)
+    actual_h = np.zeros(n_pairs, dtype=np.float64)
+    pair_idx = 0
+    for a, uid_i in enumerate(uids_now):
+        for uid_j in uids_now[a + 1 :]:
+            predicted_h[pair_idx] = pair_h_value(
+                snaps_predicted[uid_i], snaps_predicted[uid_j], alpha_pair=alpha_pair
+            )
+            actual_h[pair_idx] = pair_h_value(
+                snaps_now[uid_i], snaps_now[uid_j], alpha_pair=alpha_pair
+            )
+            pair_idx += 1
+    return compute_per_pair_loss(predicted_h, actual_h)
+
+
+def update_lambda_from_predictor(
+    state: SafetyState,
+    snaps_now: dict[str, AgentSnapshot],
+    snaps_prev: dict[str, AgentSnapshot],
+    *,
+    alpha_pair: float,
+    gamma: float,
+    dt: float,
+    in_warmup: bool = False,
+) -> FloatArray:
+    """Wire the constant-velocity predictor into the conformal update (ADR-004 §Decision).
+
+    Computes the predictor's forecast for step ``k+1`` from the previous
+    step's snapshots ``snaps_prev``, evaluates the per-pair prediction-
+    gap loss against the actual ``snaps_now``, and applies the Huriot &
+    Sibai 2025 §IV update rule via :func:`update_lambda`. The signal
+    driving ``lambda`` is the predictor's error from one step ago — the
+    quantity Theorem 3's risk bound is stated against, not the per-step
+    CBF gap from the QP backbone.
+
+    Args:
+        state: Mutable :class:`SafetyState`; ``lambda_`` is updated in
+            place.
+        snaps_now: Per-agent snapshots at the current step ``k+1``.
+        snaps_prev: Per-agent snapshots at the previous step ``k``.
+        alpha_pair: Joint braking capacity used in the barrier
+            evaluation (same value the CBF backbone uses, typically
+            ``2 * bounds.action_norm`` for symmetric agents).
+        gamma: Class-K function gain. Forwarded for forward compat
+            with drift-aware loss forms.
+        dt: Control-step duration in seconds. The predictor extrapolates
+            ``snaps_prev`` forward by ``dt`` to obtain the prediction
+            of ``snaps_now``.
+        in_warmup: When True, narrow ``eps`` and decrement
+            ``warmup_steps_remaining`` (ADR-004 risk-mitigation #2).
+
+    Returns:
+        The per-pair prediction-gap loss vector used to drive the
+        update — callers populate
+        :class:`concerto.safety.api.FilterInfo` ``"prediction_gap_loss"``
+        from this for the ADR-014 three-table report.
+
+    Raises:
+        ValueError: If ``snaps_now`` and ``snaps_prev`` do not share
+            identical key order, or if the resulting loss shape
+            mismatches ``state.lambda_``.
+    """
+    uids = list(snaps_now.keys())
+    if uids != list(snaps_prev.keys()):
+        msg = (
+            "snaps_now and snaps_prev must share identical key order; "
+            f"got {uids!r} vs {list(snaps_prev.keys())!r}"
+        )
+        raise ValueError(msg)
+    snaps_predicted = {uid: constant_velocity_predict(snaps_prev[uid], dt) for uid in uids}
+    loss = compute_prediction_gap_for_pairs(
+        snaps_now,
+        snaps_predicted,
+        alpha_pair=alpha_pair,
+        gamma=gamma,
+    )
+    update_lambda(state, loss, in_warmup=in_warmup)
+    return loss
 
 
 def compute_per_pair_loss(
@@ -167,7 +309,9 @@ def reset_on_partner_swap(
 
 __all__ = [
     "compute_per_pair_loss",
+    "compute_prediction_gap_for_pairs",
     "constant_velocity_predict",
     "reset_on_partner_swap",
     "update_lambda",
+    "update_lambda_from_predictor",
 ]

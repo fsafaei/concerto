@@ -119,17 +119,38 @@ FilterInfo = TypedDict(
     "FilterInfo",
     {
         "lambda": FloatArray,
-        "loss_k": FloatArray,
+        "constraint_violation": FloatArray,
+        "prediction_gap_loss": FloatArray | None,
         "fallback_fired": bool,
         "qp_solve_ms": float,
     },
 )
 """Telemetry payload returned by :meth:`SafetyFilter.filter` (ADR-014 §Decision).
 
-The fields populate the three-table renderer's row data: ``lambda`` and
-``loss_k`` feed Table 3 (conservativeness gap λ mean/var vs. oracle
-gt/noLearn), ``fallback_fired`` feeds Table 2's "fallback fired" column,
-``qp_solve_ms`` feeds the OSCBF 1 kHz target check (ADR-004 §"OSCBF target").
+The fields populate the three-table renderer's row data:
+
+- ``lambda`` — current conformal slack vector; feeds Table 3
+  (conservativeness gap λ mean/var vs. oracle gt/noLearn).
+- ``constraint_violation`` — per-pair non-negative violation signal
+  ``max(0, -h_ij)`` from the CBF backbone. Zero when the constraint is
+  satisfied; positive when the barrier is in the violated half-space.
+  Counted into Table 2's per-condition violation rates.
+- ``prediction_gap_loss`` — per-pair Huriot & Sibai 2025 §IV.A loss
+  ``max(0, predicted_h - actual_h)`` against a partner-trajectory
+  predictor. This is the signal that drives the conformal update
+  (``update_lambda``); :data:`None` when no predictor is wired (the
+  CBF backbone alone cannot compute it — see
+  ``concerto.safety.conformal.update_lambda_from_predictor``).
+- ``fallback_fired`` — feeds Table 2's "fallback fired" column.
+- ``qp_solve_ms`` — feeds the OSCBF 1 kHz target check
+  (ADR-004 §"OSCBF target").
+
+The constraint-violation and prediction-gap loss are reported as
+separate cells of the ADR-014 three-table report because they answer
+different questions: ``constraint_violation`` is a per-step CBF gap
+(did the QP keep us in the safe set this step?), and
+``prediction_gap_loss`` is the conformal calibration signal (was the
+predictor's forecast of the safe set wrong?).
 """
 
 

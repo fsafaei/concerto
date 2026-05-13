@@ -158,8 +158,15 @@ def test_lambda_relaxes_constraint_brings_safe_action_closer_to_proposal() -> No
     assert diff_relaxed <= diff_zero + 1e-6
 
 
-def test_loss_k_carries_negative_barrier_value_for_conformal_layer() -> None:
-    """FilterInfo['loss_k'] is -h_ij so the conformal update can drive lambda."""
+def test_constraint_violation_is_clamped_nonnegative_per_pair_gap() -> None:
+    """FilterInfo['constraint_violation'] is max(0, -h_ij) — never negative.
+
+    The CBF backbone reports the per-step constraint-violation signal as
+    ``max(0, -h_ij)``. This is a separate signal from the Huriot-Sibai
+    prediction-gap loss that drives the conformal update; the latter
+    lives in ``info["prediction_gap_loss"]`` and is :data:`None` when no
+    predictor is wired (the default for this module).
+    """
     snaps = {
         "a": _snap(0.0, 0.0, 1.0, 0.0),
         "b": _snap(2.0, 0.0, -1.0, 0.0),
@@ -174,10 +181,10 @@ def test_loss_k_carries_negative_barrier_value_for_conformal_layer() -> None:
         state=_state(1),
         bounds=_bounds(action_norm=5.0),
     )
-    # On a closing course at d=2, h_ij is small/negative; the loss
-    # signal that the conformal layer reads should be a finite scalar.
-    assert info["loss_k"].shape == (1,)
-    assert np.isfinite(info["loss_k"]).all()
+    assert info["constraint_violation"].shape == (1,)
+    assert np.isfinite(info["constraint_violation"]).all()
+    assert (info["constraint_violation"] >= 0.0).all()
+    assert info["prediction_gap_loss"] is None
 
 
 def test_filter_rejects_lambda_shape_mismatch() -> None:
@@ -262,4 +269,5 @@ def test_three_agents_no_collision_under_random_drift() -> None:
     )
     assert set(safe.keys()) == {"a", "b", "c"}
     assert info["lambda"].shape == (3,)
-    assert info["loss_k"].shape == (3,)
+    assert info["constraint_violation"].shape == (3,)
+    assert info["prediction_gap_loss"] is None

@@ -24,7 +24,7 @@ import pytest
 from concerto.safety.api import Bounds, SafetyState
 from concerto.safety.braking import maybe_brake
 from concerto.safety.cbf_qp import AgentSnapshot, ExpCBFQP
-from concerto.safety.conformal import update_lambda
+from concerto.safety.conformal import update_lambda_from_predictor
 from concerto.safety.errors import ConcertoSafetyInfeasible
 from concerto.safety.oscbf import (
     OSCBF,
@@ -75,8 +75,11 @@ def test_full_safety_stack_runs_100_steps_without_crash() -> None:  # noqa: PLR0
        ADR-004 risk-mitigation #1).
     2. Outer exp CBF-QP if the fallback didn't fire (Wang-Ames-Egerstedt
        2017 backbone).
-    3. Conformal lambda update consuming the per-pair loss returned in
-       :class:`FilterInfo` (Huriot & Sibai 2025 Theorem 3).
+    3. Conformal lambda update consuming the per-pair prediction-gap
+       loss against the constant-velocity predictor stub (Huriot &
+       Sibai 2025 Theorem 3 — the cited risk bound holds on the
+       prediction-gap signal, distinct from the per-step constraint-
+       violation signal in ``info["constraint_violation"]``).
     4. OSCBF inner filter on a synthetic 7-DOF arm command (Morton &
        Pavone 2025 §IV).
 
@@ -113,6 +116,8 @@ def test_full_safety_stack_runs_100_steps_without_crash() -> None:  # noqa: PLR0
     step_wall_ms: list[float] = []
     fallback_fires = 0
     qp_calls = 0
+    snaps_prev: dict[str, AgentSnapshot] | None = None
+    alpha_pair_cbf = 2.0 * bounds.action_norm
 
     for k in range(n_steps):
         snaps = {
@@ -136,17 +141,30 @@ def test_full_safety_stack_runs_100_steps_without_crash() -> None:  # noqa: PLR0
         else:
             # 2. Outer CBF-QP (Wang-Ames-Egerstedt 2017).
             try:
-                safe, info = cbf.filter(
+                safe, _info = cbf.filter(
                     proposed_action=proposed,
                     obs=obs,
                     state=state,
                     bounds=bounds,
                 )
                 qp_calls += 1
-                # 3. Conformal lambda update (Huriot & Sibai 2025 §IV).
-                update_lambda(state, info["loss_k"], in_warmup=False)
+                # 3. Conformal lambda update (Huriot & Sibai 2025 §IV) —
+                # driven by the prediction-gap loss against the
+                # constant-velocity predictor stub from one step ago,
+                # not by the per-step constraint-violation signal.
+                if snaps_prev is not None:
+                    update_lambda_from_predictor(
+                        state,
+                        snaps_now=snaps,
+                        snaps_prev=snaps_prev,
+                        alpha_pair=alpha_pair_cbf,
+                        gamma=2.0,
+                        dt=dt,
+                        in_warmup=False,
+                    )
             except ConcertoSafetyInfeasible as exc:
                 pytest.fail(f"step {k}: outer CBF-QP infeasible: {exc}")
+        snaps_prev = snaps
 
         # 4. OSCBF inner filter on a synthetic arm command (Morton-Pavone §IV).
         q_dot_nom = (rng.standard_normal(n_joints) * 0.2).astype(np.float64)
