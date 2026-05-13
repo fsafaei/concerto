@@ -31,13 +31,14 @@ def make_phase0_draft_zoo() -> list[PartnerSpec]:
     smoke robot tuple (panda_wristcam / fetch / allegro_hand_right).
 
     The frozen-RL checkpoint URIs (``local://artifacts/...``) are produced
-    by M4b training runs. The :class:`~chamber.partners.frozen_mappo.FrozenMAPPOPartner`
-    adapter (T4.5) is registered as ``frozen_mappo`` and loads the second
-    spec via :func:`chamber.partners.registry.load_partner`. The
-    ``FrozenHARLPartner`` adapter (T4.6) for the third spec lands in a
-    follow-up PR; calling ``load_partner`` on that spec raises
-    :class:`KeyError` in the interim — by design (loud failure surfaces the
-    deferral) per plan/04 §1.
+    by M4b training runs. Both
+    :class:`~chamber.partners.frozen_mappo.FrozenMAPPOPartner` (T4.5,
+    registered as ``frozen_mappo``) and
+    :class:`~chamber.partners.frozen_harl.FrozenHARLPartner` (T4.6,
+    registered as ``frozen_harl``) load their specs via
+    :func:`chamber.partners.registry.load_partner`. The full M4 gate
+    (plan/04 §6 #1, T4.9 draft-zoo round-trip integration test) lands in
+    a follow-up PR.
 
     Returns:
         A fresh list of 3 :class:`~chamber.partners.api.PartnerSpec`

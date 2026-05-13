@@ -17,17 +17,24 @@ plan/04 §3 (architecture). Phase-0 ships:
   :mod:`chamber.partners.frozen_mappo`). Loads a torch state-dict via
   :func:`concerto.training.checkpoints.load_checkpoint`, freezes every
   parameter, runs inference under :func:`torch.no_grad`.
+- :class:`FrozenHARLPartner` — Stage-3 draft-zoo entry #3 (T4.6;
+  :mod:`chamber.partners.frozen_harl`). Loads the HARL HAPPO actor
+  checkpoint produced by
+  :class:`chamber.benchmarks.ego_ppo_trainer.EgoPPOTrainer`, rebuilds
+  the :class:`StochasticPolicy` with the same args, freezes every
+  parameter, runs ``deterministic=True`` inference under
+  :func:`torch.no_grad`.
 - :class:`OpenVLAPartner` and :class:`CrossFormerPartner` Phase-1 stubs
   (:mod:`chamber.partners.stubs`) — ADR-010 §Decision Option B; both
   raise :class:`NotImplementedError` referencing the Phase-1 ticket.
 - The Phase-0 :func:`make_phase0_draft_zoo` (real) and the Phase-1
   :func:`select_zoo` stub (:mod:`chamber.partners.selection`).
 
-The Phase-1 :class:`FrozenHARLPartner` (T4.6) and the M4-gate
-integration test (T4.9) land in follow-up PRs (plan/04 §1).
+The M4-gate integration test (T4.9) lands in a follow-up PR (plan/04 §1).
 """
 
 from chamber.partners.api import FrozenPartner, PartnerSpec
+from chamber.partners.frozen_harl import FrozenHARLPartner
 from chamber.partners.frozen_mappo import FrozenMAPPOPartner
 from chamber.partners.heuristic import ScriptedHeuristicPartner
 from chamber.partners.interface import PartnerBase
@@ -38,6 +45,7 @@ from chamber.partners.stubs.openvla import OpenVLAPartner
 
 __all__ = [
     "CrossFormerPartner",
+    "FrozenHARLPartner",
     "FrozenMAPPOPartner",
     "FrozenPartner",
     "OpenVLAPartner",
