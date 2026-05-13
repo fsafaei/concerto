@@ -1032,6 +1032,17 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#34-stewardship-and-machine-readability" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.4 Stewardship and machine-readability
+      
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -1348,6 +1359,17 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#34-stewardship-and-machine-readability" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.4 Stewardship and machine-readability
+      
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -1421,9 +1443,9 @@ inter-robot-collision rate, force-limit violation rate — is reported
 as point estimate with a 95% bootstrap CI computed across the seed
 budget above. Submissions that report fewer seeds or omit the CI are
 not admitted to the leaderboard.</p>
-<p>This page exists, in part, because Henderson et al. (2018) catalogued
-a set of evaluation anti-patterns the project explicitly refuses to
-fall into:</p>
+<p>This page exists, in part, because Henderson et al. (2018)
+[<code>henderson2018matters</code>] catalogued a set of evaluation anti-patterns
+the project explicitly refuses to fall into:</p>
 <ul>
 <li>single-seed bar charts;</li>
 <li>mean returns without a confidence interval;</li>
@@ -1434,14 +1456,14 @@ fall into:</p>
 <li>comparison against re-implementations of baselines instead of the
   baseline authors' released code.</li>
 </ul>
-<p>See <code>henderson2018drl_matters</code> in <a href="../literature/"><code>literature.md §5</code></a>
-for the citation.</p>
+<p>See <code>henderson2018matters</code> in <a href="../literature/"><code>literature.md §5</code></a> for
+the citation.</p>
 <hr />
 <h2 id="2-aggregate-metrics">2. Aggregate metrics</h2>
 <p>Beyond mean ± 95% CI, the CHAMBER leaderboard reports the
 rliable-style robust aggregate metrics introduced by Agarwal et al.
-(2021): interquartile mean (IQM), optimality gap, and performance
-profiles. IQM is the median of the middle 50% of scores, robust to
+(2021) [<code>agarwal2021precipice</code>]: interquartile mean (IQM),
+optimality gap, and performance profiles. IQM is the median of the middle 50% of scores, robust to
 outliers in either tail; optimality gap reports the proportion of the
 score distribution below a target threshold; performance profiles
 visualise the full score distribution as a CDF, surfacing dispersion
@@ -1469,8 +1491,8 @@ implementation work that closes this contract, scheduled as a
 Phase-1 follow-up (see
 <a href="https://github.com/fsafaei/concerto/blob/main/adr/ADR-014-safety-reporting.md"><code>ADR-014</code></a>
 for the three-table-format scaffold the renderer fills in).</p>
-<p>See <code>agarwal2021rliable</code> in <a href="../literature/"><code>literature.md §5</code></a> for
-the citation.</p>
+<p>See <code>agarwal2021precipice</code> in <a href="../literature/"><code>literature.md §5</code></a>
+for the citation.</p>
 <hr />
 <h2 id="3-pre-registration-and-statistical-guard-rails">3. Pre-registration and statistical guard rails</h2>
 <p>Every Phase-0 axis spike runs against a pre-registration YAML
@@ -1494,13 +1516,29 @@ gives roughly 500 paired trials, sufficient to discriminate a 20pp
 gap from null at standard significance levels; 16 seeds at the
 Phase-1 sample size tightens the MDE substantially and is the level
 required for leaderboard admission. The underlying
-evaluation-comparison framework is Jordan et al. (2020); see
-<code>jordan2020evaluating_rl</code> in <a href="../literature/"><code>literature.md §5</code></a>.</p>
+evaluation-comparison framework is Jordan et al. (2020)
+[<code>jordan2020evaluating</code>]; see also
+<a href="../literature/"><code>literature.md §5</code></a>.</p>
 <p>The pre-registration YAML template — including the seed list, the
 hypothesis, the analysis formula, and the threshold — lives in
 <a href="https://github.com/fsafaei/concerto/tree/main/spikes/preregistration"><code>spikes/preregistration/</code></a>;
 see the
 <a href="../../how-to/run-spike/">run-spike how-to</a> for the operational flow.</p>
+<hr />
+<h2 id="34-stewardship-and-machine-readability">3.4 Stewardship and machine-readability</h2>
+<blockquote>
+<p>Beyond per-experiment statistics, CHAMBER artifacts (datasets,
+policies, leaderboard entries) follow the FAIR principles for
+scientific data management and stewardship (Wilkinson et al. 2016
+[<code>wilkinson2016fair</code>]): every artifact is Findable (Zenodo DOI on
+every release), Accessible (Apache-2.0 licence + public mirror),
+Interoperable (uv.lock-pinned dependencies + SCHEMA_VERSION-pinned
+wire format), and Reusable (CITATION.cff + SBOM + this reporting
+contract).</p>
+</blockquote>
+<p>See <code>wilkinson2016fair</code> in <a href="../literature/"><code>literature.md §5</code></a> and
+the canonical entry in <a href="../refs.bib"><code>refs.bib</code></a> for the bibliographic
+record.</p>
 
 
 

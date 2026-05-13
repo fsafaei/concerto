@@ -1,0 +1,702 @@
+% CONCERTO public bibliography
+%
+% This file is the canonical source for every paper, standard,
+% project, and model cited anywhere in the public materials
+% (README, docs/, adr/). Public docs reference entries here by
+% cite-key; do not add a citation to a public doc without an
+% entry here.
+%
+% Standards entries must carry the exact edition, year, and
+% part number in the title field. Project / model entries
+% should cite the venue paper when one exists; otherwise use
+% @software with the project URL.
+
+% ---------------------------------------------------------------
+% 1. Ad hoc teamwork and zero-shot coordination
+% ---------------------------------------------------------------
+
+@inproceedings{stone2010adhoc,
+  author    = {Peter Stone and Gal A. Kaminka and Sarit Kraus and
+               Jeffrey S. Rosenschein},
+  title     = {Ad Hoc Autonomous Agent Teams: Collaboration without
+               Pre-Coordination},
+  booktitle = {AAAI Conference on Artificial Intelligence},
+  year      = {2010},
+  url       = {https://ojs.aaai.org/index.php/AAAI/article/view/7529},
+}
+
+@inproceedings{mirsky2022survey,
+  author    = {Reuth Mirsky and Ignacio Carlucho and Arrasy Rahman
+               and Elliot Fosong and William Macke and Mohan
+               Sridharan and Peter Stone and Stefano V. Albrecht},
+  title     = {A Survey of Ad Hoc Teamwork Research},
+  booktitle = {European Conference on Multi-Agent Systems (EUMAS)},
+  year      = {2022},
+  eprinttype = {arXiv},
+  eprint     = {2202.10450},
+  url        = {https://arxiv.org/abs/2202.10450},
+}
+
+@inproceedings{hu2020otherplay,
+  author    = {Hengyuan Hu and Adam Lerer and Alex Peysakhovich
+               and Jakob Foerster},
+  title     = {``Other-Play'' for Zero-Shot Coordination},
+  booktitle = {International Conference on Machine Learning (ICML)},
+  year      = {2020},
+  eprinttype = {arXiv},
+  eprint     = {2003.02979},
+  url        = {https://arxiv.org/abs/2003.02979},
+}
+
+@inproceedings{rahman2024mcs,
+  author    = {Arrasy Rahman and Jiaxun Cui and Peter Stone},
+  title     = {Minimum Coverage Sets for Training Robust Ad Hoc
+               Teamwork Agents},
+  booktitle = {AAAI Conference on Artificial Intelligence},
+  year      = {2024},
+  eprinttype = {arXiv},
+  eprint     = {2308.09595},
+  url        = {https://arxiv.org/abs/2308.09595},
+}
+
+@inproceedings{liu2024llm_aht,
+  author    = {Bo Liu and Gabriel Stella and Peter Stone},
+  title     = {{LLM}-Powered Hierarchical Language Agent for Real-time
+               Human-{AI} Coordination},
+  booktitle = {Robotics: Science and Systems (RSS)},
+  year      = {2024},
+  note      = {Cited throughout the CONCERTO ADRs as ``Liu 2024 RSS''.},
+}
+
+@misc{coherent2024,
+  author       = {Kehui Liu and Zixin Tang and Dong Wang and Zhigang Wang
+                  and Bin Zhao and Xuelong Li},
+  title        = {{COHERENT}: Collaboration of Heterogeneous Multi-Robot
+                  Systems with Large Language Models},
+  year         = {2024},
+  eprinttype   = {arXiv},
+  eprint       = {2409.15146},
+  url          = {https://arxiv.org/abs/2409.15146},
+  note         = {Cited throughout the CONCERTO ADRs as ``COHERENT''.},
+}
+
+% ---------------------------------------------------------------
+% 2. Safe control and control barrier functions
+% ---------------------------------------------------------------
+
+@article{ames2017cbfqp,
+  author  = {Aaron D. Ames and Xiangru Xu and Jessy W. Grizzle
+             and Paulo Tabuada},
+  title   = {Control Barrier Function Based Quadratic Programs for
+             Safety Critical Systems},
+  journal = {IEEE Transactions on Automatic Control},
+  volume  = {62},
+  number  = {8},
+  pages   = {3861--3876},
+  year    = {2017},
+  doi     = {10.1109/TAC.2016.2638961},
+  note    = {The canonical CBF-QP reference.},
+}
+
+@inproceedings{ames2019cbfsurvey,
+  author    = {Aaron D. Ames and Samuel Coogan and Magnus Egerstedt
+               and Gennaro Notomista and Koushil Sreenath and Paulo
+               Tabuada},
+  title     = {Control Barrier Functions: Theory and Applications},
+  booktitle = {European Control Conference (ECC)},
+  year      = {2019},
+  doi       = {10.23919/ECC.2019.8796030},
+}
+
+@inproceedings{wangames2017,
+  author    = {Li Wang and Aaron D. Ames and Magnus Egerstedt},
+  title     = {Safety Barrier Certificates for Collisions-Free
+               Behaviors in Multirobot Systems},
+  booktitle = {IEEE Conference on Decision and Control (CDC)},
+  year      = {2017},
+  doi       = {10.1109/CDC.2017.8263769},
+  url       = {https://ieeexplore.ieee.org/document/7989121},
+  note      = {The multi-robot CBF that the per-pair budget split
+                in ADR-004 \S6.2 generalises.},
+}
+
+@misc{morton2025oscbf,
+  author       = {Daniel Morton and Marco Pavone},
+  title        = {Oblivious Safety-Critical Control via
+                  Operator-Splitting Quadratic Programs},
+  year         = {2025},
+  eprinttype   = {arXiv},
+  eprint       = {2503.17678},
+  url          = {https://arxiv.org/abs/2503.17678},
+  note         = {OSCBF; CONCERTO's inner per-arm filter, see
+                  ADR-004 \S5.},
+}
+
+@misc{guerrier2024lcbfsurvey,
+  author       = {Maeva Guerrier and Hassan Fouad and Giovanni Beltrame},
+  title        = {Learning Control Barrier Functions and their
+                  Application in Reinforcement Learning: A Survey},
+  year         = {2024},
+  eprinttype   = {arXiv},
+  eprint       = {2404.16879},
+  url          = {https://arxiv.org/abs/2404.16879},
+}
+
+@misc{lindemann2024safety,
+  title        = {Formal Verification and Control with Conformal
+                  Prediction (and the Safety of Learning-Enabled
+                  Multi-Agent Systems): A Survey},
+  year         = {2024},
+  eprinttype   = {arXiv},
+  eprint       = {2409.00536},
+  url          = {https://arxiv.org/abs/2409.00536},
+  note         = {The "Garg/Lindemann" safety survey cited in ADR-004
+                  and ADR-014 (tier-2 note 45). Author list deferred
+                  until publicly verified; do not invent.},
+}
+
+@misc{ballotta2024aoi,
+  author       = {Luca Ballotta and Rajat Talak},
+  title        = {Optimal Trade-Offs between Reliability and Freshness
+                  for Multi-Agent Decision Making with Age of
+                  Information},
+  year         = {2024},
+  eprinttype   = {arXiv},
+  eprint       = {2403.05757},
+  url          = {https://arxiv.org/abs/2403.05757},
+  note         = {Source for the AoI predictor pattern used in
+                  CHAMBER's degradation wrapper.},
+}
+
+@inproceedings{cavorsi2022,
+  author    = {Matthew Cavorsi and Beatrice Capelli and Lorenzo Sabattini
+               and Stephanie Gil},
+  title     = {Multi-Robot Adversarial Resilience using Control
+                Barrier Functions},
+  booktitle = {Robotics: Science and Systems (RSS)},
+  year      = {2022},
+  note      = {Tier-2 note 39; nested-CBF degraded-partner budget.},
+}
+
+% ---------------------------------------------------------------
+% 3. Conformal prediction and conformal control
+% ---------------------------------------------------------------
+
+@article{shafer2008conformal,
+  author  = {Glenn Shafer and Vladimir Vovk},
+  title   = {A Tutorial on Conformal Prediction},
+  journal = {Journal of Machine Learning Research},
+  volume  = {9},
+  pages   = {371--421},
+  year    = {2008},
+  url     = {https://www.jmlr.org/papers/v9/shafer08a.html},
+}
+
+@article{angelopoulos2023conformal,
+  author  = {Anastasios N. Angelopoulos and Stephen Bates},
+  title   = {Conformal Prediction: A Gentle Introduction},
+  journal = {Foundations and Trends in Machine Learning},
+  volume  = {16},
+  number  = {4},
+  pages   = {494--591},
+  year    = {2023},
+  doi     = {10.1561/2200000101},
+  url     = {https://arxiv.org/abs/2107.07511},
+}
+
+@misc{huriotsibai2025,
+  author       = {Anne Huriot and Hussein Sibai},
+  title        = {Conformal Control Barrier Functions for Safety
+                  under Distribution Shift},
+  year         = {2025},
+  eprinttype   = {arXiv},
+  eprint       = {2409.18862},
+  url          = {https://arxiv.org/abs/2409.18862},
+  note         = {Theorem 3 (average-loss bound) underwrites the
+                  conformal-slack overlay in ADR-004 \S6.1.},
+}
+
+% ---------------------------------------------------------------
+% 4. Benchmarks, data, and generalization
+% ---------------------------------------------------------------
+
+@misc{tao2024maniskill3,
+  author       = {Stone Tao and Fanbo Xiang and Arth Shukla and
+                  Yuzhe Qin and Xander Hinrichsen and Xiaodi Yuan
+                  and Chen Bao and Xinsong Lin and Yulin Liu and
+                  Tse-kai Chan and Yuan Gao and Xuanlin Li and
+                  Tongzhou Mu and Nan Xiao and Arnav Gurha and
+                  Viswesh Nagaswamy Rajesh and Yong Woo Choi and
+                  Yen-Ru Chen and Zhiao Huang and Roberto Calandra
+                  and Rui Chen and Shan Luo and Hao Su},
+  title        = {{ManiSkill3}: GPU Parallelized Robotics Simulation
+                  and Rendering for Generalizable Embodied {AI}},
+  year         = {2024},
+  eprinttype   = {arXiv},
+  eprint       = {2410.00425},
+  url          = {https://arxiv.org/abs/2410.00425},
+}
+
+@misc{chernyadev2024bigym,
+  author       = {Nikita Chernyadev and Nicholas Backshall and
+                  Xiao Ma and Yunfan Lu and Younggyo Seo and
+                  Stephen James},
+  title        = {{BiGym}: A Demo-Driven Mobile Bi-Manual
+                  Manipulation Benchmark},
+  year         = {2024},
+  eprinttype   = {arXiv},
+  eprint       = {2407.07788},
+  url          = {https://arxiv.org/abs/2407.07788},
+}
+
+@inproceedings{mandi2024rocobench,
+  author    = {Zhao Mandi and Shreeya Jain and Shuran Song},
+  title     = {{RoCo}: Dialectic Multi-Robot Collaboration with Large
+               Language Models},
+  booktitle = {IEEE International Conference on Robotics and
+               Automation (ICRA)},
+  year      = {2024},
+  eprinttype = {arXiv},
+  eprint     = {2307.04738},
+  url        = {https://arxiv.org/abs/2307.04738},
+}
+
+@misc{su2024safebimanual,
+  title        = {{SafeBimanual}: Diffusion-based Trajectory
+                  Optimization for Safe Bimanual Manipulation},
+  year         = {2024},
+  eprinttype   = {arXiv},
+  eprint       = {2508.18268},
+  url          = {https://arxiv.org/abs/2508.18268},
+  note         = {Author list deferred until publicly verified.},
+}
+
+@misc{pumacay2024colosseum,
+  author       = {Wilbert Pumacay and Ishika Singh and Jiafei Duan
+                  and Ranjay Krishna and Jesse Thomason and Dieter
+                  Fox},
+  title        = {{THE COLOSSEUM}: A Benchmark for Evaluating
+                  Generalization for Robotic Manipulation},
+  year         = {2024},
+  eprinttype   = {arXiv},
+  eprint       = {2402.08191},
+  url          = {https://arxiv.org/abs/2402.08191},
+}
+
+@inproceedings{khazatsky2024droid,
+  author    = {Alexander Khazatsky and Karl Pertsch and
+               Suraj Nair and others},
+  title     = {{DROID}: A Large-Scale In-The-Wild Robot Manipulation
+               Dataset},
+  booktitle = {Robotics: Science and Systems (RSS)},
+  year      = {2024},
+  eprinttype = {arXiv},
+  eprint     = {2403.12945},
+  url        = {https://arxiv.org/abs/2403.12945},
+}
+
+% ---------------------------------------------------------------
+% 5. Reproducibility and statistical evaluation
+% ---------------------------------------------------------------
+
+@inproceedings{henderson2018matters,
+  author    = {Peter Henderson and Riashat Islam and Philip Bachman
+               and Joelle Pineau and Doina Precup and David Meger},
+  title     = {Deep Reinforcement Learning that Matters},
+  booktitle = {AAAI Conference on Artificial Intelligence},
+  year      = {2018},
+  eprinttype = {arXiv},
+  eprint     = {1709.06560},
+  url        = {https://arxiv.org/abs/1709.06560},
+}
+
+@inproceedings{agarwal2021precipice,
+  author    = {Rishabh Agarwal and Max Schwarzer and Pablo Samuel
+               Castro and Aaron Courville and Marc G. Bellemare},
+  title     = {Deep Reinforcement Learning at the Edge of the
+               Statistical Precipice},
+  booktitle = {Advances in Neural Information Processing Systems
+               (NeurIPS)},
+  year      = {2021},
+  eprinttype = {arXiv},
+  eprint     = {2108.13264},
+  url        = {https://arxiv.org/abs/2108.13264},
+  note       = {Introduces the rliable library.},
+}
+
+@inproceedings{jordan2020evaluating,
+  author    = {Scott M. Jordan and Yash Chandak and Daniel Cohen
+               and Mengxue Zhang and Philip S. Thomas},
+  title     = {Evaluating the Performance of Reinforcement Learning
+               Algorithms},
+  booktitle = {International Conference on Machine Learning (ICML)},
+  year      = {2020},
+  eprinttype = {arXiv},
+  eprint     = {2006.16958},
+  url        = {https://arxiv.org/abs/2006.16958},
+}
+
+@article{wilkinson2016fair,
+  author  = {Mark D. Wilkinson and Michel Dumontier and IJsbrand Jan
+             Aalbersberg and Gabrielle Appleton and Myles Axton and
+             Arie Baak and Niklas Blomberg and Jan-Willem Boiten and
+             Luiz Bonino da Silva Santos and Philip E. Bourne and
+             others},
+  title   = {The {FAIR} Guiding Principles for Scientific Data
+             Management and Stewardship},
+  journal = {Scientific Data},
+  volume  = {3},
+  pages   = {160018},
+  year    = {2016},
+  doi     = {10.1038/sdata.2016.18},
+  url     = {https://www.nature.com/articles/sdata201618},
+}
+
+% ---------------------------------------------------------------
+% 6. Heterogeneous MARL precedents
+% ---------------------------------------------------------------
+
+@misc{hetgppo2023,
+  author       = {Matteo Bettini and Ajay Shankar and Amanda Prorok},
+  title        = {{HetGPPO}: Heterogeneous Multi-Robot Policy Learning
+                  with Graph Neural Networks},
+  year         = {2023},
+  eprinttype   = {arXiv},
+  eprint       = {2301.07137},
+  url          = {https://arxiv.org/abs/2301.07137},
+}
+
+@article{harl2024,
+  author  = {Yifan Zhong and Jakub Grudzien Kuba and Xidong Feng
+             and Siyi Hu and Jiaming Ji and Yaodong Yang},
+  title   = {Heterogeneous-Agent Reinforcement Learning},
+  journal = {Journal of Machine Learning Research},
+  volume  = {25},
+  number  = {32},
+  pages   = {1--67},
+  year    = {2024},
+  url     = {https://jmlr.org/papers/v25/23-0488.html},
+}
+
+% ---------------------------------------------------------------
+% 7. Foundation-model partners and policies
+% ---------------------------------------------------------------
+
+@misc{openvla2024,
+  author       = {Moo Jin Kim and Karl Pertsch and Siddharth Karamcheti
+                  and Ted Xiao and Ashwin Balakrishna and Suraj Nair
+                  and Rafael Rafailov and Ethan Foster and Grace Lam
+                  and Pannag Sanketi and Quan Vuong and Thomas Kollar
+                  and Benjamin Burchfiel and Russ Tedrake and Dorsa
+                  Sadigh and Sergey Levine and Percy Liang and Chelsea
+                  Finn},
+  title        = {{OpenVLA}: An Open-Source Vision-Language-Action
+                  Model},
+  year         = {2024},
+  eprinttype   = {arXiv},
+  eprint       = {2406.09246},
+  url          = {https://arxiv.org/abs/2406.09246},
+}
+
+@misc{crossformer2024,
+  author       = {Ria Doshi and Homer Walke and Oier Mees and
+                  Sudeep Dasari and Sergey Levine},
+  title        = {{CrossFormer}: Scaling Cross-Embodied Learning for
+                  Manipulation, Navigation, Locomotion and Aviation},
+  year         = {2024},
+  eprinttype   = {arXiv},
+  eprint       = {2408.11812},
+  url          = {https://arxiv.org/abs/2408.11812},
+}
+
+@misc{octo2024,
+  author       = {{Octo Model Team} and Dibya Ghosh and Homer Walke
+                  and Karl Pertsch and Kevin Black and Oier Mees and
+                  Sudeep Dasari and Joey Hejna and Tobias Kreiman and
+                  Charles Xu and Jianlan Luo and You Liang Tan and
+                  Pannag R. Sanketi and Quan Vuong and Ted Xiao and
+                  Dorsa Sadigh and Chelsea Finn and Sergey Levine},
+  title        = {Octo: An Open-Source Generalist Robot Policy},
+  year         = {2024},
+  eprinttype   = {arXiv},
+  eprint       = {2405.12213},
+  url          = {https://arxiv.org/abs/2405.12213},
+}
+
+% ---------------------------------------------------------------
+% 8. Simulators, benchmarks, and tooling
+% ---------------------------------------------------------------
+
+@misc{sapien32024,
+  title        = {{SAPIEN}: A SimulAted Part-based Interactive
+                  ENvironment},
+  year         = {2020},
+  howpublished = {CVPR; release line continuing through SAPIEN 3
+                  (the ManiSkill v3 simulator backend)},
+  url          = {https://sapien.ucsd.edu/},
+  note         = {Authoritative paper: Xiang et al. (2020), CVPR;
+                  SAPIEN 3 is the backend used by ManiSkill v3.},
+}
+
+@misc{warpmpm,
+  title        = {Warp-MPM: GPU-Accelerated Material Point Method for
+                  Deformable Simulation},
+  year         = {2024},
+  howpublished = {Open-source project, NVIDIA Warp ecosystem},
+  url          = {https://github.com/NVIDIA/warp},
+  note         = {Used by ManiSkill v3 for deformable / soft-body
+                  simulation. Author list deferred until publicly
+                  verified.},
+}
+
+@misc{robohive2023,
+  author       = {Vikash Kumar and Rutav Shah and Gaoyue Zhou and
+                  Vincent Moens and Vittorio Caggiano and Abhishek
+                  Gupta and Aravind Rajeswaran},
+  title        = {{RoboHive}: A Unified Framework for Robot Learning},
+  year         = {2023},
+  eprinttype   = {arXiv},
+  eprint       = {2310.06828},
+  url          = {https://arxiv.org/abs/2310.06828},
+}
+
+@misc{robocasa2024,
+  author       = {Soroush Nasiriany and Abhiram Maddukuri and Lance
+                  Zhang and Adeet Parikh and Aaron Lo and Abhishek
+                  Joshi and Ajay Mandlekar and Yuke Zhu},
+  title        = {{RoboCasa}: Large-Scale Simulation of Everyday Tasks
+                  for Generalist Robots},
+  year         = {2024},
+  eprinttype   = {arXiv},
+  eprint       = {2406.02523},
+  url          = {https://arxiv.org/abs/2406.02523},
+}
+
+@misc{benchmarl2024,
+  author       = {Matteo Bettini and Amanda Prorok and Vincent Moens},
+  title        = {{BenchMARL}: Benchmarking Multi-Agent Reinforcement
+                  Learning},
+  year         = {2024},
+  eprinttype   = {arXiv},
+  eprint       = {2312.01472},
+  url          = {https://arxiv.org/abs/2312.01472},
+}
+
+@misc{commformer2024,
+  author       = {Shengchao Hu and Li Shen and Ya Zhang and Dacheng Tao},
+  title        = {Learning Multi-Agent Communication from Graph Modeling
+                  Perspective},
+  year         = {2024},
+  eprinttype   = {arXiv},
+  eprint       = {2405.08550},
+  url          = {https://arxiv.org/abs/2405.08550},
+  note         = {Commonly referred to as ``CommFormer''.},
+}
+
+% ---------------------------------------------------------------
+% 9. Standards and technical specifications
+%
+%    Each entry below must carry the exact edition, year, and part
+%    number in the title field. Public docs MUST cite by these
+%    cite-keys, not by bare ``ISO 10218'' or ``Release 17''
+%    shorthand.
+% ---------------------------------------------------------------
+
+@misc{iso10218part1_2025,
+  author       = {{International Organization for Standardization}},
+  title        = {{ISO 10218-1:2025} --- Robotics --- Safety
+                  requirements --- Part 1: Industrial robots},
+  year         = {2025},
+  howpublished = {ISO Standard, 2nd edition},
+  url          = {https://www.iso.org/standard/73933.html},
+}
+
+@misc{iso10218part2_2025,
+  author       = {{International Organization for Standardization}},
+  title        = {{ISO 10218-2:2025} --- Robotics --- Safety
+                  requirements --- Part 2: Robot applications and
+                  integration},
+  year         = {2025},
+  howpublished = {ISO Standard, 2nd edition; absorbs ISO/TS
+                  15066:2016},
+  url          = {https://www.iso.org/standard/73934.html},
+}
+
+@misc{isots15066_2016,
+  author       = {{International Organization for Standardization}},
+  title        = {{ISO/TS 15066:2016} --- Robots and robotic devices
+                  --- Collaborative robots},
+  year         = {2016},
+  howpublished = {ISO Technical Specification; absorbed into
+                  ISO 10218-2:2025},
+  url          = {https://www.iso.org/standard/62996.html},
+}
+
+@misc{iso13849part1_2023,
+  author       = {{International Organization for Standardization}},
+  title        = {{ISO 13849-1:2023} --- Safety of machinery ---
+                  Safety-related parts of control systems --- Part 1:
+                  General principles for design},
+  year         = {2023},
+  howpublished = {ISO Standard, 4th edition},
+  url          = {https://www.iso.org/standard/73481.html},
+}
+
+@misc{iec62061_2021,
+  author       = {{International Electrotechnical Commission}},
+  title        = {{IEC 62061:2021} --- Safety of machinery ---
+                  Functional safety of safety-related control systems},
+  year         = {2021},
+  howpublished = {IEC Standard, 2nd edition},
+  url          = {https://webstore.iec.ch/publication/59927},
+}
+
+@misc{iec61508part1_2010,
+  author       = {{International Electrotechnical Commission}},
+  title        = {{IEC 61508-1:2010} --- Functional safety of
+                  electrical/electronic/programmable electronic
+                  safety-related systems --- Part 1: General
+                  requirements},
+  year         = {2010},
+  howpublished = {IEC Standard, 2nd edition},
+  url          = {https://webstore.iec.ch/publication/5515},
+}
+
+@misc{ieee8021as_2020,
+  author       = {{IEEE}},
+  title        = {{IEEE Std 802.1AS-2020} --- Timing and
+                  Synchronization for Time-Sensitive Applications},
+  year         = {2020},
+  howpublished = {IEEE Standard},
+  doi          = {10.1109/IEEESTD.2020.9121845},
+  url          = {https://standards.ieee.org/ieee/802.1AS/7121/},
+}
+
+@misc{ieee8021qbv_2015,
+  author       = {{IEEE}},
+  title        = {{IEEE Std 802.1Qbv-2015} --- Bridges and Bridged
+                  Networks --- Amendment 25: Enhancements for
+                  Scheduled Traffic},
+  year         = {2015},
+  howpublished = {IEEE Standard Amendment},
+  doi          = {10.1109/IEEESTD.2016.8613095},
+  url          = {https://standards.ieee.org/ieee/802.1Qbv/6068/},
+}
+
+@misc{ieee8021cb_2017,
+  author       = {{IEEE}},
+  title        = {{IEEE Std 802.1CB-2017} --- Frame Replication and
+                  Elimination for Reliability (FRER)},
+  year         = {2017},
+  howpublished = {IEEE Standard},
+  doi          = {10.1109/IEEESTD.2017.8091139},
+  url          = {https://standards.ieee.org/ieee/802.1CB/5973/},
+}
+
+@misc{threegpp_ts23501_r17,
+  author       = {{3rd Generation Partnership Project}},
+  title        = {{3GPP TS 23.501 v17.x.y} --- System architecture for
+                  the 5G System (5GS); Stage 2 (Release 17)},
+  year         = {2022},
+  howpublished = {3GPP Technical Specification, Release 17},
+  url          = {https://portal.3gpp.org/desktopmodules/Specifications/SpecificationDetails.aspx?specificationId=3144},
+}
+
+@misc{threegpp_ts24535,
+  author       = {{3rd Generation Partnership Project}},
+  title        = {{3GPP TS 24.535 v17.x.y} --- Device-Side
+                  TSN Translator (DS-TT) to Network-Side TSN
+                  Translator (NW-TT) Protocol Aspects (Release 17)},
+  year         = {2022},
+  howpublished = {3GPP Technical Specification, Release 17},
+  url          = {https://portal.3gpp.org/desktopmodules/Specifications/SpecificationDetails.aspx?specificationId=3766},
+}
+
+@misc{threegpp_ts24519,
+  author       = {{3rd Generation Partnership Project}},
+  title        = {{3GPP TS 24.519 v17.x.y} --- Time-Sensitive
+                  Networking (TSN) Application Function (AF) to
+                  Device-Side TSN Translator (DS-TT) and Network-Side
+                  TSN Translator (NW-TT) Protocol Aspects (Release 17)},
+  year         = {2022},
+  howpublished = {3GPP Technical Specification, Release 17},
+  url          = {https://portal.3gpp.org/desktopmodules/Specifications/SpecificationDetails.aspx?specificationId=3765},
+}
+
+@misc{fiveg_acia_2019_5gtsn,
+  author       = {{5G Alliance for Connected Industries and Automation
+                  (5G-ACIA)}},
+  title        = {Integration of {5G} with Time-Sensitive Networking
+                  for Industrial Communications},
+  year         = {2019},
+  howpublished = {5G-ACIA White Paper},
+  url          = {https://5g-acia.org/whitepapers/integration-of-5g-with-time-sensitive-networking-for-industrial-communications/},
+}
+
+% ---------------------------------------------------------------
+% 10. Emerging arXiv references
+%
+%    Per the bibliography-hygiene policy, the author field is
+%    omitted unless the full author list has been publicly verified
+%    on the arXiv abstract page. Cite-keys are lowercase id-style.
+% ---------------------------------------------------------------
+
+@misc{rtc2025,
+  title        = {{RTC}: Real-Time Coordination for Heterogeneous
+                  Multi-Agent Systems},
+  year         = {2025},
+  eprinttype   = {arXiv},
+  eprint       = {2509.23224},
+  url          = {https://arxiv.org/abs/2509.23224},
+  note         = {Author list deferred until publicly verified.},
+}
+
+@misc{a2c22025,
+  title        = {{A2C2}: Adversarial Ad-hoc Coordination under
+                  Communication Constraints},
+  year         = {2025},
+  eprinttype   = {arXiv},
+  eprint       = {2512.20188},
+  url          = {https://arxiv.org/abs/2512.20188},
+  note         = {Author list deferred until publicly verified.},
+}
+
+@misc{favla2026,
+  title        = {{FAVLA}: Functional-Safety-Aware Vision-Language-Action
+                  Models},
+  year         = {2026},
+  eprinttype   = {arXiv},
+  eprint       = {2602.23648},
+  url          = {https://arxiv.org/abs/2602.23648},
+  note         = {Author list deferred until publicly verified.},
+}
+
+@misc{vlsa_aegis2025,
+  title        = {{VLSA/AEGIS}: Vision-Language-Safety-Aware Guarded
+                  Imitation Systems},
+  year         = {2025},
+  eprinttype   = {arXiv},
+  eprint       = {2512.11891},
+  url          = {https://arxiv.org/abs/2512.11891},
+  note         = {Author list deferred until publicly verified.},
+}
+
+@misc{silentdrift2026,
+  title        = {{SilentDrift}: Detecting Latent Policy Drift in
+                  Frozen Foundation-Model Partners},
+  year         = {2026},
+  eprinttype   = {arXiv},
+  eprint       = {2601.14323},
+  url          = {https://arxiv.org/abs/2601.14323},
+  note         = {Author list deferred until publicly verified.},
+}
+
+@misc{factoryjitter2025,
+  title        = {Factory-Floor Jitter Measurements for {5G}-{TSN}
+                  Time-Sensitive Control Loops},
+  year         = {2025},
+  eprinttype   = {arXiv},
+  eprint       = {2501.12792},
+  url          = {https://arxiv.org/abs/2501.12792},
+  note         = {Author list deferred until publicly verified.},
+}

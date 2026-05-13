@@ -1456,6 +1456,14 @@ robotics) used as a prior on which heterogeneity axes are commercially
 load-bearing, but never as a substitute for the empirical ≥20pp gap
 rule (see <a href="https://github.com/fsafaei/concerto/blob/main/adr/ADR-007-heterogeneity-axis-selection.md"><code>ADR-007 §Validation criteria</code></a>).
 This page covers tier (a) only.</p>
+<blockquote>
+<p>Every entry below carries a BibTeX cite-key in square brackets
+matching the canonical <a href="../refs.bib"><code>docs/reference/refs.bib</code></a> file.
+Cite by key from public docs and ADRs; do not introduce a citation
+without adding it to <code>refs.bib</code> first. See
+<a href="https://github.com/fsafaei/concerto/blob/main/CONTRIBUTING.md#bibliography-hygiene">CONTRIBUTING.md § Bibliography hygiene</a>
+for the maintainer checklist.</p>
+</blockquote>
 <h2 id="taxonomy">Taxonomy</h2>
 <pre class="mermaid"><code>mindmap
   root((Literature))
@@ -1485,312 +1493,233 @@ This page covers tier (a) only.</p>
       Agarwal 2021
       Jordan 2020</code></pre>
 <p>The five clusters below each open with a two-paragraph note locating
-the cited work relative to CONCERTO's claims, followed by a
-BibTeX-compatible bibliography block. Where a citation also appears
+the cited work relative to CONCERTO's claims, followed by the
+bibliography itself: one bullet per work, prefixed with its
+code-spanned [<code>bibkey</code>] from
+<a href="../refs.bib"><code>docs/reference/refs.bib</code></a>. Where a citation also appears
 in an existing ADR, the ADR reference is given inline.</p>
 <hr />
 <h2 id="1-ad-hoc-teamwork-and-zero-shot-coordination">1. Ad hoc teamwork and zero-shot coordination</h2>
 <p>Ad hoc teamwork (AHT) and zero-shot coordination (ZSC) define the
 problem CONCERTO is built to solve: an ego agent must cooperate with
 partners whose policies, training history, and internal state are
-opaque at deployment time. Stone et al. (2010) coined the AHT
-formalism; Mirsky et al. (2022) survey a decade of subsequent work and
-expose the under-explored manipulation tier that CHAMBER is built to
-fill. Hu et al. (2020) introduce other-play as the first principled
-ZSC method, and Rahman et al. (2024) sharpen partner-set construction
-with Minimum Coverage Sets — the formal counterpart to the entropy-
-filtered partner zoo specified in <a href="https://github.com/fsafaei/concerto/blob/main/adr/ADR-009-partner-zoo.md"><code>ADR-009</code></a>.</p>
-<p>Liu et al. (2024) and COHERENT (Liu et al. 2024) are the two
-closest precedents to CONCERTO on the <em>heterogeneous, black-box
-partner</em> axes. Both stop short of contact-rich manipulation with a
-formal safety bound; the CONCERTO-vs-precedents table in the project
-README makes the differentiation explicit. They are listed here for
-completeness so this page can stand alone as the literature reference.</p>
-<div class="highlight"><pre><span></span><code><span class="nc">@inproceedings</span><span class="p">{</span><span class="nl">stone2010adhoc</span><span class="p">,</span>
-<span class="w">  </span><span class="na">author</span><span class="w">    </span><span class="p">=</span><span class="w"> </span><span class="s">{Peter Stone and Gal A. Kaminka and Sarit Kraus and</span>
-<span class="s">               Jeffrey S. Rosenschein}</span><span class="p">,</span>
-<span class="w">  </span><span class="na">title</span><span class="w">     </span><span class="p">=</span><span class="w"> </span><span class="s">{Ad Hoc Autonomous Agent Teams: Collaboration without</span>
-<span class="s">               Pre-Coordination}</span><span class="p">,</span>
-<span class="w">  </span><span class="na">booktitle</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">{AAAI Conference on Artificial Intelligence}</span><span class="p">,</span>
-<span class="w">  </span><span class="na">year</span><span class="w">      </span><span class="p">=</span><span class="w"> </span><span class="s">{2010}</span><span class="p">,</span>
-<span class="p">}</span>
-
-<span class="nc">@inproceedings</span><span class="p">{</span><span class="nl">mirsky2022aht_survey</span><span class="p">,</span>
-<span class="w">  </span><span class="na">author</span><span class="w">    </span><span class="p">=</span><span class="w"> </span><span class="s">{Reuth Mirsky and Ignacio Carlucho and Arrasy Rahman</span>
-<span class="s">               and Elliot Fosong and William Macke and Mohan</span>
-<span class="s">               Sridharan and Peter Stone and Stefano V. Albrecht}</span><span class="p">,</span>
-<span class="w">  </span><span class="na">title</span><span class="w">     </span><span class="p">=</span><span class="w"> </span><span class="s">{A Survey of Ad Hoc Teamwork Research}</span><span class="p">,</span>
-<span class="w">  </span><span class="na">booktitle</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">{European Conference on Multi-Agent Systems (EUMAS)}</span><span class="p">,</span>
-<span class="w">  </span><span class="na">year</span><span class="w">      </span><span class="p">=</span><span class="w"> </span><span class="s">{2022}</span><span class="p">,</span>
-<span class="p">}</span>
-
-<span class="nc">@inproceedings</span><span class="p">{</span><span class="nl">hu2020otherplay</span><span class="p">,</span>
-<span class="w">  </span><span class="na">author</span><span class="w">    </span><span class="p">=</span><span class="w"> </span><span class="s">{Hengyuan Hu and Adam Lerer and Alex Peysakhovich</span>
-<span class="s">               and Jakob Foerster}</span><span class="p">,</span>
-<span class="w">  </span><span class="na">title</span><span class="w">     </span><span class="p">=</span><span class="w"> </span><span class="s">{``Other-Play&#39;&#39; for Zero-Shot Coordination}</span><span class="p">,</span>
-<span class="w">  </span><span class="na">booktitle</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">{International Conference on Machine Learning (ICML)}</span><span class="p">,</span>
-<span class="w">  </span><span class="na">year</span><span class="w">      </span><span class="p">=</span><span class="w"> </span><span class="s">{2020}</span><span class="p">,</span>
-<span class="p">}</span>
-
-<span class="nc">@inproceedings</span><span class="p">{</span><span class="nl">rahman2024mcs</span><span class="p">,</span>
-<span class="w">  </span><span class="na">author</span><span class="w">    </span><span class="p">=</span><span class="w"> </span><span class="s">{Arrasy Rahman and Jiaxun Cui and Peter Stone}</span><span class="p">,</span>
-<span class="w">  </span><span class="na">title</span><span class="w">     </span><span class="p">=</span><span class="w"> </span><span class="s">{Minimum Coverage Sets for Training Robust Ad Hoc</span>
-<span class="s">               Teamwork Agents}</span><span class="p">,</span>
-<span class="w">  </span><span class="na">booktitle</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">{AAAI Conference on Artificial Intelligence}</span><span class="p">,</span>
-<span class="w">  </span><span class="na">year</span><span class="w">      </span><span class="p">=</span><span class="w"> </span><span class="s">{2024}</span><span class="p">,</span>
-<span class="p">}</span>
-
-<span class="nc">@inproceedings</span><span class="p">{</span><span class="nl">liu2024llm_aht</span><span class="p">,</span>
-<span class="w">  </span><span class="na">author</span><span class="w">    </span><span class="p">=</span><span class="w"> </span><span class="s">{Bo Liu and Gabriel Stella and Peter Stone}</span><span class="p">,</span>
-<span class="w">  </span><span class="na">title</span><span class="w">     </span><span class="p">=</span><span class="w"> </span><span class="s">{{LLM}-Powered Hierarchical Language Agent for Real-time</span>
-<span class="s">               Human-{AI} Coordination}</span><span class="p">,</span>
-<span class="w">  </span><span class="na">booktitle</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">{Robotics: Science and Systems (RSS)}</span><span class="p">,</span>
-<span class="w">  </span><span class="na">year</span><span class="w">      </span><span class="p">=</span><span class="w"> </span><span class="s">{2024}</span><span class="p">,</span>
-<span class="w">  </span><span class="na">note</span><span class="w">      </span><span class="p">=</span><span class="w"> </span><span class="s">{Cited throughout the CONCERTO ADRs as ``Liu 2024 RSS&#39;&#39;.}</span><span class="p">,</span>
-<span class="p">}</span>
-
-<span class="nc">@misc</span><span class="p">{</span><span class="nl">coherent2024</span><span class="p">,</span>
-<span class="w">  </span><span class="na">author</span><span class="w">    </span><span class="p">=</span><span class="w"> </span><span class="s">{Kehui Liu and Zixin Tang and Dong Wang and Zhigang Wang</span>
-<span class="s">               and Bin Zhao and Xuelong Li}</span><span class="p">,</span>
-<span class="w">  </span><span class="na">title</span><span class="w">     </span><span class="p">=</span><span class="w"> </span><span class="s">{{COHERENT}: Collaboration of Heterogeneous Multi-Robot</span>
-<span class="s">               Systems with Large Language Models}</span><span class="p">,</span>
-<span class="w">  </span><span class="na">year</span><span class="w">      </span><span class="p">=</span><span class="w"> </span><span class="s">{2024}</span><span class="p">,</span>
-<span class="w">  </span><span class="na">note</span><span class="w">      </span><span class="p">=</span><span class="w"> </span><span class="s">{Cited throughout the CONCERTO ADRs as ``COHERENT&#39;&#39;.}</span><span class="p">,</span>
-<span class="p">}</span>
-</code></pre></div>
+opaque at deployment time. Stone et al. (2010) [<code>stone2010adhoc</code>]
+coined the AHT formalism; Mirsky et al. (2022) [<code>mirsky2022survey</code>]
+survey a decade of subsequent work and expose the under-explored
+manipulation tier that CHAMBER is built to fill. Hu et al. (2020)
+[<code>hu2020otherplay</code>] introduce other-play as the first principled ZSC
+method, and Rahman et al. (2024) [<code>rahman2024mcs</code>] sharpen partner-set
+construction with Minimum Coverage Sets — the formal counterpart to
+the entropy-filtered partner zoo specified in
+<a href="https://github.com/fsafaei/concerto/blob/main/adr/ADR-009-partner-zoo.md"><code>ADR-009</code></a>.</p>
+<p>Liu et al. (2024) [<code>liu2024llm_aht</code>] and COHERENT (Liu et al. 2024)
+[<code>coherent2024</code>] are the two closest precedents to CONCERTO on the
+<em>heterogeneous, black-box partner</em> axes. Both stop short of
+contact-rich manipulation with a formal safety bound; the
+CONCERTO-vs-precedents table in the project README makes the
+differentiation explicit. They are listed here for completeness so
+this page can stand alone as the literature reference.</p>
+<ul>
+<li><strong>[<code>stone2010adhoc</code>]</strong> Stone, Kaminka, Kraus, Rosenschein (2010),
+  "Ad Hoc Autonomous Agent Teams: Collaboration without
+  Pre-Coordination," AAAI.
+  <a href="https://ojs.aaai.org/index.php/AAAI/article/view/7529">paper</a></li>
+<li><strong>[<code>mirsky2022survey</code>]</strong> Mirsky, Carlucho, Rahman, Fosong, Macke,
+  Sridharan, Stone, Albrecht (2022), "A Survey of Ad Hoc Teamwork
+  Research," EUMAS.
+  <a href="https://arxiv.org/abs/2202.10450">paper</a></li>
+<li><strong>[<code>hu2020otherplay</code>]</strong> Hu, Lerer, Peysakhovich, Foerster (2020),
+  "'Other-Play' for Zero-Shot Coordination," ICML.
+  <a href="https://arxiv.org/abs/2003.02979">paper</a></li>
+<li><strong>[<code>rahman2024mcs</code>]</strong> Rahman, Cui, Stone (2024), "Minimum Coverage
+  Sets for Training Robust Ad Hoc Teamwork Agents," AAAI.
+  <a href="https://arxiv.org/abs/2308.09595">paper</a></li>
+<li><strong>[<code>liu2024llm_aht</code>]</strong> Liu, Stella, Stone (2024), "LLM-Powered
+  Hierarchical Language Agent for Real-time Human-AI Coordination,"
+  RSS. Cited throughout the CONCERTO ADRs as "Liu 2024 RSS".</li>
+<li><strong>[<code>coherent2024</code>]</strong> Liu, Tang, Wang, Wang, Zhao, Li (2024),
+  "COHERENT: Collaboration of Heterogeneous Multi-Robot Systems with
+  Large Language Models," arXiv:2409.15146.
+  <a href="https://arxiv.org/abs/2409.15146">paper</a></li>
+</ul>
 <hr />
 <h2 id="2-safe-control-and-control-barrier-functions">2. Safe control and control barrier functions</h2>
 <p>Control barrier functions (CBFs) underwrite CONCERTO's safety claim.
-Ames et al. (2017) is the canonical CBF-QP paper and the right
-starting point for any reader new to the formalism; Ames et al.
-(2019) is the broader theory-and-applications survey that catalogues
-exponential, high-relative-degree, and discrete-time extensions used
-throughout <a href="https://github.com/fsafaei/concerto/blob/main/adr/ADR-004-safety-filter.md"><code>ADR-004</code></a>.
-Wang, Ames, and Egerstedt (2017) extend the CBF-QP to multi-robot
-collision avoidance and are the direct ancestor of the per-pair CBF
-budget split implemented in <code>concerto.safety.budget_split</code>.</p>
-<p>Morton and Pavone (2025) introduce the operator-splitting CBF
-(OSCBF), which serves as CONCERTO's inner per-arm filter, and
-Guerrier et al. (2024) survey the rapidly growing learning-to-CBF
+Ames et al. (2017) [<code>ames2017cbfqp</code>] is the canonical CBF-QP paper
+and the right starting point for any reader new to the formalism;
+Ames et al. (2019) [<code>ames2019cbfsurvey</code>] is the broader
+theory-and-applications survey that catalogues exponential,
+high-relative-degree, and discrete-time extensions used throughout
+<a href="https://github.com/fsafaei/concerto/blob/main/adr/ADR-004-safety-filter.md"><code>ADR-004</code></a>.
+Wang, Ames, and Egerstedt (2017) [<code>wangames2017</code>] extend the CBF-QP
+to multi-robot collision avoidance and are the direct ancestor of
+the per-pair CBF budget split implemented in
+<code>concerto.safety.budget_split</code>.</p>
+<p>Morton and Pavone (2025) [<code>morton2025oscbf</code>] introduce the
+operator-splitting CBF (OSCBF), which serves as CONCERTO's inner
+per-arm filter, and Guerrier et al. (2024)
+[<code>guerrier2024lcbfsurvey</code>] survey the rapidly growing learning-to-CBF
 literature — useful when reading CONCERTO against the wider field
-of safety-augmented reinforcement learning.</p>
-<div class="highlight"><pre><span></span><code><span class="nc">@article</span><span class="p">{</span><span class="nl">ames2017cbf_qp</span><span class="p">,</span>
-<span class="w">  </span><span class="na">author</span><span class="w">  </span><span class="p">=</span><span class="w"> </span><span class="s">{Aaron D. Ames and Xiangru Xu and Jessy W. Grizzle</span>
-<span class="s">             and Paulo Tabuada}</span><span class="p">,</span>
-<span class="w">  </span><span class="na">title</span><span class="w">   </span><span class="p">=</span><span class="w"> </span><span class="s">{Control Barrier Function Based Quadratic Programs for</span>
-<span class="s">             Safety Critical Systems}</span><span class="p">,</span>
-<span class="w">  </span><span class="na">journal</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">{IEEE Transactions on Automatic Control}</span><span class="p">,</span>
-<span class="w">  </span><span class="na">volume</span><span class="w">  </span><span class="p">=</span><span class="w"> </span><span class="s">{62}</span><span class="p">,</span>
-<span class="w">  </span><span class="na">number</span><span class="w">  </span><span class="p">=</span><span class="w"> </span><span class="s">{8}</span><span class="p">,</span>
-<span class="w">  </span><span class="na">pages</span><span class="w">   </span><span class="p">=</span><span class="w"> </span><span class="s">{3861--3876}</span><span class="p">,</span>
-<span class="w">  </span><span class="na">year</span><span class="w">    </span><span class="p">=</span><span class="w"> </span><span class="s">{2017}</span><span class="p">,</span>
-<span class="w">  </span><span class="na">note</span><span class="w">    </span><span class="p">=</span><span class="w"> </span><span class="s">{The canonical CBF-QP reference.}</span><span class="p">,</span>
-<span class="p">}</span>
-
-<span class="nc">@inproceedings</span><span class="p">{</span><span class="nl">ames2019cbf_survey</span><span class="p">,</span>
-<span class="w">  </span><span class="na">author</span><span class="w">    </span><span class="p">=</span><span class="w"> </span><span class="s">{Aaron D. Ames and Samuel Coogan and Magnus Egerstedt</span>
-<span class="s">               and Gennaro Notomista and Koushil Sreenath and Paulo</span>
-<span class="s">               Tabuada}</span><span class="p">,</span>
-<span class="w">  </span><span class="na">title</span><span class="w">     </span><span class="p">=</span><span class="w"> </span><span class="s">{Control Barrier Functions: Theory and Applications}</span><span class="p">,</span>
-<span class="w">  </span><span class="na">booktitle</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">{European Control Conference (ECC)}</span><span class="p">,</span>
-<span class="w">  </span><span class="na">year</span><span class="w">      </span><span class="p">=</span><span class="w"> </span><span class="s">{2019}</span><span class="p">,</span>
-<span class="p">}</span>
-
-<span class="nc">@inproceedings</span><span class="p">{</span><span class="nl">wang2017multirobot_cbf</span><span class="p">,</span>
-<span class="w">  </span><span class="na">author</span><span class="w">    </span><span class="p">=</span><span class="w"> </span><span class="s">{Li Wang and Aaron D. Ames and Magnus Egerstedt}</span><span class="p">,</span>
-<span class="w">  </span><span class="na">title</span><span class="w">     </span><span class="p">=</span><span class="w"> </span><span class="s">{Safety Barrier Certificates for Collisions-Free</span>
-<span class="s">               Behaviors in Multirobot Systems}</span><span class="p">,</span>
-<span class="w">  </span><span class="na">booktitle</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">{IEEE Conference on Decision and Control (CDC)}</span><span class="p">,</span>
-<span class="w">  </span><span class="na">year</span><span class="w">      </span><span class="p">=</span><span class="w"> </span><span class="s">{2017}</span><span class="p">,</span>
-<span class="w">  </span><span class="na">note</span><span class="w">      </span><span class="p">=</span><span class="w"> </span><span class="s">{The multi-robot CBF that the per-pair budget split</span>
-<span class="s">                in ADR-004 \S6.2 generalises.}</span><span class="p">,</span>
-<span class="p">}</span>
-
-<span class="nc">@misc</span><span class="p">{</span><span class="nl">morton2025oscbf</span><span class="p">,</span>
-<span class="w">  </span><span class="na">author</span><span class="w">       </span><span class="p">=</span><span class="w"> </span><span class="s">{Daniel Morton and Marco Pavone}</span><span class="p">,</span>
-<span class="w">  </span><span class="na">title</span><span class="w">        </span><span class="p">=</span><span class="w"> </span><span class="s">{Oblivious Safety-Critical Control via</span>
-<span class="s">                  Operator-Splitting Quadratic Programs}</span><span class="p">,</span>
-<span class="w">  </span><span class="na">year</span><span class="w">         </span><span class="p">=</span><span class="w"> </span><span class="s">{2025}</span><span class="p">,</span>
-<span class="w">  </span><span class="na">howpublished</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">{arXiv:2503.17678}</span><span class="p">,</span>
-<span class="w">  </span><span class="na">note</span><span class="w">         </span><span class="p">=</span><span class="w"> </span><span class="s">{OSCBF; CONCERTO&#39;s inner per-arm filter, see</span>
-<span class="s">                  ADR-004 \S5.}</span><span class="p">,</span>
-<span class="p">}</span>
-
-<span class="nc">@misc</span><span class="p">{</span><span class="nl">guerrier2024lcbf_survey</span><span class="p">,</span>
-<span class="w">  </span><span class="na">author</span><span class="w">       </span><span class="p">=</span><span class="w"> </span><span class="s">{Maeva Guerrier and Hassan Fouad and Giovanni Beltrame}</span><span class="p">,</span>
-<span class="w">  </span><span class="na">title</span><span class="w">        </span><span class="p">=</span><span class="w"> </span><span class="s">{Learning Control Barrier Functions and their</span>
-<span class="s">                  Application in Reinforcement Learning: A Survey}</span><span class="p">,</span>
-<span class="w">  </span><span class="na">year</span><span class="w">         </span><span class="p">=</span><span class="w"> </span><span class="s">{2024}</span><span class="p">,</span>
-<span class="w">  </span><span class="na">howpublished</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">{arXiv:2404.16879}</span><span class="p">,</span>
-<span class="p">}</span>
-</code></pre></div>
+of safety-augmented reinforcement learning. The cross-cutting
+multi-agent safety survey carried by ADR-004 / ADR-014 tier-2 note 45
+is [<code>lindemann2024safety</code>].</p>
+<ul>
+<li><strong>[<code>ames2017cbfqp</code>]</strong> Ames, Xu, Grizzle, Tabuada (2017), "Control
+  Barrier Function Based Quadratic Programs for Safety Critical
+  Systems," IEEE TAC 62(8):3861–3876.
+  <a href="https://ieeexplore.ieee.org/document/7782377">paper</a></li>
+<li><strong>[<code>ames2019cbfsurvey</code>]</strong> Ames, Coogan, Egerstedt, Notomista,
+  Sreenath, Tabuada (2019), "Control Barrier Functions: Theory and
+  Applications," ECC.
+  <a href="https://ieeexplore.ieee.org/document/8796030">paper</a></li>
+<li><strong>[<code>wangames2017</code>]</strong> Wang, Ames, Egerstedt (2017), "Safety Barrier
+  Certificates for Collisions-Free Behaviors in Multirobot Systems,"
+  IEEE CDC. The multi-robot CBF that the per-pair budget split in
+  ADR-004 §6.2 generalises.
+  <a href="https://ieeexplore.ieee.org/document/7989121">paper</a></li>
+<li><strong>[<code>morton2025oscbf</code>]</strong> Morton, Pavone (2025), "Oblivious
+  Safety-Critical Control via Operator-Splitting Quadratic Programs,"
+  arXiv:2503.17678. OSCBF; CONCERTO's inner per-arm filter (see
+  ADR-004 §5).
+  <a href="https://arxiv.org/abs/2503.17678">paper</a></li>
+<li><strong>[<code>guerrier2024lcbfsurvey</code>]</strong> Guerrier, Fouad, Beltrame (2024),
+  "Learning Control Barrier Functions and their Application in
+  Reinforcement Learning: A Survey," arXiv:2404.16879.
+  <a href="https://arxiv.org/abs/2404.16879">paper</a></li>
+<li><strong>[<code>lindemann2024safety</code>]</strong> Lindemann et al. (2024), "Formal
+  Verification and Control with Conformal Prediction (and the Safety
+  of Learning-Enabled Multi-Agent Systems): A Survey,"
+  arXiv:2409.00536. The "Garg/Lindemann" safety survey carried by
+  ADR-004 and ADR-014 tier-2 note 45.
+  <a href="https://arxiv.org/abs/2409.00536">paper</a></li>
+<li><strong>[<code>ballotta2024aoi</code>]</strong> Ballotta, Talak (2024), "Optimal Trade-Offs
+  between Reliability and Freshness for Multi-Agent Decision Making
+  with Age of Information," arXiv:2403.05757. Source for the AoI
+  predictor pattern used in CHAMBER's degradation wrapper (ADR-003,
+  ADR-008).
+  <a href="https://arxiv.org/abs/2403.05757">paper</a></li>
+<li><strong>[<code>cavorsi2022</code>]</strong> Cavorsi, Capelli, Sabattini, Gil (2022),
+  "Multi-Robot Adversarial Resilience using Control Barrier
+  Functions," RSS. Source for the nested-CBF degraded-partner budget
+  template referenced by ADR-006 and ADR-008.</li>
+</ul>
 <hr />
 <h2 id="3-conformal-prediction-and-conformal-control">3. Conformal prediction and conformal control</h2>
 <p>Conformal prediction supplies the distribution-free coverage
 guarantee that the conformal-slack overlay in
 <a href="https://github.com/fsafaei/concerto/blob/main/adr/ADR-004-safety-filter.md"><code>ADR-004 §6.1</code></a>
-inherits. Shafer and Vovk (2008) give the original tutorial; the
-Angelopoulos and Bates (2023) Foundations and Trends monograph is the
+inherits. Shafer and Vovk (2008) [<code>shafer2008conformal</code>] give the
+original tutorial; the Angelopoulos and Bates (2023)
+[<code>angelopoulos2023conformal</code>] Foundations and Trends monograph is the
 modern textbook reference and the one to recommend to a reader new to
 the subject.</p>
-<p>Huriot and Sibai (2025) bridge conformal prediction and CBF-based
-safety. Their Theorem 3 average-loss bound is the theoretical anchor
-for CONCERTO's conformal overlay and is also the project's biggest
-open question: whether the bound can be sharpened from an average
-guarantee to a per-step one (deferred to a follow-up ADR — see
+<p>Huriot and Sibai (2025) [<code>huriotsibai2025</code>] bridge conformal
+prediction and CBF-based safety. Their Theorem 3 average-loss bound
+is the theoretical anchor for CONCERTO's conformal overlay and is
+also the project's biggest open question: whether the bound can be
+sharpened from an average guarantee to a per-step one (deferred to a
+follow-up ADR — see
 <a href="https://github.com/fsafaei/concerto/blob/main/adr/ADR-014-safety-reporting.md"><code>ADR-014 §Open questions</code></a>).</p>
-<div class="highlight"><pre><span></span><code><span class="nc">@article</span><span class="p">{</span><span class="nl">shafer2008conformal_tutorial</span><span class="p">,</span>
-<span class="w">  </span><span class="na">author</span><span class="w">  </span><span class="p">=</span><span class="w"> </span><span class="s">{Glenn Shafer and Vladimir Vovk}</span><span class="p">,</span>
-<span class="w">  </span><span class="na">title</span><span class="w">   </span><span class="p">=</span><span class="w"> </span><span class="s">{A Tutorial on Conformal Prediction}</span><span class="p">,</span>
-<span class="w">  </span><span class="na">journal</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">{Journal of Machine Learning Research}</span><span class="p">,</span>
-<span class="w">  </span><span class="na">volume</span><span class="w">  </span><span class="p">=</span><span class="w"> </span><span class="s">{9}</span><span class="p">,</span>
-<span class="w">  </span><span class="na">pages</span><span class="w">   </span><span class="p">=</span><span class="w"> </span><span class="s">{371--421}</span><span class="p">,</span>
-<span class="w">  </span><span class="na">year</span><span class="w">    </span><span class="p">=</span><span class="w"> </span><span class="s">{2008}</span><span class="p">,</span>
-<span class="p">}</span>
-
-<span class="nc">@article</span><span class="p">{</span><span class="nl">angelopoulos2023conformal_intro</span><span class="p">,</span>
-<span class="w">  </span><span class="na">author</span><span class="w">  </span><span class="p">=</span><span class="w"> </span><span class="s">{Anastasios N. Angelopoulos and Stephen Bates}</span><span class="p">,</span>
-<span class="w">  </span><span class="na">title</span><span class="w">   </span><span class="p">=</span><span class="w"> </span><span class="s">{Conformal Prediction: A Gentle Introduction}</span><span class="p">,</span>
-<span class="w">  </span><span class="na">journal</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">{Foundations and Trends in Machine Learning}</span><span class="p">,</span>
-<span class="w">  </span><span class="na">volume</span><span class="w">  </span><span class="p">=</span><span class="w"> </span><span class="s">{16}</span><span class="p">,</span>
-<span class="w">  </span><span class="na">number</span><span class="w">  </span><span class="p">=</span><span class="w"> </span><span class="s">{4}</span><span class="p">,</span>
-<span class="w">  </span><span class="na">pages</span><span class="w">   </span><span class="p">=</span><span class="w"> </span><span class="s">{494--591}</span><span class="p">,</span>
-<span class="w">  </span><span class="na">year</span><span class="w">    </span><span class="p">=</span><span class="w"> </span><span class="s">{2023}</span><span class="p">,</span>
-<span class="p">}</span>
-
-<span class="nc">@misc</span><span class="p">{</span><span class="nl">huriot2025conformal_cbf</span><span class="p">,</span>
-<span class="w">  </span><span class="na">author</span><span class="w">       </span><span class="p">=</span><span class="w"> </span><span class="s">{Anne Huriot and Hussein Sibai}</span><span class="p">,</span>
-<span class="w">  </span><span class="na">title</span><span class="w">        </span><span class="p">=</span><span class="w"> </span><span class="s">{Conformal Control Barrier Functions for Safety</span>
-<span class="s">                  under Distribution Shift}</span><span class="p">,</span>
-<span class="w">  </span><span class="na">year</span><span class="w">         </span><span class="p">=</span><span class="w"> </span><span class="s">{2025}</span><span class="p">,</span>
-<span class="w">  </span><span class="na">howpublished</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">{arXiv:2409.18862}</span><span class="p">,</span>
-<span class="w">  </span><span class="na">note</span><span class="w">         </span><span class="p">=</span><span class="w"> </span><span class="s">{Theorem 3 (average-loss bound) underwrites the</span>
-<span class="s">                  conformal-slack overlay in ADR-004 \S6.1.}</span><span class="p">,</span>
-<span class="p">}</span>
-</code></pre></div>
+<ul>
+<li><strong>[<code>shafer2008conformal</code>]</strong> Shafer, Vovk (2008), "A Tutorial on
+  Conformal Prediction," JMLR 9:371–421.
+  <a href="https://www.jmlr.org/papers/v9/shafer08a.html">paper</a></li>
+<li><strong>[<code>angelopoulos2023conformal</code>]</strong> Angelopoulos, Bates (2023),
+  "Conformal Prediction: A Gentle Introduction," Foundations and
+  Trends in Machine Learning 16(4):494–591.
+  <a href="https://arxiv.org/abs/2107.07511">paper</a></li>
+<li><strong>[<code>huriotsibai2025</code>]</strong> Huriot, Sibai (2025), "Conformal Control
+  Barrier Functions for Safety under Distribution Shift,"
+  arXiv:2409.18862. Theorem 3 (average-loss bound) underwrites the
+  conformal-slack overlay in ADR-004 §6.1.
+  <a href="https://arxiv.org/abs/2409.18862">paper</a></li>
+</ul>
 <hr />
 <h2 id="4-benchmarks-data-and-generalization">4. Benchmarks, data, and generalization</h2>
-<p>CHAMBER is a wrapper layer above ManiSkill v3 (Tao et al. 2024); the
-wrapper-only discipline is captured in
+<p>CHAMBER is a wrapper layer above ManiSkill v3 (Tao et al. 2024)
+[<code>tao2024maniskill3</code>]; the wrapper-only discipline is captured in
 <a href="https://github.com/fsafaei/concerto/blob/main/adr/ADR-001-fork-vs-build.md"><code>ADR-001</code></a>
 and enforced by <code>tests/unit/test_no_private_imports.py</code>. BiGym
-(Chernyadev et al. 2024), RoCoBench (Mandi et al. 2024), and
-SafeBimanual (Su et al. 2024) are the closest existing bimanual /
+(Chernyadev et al. 2024) [<code>chernyadev2024bigym</code>], RoCoBench (Mandi
+et al. 2024) [<code>mandi2024rocobench</code>], and SafeBimanual (Su et al.
+2024) [<code>su2024safebimanual</code>] are the closest existing bimanual /
 multi-arm benchmarks; their gap on the <em>Heterogeneity ×
 Black-box-partner × Safety × Manipulation</em> intersection is the
 reason CHAMBER exists.</p>
-<p>THE COLOSSEUM (Pumacay et al. 2024) is the closest precedent for
-<em>generalization-axis-perturbation</em> evaluation in manipulation; its
-14-axis perturbation matrix is methodologically adjacent to CHAMBER's
-six-axis heterogeneity sweep, though it focuses on visual /
-environmental perturbations rather than partner heterogeneity. DROID
-(Khazatsky et al. 2024) is the large-scale in-the-wild manipulation
-dataset whose 564-scene diversity informs CHAMBER's task-lattice
-selection.</p>
-<div class="highlight"><pre><span></span><code><span class="nc">@misc</span><span class="p">{</span><span class="nl">tao2024maniskill3</span><span class="p">,</span>
-<span class="w">  </span><span class="na">author</span><span class="w">       </span><span class="p">=</span><span class="w"> </span><span class="s">{Stone Tao and Fanbo Xiang and Arth Shukla and</span>
-<span class="s">                  Yuzhe Qin and Xander Hinrichsen and Xiaodi Yuan</span>
-<span class="s">                  and Chen Bao and Xinsong Lin and Yulin Liu and</span>
-<span class="s">                  Tse-kai Chan and Yuan Gao and Xuanlin Li and</span>
-<span class="s">                  Tongzhou Mu and Nan Xiao and Arnav Gurha and</span>
-<span class="s">                  Viswesh Nagaswamy Rajesh and Yong Woo Choi and</span>
-<span class="s">                  Yen-Ru Chen and Zhiao Huang and Roberto Calandra</span>
-<span class="s">                  and Rui Chen and Shan Luo and Hao Su}</span><span class="p">,</span>
-<span class="w">  </span><span class="na">title</span><span class="w">        </span><span class="p">=</span><span class="w"> </span><span class="s">{{ManiSkill3}: GPU Parallelized Robotics Simulation</span>
-<span class="s">                  and Rendering for Generalizable Embodied {AI}}</span><span class="p">,</span>
-<span class="w">  </span><span class="na">year</span><span class="w">         </span><span class="p">=</span><span class="w"> </span><span class="s">{2024}</span><span class="p">,</span>
-<span class="w">  </span><span class="na">howpublished</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">{arXiv:2410.00425}</span><span class="p">,</span>
-<span class="p">}</span>
-
-<span class="nc">@misc</span><span class="p">{</span><span class="nl">chernyadev2024bigym</span><span class="p">,</span>
-<span class="w">  </span><span class="na">author</span><span class="w">       </span><span class="p">=</span><span class="w"> </span><span class="s">{Nikita Chernyadev and Nicholas Backshall and</span>
-<span class="s">                  Xiao Ma and Yunfan Lu and Younggyo Seo and</span>
-<span class="s">                  Stephen James}</span><span class="p">,</span>
-<span class="w">  </span><span class="na">title</span><span class="w">        </span><span class="p">=</span><span class="w"> </span><span class="s">{{BiGym}: A Demo-Driven Mobile Bi-Manual</span>
-<span class="s">                  Manipulation Benchmark}</span><span class="p">,</span>
-<span class="w">  </span><span class="na">year</span><span class="w">         </span><span class="p">=</span><span class="w"> </span><span class="s">{2024}</span><span class="p">,</span>
-<span class="w">  </span><span class="na">howpublished</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">{arXiv:2407.07788}</span><span class="p">,</span>
-<span class="p">}</span>
-
-<span class="nc">@inproceedings</span><span class="p">{</span><span class="nl">mandi2024rocobench</span><span class="p">,</span>
-<span class="w">  </span><span class="na">author</span><span class="w">    </span><span class="p">=</span><span class="w"> </span><span class="s">{Zhao Mandi and Shreeya Jain and Shuran Song}</span><span class="p">,</span>
-<span class="w">  </span><span class="na">title</span><span class="w">     </span><span class="p">=</span><span class="w"> </span><span class="s">{{RoCo}: Dialectic Multi-Robot Collaboration with Large</span>
-<span class="s">               Language Models}</span><span class="p">,</span>
-<span class="w">  </span><span class="na">booktitle</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">{IEEE International Conference on Robotics and</span>
-<span class="s">               Automation (ICRA)}</span><span class="p">,</span>
-<span class="w">  </span><span class="na">year</span><span class="w">      </span><span class="p">=</span><span class="w"> </span><span class="s">{2024}</span><span class="p">,</span>
-<span class="p">}</span>
-
-<span class="nc">@misc</span><span class="p">{</span><span class="nl">su2024safebimanual</span><span class="p">,</span>
-<span class="w">  </span><span class="na">author</span><span class="w">       </span><span class="p">=</span><span class="w"> </span><span class="s">{Haoyuan Su and others}</span><span class="p">,</span>
-<span class="w">  </span><span class="na">title</span><span class="w">        </span><span class="p">=</span><span class="w"> </span><span class="s">{{SafeBimanual}: Diffusion-based Trajectory</span>
-<span class="s">                  Optimization for Safe Bimanual Manipulation}</span><span class="p">,</span>
-<span class="w">  </span><span class="na">year</span><span class="w">         </span><span class="p">=</span><span class="w"> </span><span class="s">{2024}</span><span class="p">,</span>
-<span class="p">}</span>
-
-<span class="nc">@misc</span><span class="p">{</span><span class="nl">pumacay2024colosseum</span><span class="p">,</span>
-<span class="w">  </span><span class="na">author</span><span class="w">       </span><span class="p">=</span><span class="w"> </span><span class="s">{Wilbert Pumacay and Ishika Singh and Jiafei Duan</span>
-<span class="s">                  and Ranjay Krishna and Jesse Thomason and Dieter</span>
-<span class="s">                  Fox}</span><span class="p">,</span>
-<span class="w">  </span><span class="na">title</span><span class="w">        </span><span class="p">=</span><span class="w"> </span><span class="s">{{THE COLOSSEUM}: A Benchmark for Evaluating</span>
-<span class="s">                  Generalization for Robotic Manipulation}</span><span class="p">,</span>
-<span class="w">  </span><span class="na">year</span><span class="w">         </span><span class="p">=</span><span class="w"> </span><span class="s">{2024}</span><span class="p">,</span>
-<span class="w">  </span><span class="na">howpublished</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">{arXiv:2402.08191}</span><span class="p">,</span>
-<span class="p">}</span>
-
-<span class="nc">@inproceedings</span><span class="p">{</span><span class="nl">khazatsky2024droid</span><span class="p">,</span>
-<span class="w">  </span><span class="na">author</span><span class="w">    </span><span class="p">=</span><span class="w"> </span><span class="s">{Alexander Khazatsky and Karl Pertsch and</span>
-<span class="s">               Suraj Nair and others}</span><span class="p">,</span>
-<span class="w">  </span><span class="na">title</span><span class="w">     </span><span class="p">=</span><span class="w"> </span><span class="s">{{DROID}: A Large-Scale In-The-Wild Robot Manipulation</span>
-<span class="s">               Dataset}</span><span class="p">,</span>
-<span class="w">  </span><span class="na">booktitle</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">{Robotics: Science and Systems (RSS)}</span><span class="p">,</span>
-<span class="w">  </span><span class="na">year</span><span class="w">      </span><span class="p">=</span><span class="w"> </span><span class="s">{2024}</span><span class="p">,</span>
-<span class="p">}</span>
-</code></pre></div>
+<p>THE COLOSSEUM (Pumacay et al. 2024) [<code>pumacay2024colosseum</code>] is the
+closest precedent for <em>generalization-axis-perturbation</em> evaluation
+in manipulation; its 14-axis perturbation matrix is methodologically
+adjacent to CHAMBER's six-axis heterogeneity sweep, though it focuses
+on visual / environmental perturbations rather than partner
+heterogeneity. DROID (Khazatsky et al. 2024) [<code>khazatsky2024droid</code>]
+is the large-scale in-the-wild manipulation dataset whose 564-scene
+diversity informs CHAMBER's task-lattice selection.</p>
+<ul>
+<li><strong>[<code>tao2024maniskill3</code>]</strong> Tao, Xiang, Shukla, Qin, Hinrichsen, Yuan,
+  Bao, Lin, Liu, Chan, Gao, Li, Mu, Xiao, Gurha, Nagaswamy Rajesh,
+  Choi, Chen, Huang, Calandra, Chen, Luo, Su (2024), "ManiSkill3: GPU
+  Parallelized Robotics Simulation and Rendering for Generalizable
+  Embodied AI," arXiv:2410.00425.
+  <a href="https://arxiv.org/abs/2410.00425">paper</a></li>
+<li><strong>[<code>chernyadev2024bigym</code>]</strong> Chernyadev, Backshall, Ma, Lu, Seo,
+  James (2024), "BiGym: A Demo-Driven Mobile Bi-Manual Manipulation
+  Benchmark," arXiv:2407.07788.
+  <a href="https://arxiv.org/abs/2407.07788">paper</a></li>
+<li><strong>[<code>mandi2024rocobench</code>]</strong> Mandi, Jain, Song (2024), "RoCo:
+  Dialectic Multi-Robot Collaboration with Large Language Models,"
+  IEEE ICRA.
+  <a href="https://arxiv.org/abs/2307.04738">paper</a></li>
+<li><strong>[<code>su2024safebimanual</code>]</strong> Su et al. (2024), "SafeBimanual:
+  Diffusion-based Trajectory Optimization for Safe Bimanual
+  Manipulation," arXiv:2508.18268.
+  <a href="https://arxiv.org/abs/2508.18268">paper</a></li>
+<li><strong>[<code>pumacay2024colosseum</code>]</strong> Pumacay, Singh, Duan, Krishna,
+  Thomason, Fox (2024), "THE COLOSSEUM: A Benchmark for Evaluating
+  Generalization for Robotic Manipulation," arXiv:2402.08191.
+  <a href="https://arxiv.org/abs/2402.08191">paper</a></li>
+<li><strong>[<code>khazatsky2024droid</code>]</strong> Khazatsky, Pertsch, Nair, et al. (2024),
+  "DROID: A Large-Scale In-The-Wild Robot Manipulation Dataset," RSS.
+  <a href="https://arxiv.org/abs/2403.12945">paper</a></li>
+</ul>
 <hr />
 <h2 id="5-reproducibility-and-statistical-evaluation">5. Reproducibility and statistical evaluation</h2>
 <p>CHAMBER commits up-front to the reporting discipline these three
-papers establish. Henderson et al. (2018) is the canonical
-cautionary tale for deep-RL evaluation: single-seed bars, no
-confidence intervals, cherry-picked checkpoints, and undocumented
-hyperparameter sweeps together make published results
+papers establish. Henderson et al. (2018) [<code>henderson2018matters</code>]
+is the canonical cautionary tale for deep-RL evaluation: single-seed
+bars, no confidence intervals, cherry-picked checkpoints, and
+undocumented hyperparameter sweeps together make published results
 non-reproducible. <a href="../evaluation/"><code>evaluation.md</code></a> lists the
 specific anti-patterns CHAMBER refuses to fall into.</p>
-<p>Agarwal et al. (2021) introduce the rliable library and a suite of
-robust aggregate metrics (IQM, optimality gap, performance profiles)
-that are now standard in deep-RL reporting; the CHAMBER leaderboard
-renderer emits these alongside the more traditional mean ± 95% CI.
-Jordan et al. (2020) provide the underlying evaluation-comparison
-framework — minimum detectable effect size at a given sample size —
-that justifies the seed counts in <a href="https://github.com/fsafaei/concerto/blob/main/adr/ADR-009-partner-zoo.md"><code>ADR-009 §Validation criteria</code></a>.</p>
-<div class="highlight"><pre><span></span><code><span class="nc">@inproceedings</span><span class="p">{</span><span class="nl">henderson2018drl_matters</span><span class="p">,</span>
-<span class="w">  </span><span class="na">author</span><span class="w">    </span><span class="p">=</span><span class="w"> </span><span class="s">{Peter Henderson and Riashat Islam and Philip Bachman</span>
-<span class="s">               and Joelle Pineau and Doina Precup and David Meger}</span><span class="p">,</span>
-<span class="w">  </span><span class="na">title</span><span class="w">     </span><span class="p">=</span><span class="w"> </span><span class="s">{Deep Reinforcement Learning that Matters}</span><span class="p">,</span>
-<span class="w">  </span><span class="na">booktitle</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">{AAAI Conference on Artificial Intelligence}</span><span class="p">,</span>
-<span class="w">  </span><span class="na">year</span><span class="w">      </span><span class="p">=</span><span class="w"> </span><span class="s">{2018}</span><span class="p">,</span>
-<span class="p">}</span>
-
-<span class="nc">@inproceedings</span><span class="p">{</span><span class="nl">agarwal2021rliable</span><span class="p">,</span>
-<span class="w">  </span><span class="na">author</span><span class="w">    </span><span class="p">=</span><span class="w"> </span><span class="s">{Rishabh Agarwal and Max Schwarzer and Pablo Samuel</span>
-<span class="s">               Castro and Aaron Courville and Marc G. Bellemare}</span><span class="p">,</span>
-<span class="w">  </span><span class="na">title</span><span class="w">     </span><span class="p">=</span><span class="w"> </span><span class="s">{Deep Reinforcement Learning at the Edge of the</span>
-<span class="s">               Statistical Precipice}</span><span class="p">,</span>
-<span class="w">  </span><span class="na">booktitle</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">{Advances in Neural Information Processing Systems</span>
-<span class="s">               (NeurIPS)}</span><span class="p">,</span>
-<span class="w">  </span><span class="na">year</span><span class="w">      </span><span class="p">=</span><span class="w"> </span><span class="s">{2021}</span><span class="p">,</span>
-<span class="w">  </span><span class="na">note</span><span class="w">      </span><span class="p">=</span><span class="w"> </span><span class="s">{Introduces the rliable library.}</span><span class="p">,</span>
-<span class="p">}</span>
-
-<span class="nc">@inproceedings</span><span class="p">{</span><span class="nl">jordan2020evaluating_rl</span><span class="p">,</span>
-<span class="w">  </span><span class="na">author</span><span class="w">    </span><span class="p">=</span><span class="w"> </span><span class="s">{Scott M. Jordan and Yash Chandak and Daniel Cohen</span>
-<span class="s">               and Mengxue Zhang and Philip S. Thomas}</span><span class="p">,</span>
-<span class="w">  </span><span class="na">title</span><span class="w">     </span><span class="p">=</span><span class="w"> </span><span class="s">{Evaluating the Performance of Reinforcement Learning</span>
-<span class="s">               Algorithms}</span><span class="p">,</span>
-<span class="w">  </span><span class="na">booktitle</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">{International Conference on Machine Learning (ICML)}</span><span class="p">,</span>
-<span class="w">  </span><span class="na">year</span><span class="w">      </span><span class="p">=</span><span class="w"> </span><span class="s">{2020}</span><span class="p">,</span>
-<span class="p">}</span>
-</code></pre></div>
+<p>Agarwal et al. (2021) [<code>agarwal2021precipice</code>] introduce the rliable
+library and a suite of robust aggregate metrics (IQM, optimality gap,
+performance profiles) that are now standard in deep-RL reporting; the
+CHAMBER leaderboard renderer emits these alongside the more
+traditional mean ± 95% CI. Jordan et al. (2020)
+[<code>jordan2020evaluating</code>] provide the underlying
+evaluation-comparison framework — minimum detectable effect size at
+a given sample size — that justifies the seed counts in
+<a href="https://github.com/fsafaei/concerto/blob/main/adr/ADR-009-partner-zoo.md"><code>ADR-009 §Validation criteria</code></a>.
+Wilkinson et al. (2016) [<code>wilkinson2016fair</code>] supplies the FAIR
+stewardship principles CHAMBER artifacts are released under (see
+<a href="../evaluation/"><code>evaluation.md §3.4</code></a>).</p>
+<ul>
+<li><strong>[<code>henderson2018matters</code>]</strong> Henderson, Islam, Bachman, Pineau,
+  Precup, Meger (2018), "Deep Reinforcement Learning that Matters,"
+  AAAI.
+  <a href="https://arxiv.org/abs/1709.06560">paper</a></li>
+<li><strong>[<code>agarwal2021precipice</code>]</strong> Agarwal, Schwarzer, Castro, Courville,
+  Bellemare (2021), "Deep Reinforcement Learning at the Edge of the
+  Statistical Precipice," NeurIPS. Introduces the rliable library.
+  <a href="https://arxiv.org/abs/2108.13264">paper</a></li>
+<li><strong>[<code>jordan2020evaluating</code>]</strong> Jordan, Chandak, Cohen, Zhang, Thomas
+  (2020), "Evaluating the Performance of Reinforcement Learning
+  Algorithms," ICML.
+  <a href="https://arxiv.org/abs/2006.16958">paper</a></li>
+<li><strong>[<code>wilkinson2016fair</code>]</strong> Wilkinson et al. (2016), "The FAIR
+  Guiding Principles for Scientific Data Management and Stewardship,"
+  Scientific Data 3:160018.
+  <a href="https://www.nature.com/articles/sdata201618">paper</a></li>
+</ul>
 
 
 
