@@ -118,6 +118,31 @@ Exit codes:
 Total GPU wall-time on a single consumer GPU: ~2 hours, plus
 ~1 minute of artefact handling.
 
+> **Why does the slope-test assertion fail with `passed=False`?**
+>
+> This is the **expected and correct** outcome on the Stage-0
+> smoke environment. `make_stage0_training_env` and the
+> `_Stage0SmokeEnv` it wraps load an empty scene with no task and
+> no reward function — they exist to validate the rig (wrapper
+> dispatch, action routing, observation namespacing, GPU + CUDA
+> + SAPIEN + Vulkan integration), per [ADR-001 §Validation
+> criteria][adr-001]. There is no reward signal to learn, so
+> cumulative reward stays at 0.0 and the slope-test assertion in
+> `concerto.training.empirical_guarantee` correctly reports
+> slope = 0, `passed = False`.
+>
+> The slope-test trip-wire is the [ADR-002 risk-mitigation
+> #1][adr-002] empirical guard rail: it fires when HAPPO produces
+> no learning, regardless of whether the cause is the frozen-
+> partner setting breaking the gradient or — as in this case —
+> the env having no task. The Stage-1 spike protocol
+> ([ADR-007 §Stage 1][adr-007]) is where the gap test against a
+> learnable task happens.
+>
+> If you want to see the trainer optimise a non-trivial reward,
+> swap `make_stage0_training_env` for the Stage-1 AS task once it
+> lands in `src/chamber/tasks/` (Phase-1+).
+
 ## 5. Publish + verify
 
 After the run, you should have on disk:
@@ -163,5 +188,6 @@ SHA-256 matches the committed manifest.
 [adr-001]: ../reference/adrs.md
 [adr-001-risks]: ../reference/adrs.md
 [adr-002]: ../reference/adrs.md
+[adr-007]: ../reference/adrs.md
 [adr-009]: ../reference/adrs.md
 [nvidia-container]: https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html
