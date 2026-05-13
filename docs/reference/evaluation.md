@@ -32,9 +32,9 @@ as point estimate with a 95% bootstrap CI computed across the seed
 budget above. Submissions that report fewer seeds or omit the CI are
 not admitted to the leaderboard.
 
-This page exists, in part, because Henderson et al. (2018) catalogued
-a set of evaluation anti-patterns the project explicitly refuses to
-fall into:
+This page exists, in part, because Henderson et al. (2018)
+[`henderson2018matters`] catalogued a set of evaluation anti-patterns
+the project explicitly refuses to fall into:
 
 - single-seed bar charts;
 - mean returns without a confidence interval;
@@ -45,8 +45,8 @@ fall into:
 - comparison against re-implementations of baselines instead of the
   baseline authors' released code.
 
-See `henderson2018drl_matters` in [`literature.md §5`](literature.md)
-for the citation.
+See `henderson2018matters` in [`literature.md §5`](literature.md) for
+the citation.
 
 ---
 
@@ -54,8 +54,8 @@ for the citation.
 
 Beyond mean ± 95% CI, the CHAMBER leaderboard reports the
 rliable-style robust aggregate metrics introduced by Agarwal et al.
-(2021): interquartile mean (IQM), optimality gap, and performance
-profiles. IQM is the median of the middle 50% of scores, robust to
+(2021) [`agarwal2021precipice`]: interquartile mean (IQM),
+optimality gap, and performance profiles. IQM is the median of the middle 50% of scores, robust to
 outliers in either tail; optimality gap reports the proportion of the
 score distribution below a target threshold; performance profiles
 visualise the full score distribution as a CDF, surfacing dispersion
@@ -86,8 +86,8 @@ Phase-1 follow-up (see
 [`ADR-014`](https://github.com/fsafaei/concerto/blob/main/adr/ADR-014-safety-reporting.md)
 for the three-table-format scaffold the renderer fills in).
 
-See `agarwal2021rliable` in [`literature.md §5`](literature.md) for
-the citation.
+See `agarwal2021precipice` in [`literature.md §5`](literature.md)
+for the citation.
 
 ---
 
@@ -115,11 +115,29 @@ gives roughly 500 paired trials, sufficient to discriminate a 20pp
 gap from null at standard significance levels; 16 seeds at the
 Phase-1 sample size tightens the MDE substantially and is the level
 required for leaderboard admission. The underlying
-evaluation-comparison framework is Jordan et al. (2020); see
-`jordan2020evaluating_rl` in [`literature.md §5`](literature.md).
+evaluation-comparison framework is Jordan et al. (2020)
+[`jordan2020evaluating`]; see also
+[`literature.md §5`](literature.md).
 
 The pre-registration YAML template — including the seed list, the
 hypothesis, the analysis formula, and the threshold — lives in
 [`spikes/preregistration/`](https://github.com/fsafaei/concerto/tree/main/spikes/preregistration);
 see the
 [run-spike how-to](../how-to/run-spike.md) for the operational flow.
+
+---
+
+## 3.4 Stewardship and machine-readability
+
+> Beyond per-experiment statistics, CHAMBER artifacts (datasets,
+> policies, leaderboard entries) follow the FAIR principles for
+> scientific data management and stewardship (Wilkinson et al. 2016
+> [`wilkinson2016fair`]): every artifact is Findable (Zenodo DOI on
+> every release), Accessible (Apache-2.0 licence + public mirror),
+> Interoperable (uv.lock-pinned dependencies + SCHEMA_VERSION-pinned
+> wire format), and Reusable (CITATION.cff + SBOM + this reporting
+> contract).
+
+See `wilkinson2016fair` in [`literature.md §5`](literature.md) and
+the canonical entry in [`refs.bib`](refs.bib) for the bibliographic
+record.

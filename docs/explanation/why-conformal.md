@@ -8,32 +8,33 @@ sets: given a user-chosen miscoverage level ε ∈ (0, 1), CP wraps the
 predictor so its sets contain the true outcome with probability at
 least 1 − ε, with no assumptions on the data distribution beyond
 exchangeability. The canonical reference for the framework and its
-finite-sample coverage proof is Shafer & Vovk 2008 ("A Tutorial on
-Conformal Prediction," JMLR).
+finite-sample coverage proof is Shafer and Vovk (2008)
+[`shafer2008conformal`] ("A Tutorial on Conformal Prediction," JMLR).
 
-Angelopoulos & Bates 2023 ("Conformal Prediction: A Gentle
-Introduction," Foundations and Trends in Machine Learning) is the
-practical entry point for ML readers — it walks through the
-split-CP, full-CP, and online-CP variants and the regret-style
-guarantees that the online variant enjoys when the data stream is
-non-exchangeable. What Huriot & Sibai 2025 contributes on top is to
-specialise the online-CP update to a CBF safety-filter setting: the
-calibration variable becomes the per-pair conformal slack λ added to
-each CBF constraint, and the resulting ε + o(1) long-term risk bound
-inherits CP's distribution-freeness while binding it to a per-step
-safety filter.
+Angelopoulos and Bates (2023) [`angelopoulos2023conformal`]
+("Conformal Prediction: A Gentle Introduction," Foundations and
+Trends in Machine Learning) is the practical entry point for ML
+readers — it walks through the split-CP, full-CP, and online-CP
+variants and the regret-style guarantees that the online variant
+enjoys when the data stream is non-exchangeable. What Huriot and
+Sibai (2025) [`huriotsibai2025`] contributes on top is to specialise
+the online-CP update to a CBF safety-filter setting: the calibration
+variable becomes the per-pair conformal slack λ added to each CBF
+constraint, and the resulting ε + o(1) long-term risk bound inherits
+CP's distribution-freeness while binding it to a per-step safety
+filter.
 
-The exponential CBF-QP backbone (Wang–Ames–Egerstedt 2017) provides
-instantaneous safety guarantees but requires tight a-priori bounds on
-partner behaviour. In heterogeneous ad-hoc teamwork those bounds are
-unknown at deployment time.
+The exponential CBF-QP backbone (Wang, Ames, and Egerstedt (2017)
+[`wangames2017`]) provides instantaneous safety guarantees but
+requires tight a-priori bounds on partner behaviour. In heterogeneous
+ad-hoc teamwork those bounds are unknown at deployment time.
 
-The conformal overlay (Huriot–Sibai 2025) relaxes this requirement: it
-maintains a running average-loss guarantee (Theorem 3) with a
-self-tuning slack variable λ that widens when the partner's actions
-are worse than expected and tightens when they are better. The OSCBF
-(Morton–Pavone 2025) resolves the multi-arm coupling into tractable
-per-arm QPs.
+The conformal overlay (Huriot and Sibai 2025) relaxes this
+requirement: it maintains a running average-loss guarantee
+(Theorem 3) with a self-tuning slack variable λ that widens when the
+partner's actions are worse than expected and tightens when they are
+better. The OSCBF (Morton and Pavone (2025) [`morton2025oscbf`])
+resolves the multi-arm coupling into tractable per-arm QPs.
 
 The key open theoretical question is whether the Huriot–Sibai
 average-loss bound can be sharpened to a per-step bound. This is not
@@ -48,8 +49,9 @@ of the previous one.
 
 ### 1. Outer layer — exp CBF-QP backbone
 
-Source: Wang–Ames–Egerstedt 2017 (Tier-2 note 37). Each pair of agents
-contributes one linear constraint to a quadratic program
+Source: Wang, Ames, and Egerstedt (2017) [`wangames2017`] (Tier-2
+note 37). Each pair of agents contributes one linear constraint to a
+quadratic program
 
 ```
 min   ||u - u_hat||^2
@@ -75,9 +77,9 @@ that assumption.
 
 ### 2. Middle layer — conformal slack overlay
 
-Source: Huriot & Sibai 2025 ICRA, the Tier-1 read (note 42; mislabelled
-"Singh" in the source CSV). A scalar slack λ is added per-pair to the
-right-hand side of every CBF constraint
+Source: Huriot and Sibai (2025) [`huriotsibai2025`] ICRA, the Tier-1
+read (note 42; mislabelled "Singh" in the source CSV). A scalar slack
+λ is added per-pair to the right-hand side of every CBF constraint
 
 ```
 A_ij u <= b_ij + λ_ij
@@ -90,7 +92,7 @@ and updated each control step by Theorem 3's rule
 ```
 
 where `l_k` is the per-pair loss — the worst-case CBF-constraint gap
-between the conformal and ground-truth constraints (Huriot & Sibai
+between the conformal and ground-truth constraints (Huriot and Sibai
 §IV.A). The default `ε = -0.05` ([ADR-004](../reference/adrs.md)
 §Decision) biases λ toward tighter constraints during contact-rich
 manipulation.
@@ -116,8 +118,9 @@ masked. See [ADR-004](../reference/adrs.md) risk-mitigation #2 +
 
 ### 3. Inner layer — OSCBF two-level QP
 
-Source: Morton & Pavone 2025 IROS (Tier-2 note 44). For
-manipulation-grade within-arm safety, the OSCBF QP minimises
+Source: Morton and Pavone (2025) [`morton2025oscbf`] IROS (Tier-2
+note 44). For manipulation-grade within-arm safety, the OSCBF QP
+minimises
 
 ```
 ||W_j (q_dot - q_dot_nom)||^2 + ||W_o (J q_dot - ν_nom)||^2 + ρ ||s||^2
@@ -131,13 +134,14 @@ and the constraints encode collision-avoidance (sphere-pair
 decomposition, Morton-Pavone §IV.B), joint-velocity limits, and any
 custom within-arm CBFs.
 
-Garg et al. 2024 (Tier-2 note 45) flag CBF-QP infeasibility under
-actuator limits as the central open challenge in multi-robot safe
-control; Morton-Pavone's slack-relaxation pattern is exactly the
-escape hatch that keeps the QP feasible without abandoning the
-safety claim — slack drives a quadratic penalty into the cost so
-the QP prefers feasible solutions but degrades gracefully when they
-don't exist.
+Lindemann et al. (2024) [`lindemann2024safety`] (the safety survey
+catalogued as Tier-2 note 45 and also referenced as "Garg/Lindemann
+2024" in ADR-004) flag CBF-QP infeasibility under actuator limits as
+the central open challenge in multi-robot safe control;
+Morton-Pavone's slack-relaxation pattern is exactly the escape hatch
+that keeps the QP feasible without abandoning the safety claim —
+slack drives a quadratic penalty into the cost so the QP prefers
+feasible solutions but degrades gracefully when they don't exist.
 
 The 1 kHz solve-time target (Morton-Pavone §V; ADR-004 validation
 criterion 3) lets the OSCBF run in the inner control loop on a
@@ -145,8 +149,9 @@ criterion 3) lets the OSCBF run in the inner control loop on a
 
 ### Per-step backstop — hard braking fallback
 
-Source: Wang–Ames–Egerstedt 2017 eq. 17 hybrid braking controller.
-Theorem 3 is *average-loss*, not per-step; in contact-rich
+Source: Wang, Ames, and Egerstedt (2017) [`wangames2017`] eq. 17
+hybrid braking controller. Theorem 3 is *average-loss*, not per-step;
+in contact-rich
 manipulation a single step of constraint violation can damage
 hardware. The braking fallback bypasses the conformal QP entirely and
 applies max-magnitude push-apart acceleration when the per-pair
@@ -211,14 +216,14 @@ override, fired = maybe_brake(nominal, agents, bounds=bounds)
 if fired and override is not None:
     safe = override
 else:
-    # 2. Outer exp CBF-QP (Wang-Ames-Egerstedt 2017).
+    # 2. Outer exp CBF-QP (Wang, Ames, and Egerstedt 2017 — wangames2017).
     safe, info = cbf.filter(
         proposed_action=nominal,
         obs={"agent_states": agents, "meta": {"partner_id": "demo"}},
         state=state,
         bounds=bounds,
     )
-    # 3. Conformal lambda update (Huriot & Sibai 2025 §IV).
+    # 3. Conformal lambda update (Huriot and Sibai 2025 §IV — huriotsibai2025).
     update_lambda(state, info["loss_k"], in_warmup=False)
 ```
 
@@ -261,10 +266,10 @@ On every encode, the wrapper:
    with its per-uid AoI bumped by the in-queue dwell time.
 
 The packet itself carries a per-uid **Age of Information** field
-(see Ballotta & Talak 2024 for the formal definition). AoI is the
-proxy the conformal slack `λ` reads: when the channel degrades, AoI
-grows, and the conformal layer widens `λ` to absorb the additional
-prediction-error variance.
+(see Ballotta and Talak (2024) [`ballotta2024aoi`] for the formal
+definition). AoI is the proxy the conformal slack `λ` reads: when the
+channel degrades, AoI grows, and the conformal layer widens `λ` to
+absorb the additional prediction-error variance.
 
 Two safety properties protect this composition:
 
@@ -305,18 +310,25 @@ externally (see [ADR-003](../reference/adrs.md) §Decision).
 The three-layer architecture and its empirical anchors are laid out
 across:
 
-- **Tier-1**: Huriot & Sibai 2025 ICRA — the conformal slack and
-  Theorem 3 bound (note 42).
-- **Tier-2**: Wang–Ames–Egerstedt 2017 T-RO — exp CBF-QP backbone
-  and braking fallback (note 37); Morton–Pavone 2025 IROS — OSCBF
-  two-level QP (note 44); Garg et al. 2024 Annual Reviews — survey
-  framing the open intersection (note 45); Ballotta–Talak 2024 — AoI
-  predictor pattern (note 41).
+- **Tier-1**: Huriot and Sibai 2025 [`huriotsibai2025`] ICRA — the
+  conformal slack and Theorem 3 bound (note 42).
+- **Tier-2**: Wang, Ames, and Egerstedt 2017 [`wangames2017`] T-RO —
+  exp CBF-QP backbone and braking fallback (note 37); Morton and
+  Pavone 2025 [`morton2025oscbf`] IROS — OSCBF two-level QP
+  (note 44); Lindemann et al. 2024 [`lindemann2024safety`] — the
+  multi-agent safety survey framing the open intersection (note 45,
+  also referenced as "Garg/Lindemann 2024"); Ballotta and Talak 2024
+  [`ballotta2024aoi`] — AoI predictor pattern (note 41).
 - **ADRs**: [ADR-004](../reference/adrs.md) (filter formulation),
   [ADR-006](../reference/adrs.md) (partner-policy assumption set),
   [ADR-014](../reference/adrs.md) (three-table reporting).
 
-For the full bibliography — Ames 2017, Ames 2019, Shafer & Vovk 2008,
-Angelopoulos & Bates 2023, Wang–Ames–Egerstedt 2017, Huriot & Sibai
-2025, and the surrounding canon — see
+For the full bibliography — `ames2017cbfqp`, `ames2019cbfsurvey`,
+`shafer2008conformal`, `angelopoulos2023conformal`, `wangames2017`,
+`huriotsibai2025`, and the surrounding canon — see
 [the literature reference page](../reference/literature.md#3-conformal-prediction-and-conformal-control).
+
+> Full bibliographic records for every entry on this page live in
+> [`docs/reference/refs.bib`](../reference/refs.bib); the thematic
+> literature map is at
+> [`docs/reference/literature.md`](../reference/literature.md).

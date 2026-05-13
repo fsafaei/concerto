@@ -9,6 +9,11 @@ three-tier evidence convention described on the
 (c) and lives in
 [`adr/international_axis_evidence.md`](https://github.com/fsafaei/concerto/blob/main/adr/international_axis_evidence.md).
 
+> Every standard below is identified by its exact edition / part
+> number / release in [`docs/reference/refs.bib`](refs.bib). Public
+> ADRs MUST cite by that key, not by a bare "ISO 10218" or
+> "Release 17" shorthand.
+
 The standards below are grouped into two stacks — machine functional
 safety and deterministic networking — followed by the
 axis-to-standard-to-measurable-variable flowchart that ties each
@@ -21,19 +26,22 @@ report-table column.
 
 ## 1. Machine functional safety
 
-ISO 10218 parts 1 and 2 are the binding industrial-robot-safety
-standard since their 2025 revision. The 2025 edition absorbs ISO/TS
-15066:2016 (the original collaborative-robot technical specification
-on biomechanical limits and force-pressure tables), making the limits
-themselves part of a binding standard rather than a technical
-specification. ISO 13849-1:2023 covers the safety-related parts of
-control systems and assigns Performance Levels (PL `a`–`e`) based on
-risk parameters (severity, frequency, avoidability). IEC 62061:2021
-is the parallel functional-safety standard targeted at machinery and
-its electrical / electronic / programmable-electronic control. The
-two map onto the broader IEC 61508-1:2010 framework, which
-establishes the Safety Integrity Level (SIL 1–4) hierarchy that ISO
-13849 PL grades against.
+ISO 10218-1:2025 [`iso10218part1_2025`] and ISO 10218-2:2025
+[`iso10218part2_2025`] are the binding industrial-robot-safety
+standards since their 2025 revision. The 2025 edition of ISO 10218-2
+absorbs ISO/TS 15066:2016 [`isots15066_2016`] (the original
+collaborative-robot technical specification on biomechanical limits
+and force-pressure tables), making the limits themselves part of a
+binding standard rather than a technical specification.
+ISO 13849-1:2023 [`iso13849part1_2023`] covers the safety-related
+parts of control systems and assigns Performance Levels (PL `a`–`e`)
+based on risk parameters (severity, frequency, avoidability).
+IEC 62061:2021 [`iec62061_2021`] is the parallel functional-safety
+standard targeted at machinery and its electrical / electronic /
+programmable-electronic control. The two map onto the broader
+IEC 61508-1:2010 [`iec61508part1_2010`] framework, which establishes
+the Safety Integrity Level (SIL 1–4) hierarchy that ISO 13849-1:2023
+PL grades against.
 
 CHAMBER references these standards directly. The Safety axis (SA)
 in [ADR-007](https://github.com/fsafaei/concerto/blob/main/adr/ADR-007-heterogeneity-axis-selection.md)
@@ -41,20 +49,20 @@ varies *per-vendor compliance level* — heterogeneous force-limit and
 SIL/PL pairs across simulated controllers — and the violation columns
 in [ADR-014 Table 2](https://github.com/fsafaei/concerto/blob/main/adr/ADR-014-safety-reporting.md)
 report against the ISO 10218-2:2025 biomechanical limits absorbed
-from ISO/TS 15066. The standards do not certify simulation; they
+from ISO/TS 15066:2016. The standards do not certify simulation; they
 define what the simulation must approximate to count as a faithful
 proxy for compliance-relevant evaluation.
 
-| Standard                | Title                                                                       | Edition / status     |
-|-------------------------|-----------------------------------------------------------------------------|----------------------|
-| ISO 10218-1:2025        | Robotics — Safety requirements — Part 1: Industrial robots                  | Binding, 2025        |
-| ISO 10218-2:2025        | Robotics — Safety requirements — Part 2: Robot applications and integration | Binding, 2025        |
-| ISO/TS 15066:2016       | Robots and robotic devices — Collaborative robots                           | Absorbed into 10218-2:2025 |
-| ISO 13849-1:2023        | Safety of machinery — Safety-related parts of control systems — Part 1      | Binding              |
-| IEC 62061:2021          | Safety of machinery — Functional safety of safety-related control systems   | Binding              |
-| IEC 61508-1:2010        | Functional safety of E/E/PE safety-related systems — Part 1                 | Binding (SIL framework) |
+| Standard                | Title                                                                       | Edition / status     | Cite-key                  |
+|-------------------------|-----------------------------------------------------------------------------|----------------------|---------------------------|
+| ISO 10218-1:2025        | Robotics — Safety requirements — Part 1: Industrial robots                  | Binding, 2nd ed., 2025 | [`iso10218part1_2025`]    |
+| ISO 10218-2:2025        | Robotics — Safety requirements — Part 2: Robot applications and integration | Binding, 2nd ed., 2025 | [`iso10218part2_2025`]    |
+| ISO/TS 15066:2016       | Robots and robotic devices — Collaborative robots                           | Absorbed into ISO 10218-2:2025 | [`isots15066_2016`]      |
+| ISO 13849-1:2023        | Safety of machinery — Safety-related parts of control systems — Part 1      | Binding, 4th ed., 2023 | [`iso13849part1_2023`]    |
+| IEC 62061:2021          | Safety of machinery — Functional safety of safety-related control systems   | Binding, 2nd ed., 2021 | [`iec62061_2021`]         |
+| IEC 61508-1:2010        | Functional safety of E/E/PE safety-related systems — Part 1                 | Binding (SIL framework), 2nd ed., 2010 | [`iec61508part1_2010`] |
 
-### ISO 13849-1:2023
+### ISO 13849-1:2023 [`iso13849part1_2023`]
 
 ISO 13849-1:2023 specifies the design and integration of the
 safety-related parts of a machine's control system (SRP/CS). It
@@ -73,7 +81,7 @@ PL rating is one half of the vendor-compliance label that populates
 the ADR-014 Table 2 per-condition row when ADR-007 Open Q #4 resolves
 toward axis decomposition.
 
-### IEC 62061:2021
+### IEC 62061:2021 [`iec62061_2021`]
 
 IEC 62061:2021 is the machinery-sector application of the IEC 61508
 functional-safety framework to safety-related electrical, electronic,
@@ -91,7 +99,7 @@ IEC 62061:2021 maps onto the SA-axis *SIL* component of the per-vendor
 SIL/PL pair and is the source of the SIL labels reported alongside
 PL grades in the ADR-014 Table 2 vendor-compliance rows.
 
-### IEC 61508-1:2010
+### IEC 61508-1:2010 [`iec61508part1_2010`]
 
 IEC 61508-1:2010 is the cross-sector functional-safety standard for
 E/E/PE safety-related systems, from which both ISO 13849-1's PL
@@ -115,18 +123,24 @@ adds (as A4) if the safety axis decomposes.
 
 CHAMBER's fixed-format communication channel
 ([`chamber.comm`](api.md)) is anchored to the IEEE Time-Sensitive
-Networking (TSN) family and the 3GPP Release 17 URLLC profile. IEEE
-802.1AS specifies generalised-precision time-synchronisation (the
-profile of IEEE 1588 PTP used in TSN); IEEE 802.1Qbv defines
-scheduled traffic via time-aware shaping; IEEE 802.1CB defines frame
+Networking (TSN) family and the 3GPP Release 17 URLLC profile.
+IEEE Std 802.1AS-2020 [`ieee8021as_2020`] specifies
+generalised-precision time-synchronisation (the profile of
+IEEE 1588 PTPv2 used in TSN); IEEE Std 802.1Qbv-2015
+[`ieee8021qbv_2015`] defines scheduled traffic via time-aware
+shaping; IEEE Std 802.1CB-2017 [`ieee8021cb_2017`] defines frame
 replication and elimination for reliability (FRER) — used to obtain
 seamless redundancy across redundant network paths. 3GPP Release 17
 defines URLLC and the 5G system architecture that integrates a 5G
-network as a virtual TSN bridge; 3GPP TS 23.501 is the canonical
-5G-system-architecture spec and the entry point for the 5G-TSN
-integration model. 5G-ACIA (5G Alliance for Connected Industries and
-Automation) publishes the industry-side white papers that translate
-3GPP and IEEE primitives into deployable factory configurations.
+network as a virtual TSN bridge; 3GPP TS 23.501 v17 (Release 17)
+[`threegpp_ts23501_r17`] is the canonical 5G-system-architecture
+spec and the entry point for the 5G-TSN integration model;
+3GPP TS 24.535 v17 [`threegpp_ts24535`] and 3GPP TS 24.519 v17
+[`threegpp_ts24519`] specify the DS-TT/NW-TT translator protocol
+aspects. 5G-ACIA (5G Alliance for Connected Industries and
+Automation) publishes the industry-side 5G-TSN integration white
+paper (2019) [`fiveg_acia_2019_5gtsn`] that translates 3GPP and
+IEEE primitives into deployable factory configurations.
 
 The six pre-registered URLLC profiles in `chamber.comm.URLLC_3GPP_R17`
 (`ideal`, `urllc`, `factory`, `wifi`, `lossy`, `saturation`) are
@@ -136,19 +150,21 @@ microsecond-grade scheduled-traffic jitter, and the factory-jitter
 measurements reported in the 5G-TSN industrial trials (see the tier-c
 evidence sweep linked above).
 
-| Standard / spec         | Title / scope                                                               | Role in CHAMBER                          |
-|-------------------------|-----------------------------------------------------------------------------|------------------------------------------|
-| IEEE 802.1AS            | Timing and synchronisation for time-sensitive applications                  | Per-tick clock alignment in `chamber.comm` |
-| IEEE 802.1Qbv           | Enhancements for scheduled traffic (time-aware shaping)                     | Anchors jitter bounds in URLLC profiles  |
-| IEEE 802.1CB            | Frame replication and elimination for reliability (FRER)                    | Reference for the redundancy variant of the degradation wrapper |
-| 3GPP Release 17 URLLC   | Ultra-reliable low-latency communication (1 ms p99 at 99.9999% reliability) | Numeric anchor for `URLLC_3GPP_R17`      |
-| 3GPP TS 23.501          | System architecture for the 5G system; 5G-as-virtual-TSN-bridge model       | Integration model for the comm stack     |
-| 5G-ACIA white papers    | 5G-TSN integration, industrial deployment patterns                          | Cross-check on factory-floor parameterisation |
+| Standard / spec               | Title / scope                                                               | Role in CHAMBER                          | Cite-key                       |
+|-------------------------------|-----------------------------------------------------------------------------|------------------------------------------|--------------------------------|
+| IEEE Std 802.1AS-2020         | Timing and Synchronization for Time-Sensitive Applications                  | Per-tick clock alignment in `chamber.comm` | [`ieee8021as_2020`]            |
+| IEEE Std 802.1Qbv-2015        | Bridges and Bridged Networks — Amendment 25: Enhancements for Scheduled Traffic | Anchors jitter bounds in URLLC profiles | [`ieee8021qbv_2015`]           |
+| IEEE Std 802.1CB-2017         | Frame Replication and Elimination for Reliability (FRER)                    | Reference for the redundancy variant of the degradation wrapper | [`ieee8021cb_2017`]            |
+| 3GPP TS 23.501 v17 (Rel. 17)  | System architecture for the 5G System (5GS); Stage 2; URLLC + 5G-as-virtual-TSN-bridge model | Integration model for the comm stack | [`threegpp_ts23501_r17`]       |
+| 3GPP TS 24.535 v17 (Rel. 17)  | DS-TT to NW-TT protocol aspects                                             | TSN translator protocol reference        | [`threegpp_ts24535`]           |
+| 3GPP TS 24.519 v17 (Rel. 17)  | TSN AF to DS-TT/NW-TT protocol aspects                                      | TSN translator protocol reference        | [`threegpp_ts24519`]           |
+| 5G-ACIA 5G-TSN white paper (2019) | Integration of 5G with Time-Sensitive Networking for Industrial Communications | Cross-check on factory-floor parameterisation | [`fiveg_acia_2019_5gtsn`]      |
 
-### IEEE 802.1AS
+### IEEE Std 802.1AS-2020 [`ieee8021as_2020`]
 
-IEEE 802.1AS specifies the generalised precision time protocol (gPTP),
-the profile of IEEE 1588 PTPv2 used inside time-sensitive networks. A
+IEEE Std 802.1AS-2020 specifies the generalised precision time
+protocol (gPTP), the profile of IEEE 1588 PTPv2 used inside
+time-sensitive networks. A
 conformant bridge propagates timing information end-to-end through a
 master-slave hierarchy elected by the best-master-clock algorithm
 (BMCA), and the standard normatively requires that path delay and
@@ -156,13 +172,14 @@ residence time at each hop be measured and corrected so that
 participating end-stations share a common time reference accurate to
 sub-microsecond on a single-segment factory deployment. CHAMBER's
 fixed-format channel reads AoI timestamps against this assumed
-shared time-base: without an 802.1AS-grade primitive, AoI is not
-comparable across agents, and the conformal prediction layer's
-input is no longer well-defined.
+shared time-base: without an IEEE Std 802.1AS-2020-grade primitive,
+AoI is not comparable across agents, and the conformal prediction
+layer's input is no longer well-defined.
 
-### IEEE 802.1Qbv
+### IEEE Std 802.1Qbv-2015 [`ieee8021qbv_2015`]
 
-IEEE 802.1Qbv defines time-aware scheduled traffic via gate control
+IEEE Std 802.1Qbv-2015 defines time-aware scheduled traffic via gate
+control
 lists (GCLs) at every bridge output port. Each traffic class is
 assigned an open transmission window inside a repeating cycle, and
 the bridge normatively guarantees that frames belonging to a
@@ -170,33 +187,35 @@ scheduled class are forwarded only during their window, free of
 contention from best-effort traffic. The standard's guarantees apply
 to per-class p99 latency and to microsecond-grade jitter under
 deterministic load. CHAMBER's URLLC degradation profiles
-(`chamber.comm.URLLC_3GPP_R17`) treat the 802.1Qbv jitter envelope as
-the floor of what a real 5G-TSN deployment can sustain — the
-`urllc` and `factory` profiles parameterise jitter against this
-floor; the `wifi` and `saturation` profiles deliberately violate it
-to model commodity wireless and overloaded fabrics.
+(`chamber.comm.URLLC_3GPP_R17`) treat the IEEE Std 802.1Qbv-2015
+jitter envelope as the floor of what a real 5G-TSN deployment can
+sustain — the `urllc` and `factory` profiles parameterise jitter
+against this floor; the `wifi` and `saturation` profiles deliberately
+violate it to model commodity wireless and overloaded fabrics.
 
-### IEEE 802.1CB
+### IEEE Std 802.1CB-2017 [`ieee8021cb_2017`]
 
-IEEE 802.1CB defines frame replication and elimination for reliability
-(FRER). Each protected stream is sequence-numbered at ingress,
+IEEE Std 802.1CB-2017 defines frame replication and elimination for
+reliability (FRER). Each protected stream is sequence-numbered at
+ingress,
 replicated onto multiple disjoint paths through the network, and
 de-duplicated at the egress so that a single-path failure causes no
 frame loss as observed by the receiver. The standard normatively
 requires per-stream sequence-recovery state, a bounded
 sequence-recovery window, and consistent stream identification across
-replication points. CHAMBER references 802.1CB as the formal
-template for a redundancy variant of the comm-degradation wrapper:
+replication points. CHAMBER references IEEE Std 802.1CB-2017 as the
+formal template for a redundancy variant of the comm-degradation
+wrapper:
 the wrapper can compose any saturation or drop profile with a
 configurable FRER overlay that masks single-path losses up to a
 bound, letting the Stage 2 CM spike isolate whether observed
 violations are intrinsic to the stream or recoverable by redundancy.
 
-### 3GPP TS 23.501 §5.27
+### 3GPP TS 23.501 v17 §5.27 [`threegpp_ts23501_r17`]
 
-3GPP TS 23.501 is the canonical 5G-system-architecture specification;
-§5.27 covers the integration of the 5G system with deterministic
-networking. The 5G system is exposed to the TSN domain as a single
+3GPP TS 23.501 v17 (Release 17) is the canonical
+5G-system-architecture specification; §5.27 covers the integration
+of the 5G system with deterministic networking. The 5G system is exposed to the TSN domain as a single
 virtual TSN bridge fronted by two translator functions: a device-side
 TT (DS-TT) co-located with the UE and a network-side TT (NW-TT)
 co-located with the UPF. The clause normatively requires that QoS,
@@ -209,12 +228,15 @@ the AoI timestamp seen at the receiver is the composition of the
 DS-TT-side enqueue time, the radio segment, and the NW-TT-side
 release.
 
-### 5G-ACIA 5G-TSN integration white paper
+### 5G-ACIA 5G-TSN integration white paper (2019) [`fiveg_acia_2019_5gtsn`]
 
 The 5G Alliance for Connected Industries and Automation (5G-ACIA)
 publishes the industry-side white papers that translate the 3GPP TS
-23.501 §5.27 integration model and the IEEE 802.1 TSN family into
-deployable factory-floor configurations. The white papers specify
+23.501 v17 §5.27 integration model and the IEEE 802.1 TSN family into
+deployable factory-floor configurations. The 2019 white paper
+"Integration of 5G with Time-Sensitive Networking for Industrial
+Communications" is the load-bearing reference for the comm stack's
+factory parameterisation. The white papers specify
 deployment patterns (single-DS-TT, multi-DS-TT, redundancy
 combinations), parameter ranges measured from industrial trials, and
 reference architectures for time-sensitive control loops over 5G.
