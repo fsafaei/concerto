@@ -1,6 +1,6 @@
 # ADR-008: HRS bundle composition
 
-**Status.** Proposed (dependency update 2026-05-08 in light of ADR-007 rev 3 staged rollout)
+**Status.** RFC (dependency update 2026-05-08 in light of ADR-007 rev 3 staged rollout; HRS composition deferred to the surviving-axis outcome of the ADR-007 staged spike protocol)
 **Authors.** Farhad Safaei
 **Reviewers.** _to fill_
 **Tags.** v0.2 §3.7
@@ -49,3 +49,7 @@ By Phase-2 paper: (1) HRS score separates B0 from each baseline by ≥10 HRS poi
 - Does "partner-familiarity" have a quantitative definition compatible with the black-box constraint (no joint-training access), or does it require a learned proxy? `#design-decision`
 - Does "degraded-partner" require a formal operational threshold (e.g., > 50% action-error rate relative to nominal policy) to be distinguishable from natural performance variation? `#verify`
 - Is AoI (note 41) a better latency proxy than end-to-end round-trip time for heterogeneous systems where agents have different sensing rates? `#design-decision`
+
+## Revision history
+
+- 2026-05-13 status re-classification: status changed from Proposed to **RFC** under the new ADR status taxonomy (see [ADR-INDEX §Status taxonomy](ADR-INDEX.md#status-taxonomy)); HRS composition remains deferred to the surviving-axis outcome of the ADR-007 staged spike protocol; no Decision content is altered.

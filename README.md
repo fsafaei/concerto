@@ -34,13 +34,16 @@
   <img alt="Status" src="https://img.shields.io/badge/status-alpha%20%C2%B7%20phase%200-orange"/>
 </p>
 
-> **Status &mdash; pre-release, Phase&nbsp;0.** Architecture and design
-> contract are stable; 15 ADRs are in Proposed status. The staged
-> heterogeneity-axis spike protocol is launching: Stage&nbsp;1
-> (AS&nbsp;+&nbsp;OM) preregistrations are imminent, the leaderboard
-> fills with M5, and the public API is on `0.x` &mdash; MINOR-version
-> bumps may break it per SemVer&nbsp;&sect;4. See
-> [Roadmap](#roadmap) for the full phase plan.
+> **Status &mdash; pre-release, Phase&nbsp;0.** Architecture is
+> **provisionally specified** by 15 ADRs; the senior-advisor lock
+> review and the staged Phase-0 spike protocol
+> ([ADR-007](adr/ADR-007-heterogeneity-axis-selection.md)) are the
+> validation gates that will promote ADRs from Provisional / RFC to
+> Accepted and ultimately to Validated. The Stage-1
+> (AS&nbsp;+&nbsp;OM) preregistrations are the next launch; the
+> leaderboard fills with M5. The public API is on `0.x` &mdash;
+> MINOR bumps may break it per SemVer&nbsp;&sect;4. See
+> [Roadmap](#roadmap).
 
 **TL;DR.** CONCERTO is a three-layer safety stack &mdash; exponential
 CBF&#x2011;QP, conformal-slack overlay, OSCBF inner filter, hard
@@ -219,6 +222,12 @@ and by rows to see what no single line of work has yet combined.
 Contact-rich manipulation appears with multi-robot coordination
 (RoCoBench) and with safety (SafeBimanual), but never with black-box
 ad-hoc partners under formal safety guarantees at the same time.
+CONCERTO + CHAMBER occupy the four-aspect intersection at the
+**design-contract** level (ADRs, scaffold, smoke test); empirical
+validation across the six heterogeneity sub-axes is the staged
+Phase-0 spike protocol's job (Stage 1: AS&nbsp;+&nbsp;OM &rarr;
+Stage 2: CR&nbsp;+&nbsp;CM &rarr; Stage 3: PF&nbsp;+&nbsp;SA), with
+results landing on the leaderboard from M5 onward.
 
 See [`adr/ADR-007`](adr/ADR-007-heterogeneity-axis-selection.md) for the
 six-axis taxonomy that defines "heterogeneous" precisely, and the
@@ -339,10 +348,12 @@ Phase&nbsp;1 ships the partner zoo and the populated leaderboard.
 Phase&nbsp;2 expands tasks and adds the real-robot demo platform.
 
 **Now &mdash; Phase&nbsp;0, design contract live, spikes about to start.**
-15 ADRs in Proposed status; Month-3 senior-advisor lock review
-imminent (&approx;9 ADRs flip to Accepted). M1 (platform), M2 (comm),
-and M4b (training stack) are merged on `main`. The `chamber-spike`
-CLI runs the ego-AHT loop end-to-end against a Hydra config.
+15 ADRs classified as Provisional or RFC under the new status taxonomy
+(see [adr/ADR-INDEX.md](adr/ADR-INDEX.md)); Month-3 senior-advisor
+lock review imminent (&approx;9 ADRs targeted for promotion to
+Accepted). M1 (platform), M2 (comm), and M4b (training stack) are
+merged on `main`. The `chamber-spike` CLI runs the ego-AHT loop
+end-to-end against a Hydra config.
 
 **Next.**
 Stage-1 spikes (AS&nbsp;+&nbsp;OM) &mdash; preregistered, launched,
@@ -392,6 +403,11 @@ single violation can be irreversible, the hard braking fallback
 per-step backstop. Sharpening the average-loss bound to per-step is
 the project's headline open theoretical question; see
 [ADR-004 Open Questions](adr/ADR-004-safety-filter.md#open-questions-deferred-to-a-later-adr).
+The conformal layer is a *Provisional* claim under the ADR status
+taxonomy; per-step safety under heterogeneous action spaces is gated
+by the Stage-1 AS spike and the follow-up safety-stack refactor
+flagged in
+[ADR-004 §Open Questions](adr/ADR-004-safety-filter.md#open-questions-deferred-to-a-later-adr).
 
 </details>
 

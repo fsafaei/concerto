@@ -1,6 +1,6 @@
 # ADR-002: RL framework — JAX (Mava) vs PyTorch (HARL) vs other
 
-**Status.** Proposed
+**Status.** Provisional
 **Authors.** Farhad Safaei
 **Reviewers.** _to fill_
 **Tags.** v0.2 §13, HMARL
@@ -47,3 +47,7 @@ By Phase-1 mid: ego-only HAPPO (frozen partner) reproduces published HARL Bi-Dex
 - (#verify, from `notes/tier1/25_harl.md`) Can the ego-only HAPPO frozen-partner adaptation preserve a weaker convergence guarantee, or does it reduce to an empirical baseline only? If the guarantee is entirely lost, document the implication for §3.8 B5 claim language.
 - (#design-decision, from `notes/tier1/25_harl.md`) Should HATD3 or HAPPO be prioritised for the bimanual manipulation target? HATD3 is more sample-efficient but replay-buffer complicates AHT adaptation; defer to prototype benchmark results.
 - (#verify, from `notes/tier1/23_hetgppo.md`) Is HetGPPO (B3) feasible as a frozen-partner AHT baseline with the VMAS + RLlib stack? Confirm before committing to the §3.8 baseline set.
+
+## Revision history
+
+- 2026-05-13 status re-classification: status changed from Proposed to **Provisional** under the new ADR status taxonomy (see [ADR-INDEX §Status taxonomy](ADR-INDEX.md#status-taxonomy)); no Decision content is altered.

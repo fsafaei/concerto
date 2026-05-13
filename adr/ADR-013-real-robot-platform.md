@@ -1,6 +1,6 @@
 # ADR-013: Real-robot demo platform & vendor
 
-**Status.** Proposed
+**Status.** RFC
 **Authors.** _to fill_
 **Reviewers.** _to fill_
 **Tags.** v0.2 §5.1
@@ -42,3 +42,7 @@ By Month 12: one Tier-2 demo recorded on real heterogeneous robots.
 
 ## Open questions deferred to a later ADR
 - _to fill_
+
+## Revision history
+
+- 2026-05-13 status re-classification: status changed from Proposed to **RFC** under the new ADR status taxonomy (see [ADR-INDEX §Status taxonomy](ADR-INDEX.md#status-taxonomy)); real-robot platform selection is pending partner outreach; no Decision content is altered.

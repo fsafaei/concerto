@@ -1,6 +1,6 @@
 # ADR-009: Partner-zoo construction
 
-**Status.** Proposed (dependency update 2026-05-08 in light of ADR-007 rev 3 staged rollout)
+**Status.** RFC (dependency update 2026-05-08 in light of ADR-007 rev 3 staged rollout; Phase-1 lock pending)
 **Authors.** _to fill_
 **Reviewers.** _to fill_
 **Tags.** v0.2 §3.5
@@ -62,3 +62,7 @@ By Phase-1 end:
 - #design-decision (notes/tier1/25_harl.md): Is HATD3 or HAPPO preferred as the primary B5 baseline for the bimanual manipulation target? HATD3 has better sample efficiency on continuous tasks but complicates AHT adaptation due to replay buffer.
 - #verify (notes/tier1/25_harl.md): Confirm whether Bi-DexterousHands evaluation uses two identical Shadow Hands (homogeneous) or distinct embodiments; if homogeneous, HARL's result does not directly represent the mobile-base + fixed-arm setting.
 - #verify (notes/tier2/32_openvla.md): Confirm whether the 256-bin action-token boundary is accessible without partner-internal instrumentation in a frozen LoRA checkpoint, or whether a wrapper inference harness is required for CBF interception.
+
+## Revision history
+
+- 2026-05-13 status re-classification: status changed from Proposed to **RFC** under the new ADR status taxonomy (see [ADR-INDEX §Status taxonomy](ADR-INDEX.md#status-taxonomy)); Phase-1 lock pending; no Decision content is altered.

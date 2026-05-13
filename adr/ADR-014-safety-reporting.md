@@ -1,6 +1,6 @@
 # ADR-014: Safety violation reporting protocol
 
-**Status.** Proposed (dependency update 2026-05-08 in light of ADR-007 rev 3 staged rollout)
+**Status.** Provisional (dependency update 2026-05-08 in light of ADR-007 rev 3 staged rollout; reporting contract qualified — depends on ADR-008 HRS bundle and the PR-A2 conformal-loss instrumentation)
 **Authors.** Farhad Safaei
 **Reviewers.** _to fill_
 **Tags.** v0.2 §6.3
@@ -62,3 +62,4 @@ By Phase-1 end: (1) all reported results include all three safety tables with no
 
 ## Revision history
 - 2026-05-13 revision: backfills the machine functional-safety stack (ISO 13849-1:2023, IEC 62061:2021, IEC 61508-1:2010) in Context and Evidence basis alongside the existing ISO 10218-2:2025 anchor, and pins Table 2 aggregate metrics to rliable-style robust statistics (Agarwal et al. 2021) with Henderson et al. 2018 as the anti-pattern catalogue. The Decision is unchanged at the three-table structure but is now explicitly typed in terms of rliable metrics for Table 2. Mirrors the rliable contract into `docs/reference/evaluation.md` §3.2 and the SA row of `docs/reference/standards.md` §2.3.
+- 2026-05-13 status re-classification: status changed from Proposed to **Provisional** under the new ADR status taxonomy (see [ADR-INDEX §Status taxonomy](ADR-INDEX.md#status-taxonomy)); the reporting contract remains qualified by ADR-008 HRS bundle composition and by PR-A2 conformal-loss instrumentation that separates prediction-gap loss from constraint-violation signal; no Decision content is altered.

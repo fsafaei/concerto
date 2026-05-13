@@ -1,6 +1,6 @@
 # ADR-NNN: <Title in imperative form>
 
-**Status.** Proposed | Accepted (YYYY-MM-DD) | Deferred | Superseded by ADR-MMM
+**Status.** RFC | Provisional | Accepted (YYYY-MM-DD) | Validated | Superseded by ADR-MMM
 **Authors.** <names>
 **Reviewers.** <names>
 **Tags.** v0.2 §<X.Y>, <axis>, <cluster>

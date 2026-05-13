@@ -1,6 +1,6 @@
 # ADR-012: License & CLA
 
-**Status.** Proposed
+**Status.** Provisional
 **Authors.** _to fill_
 **Reviewers.** _to fill_
 **Tags.** v0.2 §10
@@ -42,3 +42,7 @@ Acceptance is unconditional; this ADR is largely a recording of the plan default
 
 ## Open questions deferred to a later ADR
 - _to fill_
+
+## Revision history
+
+- 2026-05-13 status re-classification: status changed from Proposed to **Provisional** under the new ADR status taxonomy (see [ADR-INDEX §Status taxonomy](ADR-INDEX.md#status-taxonomy)); the Apache 2.0 license is locked but the CLA bot is not yet wired; no Decision content is altered.
