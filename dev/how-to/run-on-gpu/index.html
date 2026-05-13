@@ -813,28 +813,6 @@
   
 </li>
       
-        <li class="md-nav__item">
-  <a href="#5-publish-verify" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        5. Publish + verify
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#troubleshooting" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Troubleshooting
-      
-    </span>
-  </a>
-  
-</li>
-      
     </ul>
   
 </nav>
@@ -1414,28 +1392,6 @@
   
 </li>
       
-        <li class="md-nav__item">
-  <a href="#5-publish-verify" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        5. Publish + verify
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#troubleshooting" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Troubleshooting
-      
-    </span>
-  </a>
-  
-</li>
-      
     </ul>
   
 </nav>
@@ -1576,6 +1532,29 @@ publishes the step-50000 checkpoint under the canonical name
 </table>
 <p>Total GPU wall-time on a single consumer GPU: ~2 hours, plus
 ~1 minute of artefact handling.</p>
+<blockquote>
+<p><strong>Why does the slope-test assertion fail with <code>passed=False</code>?</strong></p>
+<p>This is the <strong>expected and correct</strong> outcome on the Stage-0
+smoke environment. <code>make_stage0_training_env</code> and the
+<code>_Stage0SmokeEnv</code> it wraps load an empty scene with no task and
+no reward function — they exist to validate the rig (wrapper
+dispatch, action routing, observation namespacing, GPU + CUDA
++ SAPIEN + Vulkan integration), per <a href="../../reference/adrs/">ADR-001 §Validation
+criteria</a>. There is no reward signal to learn, so
+cumulative reward stays at 0.0 and the slope-test assertion in
+<code>concerto.training.empirical_guarantee</code> correctly reports
+slope = 0, <code>passed = False</code>.</p>
+<p>The slope-test trip-wire is the [ADR-002 risk-mitigation</p>
+<h1 id="1adr-002-empirical-guard-rail-it-fires-when-happo-produces">1]<a href="../../reference/adrs/">adr-002</a> empirical guard rail: it fires when HAPPO produces</h1>
+<p>no learning, regardless of whether the cause is the frozen-
+partner setting breaking the gradient or — as in this case —
+the env having no task. The Stage-1 spike protocol
+(<a href="../../reference/adrs/">ADR-007 §Stage 1</a>) is where the gap test against a
+learnable task happens.</p>
+<p>If you want to see the trainer optimise a non-trivial reward,
+swap <code>make_stage0_training_env</code> for the Stage-1 AS task once it
+lands in <code>src/chamber/tasks/</code> (Phase-1+).</p>
+</blockquote>
 <h2 id="5-publish-verify">5. Publish + verify</h2>
 <p>After the run, you should have on disk:</p>
 <ul>
