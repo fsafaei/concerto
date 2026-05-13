@@ -10,8 +10,12 @@
 1. Copy the nearest existing pre-registration YAML from
    `spikes/preregistration/` as a template.
 2. Edit the hypothesis, threshold, and comparison conditions.
-3. Commit the YAML and create a git tag (`stage<n>-<axis>-<date>`).
-4. Run `chamber-spike run --axis <axis>`.
+3. Set `run_purpose` explicitly to one of `leaderboard` (default),
+   `power`, or `debug`. Leaderboard runs may not use
+   `bootstrap_method: iid`; see
+   [`evaluation.md` §3.3](../reference/evaluation.md#33-run-purpose-and-bootstrap-policy).
+4. Commit the YAML and create a git tag (`stage<n>-<axis>-<date>`).
+5. Run `chamber-spike run --axis <axis>`.
 
 *(Full content added in M5.)*
 

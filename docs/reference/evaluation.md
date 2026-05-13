@@ -153,6 +153,34 @@ hypothesis, the analysis formula, and the threshold — lives in
 see the
 [run-spike how-to](../how-to/run-spike.md) for the operational flow.
 
+### 3.3 Run purpose and bootstrap policy
+
+Each pre-registration YAML declares a `run_purpose`, one of:
+
+| `run_purpose`   | Meaning                                                                                                               | `bootstrap_method: iid` allowed? |
+|-----------------|-----------------------------------------------------------------------------------------------------------------------|----------------------------------|
+| `leaderboard`   | Default. Admitted to the public CHAMBER ranking and the HRS bundle.                                                   | **No** — rejected at load time.  |
+| `power`         | Power-analysis run used to size cluster-aware bootstraps; not admitted to the leaderboard.                            | Yes.                             |
+| `debug`         | Local debug / smoke run; not admitted to the leaderboard.                                                             | Yes.                             |
+
+`run_purpose` defaults to `leaderboard` when the field is omitted, so
+every existing YAML is treated as a leaderboard entry and inherits the
+strictest bootstrap rules without explicit migration. New YAMLs **must**
+set `run_purpose` explicitly — copy the value from the
+`run-spike` how-to template — so reviewers can tell at a glance whether
+a run is bound for the leaderboard.
+
+The iid-not-allowed rule is enforced in
+[`chamber.evaluation.prereg.PreregistrationSpec`](https://github.com/fsafaei/concerto/blob/main/src/chamber/evaluation/prereg.py)
+by a Pydantic `model_validator`: a YAML that pairs
+`run_purpose: leaderboard` with `bootstrap_method: iid` fails to load
+with a `ValidationError` quoting *"iid bootstrap is not permitted for
+leaderboard entries; use cluster (default) or hierarchical."* The rule
+is the same one stated in §1 — a pooled iid bootstrap on
+seed-clustered episode data understates the CI width — restated at the
+schema layer so an incorrectly configured spike refuses to launch
+rather than silently producing a CI that cannot be admitted.
+
 ---
 
 ## 3.4 Stewardship and machine-readability
