@@ -10,12 +10,14 @@ from chamber.envs.action_repeat import PerAgentActionRepeatWrapper
 from chamber.envs.comm_shaping import CommShapingWrapper
 from chamber.envs.errors import ChamberEnvCompatibilityError
 from chamber.envs.mpe_cooperative_push import MPECooperativePushEnv
+from chamber.envs.partner_meta import PartnerIdAnnotationWrapper
 from chamber.envs.texture_filter import TextureFilterObsWrapper
 
 __all__ = [
     "ChamberEnvCompatibilityError",
     "CommShapingWrapper",
     "MPECooperativePushEnv",
+    "PartnerIdAnnotationWrapper",
     "PerAgentActionRepeatWrapper",
     "TextureFilterObsWrapper",
 ]
