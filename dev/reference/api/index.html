@@ -2191,6 +2191,78 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#chamber.envs.PartnerIdAnnotationWrapper" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        PartnerIdAnnotationWrapper
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="PartnerIdAnnotationWrapper">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#chamber.envs.PartnerIdAnnotationWrapper.partner_id" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        partner_id
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#chamber.envs.PartnerIdAnnotationWrapper.__init__" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        __init__
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#chamber.envs.PartnerIdAnnotationWrapper.reset" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        reset
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#chamber.envs.PartnerIdAnnotationWrapper.set_partner_id" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        set_partner_id
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#chamber.envs.PartnerIdAnnotationWrapper.step" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        step
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#chamber.envs.PerAgentActionRepeatWrapper" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -6134,6 +6206,78 @@
         
           <li class="md-nav__item">
   <a href="#chamber.envs.MPECooperativePushEnv.step" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        step
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#chamber.envs.PartnerIdAnnotationWrapper" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        PartnerIdAnnotationWrapper
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="PartnerIdAnnotationWrapper">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#chamber.envs.PartnerIdAnnotationWrapper.partner_id" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        partner_id
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#chamber.envs.PartnerIdAnnotationWrapper.__init__" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        __init__
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#chamber.envs.PartnerIdAnnotationWrapper.reset" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        reset
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#chamber.envs.PartnerIdAnnotationWrapper.set_partner_id" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        set_partner_id
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#chamber.envs.PartnerIdAnnotationWrapper.step" class="md-nav__link">
     <span class="md-ellipsis">
       
         step
@@ -21218,6 +21362,555 @@ so a misbehaving partner cannot escape the plane.</p>
     <span class="bp">self</span><span class="o">.</span><span class="n">_step_count</span> <span class="o">+=</span> <span class="mi">1</span>
     <span class="n">truncated</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_step_count</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_episode_length</span>
     <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_obs</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compute_reward</span><span class="p">(),</span> <span class="kc">False</span><span class="p">,</span> <span class="n">truncated</span><span class="p">,</span> <span class="p">{}</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+
+
+  </div>
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-class">
+
+
+
+<h2 id="chamber.envs.PartnerIdAnnotationWrapper" class="doc doc-heading">
+            <span class="doc doc-object-name doc-class-name">PartnerIdAnnotationWrapper</span>
+
+
+</h2>
+
+
+    <div class="doc doc-contents ">
+            <p class="doc doc-class-bases">
+              Bases: <code><span title="gymnasium.Wrapper">Wrapper</span></code></p>
+
+
+
+        <p>Inject <code>obs["meta"]["partner_id"]</code> on every reset and step (ADR-006 risk #3).</p>
+<p>Wraps any env whose observation space is a :class:<code>gym.spaces.Dict</code>.
+The wrapper extends the obs space with a <code>"meta"</code> sub-Dict (empty
+in Phase-0 — Gymnasium's :class:<code>gym.spaces.Dict</code> does not natively
+type string values, so the actual <code>partner_id</code> field is carried
+in the runtime observation dict rather than declared in the space).</p>
+
+
+<details class="note" open>
+  <summary>Note</summary>
+  <p>:meth:<code>gym.spaces.Dict.contains</code> returns <code>False</code> on the
+<code>"meta"</code> sub-dict because the declared inner space is empty;
+this matches :class:<code>chamber.envs.CommShapingWrapper</code>'s
+precedent for its <code>"comm"</code> sub-space (no current consumer
+validates an obs via <code>observation_space.contains</code>). Adding a
+string-typed inner Space would require an upstream Gymnasium
+change.</p>
+</details>        <p>Phase-0 binds <code>partner_id</code> at construction. For a Phase-1
+Stage-3 PF spike with mid-episode swap, call :meth:<code>set_partner_id</code>
+before the next :meth:<code>step</code>; the wrapper will surface the new
+value on the subsequent obs.</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <ul>
+        <li class="doc-section-item field-body">
+            <b><code>env</code></b>
+              (<code><span title="gymnasium.Env">Env</span></code>)
+          –
+          <div class="doc-md-description">
+            <p>Inner env with a :class:<code>gym.spaces.Dict</code> observation space.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+            <b><code>partner_id</code></b>
+              (<code><span title="str">str</span></code>)
+          –
+          <div class="doc-md-description">
+            <p>Stable 16-hex-char hash from
+:attr:<code>chamber.partners.api.PartnerSpec.partner_id</code>. The
+wrapper does not validate the format — :class:<code>PartnerSpec</code>
+is the source of truth.</p>
+          </div>
+        </li>
+    </ul>
+
+
+<p><span class="doc-section-title">Raises:</span></p>
+    <ul>
+        <li class="doc-section-item field-body">
+              <code><a class="autorefs autorefs-internal" title="ChamberEnvCompatibilityError (chamber.envs.errors.ChamberEnvCompatibilityError)" href="#chamber.envs.errors.ChamberEnvCompatibilityError">ChamberEnvCompatibilityError</a></code>
+            –
+          <div class="doc-md-description">
+            <p>When the inner observation space
+is not a :class:<code>gym.spaces.Dict</code> (ADR-001 §Risks; matches
+:class:<code>chamber.envs.CommShapingWrapper</code>'s compatibility
+contract).</p>
+          </div>
+        </li>
+    </ul>
+
+
+
+
+
+
+
+
+              <details class="mkdocstrings-source">
+                <summary>Source code in <code>src/chamber/envs/partner_meta.py</code></summary>
+                <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 57</span>
+<span class="normal"> 58</span>
+<span class="normal"> 59</span>
+<span class="normal"> 60</span>
+<span class="normal"> 61</span>
+<span class="normal"> 62</span>
+<span class="normal"> 63</span>
+<span class="normal"> 64</span>
+<span class="normal"> 65</span>
+<span class="normal"> 66</span>
+<span class="normal"> 67</span>
+<span class="normal"> 68</span>
+<span class="normal"> 69</span>
+<span class="normal"> 70</span>
+<span class="normal"> 71</span>
+<span class="normal"> 72</span>
+<span class="normal"> 73</span>
+<span class="normal"> 74</span>
+<span class="normal"> 75</span>
+<span class="normal"> 76</span>
+<span class="normal"> 77</span>
+<span class="normal"> 78</span>
+<span class="normal"> 79</span>
+<span class="normal"> 80</span>
+<span class="normal"> 81</span>
+<span class="normal"> 82</span>
+<span class="normal"> 83</span>
+<span class="normal"> 84</span>
+<span class="normal"> 85</span>
+<span class="normal"> 86</span>
+<span class="normal"> 87</span>
+<span class="normal"> 88</span>
+<span class="normal"> 89</span>
+<span class="normal"> 90</span>
+<span class="normal"> 91</span>
+<span class="normal"> 92</span>
+<span class="normal"> 93</span>
+<span class="normal"> 94</span>
+<span class="normal"> 95</span>
+<span class="normal"> 96</span>
+<span class="normal"> 97</span>
+<span class="normal"> 98</span>
+<span class="normal"> 99</span>
+<span class="normal">100</span>
+<span class="normal">101</span>
+<span class="normal">102</span>
+<span class="normal">103</span>
+<span class="normal">104</span>
+<span class="normal">105</span>
+<span class="normal">106</span>
+<span class="normal">107</span>
+<span class="normal">108</span>
+<span class="normal">109</span>
+<span class="normal">110</span>
+<span class="normal">111</span>
+<span class="normal">112</span>
+<span class="normal">113</span>
+<span class="normal">114</span>
+<span class="normal">115</span>
+<span class="normal">116</span>
+<span class="normal">117</span>
+<span class="normal">118</span>
+<span class="normal">119</span>
+<span class="normal">120</span>
+<span class="normal">121</span>
+<span class="normal">122</span>
+<span class="normal">123</span>
+<span class="normal">124</span>
+<span class="normal">125</span>
+<span class="normal">126</span>
+<span class="normal">127</span>
+<span class="normal">128</span>
+<span class="normal">129</span>
+<span class="normal">130</span>
+<span class="normal">131</span>
+<span class="normal">132</span>
+<span class="normal">133</span>
+<span class="normal">134</span>
+<span class="normal">135</span>
+<span class="normal">136</span>
+<span class="normal">137</span>
+<span class="normal">138</span>
+<span class="normal">139</span>
+<span class="normal">140</span>
+<span class="normal">141</span>
+<span class="normal">142</span>
+<span class="normal">143</span>
+<span class="normal">144</span>
+<span class="normal">145</span>
+<span class="normal">146</span>
+<span class="normal">147</span>
+<span class="normal">148</span>
+<span class="normal">149</span>
+<span class="normal">150</span>
+<span class="normal">151</span>
+<span class="normal">152</span>
+<span class="normal">153</span>
+<span class="normal">154</span>
+<span class="normal">155</span>
+<span class="normal">156</span>
+<span class="normal">157</span>
+<span class="normal">158</span>
+<span class="normal">159</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">PartnerIdAnnotationWrapper</span><span class="p">(</span><span class="n">gym</span><span class="o">.</span><span class="n">Wrapper</span><span class="p">):</span>  <span class="c1"># type: ignore[type-arg]</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Inject ``obs[&quot;meta&quot;][&quot;partner_id&quot;]`` on every reset and step (ADR-006 risk #3).</span>
+
+<span class="sd">    Wraps any env whose observation space is a :class:`gym.spaces.Dict`.</span>
+<span class="sd">    The wrapper extends the obs space with a ``&quot;meta&quot;`` sub-Dict (empty</span>
+<span class="sd">    in Phase-0 — Gymnasium&#39;s :class:`gym.spaces.Dict` does not natively</span>
+<span class="sd">    type string values, so the actual ``partner_id`` field is carried</span>
+<span class="sd">    in the runtime observation dict rather than declared in the space).</span>
+
+<span class="sd">    Note:</span>
+<span class="sd">        :meth:`gym.spaces.Dict.contains` returns ``False`` on the</span>
+<span class="sd">        ``&quot;meta&quot;`` sub-dict because the declared inner space is empty;</span>
+<span class="sd">        this matches :class:`chamber.envs.CommShapingWrapper`&#39;s</span>
+<span class="sd">        precedent for its ``&quot;comm&quot;`` sub-space (no current consumer</span>
+<span class="sd">        validates an obs via ``observation_space.contains``). Adding a</span>
+<span class="sd">        string-typed inner Space would require an upstream Gymnasium</span>
+<span class="sd">        change.</span>
+
+<span class="sd">    Phase-0 binds ``partner_id`` at construction. For a Phase-1</span>
+<span class="sd">    Stage-3 PF spike with mid-episode swap, call :meth:`set_partner_id`</span>
+<span class="sd">    before the next :meth:`step`; the wrapper will surface the new</span>
+<span class="sd">    value on the subsequent obs.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        env: Inner env with a :class:`gym.spaces.Dict` observation space.</span>
+<span class="sd">        partner_id: Stable 16-hex-char hash from</span>
+<span class="sd">            :attr:`chamber.partners.api.PartnerSpec.partner_id`. The</span>
+<span class="sd">            wrapper does not validate the format — :class:`PartnerSpec`</span>
+<span class="sd">            is the source of truth.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">        ChamberEnvCompatibilityError: When the inner observation space</span>
+<span class="sd">            is not a :class:`gym.spaces.Dict` (ADR-001 §Risks; matches</span>
+<span class="sd">            :class:`chamber.envs.CommShapingWrapper`&#39;s compatibility</span>
+<span class="sd">            contract).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">env</span><span class="p">:</span> <span class="n">gym</span><span class="o">.</span><span class="n">Env</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">partner_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>  <span class="c1"># type: ignore[type-arg]</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Validate the obs space and bind the partner identity (ADR-006 risk #3).&quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">env</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">env</span><span class="o">.</span><span class="n">observation_space</span><span class="p">,</span> <span class="n">gym</span><span class="o">.</span><span class="n">spaces</span><span class="o">.</span><span class="n">Dict</span><span class="p">):</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;PartnerIdAnnotationWrapper requires a gym.spaces.Dict observation &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;space; got </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">env</span><span class="o">.</span><span class="n">observation_space</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">. See ADR-001 §Risks.&quot;</span>
+            <span class="p">)</span>
+            <span class="k">raise</span> <span class="n">ChamberEnvCompatibilityError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_partner_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">partner_id</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_extend_observation_space</span><span class="p">()</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_extend_observation_space</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Add an empty ``&quot;meta&quot;`` sub-space (Gymnasium has no string-typed Space).&quot;&quot;&quot;</span>
+        <span class="n">existing</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">observation_space</span><span class="o">.</span><span class="n">spaces</span><span class="p">)</span>  <span class="c1"># type: ignore[attr-defined]</span>
+        <span class="n">existing</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="n">_META_KEY</span><span class="p">,</span> <span class="n">gym</span><span class="o">.</span><span class="n">spaces</span><span class="o">.</span><span class="n">Dict</span><span class="p">({}))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">observation_space</span> <span class="o">=</span> <span class="n">gym</span><span class="o">.</span><span class="n">spaces</span><span class="o">.</span><span class="n">Dict</span><span class="p">(</span><span class="n">existing</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">partner_id</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the partner identity the wrapper currently injects (ADR-006 risk #3).</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            The stable 16-hex-char hash bound at construction or via</span>
+<span class="sd">            :meth:`set_partner_id`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_partner_id</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">set_partner_id</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">partner_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Rebind the partner identity for the next reset / step (ADR-004 §risk-mitigation #2).</span>
+
+<span class="sd">        Used by Phase-1 mid-episode-swap experiments (ADR-007 Stage-3 PF):</span>
+<span class="sd">        call this before the next :meth:`step` and the wrapper will</span>
+<span class="sd">        surface the new value on the subsequent obs. The change does</span>
+<span class="sd">        NOT trigger a new :meth:`reset` automatically — the conformal</span>
+<span class="sd">        filter does that itself when it observes the new</span>
+<span class="sd">        ``partner_id`` on ``obs[&quot;meta&quot;]``.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            partner_id: New stable hash from</span>
+<span class="sd">                :attr:`chamber.partners.api.PartnerSpec.partner_id`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_partner_id</span> <span class="o">=</span> <span class="n">partner_id</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">reset</span><span class="p">(</span>  <span class="c1"># type: ignore[override]</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="nb">object</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">dict</span><span class="p">,</span> <span class="nb">dict</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Reset the env and inject ``partner_id`` into the initial obs (ADR-006 risk #3).&quot;&quot;&quot;</span>
+        <span class="n">obs</span><span class="p">,</span> <span class="n">info</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">reset</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>  <span class="c1"># type: ignore[arg-type]</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_annotate</span><span class="p">(</span><span class="n">obs</span><span class="p">),</span> <span class="n">info</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">step</span><span class="p">(</span>  <span class="c1"># type: ignore[override]</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">action</span><span class="p">:</span> <span class="nb">object</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">dict</span><span class="p">,</span> <span class="nb">object</span><span class="p">,</span> <span class="nb">bool</span><span class="p">,</span> <span class="nb">bool</span><span class="p">,</span> <span class="nb">dict</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Step the env and inject the current ``partner_id`` (ADR-006 risk #3).&quot;&quot;&quot;</span>
+        <span class="n">obs</span><span class="p">,</span> <span class="n">reward</span><span class="p">,</span> <span class="n">terminated</span><span class="p">,</span> <span class="n">truncated</span><span class="p">,</span> <span class="n">info</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">step</span><span class="p">(</span><span class="n">action</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_annotate</span><span class="p">(</span><span class="n">obs</span><span class="p">),</span> <span class="n">reward</span><span class="p">,</span> <span class="n">terminated</span><span class="p">,</span> <span class="n">truncated</span><span class="p">,</span> <span class="n">info</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_annotate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obs</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">object</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">object</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return a copy of ``obs`` with ``obs[&quot;meta&quot;][&quot;partner_id&quot;]`` set.&quot;&quot;&quot;</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">obs</span><span class="p">)</span>
+        <span class="n">existing_meta</span> <span class="o">=</span> <span class="n">out</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">_META_KEY</span><span class="p">)</span>
+        <span class="n">meta</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">object</span><span class="p">]</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">existing_meta</span><span class="p">)</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">existing_meta</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="k">else</span> <span class="p">{}</span>
+        <span class="n">meta</span><span class="p">[</span><span class="n">_PARTNER_ID_KEY</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_partner_id</span>
+        <span class="n">out</span><span class="p">[</span><span class="n">_META_KEY</span><span class="p">]</span> <span class="o">=</span> <span class="n">meta</span>
+        <span class="k">return</span> <span class="n">out</span>
+</code></pre></div></td></tr></table></div>
+              </details>
+
+
+
+<div class="doc doc-children">
+
+
+
+
+
+
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h3 id="chamber.envs.PartnerIdAnnotationWrapper.partner_id" class="doc doc-heading">
+            <span class="doc doc-object-name doc-attribute-name">partner_id</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-property"><code>property</code></small>
+  </span>
+
+</h3>
+<div class="doc-signature highlight"><pre><span></span><code><span class="n">partner_id</span><span class="p">:</span> <span class="nb">str</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Return the partner identity the wrapper currently injects (ADR-006 risk #3).</p>
+
+
+<p><span class="doc-section-title">Returns:</span></p>
+    <ul>
+        <li class="doc-section-item field-body">
+              <code><span title="str">str</span></code>
+          –
+          <div class="doc-md-description">
+            <p>The stable 16-hex-char hash bound at construction or via</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+              <code><span title="str">str</span></code>
+          –
+          <div class="doc-md-description">
+            <p>meth:<code>set_partner_id</code>.</p>
+          </div>
+        </li>
+    </ul>
+
+    </div>
+
+</div>
+
+
+
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="chamber.envs.PartnerIdAnnotationWrapper.__init__" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">__init__</span>
+
+
+</h3>
+<div class="doc-signature highlight"><pre><span></span><code><span class="nf">__init__</span><span class="p">(</span><span class="n">env</span><span class="p">:</span> <span class="n">Env</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">partner_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Validate the obs space and bind the partner identity (ADR-006 risk #3).</p>
+
+
+            <details class="mkdocstrings-source">
+              <summary>Source code in <code>src/chamber/envs/partner_meta.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 94</span>
+<span class="normal"> 95</span>
+<span class="normal"> 96</span>
+<span class="normal"> 97</span>
+<span class="normal"> 98</span>
+<span class="normal"> 99</span>
+<span class="normal">100</span>
+<span class="normal">101</span>
+<span class="normal">102</span>
+<span class="normal">103</span>
+<span class="normal">104</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">env</span><span class="p">:</span> <span class="n">gym</span><span class="o">.</span><span class="n">Env</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">partner_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>  <span class="c1"># type: ignore[type-arg]</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Validate the obs space and bind the partner identity (ADR-006 risk #3).&quot;&quot;&quot;</span>
+    <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">env</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">env</span><span class="o">.</span><span class="n">observation_space</span><span class="p">,</span> <span class="n">gym</span><span class="o">.</span><span class="n">spaces</span><span class="o">.</span><span class="n">Dict</span><span class="p">):</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;PartnerIdAnnotationWrapper requires a gym.spaces.Dict observation &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;space; got </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">env</span><span class="o">.</span><span class="n">observation_space</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">. See ADR-001 §Risks.&quot;</span>
+        <span class="p">)</span>
+        <span class="k">raise</span> <span class="n">ChamberEnvCompatibilityError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_partner_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">partner_id</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_extend_observation_space</span><span class="p">()</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="chamber.envs.PartnerIdAnnotationWrapper.reset" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">reset</span>
+
+
+</h3>
+<div class="doc-signature highlight"><pre><span></span><code><span class="nf">reset</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="nb">object</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">dict</span><span class="p">,</span> <span class="nb">dict</span><span class="p">]</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Reset the env and inject <code>partner_id</code> into the initial obs (ADR-006 risk #3).</p>
+
+
+            <details class="mkdocstrings-source">
+              <summary>Source code in <code>src/chamber/envs/partner_meta.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">138</span>
+<span class="normal">139</span>
+<span class="normal">140</span>
+<span class="normal">141</span>
+<span class="normal">142</span>
+<span class="normal">143</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">reset</span><span class="p">(</span>  <span class="c1"># type: ignore[override]</span>
+    <span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="nb">object</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">dict</span><span class="p">,</span> <span class="nb">dict</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Reset the env and inject ``partner_id`` into the initial obs (ADR-006 risk #3).&quot;&quot;&quot;</span>
+    <span class="n">obs</span><span class="p">,</span> <span class="n">info</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">reset</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>  <span class="c1"># type: ignore[arg-type]</span>
+    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_annotate</span><span class="p">(</span><span class="n">obs</span><span class="p">),</span> <span class="n">info</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="chamber.envs.PartnerIdAnnotationWrapper.set_partner_id" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">set_partner_id</span>
+
+
+</h3>
+<div class="doc-signature highlight"><pre><span></span><code><span class="nf">set_partner_id</span><span class="p">(</span><span class="n">partner_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Rebind the partner identity for the next reset / step (ADR-004 §risk-mitigation #2).</p>
+<p>Used by Phase-1 mid-episode-swap experiments (ADR-007 Stage-3 PF):
+call this before the next :meth:<code>step</code> and the wrapper will
+surface the new value on the subsequent obs. The change does
+NOT trigger a new :meth:<code>reset</code> automatically — the conformal
+filter does that itself when it observes the new
+<code>partner_id</code> on <code>obs["meta"]</code>.</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <ul>
+        <li class="doc-section-item field-body">
+            <b><code>partner_id</code></b>
+              (<code><span title="str">str</span></code>)
+          –
+          <div class="doc-md-description">
+            <p>New stable hash from
+:attr:<code>chamber.partners.api.PartnerSpec.partner_id</code>.</p>
+          </div>
+        </li>
+    </ul>
+
+
+            <details class="mkdocstrings-source">
+              <summary>Source code in <code>src/chamber/envs/partner_meta.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">122</span>
+<span class="normal">123</span>
+<span class="normal">124</span>
+<span class="normal">125</span>
+<span class="normal">126</span>
+<span class="normal">127</span>
+<span class="normal">128</span>
+<span class="normal">129</span>
+<span class="normal">130</span>
+<span class="normal">131</span>
+<span class="normal">132</span>
+<span class="normal">133</span>
+<span class="normal">134</span>
+<span class="normal">135</span>
+<span class="normal">136</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">set_partner_id</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">partner_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Rebind the partner identity for the next reset / step (ADR-004 §risk-mitigation #2).</span>
+
+<span class="sd">    Used by Phase-1 mid-episode-swap experiments (ADR-007 Stage-3 PF):</span>
+<span class="sd">    call this before the next :meth:`step` and the wrapper will</span>
+<span class="sd">    surface the new value on the subsequent obs. The change does</span>
+<span class="sd">    NOT trigger a new :meth:`reset` automatically — the conformal</span>
+<span class="sd">    filter does that itself when it observes the new</span>
+<span class="sd">    ``partner_id`` on ``obs[&quot;meta&quot;]``.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        partner_id: New stable hash from</span>
+<span class="sd">            :attr:`chamber.partners.api.PartnerSpec.partner_id`.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_partner_id</span> <span class="o">=</span> <span class="n">partner_id</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="chamber.envs.PartnerIdAnnotationWrapper.step" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">step</span>
+
+
+</h3>
+<div class="doc-signature highlight"><pre><span></span><code><span class="nf">step</span><span class="p">(</span>
+    <span class="n">action</span><span class="p">:</span> <span class="nb">object</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">dict</span><span class="p">,</span> <span class="nb">object</span><span class="p">,</span> <span class="nb">bool</span><span class="p">,</span> <span class="nb">bool</span><span class="p">,</span> <span class="nb">dict</span><span class="p">]</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Step the env and inject the current <code>partner_id</code> (ADR-006 risk #3).</p>
+
+
+            <details class="mkdocstrings-source">
+              <summary>Source code in <code>src/chamber/envs/partner_meta.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">145</span>
+<span class="normal">146</span>
+<span class="normal">147</span>
+<span class="normal">148</span>
+<span class="normal">149</span>
+<span class="normal">150</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">step</span><span class="p">(</span>  <span class="c1"># type: ignore[override]</span>
+    <span class="bp">self</span><span class="p">,</span> <span class="n">action</span><span class="p">:</span> <span class="nb">object</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">dict</span><span class="p">,</span> <span class="nb">object</span><span class="p">,</span> <span class="nb">bool</span><span class="p">,</span> <span class="nb">bool</span><span class="p">,</span> <span class="nb">dict</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Step the env and inject the current ``partner_id`` (ADR-006 risk #3).&quot;&quot;&quot;</span>
+    <span class="n">obs</span><span class="p">,</span> <span class="n">reward</span><span class="p">,</span> <span class="n">terminated</span><span class="p">,</span> <span class="n">truncated</span><span class="p">,</span> <span class="n">info</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">step</span><span class="p">(</span><span class="n">action</span><span class="p">)</span>
+    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_annotate</span><span class="p">(</span><span class="n">obs</span><span class="p">),</span> <span class="n">reward</span><span class="p">,</span> <span class="n">terminated</span><span class="p">,</span> <span class="n">truncated</span><span class="p">,</span> <span class="n">info</span>
 </code></pre></div></td></tr></table></div>
             </details>
     </div>
