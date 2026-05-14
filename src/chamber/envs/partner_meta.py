@@ -63,6 +63,15 @@ class PartnerIdAnnotationWrapper(gym.Wrapper):  # type: ignore[type-arg]
     type string values, so the actual ``partner_id`` field is carried
     in the runtime observation dict rather than declared in the space).
 
+    Note:
+        :meth:`gym.spaces.Dict.contains` returns ``False`` on the
+        ``"meta"`` sub-dict because the declared inner space is empty;
+        this matches :class:`chamber.envs.CommShapingWrapper`'s
+        precedent for its ``"comm"`` sub-space (no current consumer
+        validates an obs via ``observation_space.contains``). Adding a
+        string-typed inner Space would require an upstream Gymnasium
+        change.
+
     Phase-0 binds ``partner_id`` at construction. For a Phase-1
     Stage-3 PF spike with mid-episode swap, call :meth:`set_partner_id`
     before the next :meth:`step`; the wrapper will surface the new

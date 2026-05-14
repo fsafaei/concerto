@@ -309,6 +309,11 @@ def test_draft_zoo_round_trip_on_real_stage0_env(
     finally:
         probe.close()
 
+    # Tier-2 stages synthetic checkpoints matching the real env's shapes.
+    # The published zoo-seed (``happo_seed7_step50k.pt``) is exercised by
+    # ``tests/reproduction/test_zoo_seed_artifact.py`` in B4 — keeping the
+    # M4-gate test decoupled from artefact storage avoids confusing
+    # shape-mismatch failures here.
     monkeypatch.setenv(_ARTIFACTS_ROOT_ENV, str(tmp_path))
     for spec in zoo:
         uid = spec.extra["uid"]
