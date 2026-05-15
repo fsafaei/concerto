@@ -6,13 +6,13 @@
 #   - any CI runner that doesn't have a GPU.
 #
 # Mirrors the dev + prod stages of Dockerfile.gpu but uses
-# ubuntu:22.04 as the base so the image doesn't drag in the ~3 GB
+# ubuntu:26.04 as the base so the image doesn't drag in the ~3 GB
 # NVIDIA layer. The chamber-spike CLI's stage0_smoke / Vulkan paths
 # will loud-fail with ChamberEnvCompatibilityError on this image
 # (ADR-001 §Risks); the mpe_cooperative_push training path + the unit
 # / integration / property test suites all run cleanly.
 #
-# Pin: ubuntu:22.04 by digest so the build is reproducible on the
+# Pin: ubuntu:26.04 by digest so the build is reproducible on the
 # project's existing supply-chain attestation surface.
 FROM ubuntu:26.04@sha256:f3d28607ddd78734bb7f71f117f3c6706c666b8b76cbff7c9ff6e5718d46ff64 AS base
 ENV DEBIAN_FRONTEND=noninteractive PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1
