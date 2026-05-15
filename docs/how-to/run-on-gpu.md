@@ -49,7 +49,7 @@ cd concerto
 
 The repository ships two Dockerfiles:
 
-- `Dockerfile.cpu` — Ubuntu 22.04 base; no CUDA. Used by the
+- `Dockerfile.cpu` — Ubuntu 26.04 base; no CUDA. Used by the
   `.devcontainer/` Mac dev box. **Not** what you want here.
 - `Dockerfile.gpu` — `nvidia/cuda` base with three stages
   (`dev` / `prod` / `gpu-host`). The `gpu-host` stage installs
