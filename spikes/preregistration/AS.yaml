@@ -1,0 +1,53 @@
+# Pre-registration: Stage-1 Action-Space (AS) axis spike.
+#
+# ADR-007 §Implementation staging — Stage 1 (foundation axes; cheap to
+# instrument; failure means the rig is broken, not the axis). Stage 1
+# proceeds to Stage 2 iff at least one of {AS, OM} shows a ≥20pp gap
+# on the bootstrap CI lower bound (ADR-007 §Validation criteria).
+#
+# Schema: chamber.evaluation.prereg.PreregistrationSpec. Validated by
+# tests/unit/test_preregistration_yamls.py at load time; verified
+# against its git tag by chamber-spike verify-prereg (B6, T5b.1) at
+# launch time per ADR-007 §Discipline.
+#
+# Plan/07 §3 condition richness lives in `notes` — `condition_pair`
+# carries the free-form identifiers the chamber-side Stage-1 adapter
+# (B8, T5b.2) will resolve into concrete env builds.
+
+axis: AS
+
+condition_pair:
+  homogeneous_id: stage1_pickplace_panda_only_mappo_shared_param
+  heterogeneous_id: stage1_pickplace_panda_plus_fetch_ego_aht_happo_per_agent
+
+seeds: [0, 1, 2, 3, 4]
+episodes_per_seed: 20
+estimator: iqm_success_rate
+bootstrap_method: cluster
+failure_policy: strict
+run_purpose: leaderboard
+
+# Cut by the maintainer post-merge from the same commit that lands this
+# file (ADR-007 §Discipline: the tag's blob SHA must match the on-disk
+# YAML's blob SHA at launch time).
+git_tag: prereg-stage1-AS-2026-05-15
+
+notes: |
+  ADR-007 §Implementation staging — Stage 1 AS spike (plan/07 §3).
+
+  Homogeneous condition: shared-parameter MAPPO on the canonical
+  Stage-1 pick-place task with a 7-DOF panda arm only. Per HARL Fig. 8,
+  MAPPO with shared parameters is the literature's homogeneous-zoo
+  baseline.
+
+  Heterogeneous condition: the same task with a 7-DOF panda arm + a
+  2-DOF differential-drive fetch base; the ego is trained per-agent
+  parameter via the EgoAHTHAPPO wrapper (M4b-9 / plan/05 §3.5), the
+  partner is the scripted heuristic from the M4 draft zoo.
+
+  Metric: episode success rate aggregated via IQM
+  (chamber.evaluation.bootstrap.aggregate_metrics) across 5 seeds ×
+  20 episodes per (seed, condition) = 100 episodes per condition. The
+  ≥20pp gate (ADR-007 §Validation criteria) is enforced on the lower
+  bound of the 95% cluster-bootstrap CI on the homogeneous−heterogeneous
+  gap (ADR-008 §Decision; reviewer P1-9).
