@@ -46,13 +46,17 @@ if TYPE_CHECKING:
 #: in sync with the actual dispatch (no hand-maintained string list to
 #: drift). A future subcommand drops in as a new ``_spike_<name>.py``
 #: module + one line here.
+# Order matches the canonical lifecycle: train → verify-prereg →
+# run → next-stage → list-* (introspection). Drives both the
+# argparse subparser order and the top-level ``_SUBCOMMANDS``
+# description string.
 _DISPATCH: dict[str, Callable[[argparse.Namespace], int]] = {
     "train": _spike_train.run,
     "verify-prereg": _spike_verify_prereg.run,
-    "list-axes": _spike_list.run_axes,
-    "list-profiles": _spike_list.run_profiles,
     "run": _spike_run.run,
     "next-stage": _spike_next_stage.run,
+    "list-axes": _spike_list.run_axes,
+    "list-profiles": _spike_list.run_profiles,
 }
 _SUBCOMMANDS: tuple[str, ...] = tuple(_DISPATCH)
 
@@ -68,10 +72,10 @@ def _build_parser() -> argparse.ArgumentParser:
     sub = parser.add_subparsers(dest="command", required=False)
     _spike_train.add_parser(sub)
     _spike_verify_prereg.add_parser(sub)
-    _spike_list.add_axes_parser(sub)
-    _spike_list.add_profiles_parser(sub)
     _spike_run.add_parser(sub)
     _spike_next_stage.add_parser(sub)
+    _spike_list.add_axes_parser(sub)
+    _spike_list.add_profiles_parser(sub)
     return parser
 
 

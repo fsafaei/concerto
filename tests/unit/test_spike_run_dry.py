@@ -125,14 +125,13 @@ class TestDryRunFeedsBootstrap:
 
     def test_default_dry_run_passes_the_twenty_pp_gate(self, tmp_path: Path) -> None:
         """Default 10/20 hetero success rate → IQM gap ≈ 50pp; gate-PP=20 passes."""
-        from chamber.cli._spike_next_stage import _build_paired_episodes
-        from chamber.evaluation.bootstrap import pacluster_bootstrap
+        from chamber.evaluation.bootstrap import build_paired_episodes, pacluster_bootstrap
         from concerto.training.seeding import derive_substream
 
         out = tmp_path / "spike_dry.json"
         main(["run", "--axis", "AS", "--dry-run", "--output", str(out)])
         run = SpikeRun.model_validate_json(out.read_text(encoding="utf-8"))
-        pairs = _build_paired_episodes(run)
+        pairs = build_paired_episodes(run)
         assert pairs, "dry-run SpikeRun produces empty paired episodes"
         rng = derive_substream("test", root_seed=0).default_rng()
         ci = pacluster_bootstrap(pairs, n_resamples=500, rng=rng)
@@ -142,8 +141,7 @@ class TestDryRunFeedsBootstrap:
 
     def test_high_hetero_count_falls_below_the_gate(self, tmp_path: Path) -> None:
         """--dry-run-hetero-success-count=18 → IQM gap = 0; gate-PP=20 fails."""
-        from chamber.cli._spike_next_stage import _build_paired_episodes
-        from chamber.evaluation.bootstrap import pacluster_bootstrap
+        from chamber.evaluation.bootstrap import build_paired_episodes, pacluster_bootstrap
         from concerto.training.seeding import derive_substream
 
         out = tmp_path / "spike_dry.json"
@@ -160,7 +158,7 @@ class TestDryRunFeedsBootstrap:
             ]
         )
         run = SpikeRun.model_validate_json(out.read_text(encoding="utf-8"))
-        pairs = _build_paired_episodes(run)
+        pairs = build_paired_episodes(run)
         rng = derive_substream("test", root_seed=0).default_rng()
         ci = pacluster_bootstrap(pairs, n_resamples=500, rng=rng)
         assert ci.ci_low * 100.0 < 20.0, (

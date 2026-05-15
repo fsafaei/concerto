@@ -30,7 +30,6 @@ import chamber
 from chamber.evaluation import (
     ConditionResult,
     LeaderboardEntry,
-    PairedEpisode,
     SpikeRun,
     cluster_bootstrap,
     compute_hrs_scalar,
@@ -38,6 +37,7 @@ from chamber.evaluation import (
     pacluster_bootstrap,
     render_leaderboard,
 )
+from chamber.evaluation.bootstrap import build_paired_episodes
 from chamber.evaluation.hrs import DEFAULT_AXIS_WEIGHTS
 from concerto.training.seeding import derive_substream
 
@@ -101,34 +101,6 @@ def _parse_args(argv: list[str] | None) -> argparse.Namespace:
     return parser.parse_args(argv)
 
 
-def _build_paired_episodes(run: SpikeRun) -> list[PairedEpisode]:
-    homo = run.condition_pair.homogeneous_id
-    hetero = run.condition_pair.heterogeneous_id
-    key_homo: dict[tuple[int, int, int], float] = {}
-    key_hetero: dict[tuple[int, int, int], float] = {}
-    for ep in run.episode_results:
-        condition = ep.metadata.get("condition")
-        key = (ep.seed, int(ep.episode_idx), ep.initial_state_seed)
-        score = 1.0 if ep.success else 0.0
-        if condition == homo:
-            key_homo[key] = score
-        elif condition == hetero:
-            key_hetero[key] = score
-    pairs: list[PairedEpisode] = []
-    for key, h_score in key_homo.items():
-        if key in key_hetero:
-            pairs.append(
-                PairedEpisode(
-                    seed=key[0],
-                    episode_idx=key[1],
-                    initial_state_seed=key[2],
-                    homogeneous=h_score,
-                    heterogeneous=key_hetero[key],
-                )
-            )
-    return pairs
-
-
 def _condition_result_for(
     run: SpikeRun,
     *,
@@ -136,7 +108,7 @@ def _condition_result_for(
     n_resamples: int,
     axis_key: str,
 ) -> ConditionResult:
-    pairs = _build_paired_episodes(run)
+    pairs = build_paired_episodes(run)
     gap_ci = pacluster_bootstrap(pairs, n_resamples=n_resamples, rng=rng)
 
     by_seed_homo: dict[int, list[float]] = {}

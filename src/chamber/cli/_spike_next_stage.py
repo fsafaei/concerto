@@ -26,6 +26,18 @@ because the LeaderboardEntry schema does not carry CI bounds (only
 the HRS scalar + vector). The paired-cluster bootstrap that produces
 ``ci_low_pp`` runs on the per-episode SpikeRun data; recomputing it
 here keeps the gate independent of any leaderboard caching.
+
+Aggregator: the gate is enforced on the **IQM** of the resampled
+per-pair deltas (the bootstrap's ``ci_low``), matching ADR-008
+§Decision's rliable-style aggregate convention and
+:func:`chamber.evaluation.bootstrap.pacluster_bootstrap`'s output. For
+bimodal binary delta data — where the per-pair delta is 0/1 rather
+than a smooth fraction — IQM can pin to 0 even when the mean is
+non-zero because the middle 50% of sorted resampled values collapse
+to the majority value. Future work (ADR-008 amendment) may add a
+``--gate-aggregator {iqm,mean}`` flag if real-spike borderline data
+makes the choice load-bearing; ``BootstrapCI`` already carries both
+the IQM and the mean for downstream consumers.
 """
 
 from __future__ import annotations
@@ -34,7 +46,7 @@ import sys
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from chamber.evaluation.bootstrap import PairedEpisode, pacluster_bootstrap
+from chamber.evaluation.bootstrap import build_paired_episodes, pacluster_bootstrap
 from chamber.evaluation.results import SpikeRun
 from concerto.training.seeding import derive_substream
 
@@ -134,6 +146,15 @@ def run(args: argparse.Namespace) -> int:
         return NEXT_STAGE_GATE_EXIT_CODE
 
     relevant = [r for r in runs if r.axis in expected_axes]
+    ignored = [r for r in runs if r.axis not in expected_axes]
+    if ignored:
+        ignored_axes = sorted({r.axis for r in ignored})
+        print(
+            f"chamber-spike next-stage: note -- ignoring {len(ignored)} "
+            f"SpikeRun(s) not in Stage-{args.prior_stage} (axes "
+            f"{ignored_axes}); these are out of scope for this gate.",
+            file=sys.stderr,
+        )
     if not relevant:
         print(
             f"chamber-spike next-stage: FAIL -- no SpikeRun on the prior stage "
@@ -147,7 +168,7 @@ def run(args: argparse.Namespace) -> int:
     rng = derive_substream("chamber.cli.next_stage.bootstrap", root_seed=args.seed).default_rng()
     results: list[tuple[str, float, float]] = []
     for run_ in relevant:
-        pairs = _build_paired_episodes(run_)
+        pairs = build_paired_episodes(run_)
         if not pairs:
             print(
                 f"chamber-spike next-stage: skipping {run_.spike_id!r} (axis "
@@ -207,41 +228,6 @@ def _load_spike_runs(paths: list[Path]) -> list[SpikeRun] | None:
             )
             return None
     return runs
-
-
-def _build_paired_episodes(run: SpikeRun) -> list[PairedEpisode]:
-    """Mirror of :func:`chamber.cli.eval._build_paired_episodes` (T5b.1; reviewer P1-9).
-
-    Pairs are matched on ``(seed, episode_idx, initial_state_seed)``;
-    each episode's ``metadata["condition"]`` must equal either
-    ``run.condition_pair.homogeneous_id`` or
-    ``run.condition_pair.heterogeneous_id``.
-    """
-    homo = run.condition_pair.homogeneous_id
-    hetero = run.condition_pair.heterogeneous_id
-    key_homo: dict[tuple[int, int, int], float] = {}
-    key_hetero: dict[tuple[int, int, int], float] = {}
-    for ep in run.episode_results:
-        condition = ep.metadata.get("condition")
-        key = (ep.seed, int(ep.episode_idx), ep.initial_state_seed)
-        score = 1.0 if ep.success else 0.0
-        if condition == homo:
-            key_homo[key] = score
-        elif condition == hetero:
-            key_hetero[key] = score
-    pairs: list[PairedEpisode] = []
-    for key, h_score in key_homo.items():
-        if key in key_hetero:
-            pairs.append(
-                PairedEpisode(
-                    seed=key[0],
-                    episode_idx=key[1],
-                    initial_state_seed=key[2],
-                    homogeneous=h_score,
-                    heterogeneous=key_hetero[key],
-                )
-            )
-    return pairs
 
 
 def _print_summary(

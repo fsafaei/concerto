@@ -185,16 +185,26 @@ def _resolve_adapter(
 ) -> Callable[[argparse.Namespace], SpikeRun] | None:
     """Try to import the canonical per-axis adapter module (plan/07 §T5b.2).
 
-    Returns ``None`` when the module does not exist (Stage-1 not yet
-    shipped, or Stage-2/3 deferred). The CLI surfaces a friendly
-    "not yet wired" exit on ``None`` rather than letting the
-    ``ImportError`` bubble up.
+    Returns ``None`` when the adapter module simply does not exist
+    (Stage-1 not yet shipped, or Stage-2/3 deferred). When the adapter
+    module exists but its *own* imports are broken (e.g. a helper
+    module rename), the inner ``ModuleNotFoundError`` is re-raised so
+    the genuine error surfaces as a normal traceback rather than being
+    silently swallowed by the "not yet wired" branch.
     """
     module_name = _ADAPTER_MODULE[axis]
     try:
         module = importlib.import_module(module_name)
-    except ImportError:
-        return None
+    except ModuleNotFoundError as exc:
+        # ``exc.name`` is the module name that could not be located.
+        # When it equals the adapter module itself, the adapter is not
+        # yet shipped — return None and let the CLI emit the friendly
+        # "adapter not yet wired" exit. When it's a *different* name,
+        # the adapter exists but its dependencies are broken; surface
+        # the real error.
+        if exc.name == module_name:
+            return None
+        raise
     entry = getattr(module, _ADAPTER_ENTRY_NAME, None)
     if not callable(entry):
         return None
@@ -283,7 +293,11 @@ def _emit_dry_run_spike_run(
 
     return SpikeRun(
         spike_id=f"dry_run_{axis.lower()}",
-        prereg_sha="0" * 40,
+        # Self-describing sentinel — distinguishes a dry-run SpikeRun
+        # from a real one in case a future verify-results subcommand
+        # inspects the field (an all-zero SHA-40 is valid hex and
+        # could collide with a real if-vanishingly-unlikely run).
+        prereg_sha="dry-run-no-prereg",
         git_tag="dry-run",
         axis=axis,
         condition_pair=condition_pair,
