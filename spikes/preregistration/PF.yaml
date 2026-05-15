@@ -1,0 +1,63 @@
+# Pre-registration: Stage-3 Partner-Familiarity (PF) axis spike.
+#
+# ADR-007 §Implementation staging — Stage 3 (systems-dependent axes;
+# needs supporting ADRs mature). Pre-condition: Stage 2 gate cleared,
+# ADR-009 3-partner draft zoo loadable (M4 gate — closed by B3,
+# T4.9), M3 full safety filter stack functional, ADR-006 numeric
+# bounds enumerated for the handover task.
+#
+# PF tests the project's central AHT claim: an ego trained against a
+# trained-with partner generalises to a frozen-novel partner from
+# the same draft zoo. The mid-episode partner-swap manipulation
+# exercises ADR-004 §risk-mitigation #2 (λ re-initialisation on
+# partner-identity change) and ADR-006 risk #3 (swap-detection
+# contract) simultaneously.
+#
+# Schema: chamber.evaluation.prereg.PreregistrationSpec.
+
+axis: PF
+
+condition_pair:
+  homogeneous_id: stage3_handover_panda_plus_fetch_trained_with_partner
+  heterogeneous_id: stage3_handover_panda_plus_fetch_novel_unseen_partner_mid_episode_swap
+
+seeds: [0, 1, 2, 3, 4]
+episodes_per_seed: 20
+estimator: iqm_success_rate
+bootstrap_method: cluster
+failure_policy: strict
+run_purpose: leaderboard
+
+git_tag: prereg-stage3-PF-2026-05-15
+
+notes: |
+  ADR-007 §Implementation staging — Stage 3 PF spike (plan/07 §3).
+
+  Homogeneous condition: panda + fetch handover task with the
+  partner the ego was trained against (one of the three draft-zoo
+  entries from chamber.partners.make_phase0_draft_zoo —
+  scripted_heuristic / frozen_mappo / frozen_harl). The trained-with
+  partner stays for the full episode.
+
+  Heterogeneous condition: the same task, but the partner is a
+  different draft-zoo entry the ego never saw during training, and
+  the partner is swapped mid-episode (after step N=50). The swap
+  changes obs["meta"]["partner_id"] (M4 producer-side commitment,
+  closed by B3); the M3 conformal filter detects the new partner_id
+  and re-initialises λ to λ_safe per ADR-004 §risk-mitigation #2.
+  The warm-up window is observed before λ adapts to the new
+  partner's behaviour.
+
+  Per-step λ trajectory and per-step loss l_k are logged carefully —
+  this is the project's only Phase-0 measurement of swap-transient
+  behaviour and feeds ADR-006 risk #3.
+
+  Metric: episode success rate aggregated via IQM across 5 seeds × 20
+  episodes per (seed, condition) = 100 episodes per condition.
+  ≥20pp gate on the lower bound of the 95% cluster-bootstrap CI.
+
+  Fallback (plan/07 §3): if PF fails ≥20pp, the project's AHT claim
+  weakens. ADR-009 full-zoo priority drops; B5 (HARL) baseline
+  porting spike priority drops (ADR-011 §Other ADRs). PF is cut
+  individually from §3.4 — failure does not halt other Stage-3
+  axes.

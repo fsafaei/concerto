@@ -1,0 +1,45 @@
+# Pre-registration: Stage-1 Observation-Modality (OM) axis spike.
+#
+# ADR-007 §Implementation staging — Stage 1 (foundation axes; cheap to
+# instrument). Stage 1 proceeds to Stage 2 iff at least one of {AS, OM}
+# shows a ≥20pp gap (ADR-007 §Validation criteria).
+#
+# Schema: chamber.evaluation.prereg.PreregistrationSpec.
+
+axis: OM
+
+condition_pair:
+  homogeneous_id: stage1_pickplace_vision_only
+  heterogeneous_id: stage1_pickplace_vision_plus_force_torque_plus_proprio
+
+seeds: [0, 1, 2, 3, 4]
+episodes_per_seed: 20
+estimator: iqm_success_rate
+bootstrap_method: cluster
+failure_policy: strict
+run_purpose: leaderboard
+
+git_tag: prereg-stage1-OM-2026-05-15
+
+notes: |
+  ADR-007 §Implementation staging — Stage 1 OM spike (plan/07 §3).
+
+  Homogeneous condition: 7-DOF arm + 2-DOF base on the Stage-1
+  pick-place task with vision-only observation (RGB-D from a fixed
+  workspace camera; no proprioception, no force-torque).
+
+  Heterogeneous condition: the same task with vision + force-torque +
+  proprioceptive state fused per uid. The fusion mirrors the
+  visual-tactile peg-in-hole assembly literature anchored in
+  ADR-007's international evidence sweep
+  (adrs/international_axis_evidence.md §2.3, MDPI Machines 2025;
+  arXiv 2504.02477).
+
+  Metric: episode success rate aggregated via IQM across 5 seeds × 20
+  episodes per (seed, condition) = 100 episodes per condition. ≥20pp
+  gate enforced on the lower bound of the 95% cluster-bootstrap CI
+  (ADR-008 §Decision; reviewer P1-9).
+
+  Fallback (plan/07 §3): if OM fails ≥20pp, retain only AS for
+  Stage 1; if both fail, halt the spike sequence (Stage 2 cannot
+  launch).

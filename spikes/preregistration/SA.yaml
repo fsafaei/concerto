@@ -1,0 +1,62 @@
+# Pre-registration: Stage-3 Safety (SA) axis spike.
+#
+# ADR-007 §Implementation staging — Stage 3 (systems-dependent;
+# possibly HIL-escalating). Pre-condition: Stage 2 gate cleared,
+# ADR-004's exp CBF + conformal overlay + OSCBF stack functional,
+# ADR-006's per-task numeric bounds enumerated, contact-rich task
+# setup exercising per-vendor force-limit / SIL-PL variance under
+# ISO 10218-2:2025.
+#
+# SA failure does NOT invalidate the project's safety claim — that's
+# a property of the conformal-CBF stack (ADR-004), not of safety-as-
+# §3.4-axis. SA failure forces ADR-007 Open question #4 (safety-axis
+# decomposition) review, not a stack rework.
+#
+# Schema: chamber.evaluation.prereg.PreregistrationSpec.
+
+axis: SA
+
+condition_pair:
+  homogeneous_id: stage3_co_carry_panda_plus_fetch_homogeneous_force_pl
+  heterogeneous_id: stage3_co_carry_panda_plus_fetch_heterogeneous_force_pl
+
+seeds: [0, 1, 2, 3, 4]
+episodes_per_seed: 20
+estimator: iqm_success_rate
+bootstrap_method: cluster
+failure_policy: strict
+run_purpose: leaderboard
+
+git_tag: prereg-stage3-SA-2026-05-15
+
+notes: |
+  ADR-007 §Implementation staging — Stage 3 SA spike (plan/07 §3).
+
+  Homogeneous condition: panda + fetch co-carry of a deformable
+  payload on a contact-rich task with a global single force-limit
+  threshold ({panda: 50N, fetch: 50N}) and a global single
+  functional-safety rating ({panda: PLd, fetch: PLd}).
+
+  Heterogeneous condition: same task, vendor-heterogeneous
+  force-limit pair ({panda: 50N, fetch: 80N}) and SIL/PL pair
+  ({panda: PLd, fetch: PLe}). The ISO 10218-2:2025 binding standard
+  (which absorbed ISO/TS 15066 since v0.2 was drafted) makes
+  mixed-vendor cells compliance-heterogeneous in a binding sense.
+
+  Metric is the HRS scalar G × (1 − v) per ADR-014 §Decision Table 1
+  — derived from the per-episode (success, violation_peak) tuple. The
+  prereg `estimator` carries the IQM-success-rate handle the
+  cluster_bootstrap operates on; the HRS computation lives downstream
+  in chamber.evaluation.hrs (ADR-008 §Decision). The ≥20pp gate is
+  enforced on the lower bound of the 95% cluster-bootstrap CI of
+  the gap on HRS, not on raw success rate (per ADR-014 Table 1).
+
+  Sim-only for Phase 0; HIL escalation deferred to Phase 1
+  (single most expensive Phase-0 spike — sequenced last per
+  ADR-007 §Implementation staging).
+
+  Fallback (plan/07 §3): SA failure forces ADR-007 Open question #4
+  (decomposition into force-limit-compliance vs SIL-PL-rating
+  sub-axes) review at the Month-3 senior-advisor gate. SA is cut
+  individually from §3.4 — failure does not affect other Stage-3
+  axes.

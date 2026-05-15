@@ -1,0 +1,59 @@
+# Pre-registration: Stage-2 Control-Rate (CR) axis spike.
+#
+# ADR-007 §Implementation staging — Stage 2 (empirically-uncertain
+# axes; needs the Stage-1 rig validated first). Pre-condition:
+# Stage 1 gate cleared (≥1 of {AS, OM} ≥20pp). Stage 2 proceeds to
+# Stage 3 iff at least one of {CR, CM} shows a ≥20pp gap.
+#
+# CR is the project's #verify priority (HetGPPO §3.4 + HARL §3.4 both
+# flag control-rate heterogeneity as absent from the HMARL literature
+# but structurally present in the target platform — manipulator at
+# ~500 Hz vs. mobile base at ~50 Hz). The spike's single-embodiment
+# two-clock design mitigates ADR-007 Risk #2 (control-rate /
+# action-space confound) by holding action-space dimensionality
+# constant across the homo/hetero conditions.
+#
+# Schema: chamber.evaluation.prereg.PreregistrationSpec.
+
+axis: CR
+
+condition_pair:
+  homogeneous_id: stage2_pickplace_arm_only_500hz_single_clock
+  heterogeneous_id: stage2_pickplace_arm_only_dual_clock_500hz_50hz
+
+seeds: [0, 1, 2, 3, 4]
+episodes_per_seed: 20
+estimator: iqm_success_rate
+bootstrap_method: cluster
+failure_policy: strict
+run_purpose: leaderboard
+
+git_tag: prereg-stage2-CR-2026-05-15
+
+notes: |
+  ADR-007 §Implementation staging — Stage 2 CR spike (plan/07 §3).
+
+  Single-embodiment robot (one 7-DOF arm) with two independently-
+  clocked control loops at 500 Hz vs. 50 Hz. Chunk size held constant
+  and action-space dimensionality held constant — the deliberate
+  single-variable design that mitigates ADR-007 Risk #2 (control-rate
+  / action-space confound).
+
+  Additionally instrumented with a 5-15 Hz partner-VLA condition
+  (chunk size = 1 vs 8 vs 50 steps) so the chunk-async sub-question
+  (ADR-007 Open question #3) is answered as a side-effect of the
+  same spike. The chunk-async data is logged but does not affect the
+  ≥20pp gate on the headline CR axis — promotion to a 7th candidate
+  axis is deferred to a successor ADR per the fallback rule.
+
+  Metric: episode success rate aggregated via IQM across 5 seeds × 20
+  episodes per (seed, condition) = 100 episodes per condition. ≥20pp
+  gate on the lower bound of the 95% cluster-bootstrap CI.
+
+  Fallback (plan/07 §3): if CR fails the rate-only gap test but
+  passes when chunk_size varies, promote chunk-async to a 7th
+  candidate axis in a successor ADR (ADR-007 Open question #3). If
+  both CR and CM fail, the project's heterogeneity claim weakens
+  substantially — Stage 3 cannot launch and the Month-3 review
+  re-examines positioning vs. Liu 2024 RSS / COHERENT / Huriot-Sibai
+  2025 (ADR-007 §Stage 2 gate).

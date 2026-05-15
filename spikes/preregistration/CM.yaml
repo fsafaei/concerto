@@ -1,0 +1,50 @@
+# Pre-registration: Stage-2 Communication (CM) axis spike.
+#
+# ADR-007 §Implementation staging — Stage 2. Pre-condition: Stage 1
+# gate cleared. CM has the sharpest numeric priors of any axis (3GPP
+# Release 17 + URLLC + arXiv 2501.12792 factory-jitter measurements;
+# ADR-006 §Decision pins these as the canonical degradation profile
+# anchors). Stage 2 proceeds to Stage 3 iff at least one of {CR, CM}
+# shows a ≥20pp gap.
+#
+# Schema: chamber.evaluation.prereg.PreregistrationSpec.
+
+axis: CM
+
+condition_pair:
+  homogeneous_id: stage2_pickplace_panda_plus_fetch_comm_ideal
+  heterogeneous_id: stage2_pickplace_panda_plus_fetch_comm_urllc_factory_wifi_lossy
+
+seeds: [0, 1, 2, 3, 4]
+episodes_per_seed: 20
+estimator: iqm_success_rate
+bootstrap_method: cluster
+failure_policy: strict
+run_purpose: leaderboard
+
+git_tag: prereg-stage2-CM-2026-05-15
+
+notes: |
+  ADR-007 §Implementation staging — Stage 2 CM spike (plan/07 §3).
+
+  Homogeneous condition: 7-DOF panda arm + 2-DOF fetch base on the
+  Stage-2 pick-place task with the ``ideal`` comm profile (latency
+  0 ms, drop rate 0; see chamber.comm.URLLC_3GPP_R17).
+
+  Heterogeneous condition: same task swept across the four
+  non-ideal URLLC-anchored profiles (``urllc`` / ``factory`` /
+  ``wifi`` / ``lossy``) from chamber.comm.URLLC_3GPP_R17. The
+  fixed-format channel (ADR-003 §Decision) is the only comm path
+  exercised; the learned-message overlay is held for Phase 1.
+
+  Numeric anchors (ADR-006 §Decision): latency 1-100 ms, jitter
+  μs-10 ms, drop 10⁻⁶ to 10⁻² (URLLC + 3GPP Release 17 + factory-
+  jitter measurements per arXiv 2501.12792).
+
+  Metric: episode success rate aggregated via IQM across 5 seeds × 20
+  episodes per (seed, condition) = 100 episodes per condition.
+  ≥20pp gate on the lower bound of the 95% cluster-bootstrap CI.
+
+  Fallback (plan/07 §3): if CM fails for all four non-ideal
+  profiles, retain only CR for Stage 2; if both CR and CM fail,
+  halt the spike sequence.
