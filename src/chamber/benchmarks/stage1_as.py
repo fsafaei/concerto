@@ -36,8 +36,9 @@ diverge on the ``agent_uids`` tuple to encode the AS distinction
 policy (no training).
 
 The ego trainer integration (``concerto.training.ego_aht.train``
-per plan/07 §T5b.2) is scaffolded behind the ``_make_ego_action``
-callable injection point — Phase-1 work wires a trained
+per plan/07 §T5b.2) is scaffolded behind the ``_zero_ego_action``
+callable injection point (the ``ego_action_fn`` kwarg on
+:func:`_run_axis_with_factories`) — Phase-1 work wires a trained
 ``EgoTrainer`` here without touching the SpikeRun aggregation
 shape. Same for the real Stage-1 pick-place env: replacing
 :func:`_default_env_factory` is a one-spot edit.
@@ -52,6 +53,8 @@ from __future__ import annotations
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
+import numpy as np
+
 from chamber.envs.mpe_cooperative_push import MPECooperativePushEnv
 from chamber.evaluation.prereg import PreregistrationSpec, load_prereg
 from chamber.evaluation.results import EpisodeResult, SpikeRun
@@ -64,7 +67,6 @@ if TYPE_CHECKING:
     from collections.abc import Callable, Mapping
 
     import gymnasium as gym
-    import numpy as np
     from numpy.typing import NDArray
 
     EnvFactory = Callable[[str, tuple[str, str], int], gym.Env[Any, Any]]
@@ -198,12 +200,20 @@ def _run_axis_with_factories(
             if agent_uids is None:
                 msg = (
                     f"stage1_as.run_axis: prereg condition_id {condition_id!r} "
-                    f"is not in the Phase-0 condition map {sorted(_CONDITION_UIDS)}."
+                    f"is not in the Phase-0 condition map {sorted(_CONDITION_UIDS)}. "
+                    "This typically means the AS pre-registration was edited "
+                    "after the Phase-0 adapter shipped — re-issue the prereg "
+                    "with a new git_tag per ADR-007 §Discipline, or update "
+                    "_CONDITION_UIDS in this module."
                 )
                 raise ValueError(msg)
             ego_uid, partner_uid = agent_uids
             for episode_idx in range(prereg.episodes_per_seed):
                 initial_state_seed = _derive_episode_seed(seed=seed, episode_idx=episode_idx)
+                # Phase-1: hoist env construction to the per-condition
+                # loop (real ManiSkill envs take seconds each, MPE / Fake
+                # take microseconds). The per-episode reset already
+                # threads ``initial_state_seed`` into the inner RNG.
                 env = env_factory(condition_id, agent_uids, seed)
                 partner = _make_scripted_partner(partner_uid=partner_uid)
                 episode_results.append(
@@ -265,6 +275,10 @@ def _run_one_episode(
         if terminated or truncated:
             break
     mean_reward = total_reward / max(1, n_steps)
+    # Phase-1: the real Stage-1 pick-place env exposes ``terminated=True``
+    # on success, at which point the ``or terminated`` clause becomes the
+    # dominant signal and the rule-based mean-reward fallback can be
+    # dropped (plan/07 §T5b.2 follow-up).
     success = mean_reward > _SUCCESS_THRESHOLD or terminated
     return EpisodeResult(
         seed=seed,
@@ -308,8 +322,6 @@ def _zero_ego_action(
     inference. The function's signature is the injection contract.
     """
     del ego_uid, obs
-    import numpy as np
-
     return np.zeros_like(partner_action, dtype=np.float32)
 
 

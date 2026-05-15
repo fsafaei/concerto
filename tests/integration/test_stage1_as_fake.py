@@ -21,6 +21,8 @@ Mirrors the Tier-1 pattern from
 
 from __future__ import annotations
 
+import argparse
+from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 import numpy as np
@@ -36,13 +38,17 @@ from tests.fakes import FakeMultiAgentEnv
 
 if TYPE_CHECKING:
     from collections.abc import Mapping
-    from pathlib import Path
 
     import gymnasium as gym
     from numpy.typing import NDArray
 
-_REPO_ROOT = __import__("pathlib").Path(__file__).resolve().parents[2]
+_REPO_ROOT = Path(__file__).resolve().parents[2]
 _AS_PREREG = _REPO_ROOT / "spikes" / "preregistration" / "AS.yaml"
+
+
+def _make_args(axis: str) -> argparse.Namespace:
+    """Build a minimal argparse Namespace for run_axis. Removes duck-type ``_Args`` repetition."""
+    return argparse.Namespace(axis=axis)
 
 
 def _fake_env_factory(
@@ -205,20 +211,12 @@ class TestStage1ASEntryPointResolution:
 
         monkeypatch.setattr(stage1_as, "_default_env_factory", _fake_env_factory, raising=True)
         monkeypatch.setattr(stage1_as, "_zero_ego_action", _scripted_ego_action, raising=True)
-
-        class _Args:
-            axis = "AS"
-
-        run = run_axis(_Args())  # type: ignore[arg-type]
+        run = run_axis(_make_args("AS"))
         assert run.axis == "AS"
         # The shipped prereg has 5 seeds x 20 episodes per (seed, condition) = 200 episodes.
         assert len(run.episode_results) == 200
 
     def test_wrong_axis_raises_value_error(self) -> None:
         """Defensive: a dispatch routing mistake surfaces loudly."""
-
-        class _Args:
-            axis = "OM"
-
         with pytest.raises(ValueError, match="AS"):
-            run_axis(_Args())  # type: ignore[arg-type]
+            run_axis(_make_args("OM"))

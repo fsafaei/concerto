@@ -20,11 +20,17 @@ end-to-end run" smoke rather than a science assertion.
 
 from __future__ import annotations
 
+import argparse
+
 import pytest
 
 from chamber.benchmarks.stage1_as import run_axis
 from chamber.evaluation.results import SpikeRun
 
+# TODO(plan/07 §T5b.2 Phase-1): add @pytest.mark.gpu +
+# sapien_gpu_available() guards once _default_env_factory returns a
+# SAPIEN env. Until then the Phase-0 MPE stand-in is CPU-only and the
+# slow marker is the right gate.
 pytestmark = pytest.mark.slow
 
 
@@ -38,11 +44,7 @@ def test_run_axis_smoke_on_real_mpe_factory() -> None:
     Phase-0 stand-in env has no AS-axis signal — the maintainer's
     real-spike launch will use the real Stage-1 pick-place env).
     """
-
-    class _Args:
-        axis = "AS"
-
-    run = run_axis(_Args())  # type: ignore[arg-type]
+    run = run_axis(argparse.Namespace(axis="AS"))
     assert isinstance(run, SpikeRun)
     assert run.axis == "AS"
     # plan/07 §2 sample-size contract: 5 seeds x 20 episodes x 2 conditions.
