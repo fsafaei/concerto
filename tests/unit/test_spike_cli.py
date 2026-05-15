@@ -1,0 +1,291 @@
+# SPDX-License-Identifier: Apache-2.0
+"""``chamber-spike`` CLI tests (T5b.1; plan/07 §5 ``test_spike_cli.py``).
+
+Covers the three subcommands B6 ships:
+
+- ``verify-prereg`` — the load + git-tag SHA check (ADR-007
+  §Discipline). The happy-path test builds a tiny tmp_path git repo,
+  commits a real prereg YAML, cuts the tag, and asserts the CLI exits
+  0 with a ``PASS — ... blob_sha=...`` line. The unhappy-path tests
+  pin the three documented failure modes: missing tag, on-disk
+  tamper, and missing file.
+- ``list-axes`` — the six ADR-007 §3.4 axis labels appear in stdout
+  along with their Phase-0 stage assignment.
+- ``list-profiles`` — every key in :data:`chamber.comm.URLLC_3GPP_R17`
+  appears in stdout along with its numeric anchors.
+
+The pre-existing ``train`` subcommand tests live in
+:mod:`tests.unit.test_cli_stubs` (M4b-9b) and are untouched by this
+PR; the top-level banner-path test there continues to exercise the
+no-subcommand path.
+"""
+
+from __future__ import annotations
+
+import os
+import shutil
+import subprocess
+from typing import TYPE_CHECKING
+
+import pytest
+
+from chamber.cli.spike import main
+
+if TYPE_CHECKING:
+    from pathlib import Path
+
+
+# ---------------------------------------------------------------------------
+# Top-level surface
+# ---------------------------------------------------------------------------
+
+
+class TestTopLevelSurface:
+    """The dispatcher exposes every subcommand B6 adds (plan/07 §T5b.1)."""
+
+    def test_help_lists_every_subcommand(self, capsys: pytest.CaptureFixture[str]) -> None:
+        """`--help` enumerates train, verify-prereg, list-axes, list-profiles."""
+        with pytest.raises(SystemExit) as excinfo:
+            main(["--help"])
+        assert excinfo.value.code == 0
+        captured = capsys.readouterr()
+        for name in ("train", "verify-prereg", "list-axes", "list-profiles"):
+            assert name in captured.out, (
+                f"top-level --help missing subcommand {name!r}; got: {captured.out}"
+            )
+
+
+# ---------------------------------------------------------------------------
+# verify-prereg
+# ---------------------------------------------------------------------------
+
+
+_REQUIRED_GIT_ENV: dict[str, str] = {
+    "GIT_AUTHOR_NAME": "test",
+    "GIT_AUTHOR_EMAIL": "test@example.com",
+    "GIT_COMMITTER_NAME": "test",
+    "GIT_COMMITTER_EMAIL": "test@example.com",
+    # Disable any host-level GPG-signing config; the test repo is throwaway.
+    "GIT_CONFIG_GLOBAL": "/dev/null",
+    "GIT_CONFIG_SYSTEM": "/dev/null",
+}
+
+
+def _git(*args: str, repo: Path) -> None:
+    """Run a git command in ``repo``, raising on non-zero exit."""
+    git_bin = shutil.which("git")
+    assert git_bin is not None, "git not on PATH; the test cannot proceed"
+    env = {**os.environ, **_REQUIRED_GIT_ENV}
+    subprocess.run(  # noqa: S603 — args fully resolved
+        [git_bin, *args],
+        cwd=repo,
+        env=env,
+        check=True,
+        capture_output=True,
+    )
+
+
+_VALID_YAML = """\
+axis: AS
+condition_pair:
+  homogeneous_id: stage1_homo_test
+  heterogeneous_id: stage1_hetero_test
+seeds: [0, 1, 2, 3, 4]
+episodes_per_seed: 20
+estimator: iqm_success_rate
+bootstrap_method: cluster
+failure_policy: strict
+run_purpose: leaderboard
+git_tag: prereg-stage1-AS-test
+notes: |
+  Throwaway fixture for the chamber-spike verify-prereg test.
+"""
+
+
+@pytest.fixture
+def tagged_prereg_repo(tmp_path: Path) -> tuple[Path, Path]:
+    """Build a tmp git repo with a committed + tagged prereg YAML.
+
+    Returns ``(repo_root, prereg_path)`` where ``prereg_path`` is
+    absolute and ``repo_root`` contains a ``.git`` directory plus
+    one commit whose tag matches the YAML's ``git_tag`` field.
+    """
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    _git("init", "--initial-branch=main", "--quiet", str(repo), repo=tmp_path)
+    prereg_dir = repo / "spikes" / "preregistration"
+    prereg_dir.mkdir(parents=True)
+    prereg_path = prereg_dir / "AS.yaml"
+    prereg_path.write_text(_VALID_YAML, encoding="utf-8")
+    _git("add", "spikes/preregistration/AS.yaml", repo=repo)
+    _git("commit", "--no-gpg-sign", "-m", "add AS prereg", repo=repo)
+    _git("tag", "-a", "prereg-stage1-AS-test", "-m", "tag AS prereg", repo=repo)
+    return repo, prereg_path
+
+
+class TestVerifyPreregHappyPath:
+    """The happy path: on-disk YAML matches the tagged blob SHA."""
+
+    def test_pass_exits_zero(
+        self,
+        tagged_prereg_repo: tuple[Path, Path],
+        capsys: pytest.CaptureFixture[str],
+    ) -> None:
+        """verify-prereg returns 0 + prints PASS + blob_sha on success."""
+        repo, prereg_path = tagged_prereg_repo
+        rc = main(
+            [
+                "verify-prereg",
+                "--spike",
+                str(prereg_path),
+                "--repo-root",
+                str(repo),
+            ]
+        )
+        assert rc == 0, f"expected exit 0, got {rc}"
+        captured = capsys.readouterr()
+        assert "PASS" in captured.out
+        assert "axis=AS" in captured.out
+        assert "tag=prereg-stage1-AS-test" in captured.out
+        assert "blob_sha=" in captured.out
+
+
+class TestVerifyPreregFailureModes:
+    """Pin the three documented failure paths (ADR-007 §Discipline)."""
+
+    def test_missing_file_exits_nonzero(
+        self, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+        """A non-existent --spike path exits non-zero with a stderr message."""
+        rc = main(
+            [
+                "verify-prereg",
+                "--spike",
+                str(tmp_path / "does_not_exist.yaml"),
+                "--repo-root",
+                str(tmp_path),
+            ]
+        )
+        assert rc != 0
+        captured = capsys.readouterr()
+        assert "not found" in captured.err
+
+    def test_missing_tag_exits_nonzero(
+        self,
+        tagged_prereg_repo: tuple[Path, Path],
+        capsys: pytest.CaptureFixture[str],
+    ) -> None:
+        """A YAML whose tag does not exist exits non-zero."""
+        repo, prereg_path = tagged_prereg_repo
+        _git("tag", "-d", "prereg-stage1-AS-test", repo=repo)
+        rc = main(
+            [
+                "verify-prereg",
+                "--spike",
+                str(prereg_path),
+                "--repo-root",
+                str(repo),
+            ]
+        )
+        assert rc != 0
+        captured = capsys.readouterr()
+        assert "FAIL" in captured.err
+        assert "does not exist" in captured.err
+
+    def test_tampered_yaml_exits_nonzero_with_sha_mismatch_message(
+        self,
+        tagged_prereg_repo: tuple[Path, Path],
+        capsys: pytest.CaptureFixture[str],
+    ) -> None:
+        """Modifying the YAML's bytes post-tag must surface a SHA mismatch."""
+        repo, prereg_path = tagged_prereg_repo
+        # Tamper: change the homogeneous_id by one character so the
+        # bytes (and therefore the blob SHA) shift but the schema still
+        # validates.
+        original = prereg_path.read_text(encoding="utf-8")
+        tampered = original.replace("stage1_homo_test", "stage1_homo_TAMP")
+        assert tampered != original
+        prereg_path.write_text(tampered, encoding="utf-8")
+        rc = main(
+            [
+                "verify-prereg",
+                "--spike",
+                str(prereg_path),
+                "--repo-root",
+                str(repo),
+            ]
+        )
+        assert rc != 0
+        captured = capsys.readouterr()
+        assert "FAIL" in captured.err
+        assert "blob SHA mismatch" in captured.err
+
+
+class TestVerifyPreregRepoRootInference:
+    """--repo-root is optional: the subcommand walks up for a .git ancestor."""
+
+    def test_repo_root_inferred_from_spike_path(
+        self,
+        tagged_prereg_repo: tuple[Path, Path],
+        capsys: pytest.CaptureFixture[str],
+    ) -> None:
+        """Calling verify-prereg without --repo-root finds the enclosing repo."""
+        _repo, prereg_path = tagged_prereg_repo
+        rc = main(["verify-prereg", "--spike", str(prereg_path)])
+        assert rc == 0, f"expected exit 0, got {rc}"
+        captured = capsys.readouterr()
+        assert "PASS" in captured.out
+
+
+# ---------------------------------------------------------------------------
+# list-axes
+# ---------------------------------------------------------------------------
+
+
+class TestListAxes:
+    """All six ADR-007 §3.4 axes appear in stdout (T5b.1)."""
+
+    def test_lists_all_six_axes(self, capsys: pytest.CaptureFixture[str]) -> None:
+        rc = main(["list-axes"])
+        assert rc == 0
+        captured = capsys.readouterr()
+        for axis in ("AS", "OM", "CR", "CM", "PF", "SA"):
+            assert axis in captured.out, f"missing axis {axis!r}"
+        # Stage column should distinguish AS+OM (1) / CR+CM (2) / PF+SA (3).
+        assert "1" in captured.out
+        assert "2" in captured.out
+        assert "3" in captured.out
+
+
+# ---------------------------------------------------------------------------
+# list-profiles
+# ---------------------------------------------------------------------------
+
+
+class TestListProfiles:
+    """Every chamber.comm.URLLC_3GPP_R17 profile name appears in stdout (T5b.1)."""
+
+    def test_lists_all_six_profiles(self, capsys: pytest.CaptureFixture[str]) -> None:
+        from chamber.comm import URLLC_3GPP_R17
+
+        rc = main(["list-profiles"])
+        assert rc == 0
+        captured = capsys.readouterr()
+        for name in URLLC_3GPP_R17:
+            assert name in captured.out, f"missing profile {name!r}"
+
+    def test_includes_numeric_columns(self, capsys: pytest.CaptureFixture[str]) -> None:
+        rc = main(["list-profiles"])
+        assert rc == 0
+        captured = capsys.readouterr()
+        for column in ("latency_mean_ms", "latency_std_ms", "drop_rate"):
+            assert column in captured.out, f"missing column header {column!r}"
+
+
+# Pytest-skip guard: every test in this file invokes ``git`` via
+# subprocess. The ``git`` binary is required by the project's existing
+# pre-commit hooks (and by ``chamber.evaluation.prereg.verify_git_tag``
+# itself), so this guard is defensive — if it ever fires on a CI host
+# the project's other tests would also be broken.
+if shutil.which("git") is None:  # pragma: no cover
+    pytest.skip("git binary not available", allow_module_level=True)
