@@ -33,11 +33,20 @@ import chamber
 from chamber.cli import _spike_list, _spike_train, _spike_verify_prereg
 
 if TYPE_CHECKING:
-    from collections.abc import Sequence
+    from collections.abc import Callable, Sequence
 
-#: Subcommands that share the same ``run(args)`` shape. The dispatch
-#: table at the bottom of :func:`main` keys on these names.
-_SUBCOMMANDS = ("train", "verify-prereg", "list-axes", "list-profiles")
+#: Subcommand → ``run(args)`` dispatch table. Built once at module
+#: import so ``_SUBCOMMANDS`` (used in the top-level description) stays
+#: in sync with the actual dispatch (no hand-maintained string list to
+#: drift). A future subcommand drops in as a new ``_spike_<name>.py``
+#: module + one line here.
+_DISPATCH: dict[str, Callable[[argparse.Namespace], int]] = {
+    "train": _spike_train.run,
+    "verify-prereg": _spike_verify_prereg.run,
+    "list-axes": _spike_list.run_axes,
+    "list-profiles": _spike_list.run_profiles,
+}
+_SUBCOMMANDS: tuple[str, ...] = tuple(_DISPATCH)
 
 
 def _build_parser() -> argparse.ArgumentParser:
@@ -80,16 +89,11 @@ def main(argv: Sequence[str] | None = None) -> int:
         print(f"chamber-spike  (CHAMBER {chamber.__version__})")
         parser.print_help()
         return 0
-    if args.command == "train":
-        return _spike_train.run(args)
-    if args.command == "verify-prereg":
-        return _spike_verify_prereg.run(args)
-    if args.command == "list-axes":
-        return _spike_list.run_axes(args)
-    if args.command == "list-profiles":
-        return _spike_list.run_profiles(args)
-    parser.error(f"unknown command {args.command!r}")
-    return 2  # pragma: no cover  # parser.error sys.exits before this returns.
+    runner = _DISPATCH.get(args.command)
+    if runner is None:
+        parser.error(f"unknown command {args.command!r}")
+        return 2  # pragma: no cover  # parser.error sys.exits before this returns.
+    return runner(args)
 
 
 if __name__ == "__main__":  # pragma: no cover

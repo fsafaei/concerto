@@ -27,16 +27,19 @@ if TYPE_CHECKING:
 #: ADR-007 §3.4 Option D axes + their Phase-0 stage assignment
 #: (ADR-007 §Implementation staging). Tuple-of-tuples (rather than a
 #: dict) so iteration order is the canonical
-#: AS → OM → CR → CM → PF → SA — easier to read at a glance than the
-#: HRS-bundle ordering (which lives separately in
+#: AS / OM / CR / CM / PF / SA. Iteration order is easier to read at a
+#: glance than the HRS-bundle ordering (which lives separately in
 #: :data:`chamber.evaluation.hrs.DEFAULT_AXIS_WEIGHTS`).
+#:
+#: Description strings are pure ASCII so ``chamber-spike list-axes``
+#: works on a Windows console (cp1252) and on non-UTF-8 CI pipes.
 _AXES: tuple[tuple[str, int, str], ...] = (
-    ("AS", 1, "Action space — 7-DOF arm vs 2-DOF base on shared pick-place."),
-    ("OM", 1, "Observation modality — vision-only vs vision+FT+proprio fused."),
-    ("CR", 2, "Control rate — dual-clock 500 Hz vs 50 Hz on a single embodiment."),
-    ("CM", 2, "Communication — URLLC / 5G-TSN profile sweep on the fixed-format channel."),
-    ("PF", 3, "Partner familiarity — trained-with vs novel partner with mid-episode swap."),
-    ("SA", 3, "Safety — heterogeneous force-limit / SIL-PL pair on a contact-rich task."),
+    ("AS", 1, "Action space: 7-DOF arm vs 2-DOF base on shared pick-place."),
+    ("OM", 1, "Observation modality: vision-only vs vision+FT+proprio fused."),
+    ("CR", 2, "Control rate: dual-clock 500 Hz vs 50 Hz on a single embodiment."),
+    ("CM", 2, "Communication: URLLC / 5G-TSN profile sweep on the fixed-format channel."),
+    ("PF", 3, "Partner familiarity: trained-with vs novel partner with mid-episode swap."),
+    ("SA", 3, "Safety: heterogeneous force-limit / SIL-PL pair on a contact-rich task."),
 )
 
 

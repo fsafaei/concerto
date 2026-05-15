@@ -68,7 +68,16 @@ _REQUIRED_GIT_ENV: dict[str, str] = {
     # Disable any host-level GPG-signing config; the test repo is throwaway.
     "GIT_CONFIG_GLOBAL": "/dev/null",
     "GIT_CONFIG_SYSTEM": "/dev/null",
+    # Disable any host-level commit-msg / pre-commit hooks the user's
+    # template-dir might inject into ``git init``; a CI host with a
+    # site-wide template-dir would otherwise pull in hooks here.
+    "GIT_TEMPLATE_DIR": "/dev/null",
 }
+
+# The fixture deliberately does not pin GIT_AUTHOR_DATE / GIT_COMMITTER_DATE.
+# No test asserts a specific commit / blob SHA against a fixed value (the
+# happy-path test only checks the SHA shape); if a future test ever needs
+# byte-identical SHAs, pin the dates here too.
 
 
 def _git(*args: str, repo: Path) -> None:
@@ -85,6 +94,11 @@ def _git(*args: str, repo: Path) -> None:
     )
 
 
+# Test-only fixture. The `git_tag` deliberately omits the YYYY-MM-DD
+# date suffix the canonical prereg files in ``spikes/preregistration/``
+# use (``prereg-stage1-AS-2026-05-15``) so the test does not need to
+# be updated annually. The schema does not enforce the date suffix;
+# it is a maintainer convention pinned by plan/08 §9.
 _VALID_YAML = """\
 axis: AS
 condition_pair:
