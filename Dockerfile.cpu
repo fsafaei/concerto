@@ -32,7 +32,11 @@ RUN uv sync --frozen --all-extras
 COPY . .
 
 FROM base AS prod
-COPY pyproject.toml uv.lock ./
+# Hatchling validates ``license = { file = "LICENSE" }`` and ``readme =
+# "README.md"`` from pyproject.toml at package-build time during ``uv
+# sync``; copying just pyproject.toml + uv.lock makes that validation
+# fail. The two files are stable inputs to the prod stage.
+COPY pyproject.toml uv.lock LICENSE README.md ./
 RUN uv sync --frozen --no-dev
 COPY src ./src
 ENTRYPOINT ["uv", "run", "concerto"]

@@ -72,6 +72,11 @@ DEFAULT_EPISODE_LENGTH: int = 100
 #: the same name.
 _STATE_KEY: str = "state"
 
+#: Rank of the vectorised-by-num_envs obs shapes ManiSkill emits when
+#: ``num_envs=1`` adds a leading batch dimension — ``(1, n)`` is rank 2.
+#: Used to relax the 1-D Box check in :func:`_synthesised_state_space`.
+_VECTORISED_RANK: int = 2
+
 
 class _Stage0TrainingAdapter(gym.Env):  # type: ignore[type-arg]
     """EnvLike adapter over the Stage-0 multi-robot env (T4b.3; ADR-001 §Validation criteria).
@@ -358,8 +363,23 @@ def _synthesised_state_space(
     keys: list[str] = []
     for key in sorted(sub_space.spaces.keys()):
         sub = sub_space.spaces[key]
-        if isinstance(sub, gym.spaces.Box) and sub.shape is not None and len(sub.shape) == 1:
+        if not isinstance(sub, gym.spaces.Box) or sub.shape is None:
+            continue
+        # Accept 1-D shapes ``(n,)`` and vectorised ``(1, n)`` shapes — the
+        # latter is what ManiSkill emits when ``num_envs=1`` adds a leading
+        # batch dimension to every per-agent obs channel. ``_transform_obs``
+        # already handles any shape via ``.ravel()``; only the space-building
+        # check needed the relaxation (ADR-001 §Validation criteria).
+        if len(sub.shape) == 1:
             pieces.append(sub)
+            keys.append(key)
+        elif len(sub.shape) == _VECTORISED_RANK and sub.shape[0] == 1:
+            squeezed = gym.spaces.Box(
+                low=np.asarray(sub.low[0], dtype=np.float32),
+                high=np.asarray(sub.high[0], dtype=np.float32),
+                dtype=np.float32,
+            )
+            pieces.append(squeezed)
             keys.append(key)
     if not pieces:
         raise ChamberEnvCompatibilityError(
