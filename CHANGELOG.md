@@ -8,6 +8,60 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 While the project is on `0.x`, MINOR-version bumps may break the public API
 per SemVer §4.
 
+## [0.2.0](https://github.com/fsafaei/concerto/compare/v0.1.1...v0.2.0) (2026-05-15)
+
+
+### Features
+
+* **benchmarks:** Stage-1 AS adapter (T5b.2 a; plan/07 §3) ([#112](https://github.com/fsafaei/concerto/issues/112)) ([3e47075](https://github.com/fsafaei/concerto/commit/3e47075fbdcf579341a13e92492a0a29c76e4381))
+* **benchmarks:** Stage-1 OM adapter (T5b.2 b; plan/07 §3; closes M5b) ([#113](https://github.com/fsafaei/concerto/issues/113)) ([c93a833](https://github.com/fsafaei/concerto/commit/c93a83316f4028dff078b42a9664dbc6d9368dec))
+* **benchmarks:** stage0_smoke env adapter for ego-AHT training (T4b.3) ([#74](https://github.com/fsafaei/concerto/issues/74)) ([c56df38](https://github.com/fsafaei/concerto/commit/c56df38ee2fefd59d31844ff55d3ff8d3e652378))
+* **chamber:** chamber-eval accepts multiple SpikeRun files for multi-axis HRS ([#99](https://github.com/fsafaei/concerto/issues/99)) ([d2398ae](https://github.com/fsafaei/concerto/commit/d2398ae13b01264d8c56fea8b1585f29887a1809))
+* **chamber:** minimum evaluation spine — results schema, preregistration loader, hierarchical bootstrap, HRS-vector + scalar, three-table renderer ([#94](https://github.com/fsafaei/concerto/issues/94)) ([24d3a61](https://github.com/fsafaei/concerto/commit/24d3a610fac5b598043255a00aa8f093c5896c93))
+* **cli:** chamber-spike run + next-stage gate (T5b.1; plan/07 §5) ([#111](https://github.com/fsafaei/concerto/issues/111)) ([280b46a](https://github.com/fsafaei/concerto/commit/280b46a2eade6a3cca202b2116a6cf09013ae0e2))
+* **cli:** chamber-spike verify-prereg + list-axes + list-profiles (T5b.1) ([#110](https://github.com/fsafaei/concerto/issues/110)) ([5e4e12b](https://github.com/fsafaei/concerto/commit/5e4e12bf646126566fc4430bfdc7bbf032117b78))
+* **envs,partners:** draft-zoo Stage-0 round-trip — closes M4 gate (T4.9) ([#105](https://github.com/fsafaei/concerto/issues/105)) ([72bbab8](https://github.com/fsafaei/concerto/commit/72bbab8e40701d1f122479913db248ad24811659))
+* **eval:** enforce iid-not-allowed-for-leaderboard bootstrap policy in PreregistrationSpec ([#100](https://github.com/fsafaei/concerto/issues/100)) ([dc69217](https://github.com/fsafaei/concerto/commit/dc6921799f813ecca37eae52e32faeb779799440))
+* **partners:** FrozenHARLPartner adapter (T4.6) ([#104](https://github.com/fsafaei/concerto/issues/104)) ([3f87e72](https://github.com/fsafaei/concerto/commit/3f87e7217bee20550ce8856610982929def7da75))
+* **partners:** FrozenMAPPOPartner adapter (T4.5) ([#103](https://github.com/fsafaei/concerto/issues/103)) ([1eab560](https://github.com/fsafaei/concerto/commit/1eab560f195cbc4983160a75e709972112acd4b2))
+* **safety:** per-agent control models, ego-only mode, and heterogeneous-action CBF-QP ([#93](https://github.com/fsafaei/concerto/issues/93)) ([d8a8a11](https://github.com/fsafaei/concerto/commit/d8a8a1157cef51868b1edb49d0102062f5d4ffe9))
+* **safety:** split SafetyFilter into EgoOnlySafetyFilter and JointSafetyFilter Protocols ([#97](https://github.com/fsafaei/concerto/issues/97)) ([e100c4b](https://github.com/fsafaei/concerto/commit/e100c4bc95f7c8364a2f8b7b47c5d7678d554e03))
+* **spikes:** six ADR-007 pre-registration YAMLs (T5a.7) ([#109](https://github.com/fsafaei/concerto/issues/109)) ([153a67d](https://github.com/fsafaei/concerto/commit/153a67de04a583b3689f9ff284c2099209248f06))
+* **training,cli:** runtime device + chamber-spike train + GPU host kit (T4b.14 prep) ([#76](https://github.com/fsafaei/concerto/issues/76)) ([0a1b0ca](https://github.com/fsafaei/concerto/commit/0a1b0ca8952ad0e4784d3d888d18c8e5c096eee7))
+* **training:** empirical-guarantee scaffolding + xfail trip-wire probe (T4b.13) ([#63](https://github.com/fsafaei/concerto/issues/63)) ([48f46e9](https://github.com/fsafaei/concerto/commit/48f46e92e5d2e0175281392773e13c7753060274))
+* **training:** replace empirical-guarantee statistic with slope test (closes [#62](https://github.com/fsafaei/concerto/issues/62)) ([#72](https://github.com/fsafaei/concerto/issues/72)) ([75b5c7a](https://github.com/fsafaei/concerto/commit/75b5c7a69d84e127b0eb0da9cf39ae9f2b3e4a2f))
+
+
+### Bug Fixes
+
+* **deps:** bump torch to &gt;=2.8,&lt;2.9 to close three CVEs ([#81](https://github.com/fsafaei/concerto/issues/81)) ([633e4b9](https://github.com/fsafaei/concerto/commit/633e4b90d49c81914d4fd9fc517d7f4facba91d2))
+* **envs,docker:** make zoo-seed run on WSL2 + Docker Engine ([#107](https://github.com/fsafaei/concerto/issues/107)) ([1113e23](https://github.com/fsafaei/concerto/commit/1113e23e8be91338b80b3c736458b9fa9994a61f))
+* **readme:** correct Quickstart to use encode/decode and add an executable docs test ([#89](https://github.com/fsafaei/concerto/issues/89)) ([4711006](https://github.com/fsafaei/concerto/commit/47110069c779a44ecfa64ee1d9e3162acdba1408))
+* **safety:** embodiment-aware multi-pair braking fallback ([#91](https://github.com/fsafaei/concerto/issues/91)) ([854cfe1](https://github.com/fsafaei/concerto/commit/854cfe1d9b5fe1677d6e8fe389149c4da0b490b5))
+* **safety:** separate conformal prediction-gap loss from constraint-violation signal ([#90](https://github.com/fsafaei/concerto/issues/90)) ([786baa1](https://github.com/fsafaei/concerto/commit/786baa1408b44c4f6c134cafad2d0b53a3675b49))
+* **training:** handle time-limit truncation in GAE bootstrap (issue [#62](https://github.com/fsafaei/concerto/issues/62) root cause) ([#70](https://github.com/fsafaei/concerto/issues/70)) ([e0819be](https://github.com/fsafaei/concerto/commit/e0819be91d0200d05243018fb2f7fcd3f07fae0b))
+
+
+### Documentation
+
+* **adr-003+006:** cite TSN clause-level standards underneath URLLC ([#84](https://github.com/fsafaei/concerto/issues/84)) ([caec8c5](https://github.com/fsafaei/concerto/commit/caec8c5144389e7206855ed5dc0c4c483021a1f4))
+* **adr-004:** anchor safety filter in foundational CBF and CP canon ([#83](https://github.com/fsafaei/concerto/issues/83)) ([a1951ec](https://github.com/fsafaei/concerto/commit/a1951ec8d9a03815bbc0115b94a48b90bde82baf))
+* **adr-014:** add machine functional-safety stack and rliable reporting contract ([#85](https://github.com/fsafaei/concerto/issues/85)) ([8b60c13](https://github.com/fsafaei/concerto/commit/8b60c13f309462a1596a8b824d4522ac41b3c5e4))
+* **brand:** crop logo PNGs to their content bounding box ([#69](https://github.com/fsafaei/concerto/issues/69)) ([f42203b](https://github.com/fsafaei/concerto/commit/f42203beab6b9761b46b1d056e16552fd7546ec3))
+* **brand:** use the white-text logo + size it to fit the docs header ([#68](https://github.com/fsafaei/concerto/issues/68)) ([2cde7d7](https://github.com/fsafaei/concerto/commit/2cde7d7bf690a3daf534a1a7aeb1032392d58505))
+* **brand:** wire up the CONCERTO logo for README + mkdocs theme ([#67](https://github.com/fsafaei/concerto/issues/67)) ([0a1e2f7](https://github.com/fsafaei/concerto/commit/0a1e2f7ad06191870bfdbba0811ed26dfd147bd3))
+* **changelog:** remove stale hand-written [Unreleased] block ([#87](https://github.com/fsafaei/concerto/issues/87)) ([19a3e58](https://github.com/fsafaei/concerto/commit/19a3e58c84bcda05b8ca2409c2d52ba10e14b9b2))
+* **governance:** introduce ADR status taxonomy and downgrade README to Provisional language ([#92](https://github.com/fsafaei/concerto/issues/92)) ([181cfa2](https://github.com/fsafaei/concerto/commit/181cfa2a20e33c1388982e55e7711bd760788c1c))
+* **readme:** add Zenodo DOI badge to the top of the badge row ([#61](https://github.com/fsafaei/concerto/issues/61)) ([718c14f](https://github.com/fsafaei/concerto/commit/718c14faf3fdb80a1858d94fce6a0b7a4bfc4c7a))
+* **readme:** correct comparison table — purge Singh row, add precedent links ([#75](https://github.com/fsafaei/concerto/issues/75)) ([48a59e2](https://github.com/fsafaei/concerto/commit/48a59e2b19694e516466af79f201fbba479c78b9))
+* **readme:** downgrade safety wording from "certified" / "high-probability" to match ADR-004 Provisional status ([#96](https://github.com/fsafaei/concerto/issues/96)) ([318824b](https://github.com/fsafaei/concerto/commit/318824b216e6b6111129569aa4189c53fb793a1a))
+* **readme:** modernise structure, add status / TL;DR / TOC / FAQ / roadmap / non-goals / stability sections ([#86](https://github.com/fsafaei/concerto/issues/86)) ([64f7e5a](https://github.com/fsafaei/concerto/commit/64f7e5a2d81ef867c9f082512afd981638a0a4e5))
+* **readme:** use ``/latest/`` versioned path for docs deep-links ([#65](https://github.com/fsafaei/concerto/issues/65)) ([1b6cf88](https://github.com/fsafaei/concerto/commit/1b6cf884a65cd6937540f56ac8f321b635957bb1))
+* **readme:** wire up the Zenodo DOI in CITATION.cff and the bibtex ([#66](https://github.com/fsafaei/concerto/issues/66)) ([1c4a82c](https://github.com/fsafaei/concerto/commit/1c4a82c8200327c4630e9c591db2ff7f6d2513d8))
+* **reference:** add canonical refs.bib and normalise public citation shorthand ([#88](https://github.com/fsafaei/concerto/issues/88)) ([eb6dc5e](https://github.com/fsafaei/concerto/commit/eb6dc5e9fa97b966145e8315a1a4ae9a3109bc80))
+* **reference:** add public literature, standards, and evaluation pages ([#82](https://github.com/fsafaei/concerto/issues/82)) ([fb9367b](https://github.com/fsafaei/concerto/commit/fb9367b9db7d2b990e5868724db7652dbbb4c4a1))
+* **run-on-gpu:** clarify that slope=0 on stage0_smoke is the expected rig-validation outcome ([#95](https://github.com/fsafaei/concerto/issues/95)) ([2134613](https://github.com/fsafaei/concerto/commit/2134613c8f7f63306c9aa4b42a5681ae1fea31b8))
+
 ## [0.1.1](https://github.com/fsafaei/concerto/compare/v0.1.0...v0.1.1) (2026-05-11)
 
 
