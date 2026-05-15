@@ -43,13 +43,23 @@ notes: |
   (which absorbed ISO/TS 15066 since v0.2 was drafted) makes
   mixed-vendor cells compliance-heterogeneous in a binding sense.
 
-  Metric is the HRS scalar G × (1 − v) per ADR-014 §Decision Table 1
-  — derived from the per-episode (success, violation_peak) tuple. The
-  prereg `estimator` carries the IQM-success-rate handle the
-  cluster_bootstrap operates on; the HRS computation lives downstream
-  in chamber.evaluation.hrs (ADR-008 §Decision). The ≥20pp gate is
-  enforced on the lower bound of the 95% cluster-bootstrap CI of
-  the gap on HRS, not on raw success rate (per ADR-014 Table 1).
+  Metric (gate): episode success rate aggregated via IQM across 5
+  seeds × 20 episodes per (seed, condition) = 100 episodes per
+  condition. ≥20pp gate on the lower bound of the 95%
+  cluster-bootstrap CI — same statistic as the other five axes, per
+  ADR-007 §Validation criteria. The cluster bootstrap operates on
+  the success-rate samples directly; bootstrapping the gate on
+  HRS = G × (1 − v) would need a separate bootstrap path because the
+  variance structure of v differs from that of G.
+
+  Downstream reporting: the HRS scalar (G × (1 − v) per ADR-008
+  §Decision; v0.2 §3.7) is computed by chamber.evaluation.hrs from
+  the same per-episode (success, violation_peak) tuple and appears
+  on the leaderboard alongside the per-axis breakdown (reviewer
+  P1-8). The ADR-014 three-table safety report (Table 1: peak
+  violations; Table 2: per-step violation rate v + fallback
+  fires; Table 3: lambda trajectories) is emitted from the same
+  episode records.
 
   Sim-only for Phase 0; HIL escalation deferred to Phase 1
   (single most expensive Phase-0 spike — sequenced last per

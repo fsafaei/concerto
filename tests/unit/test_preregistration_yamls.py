@@ -35,15 +35,15 @@ _REPO_ROOT: Path = Path(__file__).resolve().parents[2]
 #: Directory the six prereg YAMLs live in (plan/06 §3.3).
 _PREREG_DIR: Path = _REPO_ROOT / "spikes" / "preregistration"
 
-#: Canonical ADR-007 §3.4 axes — the Option D shortlist
-#: (CR > CM > PF > SA > OM > AS for the HRS bundle ordering per
-#: ADR-008 §Decision, but the six prereg files are independent).
+#: Canonical ADR-007 §3.4 axes — the Option D shortlist. The
+#: HRS-bundle ordering (CM > PF > CR > SA > OM > AS) lives in
+#: :data:`chamber.evaluation.hrs.DEFAULT_AXIS_WEIGHTS` per ADR-008
+#: §Decision; the six prereg files themselves are order-independent.
 _AXES: tuple[str, ...] = ("AS", "OM", "CR", "CM", "PF", "SA")
 
-#: Plan/07 §2 sample-size contract: 5 seeds x 100 episodes per
-#: condition = 100 episodes per condition total. With
-#: ``episodes_per_seed`` carrying the per-(seed, condition) budget,
-#: that's 20 episodes per seed per condition.
+#: Plan/07 §2 sample-size contract: 5 seeds x 20 episodes per
+#: (seed, condition) = 100 episodes per condition total.
+#: ``episodes_per_seed`` carries the per-(seed, condition) budget.
 _EXPECTED_SEEDS: list[int] = [0, 1, 2, 3, 4]
 _EXPECTED_EPISODES_PER_SEED: int = 20
 _EXPECTED_TOTAL_EPISODES_PER_CONDITION: int = 100
