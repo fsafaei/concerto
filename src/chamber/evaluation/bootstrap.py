@@ -260,6 +260,60 @@ def pacluster_bootstrap(
     )
 
 
+def build_paired_episodes(run: object) -> list[PairedEpisode]:
+    """Build paired-cluster bootstrap input from a SpikeRun (ADR-007 §Validation criteria).
+
+    Pairs are matched on ``(seed, episode_idx, initial_state_seed)``
+    triples; each episode's ``metadata["condition"]`` must equal
+    either ``run.condition_pair.homogeneous_id`` or
+    ``run.condition_pair.heterogeneous_id``. Episodes without a
+    matching pair on the opposite side are silently dropped — the
+    paired test is only defined on matched pairs (reviewer P1-9).
+
+    The argument is typed as :class:`object` (rather than
+    :class:`chamber.evaluation.results.SpikeRun`) to avoid the
+    circular import :mod:`chamber.evaluation.results` →
+    :mod:`chamber.evaluation.bootstrap` would introduce; the function
+    structurally requires ``.condition_pair.homogeneous_id`` /
+    ``.heterogeneous_id`` / ``.episode_results`` so any object with
+    that shape works (e.g. the
+    :class:`~chamber.evaluation.results.SpikeRun` Pydantic model).
+
+    Args:
+        run: A :class:`~chamber.evaluation.results.SpikeRun` instance
+            (or any structurally-compatible record).
+
+    Returns:
+        A list of :class:`PairedEpisode` records, one per matched
+        ``(seed, episode_idx, initial_state_seed)`` triple.
+    """
+    homo: str = run.condition_pair.homogeneous_id  # type: ignore[attr-defined]
+    hetero: str = run.condition_pair.heterogeneous_id  # type: ignore[attr-defined]
+    key_homo: dict[tuple[int, int, int], float] = {}
+    key_hetero: dict[tuple[int, int, int], float] = {}
+    for ep in run.episode_results:  # type: ignore[attr-defined]
+        condition = ep.metadata.get("condition")
+        key = (ep.seed, int(ep.episode_idx), ep.initial_state_seed)
+        score = 1.0 if ep.success else 0.0
+        if condition == homo:
+            key_homo[key] = score
+        elif condition == hetero:
+            key_hetero[key] = score
+    pairs: list[PairedEpisode] = []
+    for key, h_score in key_homo.items():
+        if key in key_hetero:
+            pairs.append(
+                PairedEpisode(
+                    seed=key[0],
+                    episode_idx=key[1],
+                    initial_state_seed=key[2],
+                    homogeneous=h_score,
+                    heterogeneous=key_hetero[key],
+                )
+            )
+    return pairs
+
+
 _RLIABLE_AVAILABLE = importlib.util.find_spec("rliable") is not None
 
 
@@ -340,6 +394,7 @@ __all__ = [
     "BootstrapCI",
     "PairedEpisode",
     "aggregate_metrics",
+    "build_paired_episodes",
     "cluster_bootstrap",
     "pacluster_bootstrap",
 ]
