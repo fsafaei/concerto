@@ -36,7 +36,12 @@ partner:
   extra:
     uid: fetch
     target_xy: "0.0,0.0"
-    action_dim: "2"
+    # Match the fetch agent's full action-space dimension (13). The
+    # ScriptedHeuristicPartner writes the planar xy command into the
+    # first two components and zero-pads the rest; the env-level
+    # controller validates shape == (num_envs, action_dim) and
+    # rejects (1, 2).
+    action_dim: "13"
 
 happo:
   lr: 3.0e-4

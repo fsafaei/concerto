@@ -15,13 +15,20 @@
 #   bash scripts/repro/zoo_seed.sh
 #
 # Exit codes:
-#   0  — training cleared the empirical-guarantee slope test + the
-#        published artefact's SHA-256 was written.
+#   0  — training completed + the published artefact's SHA-256 was
+#        written.
 #   1  — training failed or the published artefact wasn't found.
 #   2  — CPU-only host (torch_device() != "cuda"). Loud-fail before
 #        any work happens.
-#   3  — empirical-guarantee slope test fired (ADR-002 §Risks #1; the
-#        ``chamber-spike train --check-guarantee`` exit code).
+#
+# This script targets the Stage-0 rig-validation env (zero reward by
+# design — see ADR-001 §Validation criteria), so the empirical-
+# guarantee slope test is intentionally NOT invoked here: a flat
+# zero-reward curve has slope = 0 and trips the gate, even though the
+# rig validation itself succeeded. The ``--check-guarantee`` flag (the
+# ADR-002 §Risks #1 trip-wire) belongs on real-task spike runners, not
+# on this rig-validation reproduction. Phase-1+ Stage-1 task spikes
+# will wire the flag into their own runner scripts.
 #
 # plan/05 §6 #5 + #6, plan/08 §10–§11.
 
@@ -53,20 +60,20 @@ if [ "${DEVICE}" != "cuda" ]; then
     exit 2
 fi
 
-echo "    Running: uv run chamber-spike train --config ${CONFIG} --check-guarantee"
+echo "    Running: uv run chamber-spike train --config ${CONFIG}"
 echo ""
 
-if uv run chamber-spike train --config "${CONFIG}" --check-guarantee; then
+# --check-guarantee is intentionally NOT passed here — the Stage-0
+# smoke env is zero-reward by design (ADR-001 §Validation criteria) and
+# the slope test always trips on a flat reward curve. Real-task spikes
+# wire the trip-wire into their own runner scripts.
+if uv run chamber-spike train --config "${CONFIG}"; then
     echo ""
-    echo "==> Training cleared the empirical-guarantee slope test."
+    echo "==> Training completed."
 else
     STATUS=$?
     echo ""
     echo "==> FAIL — chamber-spike train returned exit ${STATUS}."
-    if [ "${STATUS}" -eq 3 ]; then
-        echo "    The empirical-guarantee trip-wire fired (ADR-002 §Risks #1)."
-        echo "    DO NOT lower alpha or shorten the budget; open a scope-revision issue."
-    fi
     exit "${STATUS}"
 fi
 

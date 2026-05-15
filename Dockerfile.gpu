@@ -28,7 +28,11 @@ RUN uv sync --frozen --all-extras
 COPY . .
 
 FROM base AS prod
-COPY pyproject.toml uv.lock ./
+# Hatchling validates ``license = { file = "LICENSE" }`` and ``readme =
+# "README.md"`` from pyproject.toml at package-build time during ``uv
+# sync``; copying just pyproject.toml + uv.lock makes that validation
+# fail. The two files are stable inputs to the prod stage.
+COPY pyproject.toml uv.lock LICENSE README.md ./
 RUN uv sync --frozen --no-dev
 COPY src ./src
 ENTRYPOINT ["uv", "run", "concerto"]
@@ -43,7 +47,13 @@ FROM prod AS gpu-host
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libvulkan1 mesa-vulkan-drivers libegl1 libgles2 \
     && rm -rf /var/lib/apt/lists/*
-# Re-set the entrypoint so the image can also be invoked as a bare
-# bash shell when running ad-hoc commands like `make zoo-seed-gpu`.
-# The prod ENTRYPOINT is preserved for `docker run concerto:gpu`.
-ENTRYPOINT ["uv", "run", "concerto"]
+# Reset the inherited ENTRYPOINT so ``docker run concerto:gpu make
+# zoo-seed-gpu`` invokes ``make`` directly. The ``prod`` stage sets
+# ``ENTRYPOINT ["uv", "run", "concerto"]`` which Docker would otherwise
+# prepend to every command passed to the container, turning the
+# zoo-seed invocation into ``uv run concerto make zoo-seed-gpu`` (which
+# fails immediately with command-not-found). The ``prod`` ENTRYPOINT is
+# correct for that stage; the GPU host stage runs a different mix of
+# entry points (``make``, ``bash``, ``uv run chamber-spike``) so the
+# inherited entrypoint is reset here.
+ENTRYPOINT []

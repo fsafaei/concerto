@@ -1,4 +1,10 @@
 # SPDX-License-Identifier: Apache-2.0
+# pyright: reportPrivateImportUsage=false
+#
+# Same rationale as :mod:`chamber.benchmarks.ego_ppo_trainer`: torch's
+# stub files do not export ``zeros`` via ``__all__`` even though it is
+# public API per the official docs. Suppressed file-locally so the
+# zero-reward override stays free of per-line ``type: ignore`` noise.
 """Stage 0 smoke test — ADR-001 §Validation criteria, ADR-007 §Stage 0.
 
 This module exposes :func:`make_stage0_env`, the canonical wrapped env used
@@ -20,6 +26,7 @@ Env ID note (2026-05-08, ManiSkill v3.0.1 at commit a4a4f92):
 
 from __future__ import annotations
 
+import os
 from typing import TYPE_CHECKING, ClassVar
 
 if TYPE_CHECKING:
@@ -56,6 +63,49 @@ _SMOKE_ROBOT_UIDS: tuple[str, ...] = (
     "fetch",
     "allegro_hand_right",
 )
+
+#: Idempotency guard for :func:`_patch_sapien_urdf_no_visual_material`.
+_sapien_urdf_patched: bool = False
+
+
+def _patch_sapien_urdf_no_visual_material() -> None:
+    """Strip visual materials from SAPIEN's URDF loader (ADR-001 §Risks).
+
+    SAPIEN's C++ ``RenderMaterial()`` binding calls into the global Vulkan
+    render context. On headless hosts (``CHAMBER_RENDER_BACKEND=none``) no
+    render context is initialised, but the URDF loader still instantiates
+    a ``RenderMaterial()`` for every visual link before any observation
+    rendering occurs — raising ``RuntimeError: failed to find a rendering
+    device``. Setting ``render_backend="none"`` on the env constructor
+    skips ``RenderSystem`` initialisation but does not suppress
+    ``RenderMaterial()``.
+
+    Since the Stage-0 smoke env uses ``obs_mode="state_dict"`` (no rendered
+    frames), visual materials are purely cosmetic and safe to drop. The
+    patch zero-es every visual's material on ``_build_link``, leaving
+    physics and state observations untouched.
+
+    Idempotent: a second call is a no-op.
+    """
+    global _sapien_urdf_patched  # noqa: PLW0603
+    if _sapien_urdf_patched:
+        return
+    try:
+        import sapien.wrapper.urdf_loader as _ul
+
+        _orig = _ul.URDFLoader._build_link
+
+        def _build_link_no_material(self: object, link: object, link_builder: object) -> object:
+            for v in getattr(link, "visuals", []):
+                v.material = None
+            return _orig(self, link, link_builder)  # type: ignore[arg-type]
+
+        _ul.URDFLoader._build_link = _build_link_no_material  # type: ignore[method-assign]
+        _sapien_urdf_patched = True
+    except ImportError:
+        # sapien not installed — make_stage0_env will surface this via the
+        # mani_skill import guard with a ChamberEnvCompatibilityError.
+        return
 
 
 def make_stage0_env(*, render_mode: str | None = None) -> gym.Env:  # type: ignore[return]
@@ -105,18 +155,103 @@ def make_stage0_env(*, render_mode: str | None = None) -> gym.Env:  # type: igno
             ADR-001 §Validation criteria.
             """
 
+        def _load_agent(  # type: ignore[override]
+            self,
+            options: dict,
+            initial_agent_poses: object = None,
+            build_separate: bool = False,
+        ) -> None:
+            """Multi-robot ``_load_agent`` override (ADR-001 §Validation criteria).
+
+            Patches two pre-existing ManiSkill issues that block the 3-robot rig:
+
+            1. ``BaseEnv._load_agent`` coerces a scalar ``initial_agent_poses=None``
+               into ``[None]`` (length 1), then indexes into it with ``i`` for each
+               robot. With 3 robots, ``[None][1]`` raises ``IndexError``. Passing
+               an explicit per-agent list keeps the index inside bounds.
+            2. ``MultiAgent.__init__`` unconditionally keys every agent as
+               ``f"{uid}-{i}"`` once there is more than one robot, propagating
+               the suffix into ``action_space`` and ``observation_space``. The
+               training stack (config, adapter, trainer) all use bare uids. We
+               rebuild ``agents_dict`` with stripped keys and re-bind
+               ``get_proprioception`` to iterate the bare-uid dict, before the
+               first ``_get_obs()`` runs at the end of ``reset()`` (since
+               ``_load_agent`` is invoked inside ``_reconfigure()``).
+            """
+            import types
+
+            if initial_agent_poses is None:
+                # ``self.robot_uids`` is the constructor-passed tuple in the
+                # multi-robot path; len(...) gives the agent count.
+                initial_agent_poses = [None] * len(self.robot_uids)  # type: ignore[arg-type]
+            super()._load_agent(
+                options,
+                initial_agent_poses=initial_agent_poses,  # type: ignore[arg-type]
+                build_separate=build_separate,
+            )
+            multi = self.agent
+            if not hasattr(multi, "agents_dict"):
+                # Single-agent path: ManiSkill never appends a "-i" suffix here.
+                return
+
+            def _strip_suffix(uid: str) -> str:
+                head, _, tail = uid.rpartition("-")
+                return head if head and tail.isdigit() else uid
+
+            multi.agents_dict = {  # type: ignore[attr-defined]
+                _strip_suffix(uid): agent
+                for uid, agent in multi.agents_dict.items()  # type: ignore[attr-defined]
+            }
+
+            def _bare_proprioception(self: object) -> dict[str, object]:
+                return {
+                    uid: agent.get_proprioception()
+                    for uid, agent in self.agents_dict.items()  # type: ignore[attr-defined]
+                }
+
+            multi.get_proprioception = types.MethodType(_bare_proprioception, multi)
+
+        def compute_normalized_dense_reward(
+            self,
+            obs: object,
+            action: object,
+            info: dict,
+        ) -> object:
+            """Zero reward — Stage-0 is a rig-validation env with no task.
+
+            ADR-001 §Validation criteria: Stage-0 tests wrapper dispatch and
+            action routing, not task performance. ``BaseEnv.get_reward`` calls
+            this method and the default raises ``NotImplementedError``, so a
+            no-task env must override it. Returning a per-num_envs zero tensor
+            keeps the trainer's reward bookkeeping intact.
+            """
+            del obs, action, info
+            import torch
+
+            return torch.zeros(self.num_envs, device=self.device)
+
+    render_backend = os.environ.get("CHAMBER_RENDER_BACKEND", "gpu")
+
+    if render_backend == "none":
+        # Headless hosts (CUDA-only, no Vulkan — e.g. WSL2 + Docker) need the
+        # URDF visual-material strip-patch before the env is constructed; the
+        # patch is idempotent (ADR-001 §Risks).
+        _patch_sapien_urdf_no_visual_material()
+
     try:
         env = _Stage0SmokeEnv(
             robot_uids=_SMOKE_ROBOT_UIDS,  # type: ignore[arg-type]
             num_envs=1,
-            obs_mode="state",
+            obs_mode="state_dict",
             control_mode=None,
             render_mode=render_mode,
+            render_backend=render_backend,
         )
     except RuntimeError as exc:
         raise ChamberEnvCompatibilityError(
             f"SAPIEN/Vulkan initialisation failed: {exc}\n"
-            "Stage-0 smoke requires a GPU with Vulkan support. "
+            "Stage-0 smoke requires a GPU with Vulkan support, or "
+            "CHAMBER_RENDER_BACKEND=none on a CUDA-only host. "
             "See ADR-001 §Risks."
         ) from exc
 

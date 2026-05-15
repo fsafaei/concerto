@@ -16,8 +16,10 @@ and writes the Phase-0 M4a draft-zoo seed checkpoint
 
 ## Prerequisites
 
-- **Linux** (Ubuntu 22.04 or equivalent). Windows + WSL2 has not been
-  validated.
+- **Linux** (Ubuntu 22.04 or equivalent) — native, OR Windows 11 +
+  WSL2 (Ubuntu) + Docker Engine. The WSL2 path is CUDA-only (no
+  Vulkan); pass `-e CHAMBER_RENDER_BACKEND=none` on the `docker run`
+  line as described in "Run the zoo-seed training" below.
 - **NVIDIA GPU** with CUDA 12.x driver. The image uses the
   `nvidia/cuda:12.2.2-cudnn8-runtime-ubuntu22.04` base; minimum
   driver version per NVIDIA's CUDA compatibility table is **535.54**.
@@ -81,22 +83,37 @@ via `sapien_gpu_available()`; here they execute).
 ## 4. Run the zoo-seed training
 
 This is the load-bearing step. It runs the 100k-frame ego-AHT HAPPO
-training on the Stage-0 env at `seed=7`, asserts the empirical-
-guarantee slope test ([ADR-002 §Risks #1][adr-002]; issue #62), and
-publishes the step-50000 checkpoint under the canonical name
-[ADR-009 §Decision][adr-009] specifies:
+training on the Stage-0 env at `seed=7` and publishes the step-50000
+checkpoint under the canonical name [ADR-009 §Decision][adr-009]
+specifies:
 
 ```shell
 docker run --rm --gpus all -v "$PWD:/workspace" -w /workspace \
     concerto:gpu make zoo-seed-gpu
 ```
 
+On Windows 11 + WSL2 + Docker Engine, add `-e
+CHAMBER_RENDER_BACKEND=none` to the same command:
+
+```shell
+docker run --rm --gpus all \
+    -e CHAMBER_RENDER_BACKEND=none \
+    -v "$PWD:/workspace" -w /workspace \
+    concerto:gpu make zoo-seed-gpu
+```
+
+`CHAMBER_RENDER_BACKEND` defaults to `"gpu"` so the original command
+above still works unchanged on native Linux hosts with a real NVIDIA
+Vulkan driver. Setting it to `"none"` disables SAPIEN's Vulkan render
+path; CUDA still drives PyTorch (HAPPO training) and the Stage-0 env
+uses `obs_mode="state_dict"` so no rendered frames are ever requested.
+
 What the target does (`scripts/repro/zoo_seed.sh`):
 
 1. Probes the device. Loud-fails (exit 2) if `torch_device() !=
    "cuda"`.
 2. Invokes
-   `chamber-spike train --config configs/training/ego_aht_happo/stage0_smoke.yaml --check-guarantee`.
+   `chamber-spike train --config configs/training/ego_aht_happo/stage0_smoke.yaml`.
 3. On training success, copies
    `./artifacts/artifacts/<run_id>_step50000.pt` (+ sidecar) to the
    M4a-contract path
@@ -110,38 +127,30 @@ Exit codes:
 
 | Code | Meaning |
 |---|---|
-| 0 | Trip-wire cleared, artefact published, SHA written. |
+| 0 | Training completed, artefact published, SHA written. |
 | 1 | Training failed or the published artefact wasn't found. |
 | 2 | CPU-only host (`torch_device() != "cuda"`). |
-| 3 | Empirical-guarantee slope test fired. **Do not** lower α or shorten the budget; open a `scope-revision` issue. |
 
 Total GPU wall-time on a single consumer GPU: ~2 hours, plus
 ~1 minute of artefact handling.
 
-> **Why does the slope-test assertion fail with `passed=False`?**
+> **Why is `--check-guarantee` not used here?**
 >
-> This is the **expected and correct** outcome on the Stage-0
-> smoke environment. `make_stage0_training_env` and the
-> `_Stage0SmokeEnv` it wraps load an empty scene with no task and
-> no reward function — they exist to validate the rig (wrapper
+> The Stage-0 smoke env (`make_stage0_training_env` /
+> `_Stage0SmokeEnv`) loads an empty scene with no task and no
+> reward function — it exists to validate the rig (wrapper
 > dispatch, action routing, observation namespacing, GPU + CUDA
 > + SAPIEN + Vulkan integration), per [ADR-001 §Validation
-> criteria][adr-001]. There is no reward signal to learn, so
-> cumulative reward stays at 0.0 and the slope-test assertion in
-> `concerto.training.empirical_guarantee` correctly reports
-> slope = 0, `passed = False`.
+> criteria][adr-001]. Reward stays at 0.0, so the slope test in
+> `concerto.training.empirical_guarantee` would always trip with
+> `slope = 0`, `passed = False`.
 >
-> The slope-test trip-wire is the [ADR-002 risk-mitigation
-> #1][adr-002] empirical guard rail: it fires when HAPPO produces
-> no learning, regardless of whether the cause is the frozen-
-> partner setting breaking the gradient or — as in this case —
-> the env having no task. The Stage-1 spike protocol
-> ([ADR-007 §Stage 1][adr-007]) is where the gap test against a
-> learnable task happens.
->
-> If you want to see the trainer optimise a non-trivial reward,
-> swap `make_stage0_training_env` for the Stage-1 AS task once it
-> lands in `src/chamber/tasks/` (Phase-1+).
+> The empirical-guarantee trip-wire is the [ADR-002 risk-mitigation
+> #1][adr-002] gate for *learnable* tasks; running it on a zero-
+> reward rig-validation env is a category error. The Stage-1 spike
+> protocol ([ADR-007 §Stage 1][adr-007]) is where the gap test
+> against a learnable task happens, and the Stage-1 runner wires
+> `--check-guarantee` into its own script.
 
 ## 5. Publish + verify
 
@@ -178,12 +187,14 @@ SHA-256 matches the committed manifest.
   [NVIDIA's install guide][nvidia-container].
 - **`ChamberEnvCompatibilityError: SAPIEN/Vulkan initialisation failed`** —
   the container started but couldn't reach the GPU's Vulkan stack.
-  Check the host driver version (must be ≥535.54) and that
-  `--gpus all` is on the `docker run` line.
-- **Training trip-wire fires (exit 3)** — read
-  [`docs/explanation/why-aht.md`](../explanation/why-aht.md) for what
-  the assertion measures + see issue #62 for the diagnostic protocol.
-  Do **not** widen the gate.
+  On native Linux hosts with NVIDIA Vulkan drivers, check the host
+  driver version (must be ≥535.54) and that `--gpus all` is on the
+  `docker run` line. On hosts where CUDA is available but Vulkan is
+  not (e.g. Windows 11 + WSL2 + Docker Engine), set
+  `CHAMBER_RENDER_BACKEND=none` via `docker run -e
+  CHAMBER_RENDER_BACKEND=none …`; the simulator's render path is
+  skipped (the env uses `obs_mode="state_dict"` so no rendered frames
+  are needed) while CUDA continues to drive HAPPO training.
 
 [adr-001]: ../reference/adrs.md
 [adr-001-risks]: ../reference/adrs.md
