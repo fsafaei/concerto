@@ -173,9 +173,17 @@ class TestDryRunFeedsBootstrap:
 
 
 class TestRealRunWithoutAdapter:
-    """plan/07 §T5b.2: every axis without a registered adapter exits with code 6."""
+    """plan/07 §T5b.2: axes without a registered adapter exit with code 6.
 
-    @pytest.mark.parametrize("axis", ["AS", "OM", "CR", "CM", "PF", "SA"])
+    The AS adapter ships in B8 (``chamber.benchmarks.stage1_as``); the
+    OM adapter is B9. Stage-2/3 axes (CR/CM/PF/SA) stay deferred per
+    the prompt §2 explicit out-of-scope list, so they continue to exit
+    with :data:`ADAPTER_NOT_WIRED_EXIT_CODE` until plan/07 §T5b.3 /
+    §T5b.4 work lands. Each newly-shipped adapter flips one entry of
+    this parametrisation.
+    """
+
+    @pytest.mark.parametrize("axis", ["OM", "CR", "CM", "PF", "SA"])
     def test_real_run_exits_adapter_not_wired(
         self, axis: str, tmp_path: Path, capsys: pytest.CaptureFixture[str]
     ) -> None:
