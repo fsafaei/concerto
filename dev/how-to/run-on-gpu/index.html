@@ -1459,7 +1459,7 @@ on Mac / Linux laptop CPU in ~5 minutes.</p>
 <h2 id="2-build-the-gpu-image">2. Build the GPU image</h2>
 <p>The repository ships two Dockerfiles:</p>
 <ul>
-<li><code>Dockerfile.cpu</code> — Ubuntu 22.04 base; no CUDA. Used by the
+<li><code>Dockerfile.cpu</code> — Ubuntu 26.04 base; no CUDA. Used by the
   <code>.devcontainer/</code> Mac dev box. <strong>Not</strong> what you want here.</li>
 <li><code>Dockerfile.gpu</code> — <code>nvidia/cuda</code> base with three stages
   (<code>dev</code> / <code>prod</code> / <code>gpu-host</code>). The <code>gpu-host</code> stage installs
