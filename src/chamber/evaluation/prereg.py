@@ -34,6 +34,15 @@ if TYPE_CHECKING:
 #: Permitted ADR-007 §3.4 axis labels (Option D shortlist).
 _AXIS_LABELS = frozenset({"CR", "AS", "OM", "CM", "PF", "SA"})
 
+#: Exit code consumers should emit when an ADR-007 §Discipline check fails
+#: (missing tag, file outside repo, or blob-SHA mismatch). Distinct from
+#: argparse's 2 ("bad usage") and the training trip-wire's 3 so reproduction
+#: scripts can grep the failure mode unambiguously. ``chamber-spike
+#: verify-prereg`` returns this; any future runner that auto-verifies before
+#: launch (B7's ``chamber-spike run``) should reuse the same constant rather
+#: than re-deriving the integer.
+PREREG_MISMATCH_EXIT_CODE: int = 4
+
 #: Permitted bootstrap-method labels (ADR-008 §Decision + reviewer P1-9).
 BootstrapMethod = Literal["cluster", "hierarchical", "iid"]
 
@@ -246,6 +255,7 @@ def verify_git_tag(
 
 
 __all__ = [
+    "PREREG_MISMATCH_EXIT_CODE",
     "BootstrapMethod",
     "FailurePolicy",
     "PreregistrationError",
