@@ -10,13 +10,17 @@ refuses to launch in that state.
 
 Two modes (plan/07 §6 #5):
 
-- ``--spike <path>`` — verify a single YAML.
+- ``--spike <path>`` — verify a single YAML. Output wording is
+  byte-identical to the pre-PR shape (PR #94) so downstream grep on
+  the FAIL prefix continues to work.
 - ``--all`` — walk all six canonical axis YAMLs under
   ``spikes/preregistration/`` in :data:`CANONICAL_AXIS_ORDER` (AS → OM
   → CR → CM → PF → SA, ADR-007 §Implementation staging order),
   aggregate per-axis pass/fail without short-circuiting, and exit
   :data:`PREREG_MISMATCH_EXIT_CODE` if any axis failed. The user sees
-  the full per-axis state in one pass.
+  the full per-axis state in one pass; each line carries an
+  ``axis=…`` token and a ``reason=…`` failure body so multi-axis
+  output is uniformly greppable.
 
 Delegates the actual SHA comparison to
 :func:`chamber.evaluation.prereg.verify_git_tag` (PR #94 ship;
@@ -33,7 +37,7 @@ from __future__ import annotations
 import sys
 from dataclasses import dataclass
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Literal
 
 from chamber.evaluation.prereg import (
     CANONICAL_AXIS_ORDER,
@@ -52,6 +56,13 @@ if TYPE_CHECKING:
 #: (plan/07 §6 #5). The ``--all`` walker resolves
 #: ``<repo_root> / _PREREG_SUBDIR / {axis}.yaml`` per axis.
 _PREREG_SUBDIR: Path = Path("spikes") / "preregistration"
+
+#: Discriminator for the three failure modes :func:`_verify_one_axis`
+#: can return. Single-axis mode reconstructs the pre-PR FAIL wording
+#: from this; ``--all`` mode prepends ``axis=…`` and renders a uniform
+#: ``reason=…`` body. Keeps both contracts intact without two parallel
+#: code paths (ADR-007 §Discipline; plan/07 §6 #5).
+_FailKind = Literal["missing_file", "load_error", "verify_error"]
 
 
 def add_parser(sub: argparse._SubParsersAction) -> None:  # type: ignore[type-arg]
@@ -123,22 +134,20 @@ def run(args: argparse.Namespace) -> int:
 
 
 def _run_one(args: argparse.Namespace) -> int:
-    """Single-YAML mode: ``--spike <path>`` (T5b.1; ADR-007 §Discipline)."""
+    """Single-YAML mode: ``--spike <path>`` (T5b.1; ADR-007 §Discipline).
+
+    FAIL wording is byte-identical to the pre-PR shape (PR #94) so
+    downstream callers that grep on the message prefix continue to
+    work. Multi-axis output (``--all``) carries an ``axis=…`` /
+    ``reason=…`` shape instead — see :func:`_run_all`.
+    """
     spike_path: Path = args.spike
-    if not spike_path.exists():
-        print(
-            f"verify-prereg: pre-registration YAML not found at {spike_path}",
-            file=sys.stderr,
-        )
-        return PREREG_MISMATCH_EXIT_CODE
-
     repo_root: Path = args.repo_root if args.repo_root is not None else _infer_repo_root(spike_path)
-
-    result = _verify_one_axis(prereg_path=spike_path, repo_root=repo_root)
-    if result.passed:
-        print(result.message)
+    outcome = _verify_one_axis(prereg_path=spike_path, repo_root=repo_root)
+    if outcome.passed:
+        print(_format_pass_line(outcome))
         return 0
-    print(result.message, file=sys.stderr)
+    print(_format_single_axis_fail(outcome), file=sys.stderr)
     return PREREG_MISMATCH_EXIT_CODE
 
 
@@ -152,29 +161,42 @@ def _run_all(args: argparse.Namespace) -> int:
 
     Aggregates without short-circuiting per plan/07 §6 #5: a single
     tampered YAML must not hide the state of the other five from the
-    user.
+    user. Each line is uniformly greppable as
+    ``verify-prereg: <PASS|FAIL> — axis=<AXIS> …``.
     """
     repo_root: Path = args.repo_root if args.repo_root is not None else _infer_repo_root(Path.cwd())
     prereg_dir = repo_root / _PREREG_SUBDIR
-    results: list[_AxisResult] = []
+    outcomes: list[_AxisOutcome] = []
     for axis in CANONICAL_AXIS_ORDER:
         prereg_path = prereg_dir / f"{axis}.yaml"
-        results.append(_verify_one_axis(prereg_path=prereg_path, repo_root=repo_root, axis=axis))
-    for result in results:
-        stream = sys.stdout if result.passed else sys.stderr
-        print(result.message, file=stream)
-    if all(r.passed for r in results):
+        outcomes.append(_verify_one_axis(prereg_path=prereg_path, repo_root=repo_root, axis=axis))
+    for outcome in outcomes:
+        if outcome.passed:
+            print(_format_pass_line(outcome))
+        else:
+            print(_format_all_axis_fail(outcome), file=sys.stderr)
+    if all(o.passed for o in outcomes):
         return 0
     return PREREG_MISMATCH_EXIT_CODE
 
 
 @dataclass(frozen=True)
-class _AxisResult:
-    """Per-axis verification outcome (ADR-007 §Discipline)."""
+class _AxisOutcome:
+    """Per-axis verification outcome (ADR-007 §Discipline; plan/07 §6 #5).
 
-    axis: str
+    Carries every datum either caller (``--spike`` or ``--all``)
+    might need to render its line, so the two callers can pick the
+    appropriate format string without re-running the verification
+    or losing precision on the failure mode.
+    """
+
+    prereg_path: Path
+    axis: str  # resolved axis label, or "" if load failed before spec
     passed: bool
-    message: str
+    spec: PreregistrationSpec | None = None
+    blob_sha: str = ""
+    fail_kind: _FailKind | None = None
+    fail_detail: str = ""
 
 
 def _verify_one_axis(
@@ -182,63 +204,95 @@ def _verify_one_axis(
     prereg_path: Path,
     repo_root: Path,
     axis: str | None = None,
-) -> _AxisResult:
+) -> _AxisOutcome:
     """Verify a single prereg YAML; never raise (ADR-007 §Discipline; plan/07 §6 #5).
 
-    Folds the four failure modes (missing file / load error / git-tag
-    missing / blob-SHA mismatch) into a uniform :class:`_AxisResult`
-    so the ``--all`` aggregator can render the full per-axis picture
-    in one pass without short-circuiting.
+    Folds the three failure modes (missing file / load error / git-tag
+    or blob-SHA mismatch) into a uniform :class:`_AxisOutcome` so the
+    ``--all`` aggregator can render the full per-axis picture in one
+    pass without short-circuiting. The single-axis caller reconstructs
+    the pre-PR FAIL wording from the same outcome via
+    :func:`_format_single_axis_fail`.
 
     Args:
         prereg_path: Path to the YAML file on disk.
         repo_root: Root of the git working tree.
-        axis: Optional canonical axis label (used when called from
-            ``--all`` so the message includes ``axis=…`` even when the
-            file is missing and the spec cannot be loaded). When
-            ``None`` (single-YAML mode) the axis is taken from the
-            successfully-loaded :class:`PreregistrationSpec`, or
-            omitted if the load fails before that point.
+        axis: Canonical axis label, set by ``--all`` callers so the
+            outcome carries an axis even when the file is missing
+            (single-axis callers pass ``None`` and the axis is taken
+            from the loaded :class:`PreregistrationSpec`, or left
+            empty if the load fails earlier).
     """
-    label = _axis_label(axis)
     if not prereg_path.exists():
-        return _AxisResult(
+        return _AxisOutcome(
+            prereg_path=prereg_path,
             axis=axis or "",
             passed=False,
-            message=f"verify-prereg: FAIL — {label}reason=prereg YAML not found at {prereg_path}",
+            fail_kind="missing_file",
         )
     try:
         spec = load_prereg(prereg_path)
     except (FileNotFoundError, ValueError) as exc:
-        return _AxisResult(
+        return _AxisOutcome(
+            prereg_path=prereg_path,
             axis=axis or "",
             passed=False,
-            message=f"verify-prereg: FAIL — {label}reason=failed to load {prereg_path}: {exc}",
+            fail_kind="load_error",
+            fail_detail=str(exc),
         )
-    label = _axis_label(axis or spec.axis)
+    resolved_axis = axis or spec.axis
     try:
         blob_sha = verify_git_tag(spec, prereg_path, repo_path=repo_root)
     except PreregistrationError as exc:
-        return _AxisResult(
-            axis=axis or spec.axis,
+        return _AxisOutcome(
+            prereg_path=prereg_path,
+            axis=resolved_axis,
             passed=False,
-            message=f"verify-prereg: FAIL — {label}reason={exc}",
+            spec=spec,
+            fail_kind="verify_error",
+            fail_detail=str(exc),
         )
-    return _AxisResult(
-        axis=axis or spec.axis,
+    return _AxisOutcome(
+        prereg_path=prereg_path,
+        axis=resolved_axis,
         passed=True,
-        message=_format_pass_line(spec=spec, blob_sha=blob_sha),
+        spec=spec,
+        blob_sha=blob_sha,
     )
 
 
-def _axis_label(axis: str | None) -> str:
-    """Render the ``axis=…`` token used in PASS / FAIL message bodies."""
-    return f"axis={axis} " if axis else ""
+def _format_pass_line(outcome: _AxisOutcome) -> str:
+    """Format a PASS line; identical shape for ``--spike`` and ``--all`` (T5b.1)."""
+    assert outcome.spec is not None  # noqa: S101 — narrow types for type-checker.
+    return (
+        f"verify-prereg: PASS — axis={outcome.spec.axis} "
+        f"tag={outcome.spec.git_tag} blob_sha={outcome.blob_sha}"
+    )
 
 
-def _format_pass_line(*, spec: PreregistrationSpec, blob_sha: str) -> str:
-    """Format the PASS line; matches the existing single-YAML output (T5b.1)."""
-    return f"verify-prereg: PASS — axis={spec.axis} tag={spec.git_tag} blob_sha={blob_sha}"
+def _format_single_axis_fail(outcome: _AxisOutcome) -> str:
+    """Single-axis FAIL line; byte-identical to the pre-PR shape (PR #94)."""
+    if outcome.fail_kind == "missing_file":
+        return f"verify-prereg: pre-registration YAML not found at {outcome.prereg_path}"
+    if outcome.fail_kind == "load_error":
+        return f"verify-prereg: failed to load {outcome.prereg_path}: {outcome.fail_detail}"
+    return f"verify-prereg: FAIL — {outcome.fail_detail}"
+
+
+def _format_all_axis_fail(outcome: _AxisOutcome) -> str:
+    """``--all`` FAIL line; uniform ``axis=… reason=…`` shape (plan/07 §6 #5)."""
+    axis_part = f"axis={outcome.axis} " if outcome.axis else ""
+    if outcome.fail_kind == "missing_file":
+        return (
+            f"verify-prereg: FAIL — {axis_part}"
+            f"reason=prereg YAML not found at {outcome.prereg_path}"
+        )
+    if outcome.fail_kind == "load_error":
+        return (
+            f"verify-prereg: FAIL — {axis_part}"
+            f"reason=failed to load {outcome.prereg_path}: {outcome.fail_detail}"
+        )
+    return f"verify-prereg: FAIL — {axis_part}reason={outcome.fail_detail}"
 
 
 def _infer_repo_root(start: Path) -> Path:

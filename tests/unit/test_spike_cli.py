@@ -380,6 +380,27 @@ class TestVerifyPreregAll:
             main(["verify-prereg"])
         assert excinfo.value.code == 2
 
+    def test_fails_loud_on_missing_axis_yaml(
+        self,
+        six_axis_tagged_repo: tuple[Path, dict[str, Path]],
+        capsys: pytest.CaptureFixture[str],
+    ) -> None:
+        """A canonical axis YAML deleted post-corpus ⇒ exit 4; the gap is named loudly."""
+        repo, paths = six_axis_tagged_repo
+        # Pretend the PF YAML was never checked in.
+        paths["PF"].unlink()
+        rc = main(["verify-prereg", "--all", "--repo-root", str(repo)])
+        assert rc == PREREG_MISMATCH_EXIT_CODE, (
+            f"expected exit {PREREG_MISMATCH_EXIT_CODE}, got {rc}"
+        )
+        captured = capsys.readouterr()
+        assert "axis=PF" in captured.err
+        assert "not found" in captured.err
+        for axis in ("AS", "OM", "CR", "CM", "SA"):
+            assert f"axis={axis}" in captured.out, (
+                f"expected non-failing axis {axis} on stdout; got: {captured.out!r}"
+            )
+
     def test_skips_non_axis_yamls(
         self,
         six_axis_tagged_repo: tuple[Path, dict[str, Path]],
