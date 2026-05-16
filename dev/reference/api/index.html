@@ -18797,15 +18797,7 @@ via the trainer-factory seam (ADR-002 §Decisions; plan/05 §3.5).</p>
 
               <details class="mkdocstrings-source">
                 <summary>Source code in <code>src/concerto/training/ego_aht.py</code></summary>
-                <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">234</span>
-<span class="normal">235</span>
-<span class="normal">236</span>
-<span class="normal">237</span>
-<span class="normal">238</span>
-<span class="normal">239</span>
-<span class="normal">240</span>
-<span class="normal">241</span>
-<span class="normal">242</span>
+                <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">242</span>
 <span class="normal">243</span>
 <span class="normal">244</span>
 <span class="normal">245</span>
@@ -18854,7 +18846,15 @@ via the trainer-factory seam (ADR-002 §Decisions; plan/05 §3.5).</p>
 <span class="normal">288</span>
 <span class="normal">289</span>
 <span class="normal">290</span>
-<span class="normal">291</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">RandomEgoTrainer</span><span class="p">:</span>
+<span class="normal">291</span>
+<span class="normal">292</span>
+<span class="normal">293</span>
+<span class="normal">294</span>
+<span class="normal">295</span>
+<span class="normal">296</span>
+<span class="normal">297</span>
+<span class="normal">298</span>
+<span class="normal">299</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">RandomEgoTrainer</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Reference :class:`EgoTrainer` that samples uniformly from the action space.</span>
 
 <span class="sd">    Exists so :func:`train` can be exercised end-to-end before the HARL</span>
@@ -18981,15 +18981,7 @@ P6 reproducibility.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/concerto/training/ego_aht.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">245</span>
-<span class="normal">246</span>
-<span class="normal">247</span>
-<span class="normal">248</span>
-<span class="normal">249</span>
-<span class="normal">250</span>
-<span class="normal">251</span>
-<span class="normal">252</span>
-<span class="normal">253</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">253</span>
 <span class="normal">254</span>
 <span class="normal">255</span>
 <span class="normal">256</span>
@@ -18997,7 +18989,15 @@ P6 reproducibility.</p>
 <span class="normal">258</span>
 <span class="normal">259</span>
 <span class="normal">260</span>
-<span class="normal">261</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">ego_uid</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">action_dim</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">root_seed</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="normal">261</span>
+<span class="normal">262</span>
+<span class="normal">263</span>
+<span class="normal">264</span>
+<span class="normal">265</span>
+<span class="normal">266</span>
+<span class="normal">267</span>
+<span class="normal">268</span>
+<span class="normal">269</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">ego_uid</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">action_dim</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">root_seed</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Build a uniform-random reference trainer (T4b.11; ADR-002 §Decisions).</span>
 
 <span class="sd">    Args:</span>
@@ -19040,17 +19040,17 @@ P6 reproducibility.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/concerto/training/ego_aht.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">263</span>
-<span class="normal">264</span>
-<span class="normal">265</span>
-<span class="normal">266</span>
-<span class="normal">267</span>
-<span class="normal">268</span>
-<span class="normal">269</span>
-<span class="normal">270</span>
-<span class="normal">271</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">271</span>
 <span class="normal">272</span>
-<span class="normal">273</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">act</span><span class="p">(</span>
+<span class="normal">273</span>
+<span class="normal">274</span>
+<span class="normal">275</span>
+<span class="normal">276</span>
+<span class="normal">277</span>
+<span class="normal">278</span>
+<span class="normal">279</span>
+<span class="normal">280</span>
+<span class="normal">281</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">act</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
     <span class="n">obs</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span>
     <span class="o">*</span><span class="p">,</span>
@@ -19091,16 +19091,16 @@ P6 reproducibility.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/concerto/training/ego_aht.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">275</span>
-<span class="normal">276</span>
-<span class="normal">277</span>
-<span class="normal">278</span>
-<span class="normal">279</span>
-<span class="normal">280</span>
-<span class="normal">281</span>
-<span class="normal">282</span>
-<span class="normal">283</span>
-<span class="normal">284</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">observe</span><span class="p">(</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">283</span>
+<span class="normal">284</span>
+<span class="normal">285</span>
+<span class="normal">286</span>
+<span class="normal">287</span>
+<span class="normal">288</span>
+<span class="normal">289</span>
+<span class="normal">290</span>
+<span class="normal">291</span>
+<span class="normal">292</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">observe</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
     <span class="n">obs</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span>
     <span class="n">reward</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
@@ -19134,9 +19134,9 @@ P6 reproducibility.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/concerto/training/ego_aht.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">289</span>
-<span class="normal">290</span>
-<span class="normal">291</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">state_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">297</span>
+<span class="normal">298</span>
+<span class="normal">299</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">state_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Return an empty dict (ADR-002 §Decisions: trainer is parameter-free).&quot;&quot;&quot;</span>
     <span class="k">return</span> <span class="p">{}</span>
 </code></pre></div></td></tr></table></div>
@@ -19163,8 +19163,8 @@ P6 reproducibility.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/concerto/training/ego_aht.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">286</span>
-<span class="normal">287</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">294</span>
+<span class="normal">295</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;No-op (ADR-002 §Decisions): reference trainer has no learnable params.&quot;&quot;&quot;</span>
 </code></pre></div></td></tr></table></div>
             </details>
@@ -19255,15 +19255,7 @@ from this list.</p>
 
               <details class="mkdocstrings-source">
                 <summary>Source code in <code>src/concerto/training/ego_aht.py</code></summary>
-                <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">209</span>
-<span class="normal">210</span>
-<span class="normal">211</span>
-<span class="normal">212</span>
-<span class="normal">213</span>
-<span class="normal">214</span>
-<span class="normal">215</span>
-<span class="normal">216</span>
-<span class="normal">217</span>
+                <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">217</span>
 <span class="normal">218</span>
 <span class="normal">219</span>
 <span class="normal">220</span>
@@ -19277,7 +19269,15 @@ from this list.</p>
 <span class="normal">228</span>
 <span class="normal">229</span>
 <span class="normal">230</span>
-<span class="normal">231</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="normal">231</span>
+<span class="normal">232</span>
+<span class="normal">233</span>
+<span class="normal">234</span>
+<span class="normal">235</span>
+<span class="normal">236</span>
+<span class="normal">237</span>
+<span class="normal">238</span>
+<span class="normal">239</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">RewardCurve</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Result of one ego-AHT training run (T4b.11; T4b.13 consumer; ADR-002 §Decisions).</span>
 
@@ -19346,6 +19346,12 @@ from this list.</p>
 :func:<code>chamber.benchmarks.training_runner.run_training</code> selects
 :meth:<code>EgoPPOTrainer.from_config &lt;chamber.benchmarks.ego_ppo_trainer.EgoPPOTrainer.from_config&gt;</code>
 by default (M4b-8a / plan/05 §3.5).</p>
+<p>The factory receives the partner so it can refuse to construct
+against a non-frozen partner before any tensor allocation
+(ADR-009 §Consequences; plan/05 §6 #3). The default factory
+:meth:<code>~chamber.benchmarks.ego_ppo_trainer.EgoPPOTrainer.from_config</code>
+calls :func:<code>~chamber.benchmarks.ego_ppo_trainer._assert_partner_is_frozen</code>
+on the partner as its first construction step.</p>
 
 
 
@@ -19373,13 +19379,28 @@ by default (M4b-8a / plan/05 §3.5).</p>
 <span class="normal">203</span>
 <span class="normal">204</span>
 <span class="normal">205</span>
-<span class="normal">206</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">TrainerFactory</span><span class="p">(</span><span class="n">Protocol</span><span class="p">):</span>
+<span class="normal">206</span>
+<span class="normal">207</span>
+<span class="normal">208</span>
+<span class="normal">209</span>
+<span class="normal">210</span>
+<span class="normal">211</span>
+<span class="normal">212</span>
+<span class="normal">213</span>
+<span class="normal">214</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">TrainerFactory</span><span class="p">(</span><span class="n">Protocol</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Constructor that builds an :class:`EgoTrainer` (T4b.11; ADR-002 §Decisions).</span>
 
 <span class="sd">    The seam through which :func:`train` plugs in the algorithm.</span>
 <span class="sd">    :func:`chamber.benchmarks.training_runner.run_training` selects</span>
 <span class="sd">    :meth:`EgoPPOTrainer.from_config &lt;chamber.benchmarks.ego_ppo_trainer.EgoPPOTrainer.from_config&gt;`</span>
 <span class="sd">    by default (M4b-8a / plan/05 §3.5).</span>
+
+<span class="sd">    The factory receives the partner so it can refuse to construct</span>
+<span class="sd">    against a non-frozen partner before any tensor allocation</span>
+<span class="sd">    (ADR-009 §Consequences; plan/05 §6 #3). The default factory</span>
+<span class="sd">    :meth:`~chamber.benchmarks.ego_ppo_trainer.EgoPPOTrainer.from_config`</span>
+<span class="sd">    calls :func:`~chamber.benchmarks.ego_ppo_trainer._assert_partner_is_frozen`</span>
+<span class="sd">    on the partner as its first construction step.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__call__</span><span class="p">(</span>
@@ -19387,9 +19408,10 @@ by default (M4b-8a / plan/05 §3.5).</p>
         <span class="n">cfg</span><span class="p">:</span> <span class="n">EgoAHTConfig</span><span class="p">,</span>
         <span class="o">*</span><span class="p">,</span>
         <span class="n">env</span><span class="p">:</span> <span class="n">EnvLike</span><span class="p">,</span>
+        <span class="n">partner</span><span class="p">:</span> <span class="n">PartnerLike</span><span class="p">,</span>
         <span class="n">ego_uid</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">EgoTrainer</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Build a trainer (ADR-002 §Decisions; plan/05 §3.5).&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Build a trainer (ADR-002 §Decisions; plan/05 §3.5; ADR-009 §Consequences).&quot;&quot;&quot;</span>
         <span class="o">...</span>  <span class="c1"># pragma: no cover</span>
 </code></pre></div></td></tr></table></div>
               </details>
@@ -19416,33 +19438,39 @@ by default (M4b-8a / plan/05 §3.5).</p>
 
 </h3>
 <div class="doc-signature highlight"><pre><span></span><code><span class="nf">__call__</span><span class="p">(</span>
-    <span class="n">cfg</span><span class="p">:</span> <span class="n">EgoAHTConfig</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">env</span><span class="p">:</span> <span class="n">EnvLike</span><span class="p">,</span> <span class="n">ego_uid</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">cfg</span><span class="p">:</span> <span class="n">EgoAHTConfig</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">env</span><span class="p">:</span> <span class="n">EnvLike</span><span class="p">,</span>
+    <span class="n">partner</span><span class="p">:</span> <span class="n">PartnerLike</span><span class="p">,</span>
+    <span class="n">ego_uid</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">EgoTrainer</span>
 </code></pre></div>
 
     <div class="doc doc-contents ">
 
-        <p>Build a trainer (ADR-002 §Decisions; plan/05 §3.5).</p>
+        <p>Build a trainer (ADR-002 §Decisions; plan/05 §3.5; ADR-009 §Consequences).</p>
 
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/concerto/training/ego_aht.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">198</span>
-<span class="normal">199</span>
-<span class="normal">200</span>
-<span class="normal">201</span>
-<span class="normal">202</span>
-<span class="normal">203</span>
-<span class="normal">204</span>
-<span class="normal">205</span>
-<span class="normal">206</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="fm">__call__</span><span class="p">(</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">205</span>
+<span class="normal">206</span>
+<span class="normal">207</span>
+<span class="normal">208</span>
+<span class="normal">209</span>
+<span class="normal">210</span>
+<span class="normal">211</span>
+<span class="normal">212</span>
+<span class="normal">213</span>
+<span class="normal">214</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="fm">__call__</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
     <span class="n">cfg</span><span class="p">:</span> <span class="n">EgoAHTConfig</span><span class="p">,</span>
     <span class="o">*</span><span class="p">,</span>
     <span class="n">env</span><span class="p">:</span> <span class="n">EnvLike</span><span class="p">,</span>
+    <span class="n">partner</span><span class="p">:</span> <span class="n">PartnerLike</span><span class="p">,</span>
     <span class="n">ego_uid</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">EgoTrainer</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Build a trainer (ADR-002 §Decisions; plan/05 §3.5).&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Build a trainer (ADR-002 §Decisions; plan/05 §3.5; ADR-009 §Consequences).&quot;&quot;&quot;</span>
     <span class="o">...</span>  <span class="c1"># pragma: no cover</span>
 </code></pre></div></td></tr></table></div>
             </details>
@@ -19578,15 +19606,7 @@ injects the M4b-8a
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/concerto/training/ego_aht.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">294</span>
-<span class="normal">295</span>
-<span class="normal">296</span>
-<span class="normal">297</span>
-<span class="normal">298</span>
-<span class="normal">299</span>
-<span class="normal">300</span>
-<span class="normal">301</span>
-<span class="normal">302</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">302</span>
 <span class="normal">303</span>
 <span class="normal">304</span>
 <span class="normal">305</span>
@@ -19727,7 +19747,15 @@ injects the M4b-8a
 <span class="normal">440</span>
 <span class="normal">441</span>
 <span class="normal">442</span>
-<span class="normal">443</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">train</span><span class="p">(</span>
+<span class="normal">443</span>
+<span class="normal">444</span>
+<span class="normal">445</span>
+<span class="normal">446</span>
+<span class="normal">447</span>
+<span class="normal">448</span>
+<span class="normal">449</span>
+<span class="normal">450</span>
+<span class="normal">451</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">train</span><span class="p">(</span>
     <span class="n">cfg</span><span class="p">:</span> <span class="n">EgoAHTConfig</span><span class="p">,</span>
     <span class="o">*</span><span class="p">,</span>
     <span class="n">env</span><span class="p">:</span> <span class="n">EnvLike</span><span class="p">,</span>
@@ -19791,7 +19819,7 @@ injects the M4b-8a
             <span class="n">root_seed</span><span class="o">=</span><span class="n">cfg</span><span class="o">.</span><span class="n">seed</span><span class="p">,</span>
         <span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="n">trainer</span> <span class="o">=</span> <span class="n">trainer_factory</span><span class="p">(</span><span class="n">cfg</span><span class="p">,</span> <span class="n">env</span><span class="o">=</span><span class="n">env</span><span class="p">,</span> <span class="n">ego_uid</span><span class="o">=</span><span class="n">ego_uid</span><span class="p">)</span>
+        <span class="n">trainer</span> <span class="o">=</span> <span class="n">trainer_factory</span><span class="p">(</span><span class="n">cfg</span><span class="p">,</span> <span class="n">env</span><span class="o">=</span><span class="n">env</span><span class="p">,</span> <span class="n">partner</span><span class="o">=</span><span class="n">partner</span><span class="p">,</span> <span class="n">ego_uid</span><span class="o">=</span><span class="n">ego_uid</span><span class="p">)</span>
 
     <span class="n">obs</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">reset</span><span class="p">(</span><span class="n">seed</span><span class="o">=</span><span class="n">cfg</span><span class="o">.</span><span class="n">seed</span><span class="p">)</span>
     <span class="n">partner</span><span class="o">.</span><span class="n">reset</span><span class="p">(</span><span class="n">seed</span><span class="o">=</span><span class="n">cfg</span><span class="o">.</span><span class="n">seed</span><span class="p">)</span>
@@ -41038,507 +41066,545 @@ empirical-guarantee verification contract (T4b.13).</p>
 
               <details class="mkdocstrings-source">
                 <summary>Source code in <code>src/chamber/benchmarks/ego_ppo_trainer.py</code></summary>
-                <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">391</span>
-<span class="normal">392</span>
-<span class="normal">393</span>
-<span class="normal">394</span>
-<span class="normal">395</span>
-<span class="normal">396</span>
-<span class="normal">397</span>
-<span class="normal">398</span>
-<span class="normal">399</span>
-<span class="normal">400</span>
-<span class="normal">401</span>
-<span class="normal">402</span>
-<span class="normal">403</span>
-<span class="normal">404</span>
-<span class="normal">405</span>
-<span class="normal">406</span>
-<span class="normal">407</span>
-<span class="normal">408</span>
-<span class="normal">409</span>
-<span class="normal">410</span>
-<span class="normal">411</span>
-<span class="normal">412</span>
-<span class="normal">413</span>
-<span class="normal">414</span>
-<span class="normal">415</span>
-<span class="normal">416</span>
-<span class="normal">417</span>
-<span class="normal">418</span>
-<span class="normal">419</span>
-<span class="normal">420</span>
-<span class="normal">421</span>
-<span class="normal">422</span>
-<span class="normal">423</span>
-<span class="normal">424</span>
-<span class="normal">425</span>
-<span class="normal">426</span>
-<span class="normal">427</span>
-<span class="normal">428</span>
-<span class="normal">429</span>
-<span class="normal">430</span>
-<span class="normal">431</span>
-<span class="normal">432</span>
-<span class="normal">433</span>
-<span class="normal">434</span>
-<span class="normal">435</span>
-<span class="normal">436</span>
-<span class="normal">437</span>
-<span class="normal">438</span>
-<span class="normal">439</span>
-<span class="normal">440</span>
-<span class="normal">441</span>
-<span class="normal">442</span>
-<span class="normal">443</span>
-<span class="normal">444</span>
-<span class="normal">445</span>
-<span class="normal">446</span>
-<span class="normal">447</span>
-<span class="normal">448</span>
-<span class="normal">449</span>
-<span class="normal">450</span>
-<span class="normal">451</span>
-<span class="normal">452</span>
-<span class="normal">453</span>
-<span class="normal">454</span>
-<span class="normal">455</span>
-<span class="normal">456</span>
-<span class="normal">457</span>
-<span class="normal">458</span>
-<span class="normal">459</span>
-<span class="normal">460</span>
-<span class="normal">461</span>
-<span class="normal">462</span>
-<span class="normal">463</span>
-<span class="normal">464</span>
-<span class="normal">465</span>
-<span class="normal">466</span>
-<span class="normal">467</span>
-<span class="normal">468</span>
-<span class="normal">469</span>
-<span class="normal">470</span>
-<span class="normal">471</span>
-<span class="normal">472</span>
-<span class="normal">473</span>
-<span class="normal">474</span>
-<span class="normal">475</span>
-<span class="normal">476</span>
-<span class="normal">477</span>
-<span class="normal">478</span>
-<span class="normal">479</span>
-<span class="normal">480</span>
-<span class="normal">481</span>
-<span class="normal">482</span>
-<span class="normal">483</span>
-<span class="normal">484</span>
-<span class="normal">485</span>
-<span class="normal">486</span>
-<span class="normal">487</span>
-<span class="normal">488</span>
-<span class="normal">489</span>
-<span class="normal">490</span>
-<span class="normal">491</span>
-<span class="normal">492</span>
-<span class="normal">493</span>
-<span class="normal">494</span>
-<span class="normal">495</span>
-<span class="normal">496</span>
-<span class="normal">497</span>
-<span class="normal">498</span>
-<span class="normal">499</span>
-<span class="normal">500</span>
-<span class="normal">501</span>
-<span class="normal">502</span>
-<span class="normal">503</span>
-<span class="normal">504</span>
-<span class="normal">505</span>
-<span class="normal">506</span>
-<span class="normal">507</span>
-<span class="normal">508</span>
-<span class="normal">509</span>
-<span class="normal">510</span>
-<span class="normal">511</span>
-<span class="normal">512</span>
-<span class="normal">513</span>
-<span class="normal">514</span>
-<span class="normal">515</span>
-<span class="normal">516</span>
-<span class="normal">517</span>
-<span class="normal">518</span>
-<span class="normal">519</span>
-<span class="normal">520</span>
-<span class="normal">521</span>
-<span class="normal">522</span>
-<span class="normal">523</span>
-<span class="normal">524</span>
-<span class="normal">525</span>
-<span class="normal">526</span>
-<span class="normal">527</span>
-<span class="normal">528</span>
-<span class="normal">529</span>
-<span class="normal">530</span>
-<span class="normal">531</span>
-<span class="normal">532</span>
-<span class="normal">533</span>
-<span class="normal">534</span>
-<span class="normal">535</span>
-<span class="normal">536</span>
-<span class="normal">537</span>
-<span class="normal">538</span>
-<span class="normal">539</span>
-<span class="normal">540</span>
-<span class="normal">541</span>
-<span class="normal">542</span>
-<span class="normal">543</span>
-<span class="normal">544</span>
-<span class="normal">545</span>
-<span class="normal">546</span>
-<span class="normal">547</span>
-<span class="normal">548</span>
-<span class="normal">549</span>
-<span class="normal">550</span>
-<span class="normal">551</span>
-<span class="normal">552</span>
-<span class="normal">553</span>
-<span class="normal">554</span>
-<span class="normal">555</span>
-<span class="normal">556</span>
-<span class="normal">557</span>
-<span class="normal">558</span>
-<span class="normal">559</span>
-<span class="normal">560</span>
-<span class="normal">561</span>
-<span class="normal">562</span>
-<span class="normal">563</span>
-<span class="normal">564</span>
-<span class="normal">565</span>
-<span class="normal">566</span>
-<span class="normal">567</span>
-<span class="normal">568</span>
-<span class="normal">569</span>
-<span class="normal">570</span>
-<span class="normal">571</span>
-<span class="normal">572</span>
-<span class="normal">573</span>
-<span class="normal">574</span>
-<span class="normal">575</span>
-<span class="normal">576</span>
-<span class="normal">577</span>
-<span class="normal">578</span>
-<span class="normal">579</span>
-<span class="normal">580</span>
-<span class="normal">581</span>
-<span class="normal">582</span>
-<span class="normal">583</span>
-<span class="normal">584</span>
-<span class="normal">585</span>
-<span class="normal">586</span>
-<span class="normal">587</span>
-<span class="normal">588</span>
-<span class="normal">589</span>
-<span class="normal">590</span>
-<span class="normal">591</span>
-<span class="normal">592</span>
-<span class="normal">593</span>
-<span class="normal">594</span>
-<span class="normal">595</span>
-<span class="normal">596</span>
-<span class="normal">597</span>
-<span class="normal">598</span>
-<span class="normal">599</span>
-<span class="normal">600</span>
-<span class="normal">601</span>
-<span class="normal">602</span>
-<span class="normal">603</span>
-<span class="normal">604</span>
-<span class="normal">605</span>
-<span class="normal">606</span>
-<span class="normal">607</span>
-<span class="normal">608</span>
-<span class="normal">609</span>
-<span class="normal">610</span>
-<span class="normal">611</span>
-<span class="normal">612</span>
-<span class="normal">613</span>
-<span class="normal">614</span>
-<span class="normal">615</span>
-<span class="normal">616</span>
-<span class="normal">617</span>
-<span class="normal">618</span>
-<span class="normal">619</span>
-<span class="normal">620</span>
-<span class="normal">621</span>
-<span class="normal">622</span>
-<span class="normal">623</span>
-<span class="normal">624</span>
-<span class="normal">625</span>
-<span class="normal">626</span>
-<span class="normal">627</span>
-<span class="normal">628</span>
-<span class="normal">629</span>
-<span class="normal">630</span>
-<span class="normal">631</span>
-<span class="normal">632</span>
-<span class="normal">633</span>
-<span class="normal">634</span>
-<span class="normal">635</span>
-<span class="normal">636</span>
-<span class="normal">637</span>
-<span class="normal">638</span>
-<span class="normal">639</span>
-<span class="normal">640</span>
-<span class="normal">641</span>
-<span class="normal">642</span>
-<span class="normal">643</span>
-<span class="normal">644</span>
-<span class="normal">645</span>
-<span class="normal">646</span>
-<span class="normal">647</span>
-<span class="normal">648</span>
-<span class="normal">649</span>
-<span class="normal">650</span>
-<span class="normal">651</span>
-<span class="normal">652</span>
-<span class="normal">653</span>
-<span class="normal">654</span>
-<span class="normal">655</span>
-<span class="normal">656</span>
-<span class="normal">657</span>
-<span class="normal">658</span>
-<span class="normal">659</span>
-<span class="normal">660</span>
-<span class="normal">661</span>
-<span class="normal">662</span>
-<span class="normal">663</span>
-<span class="normal">664</span>
-<span class="normal">665</span>
-<span class="normal">666</span>
-<span class="normal">667</span>
-<span class="normal">668</span>
-<span class="normal">669</span>
-<span class="normal">670</span>
-<span class="normal">671</span>
-<span class="normal">672</span>
-<span class="normal">673</span>
-<span class="normal">674</span>
-<span class="normal">675</span>
-<span class="normal">676</span>
-<span class="normal">677</span>
-<span class="normal">678</span>
-<span class="normal">679</span>
-<span class="normal">680</span>
-<span class="normal">681</span>
-<span class="normal">682</span>
-<span class="normal">683</span>
-<span class="normal">684</span>
-<span class="normal">685</span>
-<span class="normal">686</span>
-<span class="normal">687</span>
-<span class="normal">688</span>
-<span class="normal">689</span>
-<span class="normal">690</span>
-<span class="normal">691</span>
-<span class="normal">692</span>
-<span class="normal">693</span>
-<span class="normal">694</span>
-<span class="normal">695</span>
-<span class="normal">696</span>
-<span class="normal">697</span>
-<span class="normal">698</span>
-<span class="normal">699</span>
-<span class="normal">700</span>
-<span class="normal">701</span>
-<span class="normal">702</span>
-<span class="normal">703</span>
-<span class="normal">704</span>
-<span class="normal">705</span>
-<span class="normal">706</span>
-<span class="normal">707</span>
-<span class="normal">708</span>
-<span class="normal">709</span>
-<span class="normal">710</span>
-<span class="normal">711</span>
-<span class="normal">712</span>
-<span class="normal">713</span>
-<span class="normal">714</span>
-<span class="normal">715</span>
-<span class="normal">716</span>
-<span class="normal">717</span>
-<span class="normal">718</span>
-<span class="normal">719</span>
-<span class="normal">720</span>
-<span class="normal">721</span>
-<span class="normal">722</span>
-<span class="normal">723</span>
-<span class="normal">724</span>
-<span class="normal">725</span>
-<span class="normal">726</span>
-<span class="normal">727</span>
-<span class="normal">728</span>
-<span class="normal">729</span>
-<span class="normal">730</span>
-<span class="normal">731</span>
-<span class="normal">732</span>
-<span class="normal">733</span>
-<span class="normal">734</span>
-<span class="normal">735</span>
-<span class="normal">736</span>
-<span class="normal">737</span>
-<span class="normal">738</span>
-<span class="normal">739</span>
-<span class="normal">740</span>
-<span class="normal">741</span>
-<span class="normal">742</span>
-<span class="normal">743</span>
-<span class="normal">744</span>
-<span class="normal">745</span>
-<span class="normal">746</span>
-<span class="normal">747</span>
-<span class="normal">748</span>
-<span class="normal">749</span>
-<span class="normal">750</span>
-<span class="normal">751</span>
-<span class="normal">752</span>
-<span class="normal">753</span>
-<span class="normal">754</span>
-<span class="normal">755</span>
-<span class="normal">756</span>
-<span class="normal">757</span>
-<span class="normal">758</span>
-<span class="normal">759</span>
-<span class="normal">760</span>
-<span class="normal">761</span>
-<span class="normal">762</span>
-<span class="normal">763</span>
-<span class="normal">764</span>
-<span class="normal">765</span>
-<span class="normal">766</span>
-<span class="normal">767</span>
-<span class="normal">768</span>
-<span class="normal">769</span>
-<span class="normal">770</span>
-<span class="normal">771</span>
-<span class="normal">772</span>
-<span class="normal">773</span>
-<span class="normal">774</span>
-<span class="normal">775</span>
-<span class="normal">776</span>
-<span class="normal">777</span>
-<span class="normal">778</span>
-<span class="normal">779</span>
-<span class="normal">780</span>
-<span class="normal">781</span>
-<span class="normal">782</span>
-<span class="normal">783</span>
-<span class="normal">784</span>
-<span class="normal">785</span>
-<span class="normal">786</span>
-<span class="normal">787</span>
-<span class="normal">788</span>
-<span class="normal">789</span>
-<span class="normal">790</span>
-<span class="normal">791</span>
-<span class="normal">792</span>
-<span class="normal">793</span>
-<span class="normal">794</span>
-<span class="normal">795</span>
-<span class="normal">796</span>
-<span class="normal">797</span>
-<span class="normal">798</span>
-<span class="normal">799</span>
-<span class="normal">800</span>
-<span class="normal">801</span>
-<span class="normal">802</span>
-<span class="normal">803</span>
-<span class="normal">804</span>
-<span class="normal">805</span>
-<span class="normal">806</span>
-<span class="normal">807</span>
-<span class="normal">808</span>
-<span class="normal">809</span>
-<span class="normal">810</span>
-<span class="normal">811</span>
-<span class="normal">812</span>
-<span class="normal">813</span>
-<span class="normal">814</span>
-<span class="normal">815</span>
-<span class="normal">816</span>
-<span class="normal">817</span>
-<span class="normal">818</span>
-<span class="normal">819</span>
-<span class="normal">820</span>
-<span class="normal">821</span>
-<span class="normal">822</span>
-<span class="normal">823</span>
-<span class="normal">824</span>
-<span class="normal">825</span>
-<span class="normal">826</span>
-<span class="normal">827</span>
-<span class="normal">828</span>
-<span class="normal">829</span>
-<span class="normal">830</span>
-<span class="normal">831</span>
-<span class="normal">832</span>
-<span class="normal">833</span>
-<span class="normal">834</span>
-<span class="normal">835</span>
-<span class="normal">836</span>
-<span class="normal">837</span>
-<span class="normal">838</span>
-<span class="normal">839</span>
-<span class="normal">840</span>
-<span class="normal">841</span>
-<span class="normal">842</span>
-<span class="normal">843</span>
-<span class="normal">844</span>
-<span class="normal">845</span>
-<span class="normal">846</span>
-<span class="normal">847</span>
-<span class="normal">848</span>
-<span class="normal">849</span>
-<span class="normal">850</span>
-<span class="normal">851</span>
-<span class="normal">852</span>
-<span class="normal">853</span>
-<span class="normal">854</span>
-<span class="normal">855</span>
-<span class="normal">856</span>
-<span class="normal">857</span>
-<span class="normal">858</span>
-<span class="normal">859</span>
-<span class="normal">860</span>
-<span class="normal">861</span>
-<span class="normal">862</span>
-<span class="normal">863</span>
-<span class="normal">864</span>
-<span class="normal">865</span>
-<span class="normal">866</span>
-<span class="normal">867</span>
-<span class="normal">868</span>
-<span class="normal">869</span>
-<span class="normal">870</span>
-<span class="normal">871</span>
-<span class="normal">872</span>
-<span class="normal">873</span>
-<span class="normal">874</span>
-<span class="normal">875</span>
-<span class="normal">876</span>
-<span class="normal">877</span>
-<span class="normal">878</span>
-<span class="normal">879</span>
-<span class="normal">880</span>
-<span class="normal">881</span>
-<span class="normal">882</span>
-<span class="normal">883</span>
-<span class="normal">884</span>
-<span class="normal">885</span>
-<span class="normal">886</span>
-<span class="normal">887</span>
-<span class="normal">888</span>
-<span class="normal">889</span>
-<span class="normal">890</span>
-<span class="normal">891</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">EgoPPOTrainer</span><span class="p">:</span>
+                <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 469</span>
+<span class="normal"> 470</span>
+<span class="normal"> 471</span>
+<span class="normal"> 472</span>
+<span class="normal"> 473</span>
+<span class="normal"> 474</span>
+<span class="normal"> 475</span>
+<span class="normal"> 476</span>
+<span class="normal"> 477</span>
+<span class="normal"> 478</span>
+<span class="normal"> 479</span>
+<span class="normal"> 480</span>
+<span class="normal"> 481</span>
+<span class="normal"> 482</span>
+<span class="normal"> 483</span>
+<span class="normal"> 484</span>
+<span class="normal"> 485</span>
+<span class="normal"> 486</span>
+<span class="normal"> 487</span>
+<span class="normal"> 488</span>
+<span class="normal"> 489</span>
+<span class="normal"> 490</span>
+<span class="normal"> 491</span>
+<span class="normal"> 492</span>
+<span class="normal"> 493</span>
+<span class="normal"> 494</span>
+<span class="normal"> 495</span>
+<span class="normal"> 496</span>
+<span class="normal"> 497</span>
+<span class="normal"> 498</span>
+<span class="normal"> 499</span>
+<span class="normal"> 500</span>
+<span class="normal"> 501</span>
+<span class="normal"> 502</span>
+<span class="normal"> 503</span>
+<span class="normal"> 504</span>
+<span class="normal"> 505</span>
+<span class="normal"> 506</span>
+<span class="normal"> 507</span>
+<span class="normal"> 508</span>
+<span class="normal"> 509</span>
+<span class="normal"> 510</span>
+<span class="normal"> 511</span>
+<span class="normal"> 512</span>
+<span class="normal"> 513</span>
+<span class="normal"> 514</span>
+<span class="normal"> 515</span>
+<span class="normal"> 516</span>
+<span class="normal"> 517</span>
+<span class="normal"> 518</span>
+<span class="normal"> 519</span>
+<span class="normal"> 520</span>
+<span class="normal"> 521</span>
+<span class="normal"> 522</span>
+<span class="normal"> 523</span>
+<span class="normal"> 524</span>
+<span class="normal"> 525</span>
+<span class="normal"> 526</span>
+<span class="normal"> 527</span>
+<span class="normal"> 528</span>
+<span class="normal"> 529</span>
+<span class="normal"> 530</span>
+<span class="normal"> 531</span>
+<span class="normal"> 532</span>
+<span class="normal"> 533</span>
+<span class="normal"> 534</span>
+<span class="normal"> 535</span>
+<span class="normal"> 536</span>
+<span class="normal"> 537</span>
+<span class="normal"> 538</span>
+<span class="normal"> 539</span>
+<span class="normal"> 540</span>
+<span class="normal"> 541</span>
+<span class="normal"> 542</span>
+<span class="normal"> 543</span>
+<span class="normal"> 544</span>
+<span class="normal"> 545</span>
+<span class="normal"> 546</span>
+<span class="normal"> 547</span>
+<span class="normal"> 548</span>
+<span class="normal"> 549</span>
+<span class="normal"> 550</span>
+<span class="normal"> 551</span>
+<span class="normal"> 552</span>
+<span class="normal"> 553</span>
+<span class="normal"> 554</span>
+<span class="normal"> 555</span>
+<span class="normal"> 556</span>
+<span class="normal"> 557</span>
+<span class="normal"> 558</span>
+<span class="normal"> 559</span>
+<span class="normal"> 560</span>
+<span class="normal"> 561</span>
+<span class="normal"> 562</span>
+<span class="normal"> 563</span>
+<span class="normal"> 564</span>
+<span class="normal"> 565</span>
+<span class="normal"> 566</span>
+<span class="normal"> 567</span>
+<span class="normal"> 568</span>
+<span class="normal"> 569</span>
+<span class="normal"> 570</span>
+<span class="normal"> 571</span>
+<span class="normal"> 572</span>
+<span class="normal"> 573</span>
+<span class="normal"> 574</span>
+<span class="normal"> 575</span>
+<span class="normal"> 576</span>
+<span class="normal"> 577</span>
+<span class="normal"> 578</span>
+<span class="normal"> 579</span>
+<span class="normal"> 580</span>
+<span class="normal"> 581</span>
+<span class="normal"> 582</span>
+<span class="normal"> 583</span>
+<span class="normal"> 584</span>
+<span class="normal"> 585</span>
+<span class="normal"> 586</span>
+<span class="normal"> 587</span>
+<span class="normal"> 588</span>
+<span class="normal"> 589</span>
+<span class="normal"> 590</span>
+<span class="normal"> 591</span>
+<span class="normal"> 592</span>
+<span class="normal"> 593</span>
+<span class="normal"> 594</span>
+<span class="normal"> 595</span>
+<span class="normal"> 596</span>
+<span class="normal"> 597</span>
+<span class="normal"> 598</span>
+<span class="normal"> 599</span>
+<span class="normal"> 600</span>
+<span class="normal"> 601</span>
+<span class="normal"> 602</span>
+<span class="normal"> 603</span>
+<span class="normal"> 604</span>
+<span class="normal"> 605</span>
+<span class="normal"> 606</span>
+<span class="normal"> 607</span>
+<span class="normal"> 608</span>
+<span class="normal"> 609</span>
+<span class="normal"> 610</span>
+<span class="normal"> 611</span>
+<span class="normal"> 612</span>
+<span class="normal"> 613</span>
+<span class="normal"> 614</span>
+<span class="normal"> 615</span>
+<span class="normal"> 616</span>
+<span class="normal"> 617</span>
+<span class="normal"> 618</span>
+<span class="normal"> 619</span>
+<span class="normal"> 620</span>
+<span class="normal"> 621</span>
+<span class="normal"> 622</span>
+<span class="normal"> 623</span>
+<span class="normal"> 624</span>
+<span class="normal"> 625</span>
+<span class="normal"> 626</span>
+<span class="normal"> 627</span>
+<span class="normal"> 628</span>
+<span class="normal"> 629</span>
+<span class="normal"> 630</span>
+<span class="normal"> 631</span>
+<span class="normal"> 632</span>
+<span class="normal"> 633</span>
+<span class="normal"> 634</span>
+<span class="normal"> 635</span>
+<span class="normal"> 636</span>
+<span class="normal"> 637</span>
+<span class="normal"> 638</span>
+<span class="normal"> 639</span>
+<span class="normal"> 640</span>
+<span class="normal"> 641</span>
+<span class="normal"> 642</span>
+<span class="normal"> 643</span>
+<span class="normal"> 644</span>
+<span class="normal"> 645</span>
+<span class="normal"> 646</span>
+<span class="normal"> 647</span>
+<span class="normal"> 648</span>
+<span class="normal"> 649</span>
+<span class="normal"> 650</span>
+<span class="normal"> 651</span>
+<span class="normal"> 652</span>
+<span class="normal"> 653</span>
+<span class="normal"> 654</span>
+<span class="normal"> 655</span>
+<span class="normal"> 656</span>
+<span class="normal"> 657</span>
+<span class="normal"> 658</span>
+<span class="normal"> 659</span>
+<span class="normal"> 660</span>
+<span class="normal"> 661</span>
+<span class="normal"> 662</span>
+<span class="normal"> 663</span>
+<span class="normal"> 664</span>
+<span class="normal"> 665</span>
+<span class="normal"> 666</span>
+<span class="normal"> 667</span>
+<span class="normal"> 668</span>
+<span class="normal"> 669</span>
+<span class="normal"> 670</span>
+<span class="normal"> 671</span>
+<span class="normal"> 672</span>
+<span class="normal"> 673</span>
+<span class="normal"> 674</span>
+<span class="normal"> 675</span>
+<span class="normal"> 676</span>
+<span class="normal"> 677</span>
+<span class="normal"> 678</span>
+<span class="normal"> 679</span>
+<span class="normal"> 680</span>
+<span class="normal"> 681</span>
+<span class="normal"> 682</span>
+<span class="normal"> 683</span>
+<span class="normal"> 684</span>
+<span class="normal"> 685</span>
+<span class="normal"> 686</span>
+<span class="normal"> 687</span>
+<span class="normal"> 688</span>
+<span class="normal"> 689</span>
+<span class="normal"> 690</span>
+<span class="normal"> 691</span>
+<span class="normal"> 692</span>
+<span class="normal"> 693</span>
+<span class="normal"> 694</span>
+<span class="normal"> 695</span>
+<span class="normal"> 696</span>
+<span class="normal"> 697</span>
+<span class="normal"> 698</span>
+<span class="normal"> 699</span>
+<span class="normal"> 700</span>
+<span class="normal"> 701</span>
+<span class="normal"> 702</span>
+<span class="normal"> 703</span>
+<span class="normal"> 704</span>
+<span class="normal"> 705</span>
+<span class="normal"> 706</span>
+<span class="normal"> 707</span>
+<span class="normal"> 708</span>
+<span class="normal"> 709</span>
+<span class="normal"> 710</span>
+<span class="normal"> 711</span>
+<span class="normal"> 712</span>
+<span class="normal"> 713</span>
+<span class="normal"> 714</span>
+<span class="normal"> 715</span>
+<span class="normal"> 716</span>
+<span class="normal"> 717</span>
+<span class="normal"> 718</span>
+<span class="normal"> 719</span>
+<span class="normal"> 720</span>
+<span class="normal"> 721</span>
+<span class="normal"> 722</span>
+<span class="normal"> 723</span>
+<span class="normal"> 724</span>
+<span class="normal"> 725</span>
+<span class="normal"> 726</span>
+<span class="normal"> 727</span>
+<span class="normal"> 728</span>
+<span class="normal"> 729</span>
+<span class="normal"> 730</span>
+<span class="normal"> 731</span>
+<span class="normal"> 732</span>
+<span class="normal"> 733</span>
+<span class="normal"> 734</span>
+<span class="normal"> 735</span>
+<span class="normal"> 736</span>
+<span class="normal"> 737</span>
+<span class="normal"> 738</span>
+<span class="normal"> 739</span>
+<span class="normal"> 740</span>
+<span class="normal"> 741</span>
+<span class="normal"> 742</span>
+<span class="normal"> 743</span>
+<span class="normal"> 744</span>
+<span class="normal"> 745</span>
+<span class="normal"> 746</span>
+<span class="normal"> 747</span>
+<span class="normal"> 748</span>
+<span class="normal"> 749</span>
+<span class="normal"> 750</span>
+<span class="normal"> 751</span>
+<span class="normal"> 752</span>
+<span class="normal"> 753</span>
+<span class="normal"> 754</span>
+<span class="normal"> 755</span>
+<span class="normal"> 756</span>
+<span class="normal"> 757</span>
+<span class="normal"> 758</span>
+<span class="normal"> 759</span>
+<span class="normal"> 760</span>
+<span class="normal"> 761</span>
+<span class="normal"> 762</span>
+<span class="normal"> 763</span>
+<span class="normal"> 764</span>
+<span class="normal"> 765</span>
+<span class="normal"> 766</span>
+<span class="normal"> 767</span>
+<span class="normal"> 768</span>
+<span class="normal"> 769</span>
+<span class="normal"> 770</span>
+<span class="normal"> 771</span>
+<span class="normal"> 772</span>
+<span class="normal"> 773</span>
+<span class="normal"> 774</span>
+<span class="normal"> 775</span>
+<span class="normal"> 776</span>
+<span class="normal"> 777</span>
+<span class="normal"> 778</span>
+<span class="normal"> 779</span>
+<span class="normal"> 780</span>
+<span class="normal"> 781</span>
+<span class="normal"> 782</span>
+<span class="normal"> 783</span>
+<span class="normal"> 784</span>
+<span class="normal"> 785</span>
+<span class="normal"> 786</span>
+<span class="normal"> 787</span>
+<span class="normal"> 788</span>
+<span class="normal"> 789</span>
+<span class="normal"> 790</span>
+<span class="normal"> 791</span>
+<span class="normal"> 792</span>
+<span class="normal"> 793</span>
+<span class="normal"> 794</span>
+<span class="normal"> 795</span>
+<span class="normal"> 796</span>
+<span class="normal"> 797</span>
+<span class="normal"> 798</span>
+<span class="normal"> 799</span>
+<span class="normal"> 800</span>
+<span class="normal"> 801</span>
+<span class="normal"> 802</span>
+<span class="normal"> 803</span>
+<span class="normal"> 804</span>
+<span class="normal"> 805</span>
+<span class="normal"> 806</span>
+<span class="normal"> 807</span>
+<span class="normal"> 808</span>
+<span class="normal"> 809</span>
+<span class="normal"> 810</span>
+<span class="normal"> 811</span>
+<span class="normal"> 812</span>
+<span class="normal"> 813</span>
+<span class="normal"> 814</span>
+<span class="normal"> 815</span>
+<span class="normal"> 816</span>
+<span class="normal"> 817</span>
+<span class="normal"> 818</span>
+<span class="normal"> 819</span>
+<span class="normal"> 820</span>
+<span class="normal"> 821</span>
+<span class="normal"> 822</span>
+<span class="normal"> 823</span>
+<span class="normal"> 824</span>
+<span class="normal"> 825</span>
+<span class="normal"> 826</span>
+<span class="normal"> 827</span>
+<span class="normal"> 828</span>
+<span class="normal"> 829</span>
+<span class="normal"> 830</span>
+<span class="normal"> 831</span>
+<span class="normal"> 832</span>
+<span class="normal"> 833</span>
+<span class="normal"> 834</span>
+<span class="normal"> 835</span>
+<span class="normal"> 836</span>
+<span class="normal"> 837</span>
+<span class="normal"> 838</span>
+<span class="normal"> 839</span>
+<span class="normal"> 840</span>
+<span class="normal"> 841</span>
+<span class="normal"> 842</span>
+<span class="normal"> 843</span>
+<span class="normal"> 844</span>
+<span class="normal"> 845</span>
+<span class="normal"> 846</span>
+<span class="normal"> 847</span>
+<span class="normal"> 848</span>
+<span class="normal"> 849</span>
+<span class="normal"> 850</span>
+<span class="normal"> 851</span>
+<span class="normal"> 852</span>
+<span class="normal"> 853</span>
+<span class="normal"> 854</span>
+<span class="normal"> 855</span>
+<span class="normal"> 856</span>
+<span class="normal"> 857</span>
+<span class="normal"> 858</span>
+<span class="normal"> 859</span>
+<span class="normal"> 860</span>
+<span class="normal"> 861</span>
+<span class="normal"> 862</span>
+<span class="normal"> 863</span>
+<span class="normal"> 864</span>
+<span class="normal"> 865</span>
+<span class="normal"> 866</span>
+<span class="normal"> 867</span>
+<span class="normal"> 868</span>
+<span class="normal"> 869</span>
+<span class="normal"> 870</span>
+<span class="normal"> 871</span>
+<span class="normal"> 872</span>
+<span class="normal"> 873</span>
+<span class="normal"> 874</span>
+<span class="normal"> 875</span>
+<span class="normal"> 876</span>
+<span class="normal"> 877</span>
+<span class="normal"> 878</span>
+<span class="normal"> 879</span>
+<span class="normal"> 880</span>
+<span class="normal"> 881</span>
+<span class="normal"> 882</span>
+<span class="normal"> 883</span>
+<span class="normal"> 884</span>
+<span class="normal"> 885</span>
+<span class="normal"> 886</span>
+<span class="normal"> 887</span>
+<span class="normal"> 888</span>
+<span class="normal"> 889</span>
+<span class="normal"> 890</span>
+<span class="normal"> 891</span>
+<span class="normal"> 892</span>
+<span class="normal"> 893</span>
+<span class="normal"> 894</span>
+<span class="normal"> 895</span>
+<span class="normal"> 896</span>
+<span class="normal"> 897</span>
+<span class="normal"> 898</span>
+<span class="normal"> 899</span>
+<span class="normal"> 900</span>
+<span class="normal"> 901</span>
+<span class="normal"> 902</span>
+<span class="normal"> 903</span>
+<span class="normal"> 904</span>
+<span class="normal"> 905</span>
+<span class="normal"> 906</span>
+<span class="normal"> 907</span>
+<span class="normal"> 908</span>
+<span class="normal"> 909</span>
+<span class="normal"> 910</span>
+<span class="normal"> 911</span>
+<span class="normal"> 912</span>
+<span class="normal"> 913</span>
+<span class="normal"> 914</span>
+<span class="normal"> 915</span>
+<span class="normal"> 916</span>
+<span class="normal"> 917</span>
+<span class="normal"> 918</span>
+<span class="normal"> 919</span>
+<span class="normal"> 920</span>
+<span class="normal"> 921</span>
+<span class="normal"> 922</span>
+<span class="normal"> 923</span>
+<span class="normal"> 924</span>
+<span class="normal"> 925</span>
+<span class="normal"> 926</span>
+<span class="normal"> 927</span>
+<span class="normal"> 928</span>
+<span class="normal"> 929</span>
+<span class="normal"> 930</span>
+<span class="normal"> 931</span>
+<span class="normal"> 932</span>
+<span class="normal"> 933</span>
+<span class="normal"> 934</span>
+<span class="normal"> 935</span>
+<span class="normal"> 936</span>
+<span class="normal"> 937</span>
+<span class="normal"> 938</span>
+<span class="normal"> 939</span>
+<span class="normal"> 940</span>
+<span class="normal"> 941</span>
+<span class="normal"> 942</span>
+<span class="normal"> 943</span>
+<span class="normal"> 944</span>
+<span class="normal"> 945</span>
+<span class="normal"> 946</span>
+<span class="normal"> 947</span>
+<span class="normal"> 948</span>
+<span class="normal"> 949</span>
+<span class="normal"> 950</span>
+<span class="normal"> 951</span>
+<span class="normal"> 952</span>
+<span class="normal"> 953</span>
+<span class="normal"> 954</span>
+<span class="normal"> 955</span>
+<span class="normal"> 956</span>
+<span class="normal"> 957</span>
+<span class="normal"> 958</span>
+<span class="normal"> 959</span>
+<span class="normal"> 960</span>
+<span class="normal"> 961</span>
+<span class="normal"> 962</span>
+<span class="normal"> 963</span>
+<span class="normal"> 964</span>
+<span class="normal"> 965</span>
+<span class="normal"> 966</span>
+<span class="normal"> 967</span>
+<span class="normal"> 968</span>
+<span class="normal"> 969</span>
+<span class="normal"> 970</span>
+<span class="normal"> 971</span>
+<span class="normal"> 972</span>
+<span class="normal"> 973</span>
+<span class="normal"> 974</span>
+<span class="normal"> 975</span>
+<span class="normal"> 976</span>
+<span class="normal"> 977</span>
+<span class="normal"> 978</span>
+<span class="normal"> 979</span>
+<span class="normal"> 980</span>
+<span class="normal"> 981</span>
+<span class="normal"> 982</span>
+<span class="normal"> 983</span>
+<span class="normal"> 984</span>
+<span class="normal"> 985</span>
+<span class="normal"> 986</span>
+<span class="normal"> 987</span>
+<span class="normal"> 988</span>
+<span class="normal"> 989</span>
+<span class="normal"> 990</span>
+<span class="normal"> 991</span>
+<span class="normal"> 992</span>
+<span class="normal"> 993</span>
+<span class="normal"> 994</span>
+<span class="normal"> 995</span>
+<span class="normal"> 996</span>
+<span class="normal"> 997</span>
+<span class="normal"> 998</span>
+<span class="normal"> 999</span>
+<span class="normal">1000</span>
+<span class="normal">1001</span>
+<span class="normal">1002</span>
+<span class="normal">1003</span>
+<span class="normal">1004</span>
+<span class="normal">1005</span>
+<span class="normal">1006</span>
+<span class="normal">1007</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">EgoPPOTrainer</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Ego-PPO trainer wrapping HARL&#39;s HAPPO actor (M4b-8a; ADR-002 §Decisions).</span>
 
 <span class="sd">    Implements the :class:`~concerto.training.ego_aht.EgoTrainer` Protocol</span>
@@ -41579,6 +41645,7 @@ empirical-guarantee verification contract (T4b.13).</p>
         <span class="n">ego_uid</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
         <span class="n">ego_obs_space</span><span class="p">:</span> <span class="n">gym</span><span class="o">.</span><span class="n">spaces</span><span class="o">.</span><span class="n">Box</span><span class="p">,</span>  <span class="c1"># type: ignore[type-arg]</span>
         <span class="n">ego_act_space</span><span class="p">:</span> <span class="n">gym</span><span class="o">.</span><span class="n">spaces</span><span class="o">.</span><span class="n">Box</span><span class="p">,</span>  <span class="c1"># type: ignore[type-arg]</span>
+        <span class="n">partner</span><span class="p">:</span> <span class="n">PartnerLike</span><span class="p">,</span>
         <span class="n">device</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">device</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Build the trainer (M4b-8a; ADR-002 §Decisions; plan/05 §3.5).</span>
@@ -41586,6 +41653,13 @@ empirical-guarantee verification contract (T4b.13).</p>
 <span class="sd">        Prefer :meth:`from_config` over direct construction — it derives</span>
 <span class="sd">        ``ego_obs_space`` and ``ego_act_space`` from the env so the call</span>
 <span class="sd">        site cannot drift from the env&#39;s actual shapes.</span>
+
+<span class="sd">        The partner-freeze gate (ADR-009 §Consequences; plan/05 §6 #3)</span>
+<span class="sd">        runs first, before any tensor allocation: a partner with any</span>
+<span class="sd">        ``requires_grad=True`` parameter (and no</span>
+<span class="sd">        :class:`~chamber.partners.interface.PartnerBase` shield blocking</span>
+<span class="sd">        ``named_parameters`` access) aborts the construction with a</span>
+<span class="sd">        :class:`ValueError` that names the offending parameter path.</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            cfg: Validated :class:`~concerto.training.config.EgoAHTConfig`.</span>
@@ -41597,6 +41671,12 @@ empirical-guarantee verification contract (T4b.13).</p>
 <span class="sd">                observation_space.</span>
 <span class="sd">            ego_act_space: The Box space for the ego&#39;s action vector.</span>
 <span class="sd">                Read directly from ``env.action_space[ego_uid]``.</span>
+<span class="sd">            partner: The frozen partner instance the ego will be trained</span>
+<span class="sd">                against. Validated via :func:`_assert_partner_is_frozen`</span>
+<span class="sd">                before any tensor allocation. The trainer does not retain</span>
+<span class="sd">                a reference — the partner is consumed by the training</span>
+<span class="sd">                loop in :func:`concerto.training.ego_aht.train`, not by</span>
+<span class="sd">                the trainer itself.</span>
 <span class="sd">            device: Torch device. Defaults to CPU when called directly;</span>
 <span class="sd">                :meth:`from_config` resolves it from</span>
 <span class="sd">                :attr:`RuntimeConfig.device` (auto / cpu / cuda / mps)</span>
@@ -41604,7 +41684,14 @@ empirical-guarantee verification contract (T4b.13).</p>
 <span class="sd">                flag from :attr:`RuntimeConfig.deterministic_torch` on</span>
 <span class="sd">                CPU before constructing the trainer (ADR-002 §Decisions;</span>
 <span class="sd">                plan/08 §4).</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            ValueError: If ``partner`` exposes a torch parameter with</span>
+<span class="sd">                ``requires_grad=True`` (ADR-009 §Consequences).</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># ADR-009 §Consequences + plan/05 §6 #3: partner-freeze gate is</span>
+        <span class="c1"># the first construction step, before any tensor allocation.</span>
+        <span class="n">_assert_partner_is_frozen</span><span class="p">(</span><span class="n">partner</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_device</span> <span class="o">=</span> <span class="n">device</span> <span class="ow">or</span> <span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s2">&quot;cpu&quot;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_ego_uid</span> <span class="o">=</span> <span class="n">ego_uid</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_gamma</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">happo</span><span class="o">.</span><span class="n">gamma</span>
@@ -41665,15 +41752,22 @@ empirical-guarantee verification contract (T4b.13).</p>
         <span class="n">cfg</span><span class="p">:</span> <span class="n">EgoAHTConfig</span><span class="p">,</span>
         <span class="o">*</span><span class="p">,</span>
         <span class="n">env</span><span class="p">:</span> <span class="n">EnvLike</span><span class="p">,</span>
+        <span class="n">partner</span><span class="p">:</span> <span class="n">PartnerLike</span><span class="p">,</span>
         <span class="n">ego_uid</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">EgoPPOTrainer</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Build from :class:`EgoAHTConfig` + a concrete env (TrainerFactory; ADR-002 §Decisions).</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Build from :class:`EgoAHTConfig` + a concrete env + the frozen partner.</span>
+
+<span class="sd">        ADR-002 §Decisions / ADR-009 §Consequences / plan/05 §3.5 + §6 #3.</span>
 
 <span class="sd">        This is the :class:`~concerto.training.ego_aht.TrainerFactory`</span>
 <span class="sd">        callable that :func:`concerto.training.ego_aht.train` plugs in via</span>
 <span class="sd">        dependency injection. The factory reads the ego&#39;s observation +</span>
 <span class="sd">        action shapes off the env directly so the trainer&#39;s network</span>
 <span class="sd">        widths cannot drift from what the env actually emits.</span>
+
+<span class="sd">        The partner-freeze gate (:func:`_assert_partner_is_frozen`) runs</span>
+<span class="sd">        first, before any tensor allocation, so a bad partner aborts</span>
+<span class="sd">        cheaply (plan/05 §6 #3).</span>
 
 <span class="sd">        Per plan/05 §3.5 the bridge from :class:`EgoAHTConfig` to HARL&#39;s</span>
 <span class="sd">        args dict lives in this CONCERTO-side module rather than in the</span>
@@ -41688,6 +41782,9 @@ empirical-guarantee verification contract (T4b.13).</p>
 <span class="sd">                ``observation_space[&quot;agent&quot;][ego_uid][&quot;state&quot;]`` as a</span>
 <span class="sd">                :class:`gym.spaces.Box` and ``action_space[ego_uid]``</span>
 <span class="sd">                as a :class:`gym.spaces.Box`.</span>
+<span class="sd">            partner: Frozen partner instance the ego will train against.</span>
+<span class="sd">                Validated by :func:`_assert_partner_is_frozen` as the</span>
+<span class="sd">                first construction step (ADR-009 §Consequences).</span>
 <span class="sd">            ego_uid: The env-side uid the ego acts on.</span>
 
 <span class="sd">        Returns:</span>
@@ -41695,9 +41792,15 @@ empirical-guarantee verification contract (T4b.13).</p>
 <span class="sd">            :func:`concerto.training.ego_aht.train`.</span>
 
 <span class="sd">        Raises:</span>
+<span class="sd">            ValueError: If ``partner`` exposes a torch parameter with</span>
+<span class="sd">                ``requires_grad=True`` (ADR-009 §Consequences).</span>
 <span class="sd">            TypeError: If the env&#39;s ego observation or action space is</span>
 <span class="sd">                not a :class:`gym.spaces.Box`.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># ADR-009 §Consequences / plan/05 §6 #3: partner-freeze gate</span>
+        <span class="c1"># runs first, before any env-space introspection or tensor</span>
+        <span class="c1"># allocation. A bad partner aborts the construction cheaply.</span>
+        <span class="n">_assert_partner_is_frozen</span><span class="p">(</span><span class="n">partner</span><span class="p">)</span>
         <span class="n">env_obs_space</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">observation_space</span>  <span class="c1"># type: ignore[attr-defined]</span>
         <span class="n">ego_state_space</span> <span class="o">=</span> <span class="n">env_obs_space</span><span class="p">[</span><span class="s2">&quot;agent&quot;</span><span class="p">][</span><span class="n">ego_uid</span><span class="p">][</span><span class="s2">&quot;state&quot;</span><span class="p">]</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">ego_state_space</span><span class="p">,</span> <span class="n">gym</span><span class="o">.</span><span class="n">spaces</span><span class="o">.</span><span class="n">Box</span><span class="p">):</span>
@@ -41726,6 +41829,7 @@ empirical-guarantee verification contract (T4b.13).</p>
             <span class="n">ego_uid</span><span class="o">=</span><span class="n">ego_uid</span><span class="p">,</span>
             <span class="n">ego_obs_space</span><span class="o">=</span><span class="n">ego_state_space</span><span class="p">,</span>
             <span class="n">ego_act_space</span><span class="o">=</span><span class="n">ego_act_space</span><span class="p">,</span>
+            <span class="n">partner</span><span class="o">=</span><span class="n">partner</span><span class="p">,</span>
             <span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">,</span>
         <span class="p">)</span>
 
@@ -42069,6 +42173,7 @@ empirical-guarantee verification contract (T4b.13).</p>
     <span class="n">ego_uid</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
     <span class="n">ego_obs_space</span><span class="p">:</span> <span class="n">Box</span><span class="p">,</span>
     <span class="n">ego_act_space</span><span class="p">:</span> <span class="n">Box</span><span class="p">,</span>
+    <span class="n">partner</span><span class="p">:</span> <span class="n">PartnerLike</span><span class="p">,</span>
     <span class="n">device</span><span class="p">:</span> <span class="n">device</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span>
 </code></pre></div>
@@ -42079,6 +42184,12 @@ empirical-guarantee verification contract (T4b.13).</p>
 <p>Prefer :meth:<code>from_config</code> over direct construction — it derives
 <code>ego_obs_space</code> and <code>ego_act_space</code> from the env so the call
 site cannot drift from the env's actual shapes.</p>
+<p>The partner-freeze gate (ADR-009 §Consequences; plan/05 §6 #3)
+runs first, before any tensor allocation: a partner with any
+<code>requires_grad=True</code> parameter (and no
+:class:<code>~chamber.partners.interface.PartnerBase</code> shield blocking
+<code>named_parameters</code> access) aborts the construction with a
+:class:<code>ValueError</code> that names the offending parameter path.</p>
 
 
 <p><span class="doc-section-title">Parameters:</span></p>
@@ -42121,6 +42232,19 @@ Read directly from <code>env.action_space[ego_uid]</code>.</p>
           </div>
         </li>
         <li class="doc-section-item field-body">
+            <b><code>partner</code></b>
+              (<code><a class="autorefs autorefs-internal" title="PartnerLike (concerto.training.ego_aht.PartnerLike)" href="#concerto.training.ego_aht.PartnerLike">PartnerLike</a></code>)
+          –
+          <div class="doc-md-description">
+            <p>The frozen partner instance the ego will be trained
+against. Validated via :func:<code>_assert_partner_is_frozen</code>
+before any tensor allocation. The trainer does not retain
+a reference — the partner is consumed by the training
+loop in :func:<code>concerto.training.ego_aht.train</code>, not by
+the trainer itself.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
             <b><code>device</code></b>
               (<code><span title="torch.device">device</span> | None</code>, default:
                   <code>None</code>
@@ -42139,100 +42263,135 @@ plan/08 §4).</p>
     </ul>
 
 
+<p><span class="doc-section-title">Raises:</span></p>
+    <ul>
+        <li class="doc-section-item field-body">
+              <code><span title="ValueError">ValueError</span></code>
+            –
+          <div class="doc-md-description">
+            <p>If <code>partner</code> exposes a torch parameter with
+<code>requires_grad=True</code> (ADR-009 §Consequences).</p>
+          </div>
+        </li>
+    </ul>
+
+
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/chamber/benchmarks/ego_ppo_trainer.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">425</span>
-<span class="normal">426</span>
-<span class="normal">427</span>
-<span class="normal">428</span>
-<span class="normal">429</span>
-<span class="normal">430</span>
-<span class="normal">431</span>
-<span class="normal">432</span>
-<span class="normal">433</span>
-<span class="normal">434</span>
-<span class="normal">435</span>
-<span class="normal">436</span>
-<span class="normal">437</span>
-<span class="normal">438</span>
-<span class="normal">439</span>
-<span class="normal">440</span>
-<span class="normal">441</span>
-<span class="normal">442</span>
-<span class="normal">443</span>
-<span class="normal">444</span>
-<span class="normal">445</span>
-<span class="normal">446</span>
-<span class="normal">447</span>
-<span class="normal">448</span>
-<span class="normal">449</span>
-<span class="normal">450</span>
-<span class="normal">451</span>
-<span class="normal">452</span>
-<span class="normal">453</span>
-<span class="normal">454</span>
-<span class="normal">455</span>
-<span class="normal">456</span>
-<span class="normal">457</span>
-<span class="normal">458</span>
-<span class="normal">459</span>
-<span class="normal">460</span>
-<span class="normal">461</span>
-<span class="normal">462</span>
-<span class="normal">463</span>
-<span class="normal">464</span>
-<span class="normal">465</span>
-<span class="normal">466</span>
-<span class="normal">467</span>
-<span class="normal">468</span>
-<span class="normal">469</span>
-<span class="normal">470</span>
-<span class="normal">471</span>
-<span class="normal">472</span>
-<span class="normal">473</span>
-<span class="normal">474</span>
-<span class="normal">475</span>
-<span class="normal">476</span>
-<span class="normal">477</span>
-<span class="normal">478</span>
-<span class="normal">479</span>
-<span class="normal">480</span>
-<span class="normal">481</span>
-<span class="normal">482</span>
-<span class="normal">483</span>
-<span class="normal">484</span>
-<span class="normal">485</span>
-<span class="normal">486</span>
-<span class="normal">487</span>
-<span class="normal">488</span>
-<span class="normal">489</span>
-<span class="normal">490</span>
-<span class="normal">491</span>
-<span class="normal">492</span>
-<span class="normal">493</span>
-<span class="normal">494</span>
-<span class="normal">495</span>
-<span class="normal">496</span>
-<span class="normal">497</span>
-<span class="normal">498</span>
-<span class="normal">499</span>
-<span class="normal">500</span>
-<span class="normal">501</span>
-<span class="normal">502</span>
-<span class="normal">503</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">503</span>
 <span class="normal">504</span>
 <span class="normal">505</span>
 <span class="normal">506</span>
 <span class="normal">507</span>
 <span class="normal">508</span>
 <span class="normal">509</span>
-<span class="normal">510</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+<span class="normal">510</span>
+<span class="normal">511</span>
+<span class="normal">512</span>
+<span class="normal">513</span>
+<span class="normal">514</span>
+<span class="normal">515</span>
+<span class="normal">516</span>
+<span class="normal">517</span>
+<span class="normal">518</span>
+<span class="normal">519</span>
+<span class="normal">520</span>
+<span class="normal">521</span>
+<span class="normal">522</span>
+<span class="normal">523</span>
+<span class="normal">524</span>
+<span class="normal">525</span>
+<span class="normal">526</span>
+<span class="normal">527</span>
+<span class="normal">528</span>
+<span class="normal">529</span>
+<span class="normal">530</span>
+<span class="normal">531</span>
+<span class="normal">532</span>
+<span class="normal">533</span>
+<span class="normal">534</span>
+<span class="normal">535</span>
+<span class="normal">536</span>
+<span class="normal">537</span>
+<span class="normal">538</span>
+<span class="normal">539</span>
+<span class="normal">540</span>
+<span class="normal">541</span>
+<span class="normal">542</span>
+<span class="normal">543</span>
+<span class="normal">544</span>
+<span class="normal">545</span>
+<span class="normal">546</span>
+<span class="normal">547</span>
+<span class="normal">548</span>
+<span class="normal">549</span>
+<span class="normal">550</span>
+<span class="normal">551</span>
+<span class="normal">552</span>
+<span class="normal">553</span>
+<span class="normal">554</span>
+<span class="normal">555</span>
+<span class="normal">556</span>
+<span class="normal">557</span>
+<span class="normal">558</span>
+<span class="normal">559</span>
+<span class="normal">560</span>
+<span class="normal">561</span>
+<span class="normal">562</span>
+<span class="normal">563</span>
+<span class="normal">564</span>
+<span class="normal">565</span>
+<span class="normal">566</span>
+<span class="normal">567</span>
+<span class="normal">568</span>
+<span class="normal">569</span>
+<span class="normal">570</span>
+<span class="normal">571</span>
+<span class="normal">572</span>
+<span class="normal">573</span>
+<span class="normal">574</span>
+<span class="normal">575</span>
+<span class="normal">576</span>
+<span class="normal">577</span>
+<span class="normal">578</span>
+<span class="normal">579</span>
+<span class="normal">580</span>
+<span class="normal">581</span>
+<span class="normal">582</span>
+<span class="normal">583</span>
+<span class="normal">584</span>
+<span class="normal">585</span>
+<span class="normal">586</span>
+<span class="normal">587</span>
+<span class="normal">588</span>
+<span class="normal">589</span>
+<span class="normal">590</span>
+<span class="normal">591</span>
+<span class="normal">592</span>
+<span class="normal">593</span>
+<span class="normal">594</span>
+<span class="normal">595</span>
+<span class="normal">596</span>
+<span class="normal">597</span>
+<span class="normal">598</span>
+<span class="normal">599</span>
+<span class="normal">600</span>
+<span class="normal">601</span>
+<span class="normal">602</span>
+<span class="normal">603</span>
+<span class="normal">604</span>
+<span class="normal">605</span>
+<span class="normal">606</span>
+<span class="normal">607</span>
+<span class="normal">608</span>
+<span class="normal">609</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
     <span class="o">*</span><span class="p">,</span>
     <span class="n">cfg</span><span class="p">:</span> <span class="n">EgoAHTConfig</span><span class="p">,</span>
     <span class="n">ego_uid</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
     <span class="n">ego_obs_space</span><span class="p">:</span> <span class="n">gym</span><span class="o">.</span><span class="n">spaces</span><span class="o">.</span><span class="n">Box</span><span class="p">,</span>  <span class="c1"># type: ignore[type-arg]</span>
     <span class="n">ego_act_space</span><span class="p">:</span> <span class="n">gym</span><span class="o">.</span><span class="n">spaces</span><span class="o">.</span><span class="n">Box</span><span class="p">,</span>  <span class="c1"># type: ignore[type-arg]</span>
+    <span class="n">partner</span><span class="p">:</span> <span class="n">PartnerLike</span><span class="p">,</span>
     <span class="n">device</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">device</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Build the trainer (M4b-8a; ADR-002 §Decisions; plan/05 §3.5).</span>
@@ -42240,6 +42399,13 @@ plan/08 §4).</p>
 <span class="sd">    Prefer :meth:`from_config` over direct construction — it derives</span>
 <span class="sd">    ``ego_obs_space`` and ``ego_act_space`` from the env so the call</span>
 <span class="sd">    site cannot drift from the env&#39;s actual shapes.</span>
+
+<span class="sd">    The partner-freeze gate (ADR-009 §Consequences; plan/05 §6 #3)</span>
+<span class="sd">    runs first, before any tensor allocation: a partner with any</span>
+<span class="sd">    ``requires_grad=True`` parameter (and no</span>
+<span class="sd">    :class:`~chamber.partners.interface.PartnerBase` shield blocking</span>
+<span class="sd">    ``named_parameters`` access) aborts the construction with a</span>
+<span class="sd">    :class:`ValueError` that names the offending parameter path.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        cfg: Validated :class:`~concerto.training.config.EgoAHTConfig`.</span>
@@ -42251,6 +42417,12 @@ plan/08 §4).</p>
 <span class="sd">            observation_space.</span>
 <span class="sd">        ego_act_space: The Box space for the ego&#39;s action vector.</span>
 <span class="sd">            Read directly from ``env.action_space[ego_uid]``.</span>
+<span class="sd">        partner: The frozen partner instance the ego will be trained</span>
+<span class="sd">            against. Validated via :func:`_assert_partner_is_frozen`</span>
+<span class="sd">            before any tensor allocation. The trainer does not retain</span>
+<span class="sd">            a reference — the partner is consumed by the training</span>
+<span class="sd">            loop in :func:`concerto.training.ego_aht.train`, not by</span>
+<span class="sd">            the trainer itself.</span>
 <span class="sd">        device: Torch device. Defaults to CPU when called directly;</span>
 <span class="sd">            :meth:`from_config` resolves it from</span>
 <span class="sd">            :attr:`RuntimeConfig.device` (auto / cpu / cuda / mps)</span>
@@ -42258,7 +42430,14 @@ plan/08 §4).</p>
 <span class="sd">            flag from :attr:`RuntimeConfig.deterministic_torch` on</span>
 <span class="sd">            CPU before constructing the trainer (ADR-002 §Decisions;</span>
 <span class="sd">            plan/08 §4).</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">        ValueError: If ``partner`` exposes a torch parameter with</span>
+<span class="sd">            ``requires_grad=True`` (ADR-009 §Consequences).</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># ADR-009 §Consequences + plan/05 §6 #3: partner-freeze gate is</span>
+    <span class="c1"># the first construction step, before any tensor allocation.</span>
+    <span class="n">_assert_partner_is_frozen</span><span class="p">(</span><span class="n">partner</span><span class="p">)</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">_device</span> <span class="o">=</span> <span class="n">device</span> <span class="ow">or</span> <span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s2">&quot;cpu&quot;</span><span class="p">)</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">_ego_uid</span> <span class="o">=</span> <span class="n">ego_uid</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">_gamma</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">happo</span><span class="o">.</span><span class="n">gamma</span>
@@ -42389,55 +42568,55 @@ instead of a sample. Used by evaluation paths
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/chamber/benchmarks/ego_ppo_trainer.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">582</span>
-<span class="normal">583</span>
-<span class="normal">584</span>
-<span class="normal">585</span>
-<span class="normal">586</span>
-<span class="normal">587</span>
-<span class="normal">588</span>
-<span class="normal">589</span>
-<span class="normal">590</span>
-<span class="normal">591</span>
-<span class="normal">592</span>
-<span class="normal">593</span>
-<span class="normal">594</span>
-<span class="normal">595</span>
-<span class="normal">596</span>
-<span class="normal">597</span>
-<span class="normal">598</span>
-<span class="normal">599</span>
-<span class="normal">600</span>
-<span class="normal">601</span>
-<span class="normal">602</span>
-<span class="normal">603</span>
-<span class="normal">604</span>
-<span class="normal">605</span>
-<span class="normal">606</span>
-<span class="normal">607</span>
-<span class="normal">608</span>
-<span class="normal">609</span>
-<span class="normal">610</span>
-<span class="normal">611</span>
-<span class="normal">612</span>
-<span class="normal">613</span>
-<span class="normal">614</span>
-<span class="normal">615</span>
-<span class="normal">616</span>
-<span class="normal">617</span>
-<span class="normal">618</span>
-<span class="normal">619</span>
-<span class="normal">620</span>
-<span class="normal">621</span>
-<span class="normal">622</span>
-<span class="normal">623</span>
-<span class="normal">624</span>
-<span class="normal">625</span>
-<span class="normal">626</span>
-<span class="normal">627</span>
-<span class="normal">628</span>
-<span class="normal">629</span>
-<span class="normal">630</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">act</span><span class="p">(</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">698</span>
+<span class="normal">699</span>
+<span class="normal">700</span>
+<span class="normal">701</span>
+<span class="normal">702</span>
+<span class="normal">703</span>
+<span class="normal">704</span>
+<span class="normal">705</span>
+<span class="normal">706</span>
+<span class="normal">707</span>
+<span class="normal">708</span>
+<span class="normal">709</span>
+<span class="normal">710</span>
+<span class="normal">711</span>
+<span class="normal">712</span>
+<span class="normal">713</span>
+<span class="normal">714</span>
+<span class="normal">715</span>
+<span class="normal">716</span>
+<span class="normal">717</span>
+<span class="normal">718</span>
+<span class="normal">719</span>
+<span class="normal">720</span>
+<span class="normal">721</span>
+<span class="normal">722</span>
+<span class="normal">723</span>
+<span class="normal">724</span>
+<span class="normal">725</span>
+<span class="normal">726</span>
+<span class="normal">727</span>
+<span class="normal">728</span>
+<span class="normal">729</span>
+<span class="normal">730</span>
+<span class="normal">731</span>
+<span class="normal">732</span>
+<span class="normal">733</span>
+<span class="normal">734</span>
+<span class="normal">735</span>
+<span class="normal">736</span>
+<span class="normal">737</span>
+<span class="normal">738</span>
+<span class="normal">739</span>
+<span class="normal">740</span>
+<span class="normal">741</span>
+<span class="normal">742</span>
+<span class="normal">743</span>
+<span class="normal">744</span>
+<span class="normal">745</span>
+<span class="normal">746</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">act</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
     <span class="n">obs</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span>
     <span class="o">*</span><span class="p">,</span>
@@ -42505,18 +42684,26 @@ instead of a sample. Used by evaluation paths
 
 </h3>
 <div class="doc-signature highlight"><pre><span></span><code><span class="nf">from_config</span><span class="p">(</span>
-    <span class="n">cfg</span><span class="p">:</span> <span class="n">EgoAHTConfig</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">env</span><span class="p">:</span> <span class="n">EnvLike</span><span class="p">,</span> <span class="n">ego_uid</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">cfg</span><span class="p">:</span> <span class="n">EgoAHTConfig</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">env</span><span class="p">:</span> <span class="n">EnvLike</span><span class="p">,</span>
+    <span class="n">partner</span><span class="p">:</span> <span class="n">PartnerLike</span><span class="p">,</span>
+    <span class="n">ego_uid</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">EgoPPOTrainer</span>
 </code></pre></div>
 
     <div class="doc doc-contents ">
 
-        <p>Build from :class:<code>EgoAHTConfig</code> + a concrete env (TrainerFactory; ADR-002 §Decisions).</p>
+        <p>Build from :class:<code>EgoAHTConfig</code> + a concrete env + the frozen partner.</p>
+<p>ADR-002 §Decisions / ADR-009 §Consequences / plan/05 §3.5 + §6 #3.</p>
 <p>This is the :class:<code>~concerto.training.ego_aht.TrainerFactory</code>
 callable that :func:<code>concerto.training.ego_aht.train</code> plugs in via
 dependency injection. The factory reads the ego's observation +
 action shapes off the env directly so the trainer's network
 widths cannot drift from what the env actually emits.</p>
+<p>The partner-freeze gate (:func:<code>_assert_partner_is_frozen</code>) runs
+first, before any tensor allocation, so a bad partner aborts
+cheaply (plan/05 §6 #3).</p>
 <p>Per plan/05 §3.5 the bridge from :class:<code>EgoAHTConfig</code> to HARL's
 args dict lives in this CONCERTO-side module rather than in the
 fork's :meth:<code>EgoAHTHAPPO.from_config</code> (which intentionally
@@ -42544,6 +42731,16 @@ role-split rationale).</p>
 <code>observation_space["agent"][ego_uid]["state"]</code> as a
 :class:<code>gym.spaces.Box</code> and <code>action_space[ego_uid]</code>
 as a :class:<code>gym.spaces.Box</code>.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+            <b><code>partner</code></b>
+              (<code><a class="autorefs autorefs-internal" title="PartnerLike (concerto.training.ego_aht.PartnerLike)" href="#concerto.training.ego_aht.PartnerLike">PartnerLike</a></code>)
+          –
+          <div class="doc-md-description">
+            <p>Frozen partner instance the ego will train against.
+Validated by :func:<code>_assert_partner_is_frozen</code> as the
+first construction step (ADR-009 §Consequences).</p>
           </div>
         </li>
         <li class="doc-section-item field-body">
@@ -42579,6 +42776,14 @@ as a :class:<code>gym.spaces.Box</code>.</p>
 <p><span class="doc-section-title">Raises:</span></p>
     <ul>
         <li class="doc-section-item field-body">
+              <code><span title="ValueError">ValueError</span></code>
+            –
+          <div class="doc-md-description">
+            <p>If <code>partner</code> exposes a torch parameter with
+<code>requires_grad=True</code> (ADR-009 §Consequences).</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
               <code><span title="TypeError">TypeError</span></code>
             –
           <div class="doc-md-description">
@@ -42591,89 +42796,113 @@ not a :class:<code>gym.spaces.Box</code>.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/chamber/benchmarks/ego_ppo_trainer.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">512</span>
-<span class="normal">513</span>
-<span class="normal">514</span>
-<span class="normal">515</span>
-<span class="normal">516</span>
-<span class="normal">517</span>
-<span class="normal">518</span>
-<span class="normal">519</span>
-<span class="normal">520</span>
-<span class="normal">521</span>
-<span class="normal">522</span>
-<span class="normal">523</span>
-<span class="normal">524</span>
-<span class="normal">525</span>
-<span class="normal">526</span>
-<span class="normal">527</span>
-<span class="normal">528</span>
-<span class="normal">529</span>
-<span class="normal">530</span>
-<span class="normal">531</span>
-<span class="normal">532</span>
-<span class="normal">533</span>
-<span class="normal">534</span>
-<span class="normal">535</span>
-<span class="normal">536</span>
-<span class="normal">537</span>
-<span class="normal">538</span>
-<span class="normal">539</span>
-<span class="normal">540</span>
-<span class="normal">541</span>
-<span class="normal">542</span>
-<span class="normal">543</span>
-<span class="normal">544</span>
-<span class="normal">545</span>
-<span class="normal">546</span>
-<span class="normal">547</span>
-<span class="normal">548</span>
-<span class="normal">549</span>
-<span class="normal">550</span>
-<span class="normal">551</span>
-<span class="normal">552</span>
-<span class="normal">553</span>
-<span class="normal">554</span>
-<span class="normal">555</span>
-<span class="normal">556</span>
-<span class="normal">557</span>
-<span class="normal">558</span>
-<span class="normal">559</span>
-<span class="normal">560</span>
-<span class="normal">561</span>
-<span class="normal">562</span>
-<span class="normal">563</span>
-<span class="normal">564</span>
-<span class="normal">565</span>
-<span class="normal">566</span>
-<span class="normal">567</span>
-<span class="normal">568</span>
-<span class="normal">569</span>
-<span class="normal">570</span>
-<span class="normal">571</span>
-<span class="normal">572</span>
-<span class="normal">573</span>
-<span class="normal">574</span>
-<span class="normal">575</span>
-<span class="normal">576</span>
-<span class="normal">577</span>
-<span class="normal">578</span>
-<span class="normal">579</span>
-<span class="normal">580</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@classmethod</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">611</span>
+<span class="normal">612</span>
+<span class="normal">613</span>
+<span class="normal">614</span>
+<span class="normal">615</span>
+<span class="normal">616</span>
+<span class="normal">617</span>
+<span class="normal">618</span>
+<span class="normal">619</span>
+<span class="normal">620</span>
+<span class="normal">621</span>
+<span class="normal">622</span>
+<span class="normal">623</span>
+<span class="normal">624</span>
+<span class="normal">625</span>
+<span class="normal">626</span>
+<span class="normal">627</span>
+<span class="normal">628</span>
+<span class="normal">629</span>
+<span class="normal">630</span>
+<span class="normal">631</span>
+<span class="normal">632</span>
+<span class="normal">633</span>
+<span class="normal">634</span>
+<span class="normal">635</span>
+<span class="normal">636</span>
+<span class="normal">637</span>
+<span class="normal">638</span>
+<span class="normal">639</span>
+<span class="normal">640</span>
+<span class="normal">641</span>
+<span class="normal">642</span>
+<span class="normal">643</span>
+<span class="normal">644</span>
+<span class="normal">645</span>
+<span class="normal">646</span>
+<span class="normal">647</span>
+<span class="normal">648</span>
+<span class="normal">649</span>
+<span class="normal">650</span>
+<span class="normal">651</span>
+<span class="normal">652</span>
+<span class="normal">653</span>
+<span class="normal">654</span>
+<span class="normal">655</span>
+<span class="normal">656</span>
+<span class="normal">657</span>
+<span class="normal">658</span>
+<span class="normal">659</span>
+<span class="normal">660</span>
+<span class="normal">661</span>
+<span class="normal">662</span>
+<span class="normal">663</span>
+<span class="normal">664</span>
+<span class="normal">665</span>
+<span class="normal">666</span>
+<span class="normal">667</span>
+<span class="normal">668</span>
+<span class="normal">669</span>
+<span class="normal">670</span>
+<span class="normal">671</span>
+<span class="normal">672</span>
+<span class="normal">673</span>
+<span class="normal">674</span>
+<span class="normal">675</span>
+<span class="normal">676</span>
+<span class="normal">677</span>
+<span class="normal">678</span>
+<span class="normal">679</span>
+<span class="normal">680</span>
+<span class="normal">681</span>
+<span class="normal">682</span>
+<span class="normal">683</span>
+<span class="normal">684</span>
+<span class="normal">685</span>
+<span class="normal">686</span>
+<span class="normal">687</span>
+<span class="normal">688</span>
+<span class="normal">689</span>
+<span class="normal">690</span>
+<span class="normal">691</span>
+<span class="normal">692</span>
+<span class="normal">693</span>
+<span class="normal">694</span>
+<span class="normal">695</span>
+<span class="normal">696</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@classmethod</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">from_config</span><span class="p">(</span>
     <span class="bp">cls</span><span class="p">,</span>
     <span class="n">cfg</span><span class="p">:</span> <span class="n">EgoAHTConfig</span><span class="p">,</span>
     <span class="o">*</span><span class="p">,</span>
     <span class="n">env</span><span class="p">:</span> <span class="n">EnvLike</span><span class="p">,</span>
+    <span class="n">partner</span><span class="p">:</span> <span class="n">PartnerLike</span><span class="p">,</span>
     <span class="n">ego_uid</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">EgoPPOTrainer</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Build from :class:`EgoAHTConfig` + a concrete env (TrainerFactory; ADR-002 §Decisions).</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Build from :class:`EgoAHTConfig` + a concrete env + the frozen partner.</span>
+
+<span class="sd">    ADR-002 §Decisions / ADR-009 §Consequences / plan/05 §3.5 + §6 #3.</span>
 
 <span class="sd">    This is the :class:`~concerto.training.ego_aht.TrainerFactory`</span>
 <span class="sd">    callable that :func:`concerto.training.ego_aht.train` plugs in via</span>
 <span class="sd">    dependency injection. The factory reads the ego&#39;s observation +</span>
 <span class="sd">    action shapes off the env directly so the trainer&#39;s network</span>
 <span class="sd">    widths cannot drift from what the env actually emits.</span>
+
+<span class="sd">    The partner-freeze gate (:func:`_assert_partner_is_frozen`) runs</span>
+<span class="sd">    first, before any tensor allocation, so a bad partner aborts</span>
+<span class="sd">    cheaply (plan/05 §6 #3).</span>
 
 <span class="sd">    Per plan/05 §3.5 the bridge from :class:`EgoAHTConfig` to HARL&#39;s</span>
 <span class="sd">    args dict lives in this CONCERTO-side module rather than in the</span>
@@ -42688,6 +42917,9 @@ not a :class:<code>gym.spaces.Box</code>.</p>
 <span class="sd">            ``observation_space[&quot;agent&quot;][ego_uid][&quot;state&quot;]`` as a</span>
 <span class="sd">            :class:`gym.spaces.Box` and ``action_space[ego_uid]``</span>
 <span class="sd">            as a :class:`gym.spaces.Box`.</span>
+<span class="sd">        partner: Frozen partner instance the ego will train against.</span>
+<span class="sd">            Validated by :func:`_assert_partner_is_frozen` as the</span>
+<span class="sd">            first construction step (ADR-009 §Consequences).</span>
 <span class="sd">        ego_uid: The env-side uid the ego acts on.</span>
 
 <span class="sd">    Returns:</span>
@@ -42695,9 +42927,15 @@ not a :class:<code>gym.spaces.Box</code>.</p>
 <span class="sd">        :func:`concerto.training.ego_aht.train`.</span>
 
 <span class="sd">    Raises:</span>
+<span class="sd">        ValueError: If ``partner`` exposes a torch parameter with</span>
+<span class="sd">            ``requires_grad=True`` (ADR-009 §Consequences).</span>
 <span class="sd">        TypeError: If the env&#39;s ego observation or action space is</span>
 <span class="sd">            not a :class:`gym.spaces.Box`.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># ADR-009 §Consequences / plan/05 §6 #3: partner-freeze gate</span>
+    <span class="c1"># runs first, before any env-space introspection or tensor</span>
+    <span class="c1"># allocation. A bad partner aborts the construction cheaply.</span>
+    <span class="n">_assert_partner_is_frozen</span><span class="p">(</span><span class="n">partner</span><span class="p">)</span>
     <span class="n">env_obs_space</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">observation_space</span>  <span class="c1"># type: ignore[attr-defined]</span>
     <span class="n">ego_state_space</span> <span class="o">=</span> <span class="n">env_obs_space</span><span class="p">[</span><span class="s2">&quot;agent&quot;</span><span class="p">][</span><span class="n">ego_uid</span><span class="p">][</span><span class="s2">&quot;state&quot;</span><span class="p">]</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">ego_state_space</span><span class="p">,</span> <span class="n">gym</span><span class="o">.</span><span class="n">spaces</span><span class="o">.</span><span class="n">Box</span><span class="p">):</span>
@@ -42726,6 +42964,7 @@ not a :class:<code>gym.spaces.Box</code>.</p>
         <span class="n">ego_uid</span><span class="o">=</span><span class="n">ego_uid</span><span class="p">,</span>
         <span class="n">ego_obs_space</span><span class="o">=</span><span class="n">ego_state_space</span><span class="p">,</span>
         <span class="n">ego_act_space</span><span class="o">=</span><span class="n">ego_act_space</span><span class="p">,</span>
+        <span class="n">partner</span><span class="o">=</span><span class="n">partner</span><span class="p">,</span>
         <span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">,</span>
     <span class="p">)</span>
 </code></pre></div></td></tr></table></div>
@@ -42822,87 +43061,87 @@ semantics.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/chamber/benchmarks/ego_ppo_trainer.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">632</span>
-<span class="normal">633</span>
-<span class="normal">634</span>
-<span class="normal">635</span>
-<span class="normal">636</span>
-<span class="normal">637</span>
-<span class="normal">638</span>
-<span class="normal">639</span>
-<span class="normal">640</span>
-<span class="normal">641</span>
-<span class="normal">642</span>
-<span class="normal">643</span>
-<span class="normal">644</span>
-<span class="normal">645</span>
-<span class="normal">646</span>
-<span class="normal">647</span>
-<span class="normal">648</span>
-<span class="normal">649</span>
-<span class="normal">650</span>
-<span class="normal">651</span>
-<span class="normal">652</span>
-<span class="normal">653</span>
-<span class="normal">654</span>
-<span class="normal">655</span>
-<span class="normal">656</span>
-<span class="normal">657</span>
-<span class="normal">658</span>
-<span class="normal">659</span>
-<span class="normal">660</span>
-<span class="normal">661</span>
-<span class="normal">662</span>
-<span class="normal">663</span>
-<span class="normal">664</span>
-<span class="normal">665</span>
-<span class="normal">666</span>
-<span class="normal">667</span>
-<span class="normal">668</span>
-<span class="normal">669</span>
-<span class="normal">670</span>
-<span class="normal">671</span>
-<span class="normal">672</span>
-<span class="normal">673</span>
-<span class="normal">674</span>
-<span class="normal">675</span>
-<span class="normal">676</span>
-<span class="normal">677</span>
-<span class="normal">678</span>
-<span class="normal">679</span>
-<span class="normal">680</span>
-<span class="normal">681</span>
-<span class="normal">682</span>
-<span class="normal">683</span>
-<span class="normal">684</span>
-<span class="normal">685</span>
-<span class="normal">686</span>
-<span class="normal">687</span>
-<span class="normal">688</span>
-<span class="normal">689</span>
-<span class="normal">690</span>
-<span class="normal">691</span>
-<span class="normal">692</span>
-<span class="normal">693</span>
-<span class="normal">694</span>
-<span class="normal">695</span>
-<span class="normal">696</span>
-<span class="normal">697</span>
-<span class="normal">698</span>
-<span class="normal">699</span>
-<span class="normal">700</span>
-<span class="normal">701</span>
-<span class="normal">702</span>
-<span class="normal">703</span>
-<span class="normal">704</span>
-<span class="normal">705</span>
-<span class="normal">706</span>
-<span class="normal">707</span>
-<span class="normal">708</span>
-<span class="normal">709</span>
-<span class="normal">710</span>
-<span class="normal">711</span>
-<span class="normal">712</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">observe</span><span class="p">(</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">748</span>
+<span class="normal">749</span>
+<span class="normal">750</span>
+<span class="normal">751</span>
+<span class="normal">752</span>
+<span class="normal">753</span>
+<span class="normal">754</span>
+<span class="normal">755</span>
+<span class="normal">756</span>
+<span class="normal">757</span>
+<span class="normal">758</span>
+<span class="normal">759</span>
+<span class="normal">760</span>
+<span class="normal">761</span>
+<span class="normal">762</span>
+<span class="normal">763</span>
+<span class="normal">764</span>
+<span class="normal">765</span>
+<span class="normal">766</span>
+<span class="normal">767</span>
+<span class="normal">768</span>
+<span class="normal">769</span>
+<span class="normal">770</span>
+<span class="normal">771</span>
+<span class="normal">772</span>
+<span class="normal">773</span>
+<span class="normal">774</span>
+<span class="normal">775</span>
+<span class="normal">776</span>
+<span class="normal">777</span>
+<span class="normal">778</span>
+<span class="normal">779</span>
+<span class="normal">780</span>
+<span class="normal">781</span>
+<span class="normal">782</span>
+<span class="normal">783</span>
+<span class="normal">784</span>
+<span class="normal">785</span>
+<span class="normal">786</span>
+<span class="normal">787</span>
+<span class="normal">788</span>
+<span class="normal">789</span>
+<span class="normal">790</span>
+<span class="normal">791</span>
+<span class="normal">792</span>
+<span class="normal">793</span>
+<span class="normal">794</span>
+<span class="normal">795</span>
+<span class="normal">796</span>
+<span class="normal">797</span>
+<span class="normal">798</span>
+<span class="normal">799</span>
+<span class="normal">800</span>
+<span class="normal">801</span>
+<span class="normal">802</span>
+<span class="normal">803</span>
+<span class="normal">804</span>
+<span class="normal">805</span>
+<span class="normal">806</span>
+<span class="normal">807</span>
+<span class="normal">808</span>
+<span class="normal">809</span>
+<span class="normal">810</span>
+<span class="normal">811</span>
+<span class="normal">812</span>
+<span class="normal">813</span>
+<span class="normal">814</span>
+<span class="normal">815</span>
+<span class="normal">816</span>
+<span class="normal">817</span>
+<span class="normal">818</span>
+<span class="normal">819</span>
+<span class="normal">820</span>
+<span class="normal">821</span>
+<span class="normal">822</span>
+<span class="normal">823</span>
+<span class="normal">824</span>
+<span class="normal">825</span>
+<span class="normal">826</span>
+<span class="normal">827</span>
+<span class="normal">828</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">observe</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
     <span class="n">obs</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span>
     <span class="n">reward</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
@@ -43011,20 +43250,20 @@ each component reads its own sub-key off the loaded dict via
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/chamber/benchmarks/ego_ppo_trainer.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">878</span>
-<span class="normal">879</span>
-<span class="normal">880</span>
-<span class="normal">881</span>
-<span class="normal">882</span>
-<span class="normal">883</span>
-<span class="normal">884</span>
-<span class="normal">885</span>
-<span class="normal">886</span>
-<span class="normal">887</span>
-<span class="normal">888</span>
-<span class="normal">889</span>
-<span class="normal">890</span>
-<span class="normal">891</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">state_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 994</span>
+<span class="normal"> 995</span>
+<span class="normal"> 996</span>
+<span class="normal"> 997</span>
+<span class="normal"> 998</span>
+<span class="normal"> 999</span>
+<span class="normal">1000</span>
+<span class="normal">1001</span>
+<span class="normal">1002</span>
+<span class="normal">1003</span>
+<span class="normal">1004</span>
+<span class="normal">1005</span>
+<span class="normal">1006</span>
+<span class="normal">1007</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">state_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Return a flat dict with actor + critic + optimizer states (ADR-002 §Decisions; T4b.12).</span>
 
 <span class="sd">    The returned dict is what :func:`concerto.training.checkpoints.save_checkpoint`</span>
@@ -43086,122 +43325,122 @@ identically 1.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/chamber/benchmarks/ego_ppo_trainer.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">761</span>
-<span class="normal">762</span>
-<span class="normal">763</span>
-<span class="normal">764</span>
-<span class="normal">765</span>
-<span class="normal">766</span>
-<span class="normal">767</span>
-<span class="normal">768</span>
-<span class="normal">769</span>
-<span class="normal">770</span>
-<span class="normal">771</span>
-<span class="normal">772</span>
-<span class="normal">773</span>
-<span class="normal">774</span>
-<span class="normal">775</span>
-<span class="normal">776</span>
-<span class="normal">777</span>
-<span class="normal">778</span>
-<span class="normal">779</span>
-<span class="normal">780</span>
-<span class="normal">781</span>
-<span class="normal">782</span>
-<span class="normal">783</span>
-<span class="normal">784</span>
-<span class="normal">785</span>
-<span class="normal">786</span>
-<span class="normal">787</span>
-<span class="normal">788</span>
-<span class="normal">789</span>
-<span class="normal">790</span>
-<span class="normal">791</span>
-<span class="normal">792</span>
-<span class="normal">793</span>
-<span class="normal">794</span>
-<span class="normal">795</span>
-<span class="normal">796</span>
-<span class="normal">797</span>
-<span class="normal">798</span>
-<span class="normal">799</span>
-<span class="normal">800</span>
-<span class="normal">801</span>
-<span class="normal">802</span>
-<span class="normal">803</span>
-<span class="normal">804</span>
-<span class="normal">805</span>
-<span class="normal">806</span>
-<span class="normal">807</span>
-<span class="normal">808</span>
-<span class="normal">809</span>
-<span class="normal">810</span>
-<span class="normal">811</span>
-<span class="normal">812</span>
-<span class="normal">813</span>
-<span class="normal">814</span>
-<span class="normal">815</span>
-<span class="normal">816</span>
-<span class="normal">817</span>
-<span class="normal">818</span>
-<span class="normal">819</span>
-<span class="normal">820</span>
-<span class="normal">821</span>
-<span class="normal">822</span>
-<span class="normal">823</span>
-<span class="normal">824</span>
-<span class="normal">825</span>
-<span class="normal">826</span>
-<span class="normal">827</span>
-<span class="normal">828</span>
-<span class="normal">829</span>
-<span class="normal">830</span>
-<span class="normal">831</span>
-<span class="normal">832</span>
-<span class="normal">833</span>
-<span class="normal">834</span>
-<span class="normal">835</span>
-<span class="normal">836</span>
-<span class="normal">837</span>
-<span class="normal">838</span>
-<span class="normal">839</span>
-<span class="normal">840</span>
-<span class="normal">841</span>
-<span class="normal">842</span>
-<span class="normal">843</span>
-<span class="normal">844</span>
-<span class="normal">845</span>
-<span class="normal">846</span>
-<span class="normal">847</span>
-<span class="normal">848</span>
-<span class="normal">849</span>
-<span class="normal">850</span>
-<span class="normal">851</span>
-<span class="normal">852</span>
-<span class="normal">853</span>
-<span class="normal">854</span>
-<span class="normal">855</span>
-<span class="normal">856</span>
-<span class="normal">857</span>
-<span class="normal">858</span>
-<span class="normal">859</span>
-<span class="normal">860</span>
-<span class="normal">861</span>
-<span class="normal">862</span>
-<span class="normal">863</span>
-<span class="normal">864</span>
-<span class="normal">865</span>
-<span class="normal">866</span>
-<span class="normal">867</span>
-<span class="normal">868</span>
-<span class="normal">869</span>
-<span class="normal">870</span>
-<span class="normal">871</span>
-<span class="normal">872</span>
-<span class="normal">873</span>
-<span class="normal">874</span>
-<span class="normal">875</span>
-<span class="normal">876</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">877</span>
+<span class="normal">878</span>
+<span class="normal">879</span>
+<span class="normal">880</span>
+<span class="normal">881</span>
+<span class="normal">882</span>
+<span class="normal">883</span>
+<span class="normal">884</span>
+<span class="normal">885</span>
+<span class="normal">886</span>
+<span class="normal">887</span>
+<span class="normal">888</span>
+<span class="normal">889</span>
+<span class="normal">890</span>
+<span class="normal">891</span>
+<span class="normal">892</span>
+<span class="normal">893</span>
+<span class="normal">894</span>
+<span class="normal">895</span>
+<span class="normal">896</span>
+<span class="normal">897</span>
+<span class="normal">898</span>
+<span class="normal">899</span>
+<span class="normal">900</span>
+<span class="normal">901</span>
+<span class="normal">902</span>
+<span class="normal">903</span>
+<span class="normal">904</span>
+<span class="normal">905</span>
+<span class="normal">906</span>
+<span class="normal">907</span>
+<span class="normal">908</span>
+<span class="normal">909</span>
+<span class="normal">910</span>
+<span class="normal">911</span>
+<span class="normal">912</span>
+<span class="normal">913</span>
+<span class="normal">914</span>
+<span class="normal">915</span>
+<span class="normal">916</span>
+<span class="normal">917</span>
+<span class="normal">918</span>
+<span class="normal">919</span>
+<span class="normal">920</span>
+<span class="normal">921</span>
+<span class="normal">922</span>
+<span class="normal">923</span>
+<span class="normal">924</span>
+<span class="normal">925</span>
+<span class="normal">926</span>
+<span class="normal">927</span>
+<span class="normal">928</span>
+<span class="normal">929</span>
+<span class="normal">930</span>
+<span class="normal">931</span>
+<span class="normal">932</span>
+<span class="normal">933</span>
+<span class="normal">934</span>
+<span class="normal">935</span>
+<span class="normal">936</span>
+<span class="normal">937</span>
+<span class="normal">938</span>
+<span class="normal">939</span>
+<span class="normal">940</span>
+<span class="normal">941</span>
+<span class="normal">942</span>
+<span class="normal">943</span>
+<span class="normal">944</span>
+<span class="normal">945</span>
+<span class="normal">946</span>
+<span class="normal">947</span>
+<span class="normal">948</span>
+<span class="normal">949</span>
+<span class="normal">950</span>
+<span class="normal">951</span>
+<span class="normal">952</span>
+<span class="normal">953</span>
+<span class="normal">954</span>
+<span class="normal">955</span>
+<span class="normal">956</span>
+<span class="normal">957</span>
+<span class="normal">958</span>
+<span class="normal">959</span>
+<span class="normal">960</span>
+<span class="normal">961</span>
+<span class="normal">962</span>
+<span class="normal">963</span>
+<span class="normal">964</span>
+<span class="normal">965</span>
+<span class="normal">966</span>
+<span class="normal">967</span>
+<span class="normal">968</span>
+<span class="normal">969</span>
+<span class="normal">970</span>
+<span class="normal">971</span>
+<span class="normal">972</span>
+<span class="normal">973</span>
+<span class="normal">974</span>
+<span class="normal">975</span>
+<span class="normal">976</span>
+<span class="normal">977</span>
+<span class="normal">978</span>
+<span class="normal">979</span>
+<span class="normal">980</span>
+<span class="normal">981</span>
+<span class="normal">982</span>
+<span class="normal">983</span>
+<span class="normal">984</span>
+<span class="normal">985</span>
+<span class="normal">986</span>
+<span class="normal">987</span>
+<span class="normal">988</span>
+<span class="normal">989</span>
+<span class="normal">990</span>
+<span class="normal">991</span>
+<span class="normal">992</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Compute GAE; run PPO + critic updates; clear the buffer (ADR-002 §Decisions; Pardo 2017).</span>
 
 <span class="sd">    Order of operations (Schulman 2017, lifted to ego-only / frozen-</span>
@@ -43459,86 +43698,86 @@ propagation across the boundary.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/chamber/benchmarks/ego_ppo_trainer.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">191</span>
-<span class="normal">192</span>
-<span class="normal">193</span>
-<span class="normal">194</span>
-<span class="normal">195</span>
-<span class="normal">196</span>
-<span class="normal">197</span>
-<span class="normal">198</span>
-<span class="normal">199</span>
-<span class="normal">200</span>
-<span class="normal">201</span>
-<span class="normal">202</span>
-<span class="normal">203</span>
-<span class="normal">204</span>
-<span class="normal">205</span>
-<span class="normal">206</span>
-<span class="normal">207</span>
-<span class="normal">208</span>
-<span class="normal">209</span>
-<span class="normal">210</span>
-<span class="normal">211</span>
-<span class="normal">212</span>
-<span class="normal">213</span>
-<span class="normal">214</span>
-<span class="normal">215</span>
-<span class="normal">216</span>
-<span class="normal">217</span>
-<span class="normal">218</span>
-<span class="normal">219</span>
-<span class="normal">220</span>
-<span class="normal">221</span>
-<span class="normal">222</span>
-<span class="normal">223</span>
-<span class="normal">224</span>
-<span class="normal">225</span>
-<span class="normal">226</span>
-<span class="normal">227</span>
-<span class="normal">228</span>
-<span class="normal">229</span>
-<span class="normal">230</span>
-<span class="normal">231</span>
-<span class="normal">232</span>
-<span class="normal">233</span>
-<span class="normal">234</span>
-<span class="normal">235</span>
-<span class="normal">236</span>
-<span class="normal">237</span>
-<span class="normal">238</span>
-<span class="normal">239</span>
-<span class="normal">240</span>
-<span class="normal">241</span>
-<span class="normal">242</span>
-<span class="normal">243</span>
-<span class="normal">244</span>
-<span class="normal">245</span>
-<span class="normal">246</span>
-<span class="normal">247</span>
-<span class="normal">248</span>
-<span class="normal">249</span>
-<span class="normal">250</span>
-<span class="normal">251</span>
-<span class="normal">252</span>
-<span class="normal">253</span>
-<span class="normal">254</span>
-<span class="normal">255</span>
-<span class="normal">256</span>
-<span class="normal">257</span>
-<span class="normal">258</span>
-<span class="normal">259</span>
-<span class="normal">260</span>
-<span class="normal">261</span>
-<span class="normal">262</span>
-<span class="normal">263</span>
-<span class="normal">264</span>
-<span class="normal">265</span>
-<span class="normal">266</span>
-<span class="normal">267</span>
-<span class="normal">268</span>
-<span class="normal">269</span>
-<span class="normal">270</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">compute_gae</span><span class="p">(</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">269</span>
+<span class="normal">270</span>
+<span class="normal">271</span>
+<span class="normal">272</span>
+<span class="normal">273</span>
+<span class="normal">274</span>
+<span class="normal">275</span>
+<span class="normal">276</span>
+<span class="normal">277</span>
+<span class="normal">278</span>
+<span class="normal">279</span>
+<span class="normal">280</span>
+<span class="normal">281</span>
+<span class="normal">282</span>
+<span class="normal">283</span>
+<span class="normal">284</span>
+<span class="normal">285</span>
+<span class="normal">286</span>
+<span class="normal">287</span>
+<span class="normal">288</span>
+<span class="normal">289</span>
+<span class="normal">290</span>
+<span class="normal">291</span>
+<span class="normal">292</span>
+<span class="normal">293</span>
+<span class="normal">294</span>
+<span class="normal">295</span>
+<span class="normal">296</span>
+<span class="normal">297</span>
+<span class="normal">298</span>
+<span class="normal">299</span>
+<span class="normal">300</span>
+<span class="normal">301</span>
+<span class="normal">302</span>
+<span class="normal">303</span>
+<span class="normal">304</span>
+<span class="normal">305</span>
+<span class="normal">306</span>
+<span class="normal">307</span>
+<span class="normal">308</span>
+<span class="normal">309</span>
+<span class="normal">310</span>
+<span class="normal">311</span>
+<span class="normal">312</span>
+<span class="normal">313</span>
+<span class="normal">314</span>
+<span class="normal">315</span>
+<span class="normal">316</span>
+<span class="normal">317</span>
+<span class="normal">318</span>
+<span class="normal">319</span>
+<span class="normal">320</span>
+<span class="normal">321</span>
+<span class="normal">322</span>
+<span class="normal">323</span>
+<span class="normal">324</span>
+<span class="normal">325</span>
+<span class="normal">326</span>
+<span class="normal">327</span>
+<span class="normal">328</span>
+<span class="normal">329</span>
+<span class="normal">330</span>
+<span class="normal">331</span>
+<span class="normal">332</span>
+<span class="normal">333</span>
+<span class="normal">334</span>
+<span class="normal">335</span>
+<span class="normal">336</span>
+<span class="normal">337</span>
+<span class="normal">338</span>
+<span class="normal">339</span>
+<span class="normal">340</span>
+<span class="normal">341</span>
+<span class="normal">342</span>
+<span class="normal">343</span>
+<span class="normal">344</span>
+<span class="normal">345</span>
+<span class="normal">346</span>
+<span class="normal">347</span>
+<span class="normal">348</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">compute_gae</span><span class="p">(</span>
     <span class="n">rewards</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">],</span>
     <span class="n">values</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">],</span>
     <span class="n">next_values</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">],</span>
@@ -43682,34 +43921,34 @@ tautology.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/chamber/benchmarks/ego_ppo_trainer.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">273</span>
-<span class="normal">274</span>
-<span class="normal">275</span>
-<span class="normal">276</span>
-<span class="normal">277</span>
-<span class="normal">278</span>
-<span class="normal">279</span>
-<span class="normal">280</span>
-<span class="normal">281</span>
-<span class="normal">282</span>
-<span class="normal">283</span>
-<span class="normal">284</span>
-<span class="normal">285</span>
-<span class="normal">286</span>
-<span class="normal">287</span>
-<span class="normal">288</span>
-<span class="normal">289</span>
-<span class="normal">290</span>
-<span class="normal">291</span>
-<span class="normal">292</span>
-<span class="normal">293</span>
-<span class="normal">294</span>
-<span class="normal">295</span>
-<span class="normal">296</span>
-<span class="normal">297</span>
-<span class="normal">298</span>
-<span class="normal">299</span>
-<span class="normal">300</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">normalize_advantages</span><span class="p">(</span><span class="n">advantages</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">]:</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">351</span>
+<span class="normal">352</span>
+<span class="normal">353</span>
+<span class="normal">354</span>
+<span class="normal">355</span>
+<span class="normal">356</span>
+<span class="normal">357</span>
+<span class="normal">358</span>
+<span class="normal">359</span>
+<span class="normal">360</span>
+<span class="normal">361</span>
+<span class="normal">362</span>
+<span class="normal">363</span>
+<span class="normal">364</span>
+<span class="normal">365</span>
+<span class="normal">366</span>
+<span class="normal">367</span>
+<span class="normal">368</span>
+<span class="normal">369</span>
+<span class="normal">370</span>
+<span class="normal">371</span>
+<span class="normal">372</span>
+<span class="normal">373</span>
+<span class="normal">374</span>
+<span class="normal">375</span>
+<span class="normal">376</span>
+<span class="normal">377</span>
+<span class="normal">378</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">normalize_advantages</span><span class="p">(</span><span class="n">advantages</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Mean/std-normalize advantages (ADR-002 §Decisions; matches HAPPO state_type=&#39;EP&#39;).</span>
 
 <span class="sd">    The formula::</span>
