@@ -26,19 +26,35 @@ side, not on the agent count:
 
 Neither obs-modality variant is shipped yet — wiring real ManiSkill
 v3 observation builders (RGB-D, force-torque, proprio) into the
-Stage-1 pick-place env is plan/07 §T5b.2 follow-up work (Phase 1).
-For Phase-0 the adapter uses
+Stage-1 pick-place env is plan/07 §T5b.2 follow-up work (Phase 1,
+ADR-007 §Stage 1b). For Phase-0 (Stage 1a) the adapter uses
 :class:`chamber.envs.mpe_cooperative_push.MPECooperativePushEnv` as
-a CPU-friendly stand-in. Because OM does not change the agent count,
-**both conditions use the same** ``agent_uids = ("panda_wristcam",
-"fetch")`` and consequently produce identical Phase-0 SpikeRuns —
-the OM distinction lives in the prereg's ``condition_id`` strings
-(``stage1_pickplace_vision_only`` vs
-``stage1_pickplace_vision_plus_force_torque_plus_proprio``), which
-the Phase-1 obs-modality factory will read to pick its actual obs
-keys. Episode success is rule-based
+a CPU-friendly stand-in.
+
+MPE's 10-D state vector — ``self_pos(2) + self_vel(2) +
+landmark_rel(4) + partner_rel(2)`` — does not natively carry vision /
+force-torque / proprioceptive channels, but its slices proxy the
+contrast at the wiring level so each condition resolves to a distinct
+env build. :class:`_ObsChannelFilterEnv` wraps the inner MPE env and
+exposes only the channel subset named in
+:data:`_OBS_CHANNELS_BY_CONDITION` for the active ``condition_id``;
+the resulting per-condition observation_space shape differs, the
+scripted heuristic partner reads its planar xy from a different slice
+of the state vector under each condition (see
+:meth:`chamber.partners.heuristic.ScriptedHeuristicPartner._read_agent_xy`),
+and the SpikeRun's per-episode reward stream therefore diverges
+across conditions — the regression PR #119 review would have caught
+the *identical*-SpikeRun symptom this fix closes (the previous Phase-0
+scaffold's tuple-collision defect). The agent-uids tuple itself is
+unchanged across conditions (``("panda_wristcam", "fetch")``) because
+OM does not change the agent count. Episode success is rule-based
 (``mean_reward > _SUCCESS_THRESHOLD``); the ego is a frozen-zero
 policy (no training).
+
+The divergence under Stage 1a is a *measurement artefact* of the MPE
+proxy — it is not the AS/OM gap ADR-007 §Validation criteria
+demands. Stage 1b's real ManiSkill v3 obs builders supply the actual
+OM signal; the channel-filter wrapper goes away in that path.
 
 The ego trainer integration (``concerto.training.ego_aht.train``
 per plan/07 §T5b.2) is scaffolded behind the ``_zero_ego_action``
@@ -67,6 +83,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
+import gymnasium as gym
 import numpy as np
 
 from chamber.envs.mpe_cooperative_push import MPECooperativePushEnv
@@ -80,7 +97,6 @@ if TYPE_CHECKING:
     import argparse
     from collections.abc import Callable, Mapping
 
-    import gymnasium as gym
     from numpy.typing import NDArray
 
     EnvFactory = Callable[[str, tuple[str, str], int], gym.Env[Any, Any]]
@@ -105,9 +121,10 @@ _SUCCESS_THRESHOLD: float = -0.30
 #: Default per-condition agent-uid tuples. Per plan/07 §3 OM uses the
 #: same panda + fetch agent pair across BOTH conditions — the OM
 #: distinction is on the obs side, not the agent side. The two
-#: condition_id strings map to identical tuples; the Phase-1
-#: obs-modality factory will read ``condition_id`` directly to pick
-#: the right obs builder.
+#: condition_id strings map to identical tuples; the per-condition
+#: divergence is supplied by :data:`_OBS_CHANNELS_BY_CONDITION` below
+#: (the Phase-1 obs-modality factory will read ``condition_id``
+#: directly to pick the right obs builder).
 _CONDITION_UIDS: dict[str, tuple[str, str]] = {
     "stage1_pickplace_vision_only": ("panda_wristcam", "fetch"),
     "stage1_pickplace_vision_plus_force_torque_plus_proprio": (
@@ -115,6 +132,121 @@ _CONDITION_UIDS: dict[str, tuple[str, str]] = {
         "fetch",
     ),
 }
+
+#: Per-condition slice indices into MPE's 10-D state vector
+#: ``[self_pos(2), self_vel(2), landmark_rel(4), partner_rel(2)]``
+#: (Stage 1a stand-in; ADR-007 §Stage 1a).
+#:
+#: MPE has no native vision / force-torque / proprioceptive channels;
+#: the slices below are a *structural proxy* so each ``condition_id``
+#: resolves to a distinct env build with a distinct
+#: ``observation_space`` shape. Stage 1b replaces this proxy with real
+#: ManiSkill v3 obs builders (RGB-D, force-torque, proprioception);
+#: the wrapper goes away in that path (ADR-007 §Stage 1b).
+#:
+#: Channel mapping rationale:
+#:
+#: - ``vision_only`` → ``landmark_rel(4) + partner_rel(2)`` (indices
+#:   4..9). Models the "exteroceptive only" baseline — the agent
+#:   sees its goals and the partner's relative position but not its
+#:   own proprioception.
+#: - ``vision_plus_force_torque_plus_proprio`` → the full 10-D state.
+#:   Models the "fused multi-modal" condition.
+#:
+#: Under ``vision_only`` the scripted heuristic partner's
+#: :meth:`~chamber.partners.heuristic.ScriptedHeuristicPartner._read_agent_xy`
+#: fallback path (``state[:2]``) reads ``landmark1_rel`` instead of
+#: ``self_pos``, so the partner's action stream — and therefore the
+#: per-episode reward — diverges from the full-channel condition.
+#: That is the *wiring* difference Stage 1a needs; it is **not** the
+#: ≥20 pp AS/OM gap ADR-007 §Validation criteria demands.
+_OBS_CHANNELS_BY_CONDITION: dict[str, tuple[int, ...]] = {
+    "stage1_pickplace_vision_only": (4, 5, 6, 7, 8, 9),
+    "stage1_pickplace_vision_plus_force_torque_plus_proprio": (
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+    ),
+}
+
+
+class _ObsChannelFilterEnv(gym.Env):  # type: ignore[type-arg]
+    """Phase-0 (Stage 1a) wrapper that exposes a slice of MPE's state vector.
+
+    Wraps an inner :class:`MPECooperativePushEnv` and filters every
+    per-agent ``state`` array to the channel indices configured at
+    construction. The shape of the wrapped ``observation_space``
+    matches the filtered shape so downstream consumers
+    (chamber-spike evaluation, the scripted heuristic partner) see a
+    consistent contract.
+
+    The wrapper is intentionally a thin pass-through (`step` / `reset`
+    forward to the inner env and the only mutation is the per-agent
+    ``state`` channel slice). The :attr:`action_space` is inherited
+    unchanged from the inner env because OM is an observation-side
+    axis (plan/07 §3 + ADR-007 §Stage 1a).
+    """
+
+    def __init__(
+        self,
+        inner: MPECooperativePushEnv,
+        *,
+        channel_indices: tuple[int, ...],
+    ) -> None:
+        """Build the filter wrapper (ADR-007 §Stage 1a; plan/07 §3)."""
+        self._inner = inner
+        self._channel_indices = channel_indices
+        n_channels = len(channel_indices)
+        agent_state_box: gym.spaces.Box = gym.spaces.Box(
+            low=-np.inf,
+            high=np.inf,
+            shape=(n_channels,),
+            dtype=np.float32,
+        )
+        uids = inner._uids
+        self.observation_space = gym.spaces.Dict(
+            {
+                "agent": gym.spaces.Dict(
+                    {uid: gym.spaces.Dict({"state": agent_state_box}) for uid in uids}
+                )
+            }
+        )
+        self.action_space = inner.action_space
+
+    def reset(
+        self,
+        *,
+        seed: int | None = None,
+        options: dict[str, Any] | None = None,
+    ) -> tuple[dict[str, Any], dict[str, Any]]:
+        """Forward to the inner env; filter the returned obs (ADR-007 §Stage 1a)."""
+        obs, info = self._inner.reset(seed=seed, options=options)
+        return self._filter_obs(obs), info
+
+    def step(
+        self,
+        action: dict[str, NDArray[np.floating]],
+    ) -> tuple[dict[str, Any], float, bool, bool, dict[str, Any]]:
+        """Forward to the inner env; filter the returned obs (ADR-007 §Stage 1a)."""
+        obs, reward, terminated, truncated, info = self._inner.step(action)
+        return self._filter_obs(obs), reward, terminated, truncated, info
+
+    def _filter_obs(self, obs: dict[str, Any]) -> dict[str, Any]:
+        """Slice each per-agent ``state`` to :attr:`_channel_indices` (ADR-007 §Stage 1a)."""
+        indices = list(self._channel_indices)
+        filtered_agents: dict[str, dict[str, NDArray[np.float32]]] = {}
+        for uid, agent_obs in obs["agent"].items():
+            state = np.asarray(agent_obs["state"], dtype=np.float32)
+            filtered_agents[uid] = {"state": state[indices].astype(np.float32)}
+        return {"agent": filtered_agents}
+
 
 #: Canonical prereg path. Resolved relative to the repo root the
 #: caller's CWD lives under; the prereg file is part of B5's
@@ -306,22 +438,40 @@ def _run_one_episode(
 def _default_env_factory(
     condition_id: str, agent_uids: tuple[str, str], root_seed: int
 ) -> gym.Env[Any, Any]:
-    """Build the per-condition env (Phase-0 MPE stand-in; plan/07 §T5b.2 deferral).
+    """Build the per-condition env (Stage 1a stand-in; ADR-007 §Stage 1a).
 
-    The real Stage-1 obs-modality variants (vision-only vs
-    vision+FT+proprio on the panda+fetch pick-place task) live in
-    Phase-1 work — see plan/07 §T5b.2. For Phase-0 the adapter uses
-    :class:`chamber.envs.mpe_cooperative_push.MPECooperativePushEnv`
-    so the SpikeRun shape, the partner-stack contract, and the
-    chamber-side dispatch are all exercisable on CPU.
+    Phase-0 (Stage 1a) wraps :class:`MPECooperativePushEnv` with
+    :class:`_ObsChannelFilterEnv` so each ``condition_id`` resolves to
+    a distinct env build with a distinct ``observation_space`` shape
+    (see :data:`_OBS_CHANNELS_BY_CONDITION`). Same panda+fetch agent
+    tuple under both conditions per plan/07 §3 (OM is observation-
+    side, not agent-side).
 
-    Because OM does not change the agent count, both conditions map
-    to the same ``agent_uids`` tuple; the ``condition_id`` argument
-    is unused in Phase-0. The Phase-1 obs-modality factory will read
-    ``condition_id`` to pick the actual obs builder.
+    Stage 1b (Phase-1; ADR-007 §Stage 1b) replaces this proxy with
+    real ManiSkill v3 obs builders (RGB-D, force-torque,
+    proprioception) on the canonical pick-place task; the channel-
+    filter wrapper goes away in that path.
+
+    Raises:
+        ValueError: If ``condition_id`` is not in
+            :data:`_OBS_CHANNELS_BY_CONDITION`. This typically means
+            the OM pre-registration was edited after the Phase-0
+            adapter shipped — re-issue the prereg with a new
+            ``git_tag`` per ADR-007 §Discipline, or update the
+            channel-spec table here.
     """
-    del condition_id  # Phase-1 factory reads this; Phase-0 MPE stand-in ignores.
-    return MPECooperativePushEnv(agent_uids=agent_uids, root_seed=root_seed)
+    channels = _OBS_CHANNELS_BY_CONDITION.get(condition_id)
+    if channels is None:
+        msg = (
+            f"stage1_om._default_env_factory: condition_id {condition_id!r} "
+            f"has no obs-channel slice in _OBS_CHANNELS_BY_CONDITION "
+            f"(known: {sorted(_OBS_CHANNELS_BY_CONDITION)}). The OM "
+            "pre-registration drifted; re-issue with a new git_tag "
+            "(ADR-007 §Discipline) or update the channel-spec table."
+        )
+        raise ValueError(msg)
+    inner = MPECooperativePushEnv(agent_uids=agent_uids, root_seed=root_seed)
+    return _ObsChannelFilterEnv(inner, channel_indices=channels)
 
 
 def _zero_ego_action(
