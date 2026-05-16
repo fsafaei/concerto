@@ -385,7 +385,7 @@ def _build_trainer_and_env(
             extra={"uid": "partner", "target_xy": "0.0,0.0", "action_dim": "2"},
         )
     )
-    trainer = EgoPPOTrainer.from_config(cfg, env=env, ego_uid="ego")
+    trainer = EgoPPOTrainer.from_config(cfg, env=env, partner=partner, ego_uid="ego")
     return trainer, env, partner
 
 

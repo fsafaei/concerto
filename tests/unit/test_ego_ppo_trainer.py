@@ -72,7 +72,7 @@ def _tiny_cfg(*, seed: int = 0, rollout_length: int = 16) -> EgoAHTConfig:
 def _build_trainer(*, seed: int = 0, rollout_length: int = 16) -> EgoPPOTrainer:
     cfg = _tiny_cfg(seed=seed, rollout_length=rollout_length)
     env = MPECooperativePushEnv(root_seed=seed)
-    return EgoPPOTrainer.from_config(cfg, env=env, ego_uid="ego")
+    return EgoPPOTrainer.from_config(cfg, env=env, partner=_build_partner(), ego_uid="ego")
 
 
 def _build_partner() -> ScriptedHeuristicPartner:
@@ -186,7 +186,7 @@ class TestFromConfig:
         """ADR-002 §Decisions: the factory wires obs+act spaces from the env."""
         cfg = _tiny_cfg()
         env = MPECooperativePushEnv()
-        trainer = EgoPPOTrainer.from_config(cfg, env=env, ego_uid="ego")
+        trainer = EgoPPOTrainer.from_config(cfg, env=env, partner=_build_partner(), ego_uid="ego")
         assert isinstance(trainer, EgoPPOTrainer)
 
     def test_rejects_non_box_obs_state(self) -> None:
@@ -222,7 +222,12 @@ class TestFromConfig:
 
         cfg = _tiny_cfg()
         with pytest.raises(TypeError, match=r"gym\.spaces\.Box"):
-            EgoPPOTrainer.from_config(cfg, env=_BadStateEnv(), ego_uid="ego")  # type: ignore[arg-type]
+            EgoPPOTrainer.from_config(
+                cfg,
+                env=_BadStateEnv(),  # type: ignore[arg-type]
+                partner=_build_partner(),
+                ego_uid="ego",
+            )
 
     def test_rejects_non_box_action_space(self) -> None:
         """Loud-fail when the env's ego action isn't a Box (defensive)."""
@@ -264,7 +269,12 @@ class TestFromConfig:
 
         cfg = _tiny_cfg()
         with pytest.raises(TypeError, match=r"gym\.spaces\.Box"):
-            EgoPPOTrainer.from_config(cfg, env=_BadActionEnv(), ego_uid="ego")  # type: ignore[arg-type]
+            EgoPPOTrainer.from_config(
+                cfg,
+                env=_BadActionEnv(),  # type: ignore[arg-type]
+                partner=_build_partner(),
+                ego_uid="ego",
+            )
 
 
 class TestActSurface:
@@ -565,7 +575,7 @@ class TestDeviceResolution:
             update={"runtime": cfg.runtime.model_copy(update={"device": "cpu"})}
         )
         with patch("chamber.benchmarks.ego_ppo_trainer._set_torch_determinism") as mock_set:
-            EgoPPOTrainer.from_config(cfg_cpu, env=env, ego_uid="ego")
+            EgoPPOTrainer.from_config(cfg_cpu, env=env, partner=_build_partner(), ego_uid="ego")
             mock_set.assert_called_once_with(True)
 
     def test_from_config_skips_torch_determinism_when_flag_off(self) -> None:
@@ -584,7 +594,7 @@ class TestDeviceResolution:
             }
         )
         with patch("chamber.benchmarks.ego_ppo_trainer._set_torch_determinism") as mock_set:
-            EgoPPOTrainer.from_config(cfg_no_det, env=env, ego_uid="ego")
+            EgoPPOTrainer.from_config(cfg_no_det, env=env, partner=_build_partner(), ego_uid="ego")
             mock_set.assert_not_called()
 
 
