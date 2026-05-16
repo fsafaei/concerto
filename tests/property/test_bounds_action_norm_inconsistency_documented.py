@@ -30,18 +30,19 @@ so that:
 The test does NOT itself fix anything. It is a guarantee that the fix
 in the tracked issue, when it lands, cannot land *silently*.
 
-The two assertions:
+The two assertions (2-D action; the gap is ``sqrt(2)``):
 
-1. ``ExpCBFQP`` permits an action ``u = (1.0, 1.0, 1.0)`` (L-infinity
+1. ``ExpCBFQP`` permits an action ``u = (1.0, 1.0)`` (L-infinity
    norm 1.0) at ``action_norm=1.0`` — the L-infinity envelope. The
-   Euclidean norm of that action is ``sqrt(3) ~= 1.732``.
+   Euclidean norm of that action is ``sqrt(2) ~= 1.414``.
 2. ``CartesianAccelEmergencyController`` produces an override whose
    Euclidean norm equals ``action_norm = 1.0`` — the L2 envelope.
 
-The inconsistency: CBF authorised ``||u||_2 ~ 1.732`` for the ego in
+The inconsistency: CBF authorised ``||u||_2 ~ 1.414`` for the ego in
 nominal operation, but if the same step fires the emergency fallback,
 the override magnitude is L2-capped at ``1.0``. The fallback cannot
-deliver what the CBF derivation assumed feasible.
+deliver what the CBF derivation assumed feasible. The same logic
+generalises to higher ``d``: ``sqrt(d)`` is the gap.
 
 References:
 - ADR-004 §Open questions (2026-05-16 amendment): names the four

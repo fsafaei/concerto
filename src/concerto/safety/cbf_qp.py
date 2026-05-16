@@ -853,7 +853,11 @@ class ExpCBFQP:
         # Per-component action-space L-infinity bound; the Cartesian
         # capacity drives ``alpha_pair`` only — the action-space envelope
         # is the agent's own component-wise bound (Bounds.action_norm in
-        # Phase-0; future models may override this).
+        # Phase-0; future models may override this). NOTE: ``action_norm``
+        # is consumed here as L-infinity but as L2 in the emergency
+        # controller — a documented inconsistency tracked at issue #146
+        # (see :class:`concerto.safety.api.Bounds` "Known semantic
+        # inconsistency"; ADR-004 §Open questions).
         identity = np.eye(n_total, dtype=np.float64)
         ego_action_bound = np.full(n_total, bounds.action_norm, dtype=np.float64)
         bound_rows = np.vstack([identity, -identity])
@@ -1000,7 +1004,10 @@ class ExpCBFQP:
             model = self._control_models[uid]
             # Per-component action-space L-infinity bound, matching the
             # pre-refactor convention; the per-agent Cartesian capacity
-            # affects ``alpha_pair`` only.
+            # affects ``alpha_pair`` only. NOTE: see the analogous
+            # comment in ``_filter_ego_only`` and issue #146 — the
+            # ``Bounds.action_norm`` semantic inconsistency is shared
+            # between both joint-mode call sites and the EGO_ONLY path.
             action_bound = np.full(model.action_dim, bounds.action_norm, dtype=np.float64)
             if (
                 self._mode is SafetyMode.SHARED_CONTROL
