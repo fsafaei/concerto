@@ -101,7 +101,11 @@ def _sample_report() -> ThreeTableReport:
 
 
 def test_schema_version_pinned() -> None:
-    assert SCHEMA_VERSION == 1
+    """Schema bumped to 2 for the ADR-014 ``max_slack`` / ``slack_l2`` columns
+    (external-review P0-3, 2026-05-16). Bumping this further is a breaking
+    change and requires a new ADR amendment.
+    """
+    assert SCHEMA_VERSION == 2
 
 
 def test_round_trip_json_to_dataclass(tmp_path: Path) -> None:
@@ -269,3 +273,85 @@ def test_schema_version_round_trips(tmp_path: Path) -> None:
     json_path, _ = emit_three_tables(out_dir=tmp_path, report=report)
     parsed = parse_three_tables(json_path)
     assert parsed.schema_version == 42
+
+
+def test_condition_row_slack_columns_round_trip(tmp_path: Path) -> None:
+    """ADR-014 §Decision (2026-05-16): ``max_slack`` and ``slack_l2`` survive JSON ↔ dataclass."""
+    report = ThreeTableReport(
+        table_1=(),
+        table_2=(
+            ConditionRow(
+                predictor="gt",
+                conformal_mode="Learn",
+                vendor_compliance=None,
+                n_episodes=42,
+                violations=3,
+                fallback_fires=1,
+                max_slack=0.275,
+                slack_l2=0.183,
+            ),
+        ),
+        table_3=(),
+    )
+    json_path, _ = emit_three_tables(out_dir=tmp_path, report=report)
+    parsed = parse_three_tables(json_path)
+    assert parsed.table_2[0].max_slack == pytest.approx(0.275)
+    assert parsed.table_2[0].slack_l2 == pytest.approx(0.183)
+
+
+def test_condition_row_legacy_v1_payload_defaults_slack_columns(tmp_path: Path) -> None:
+    """Reading a v1 payload (no slack columns) defaults the new fields to 0.0.
+
+    The schema bump from v1 to v2 is forward-additive: a legacy payload
+    written before the slack columns existed must parse cleanly with
+    ``max_slack=slack_l2=0.0``. The content_hash check is opt-in so the
+    test can skip it (hash would differ on the missing keys).
+    """
+    legacy_payload: dict[str, object] = {
+        "schema_version": 1,
+        "table_1": [],
+        "table_2": [
+            {
+                "predictor": "gt",
+                "conformal_mode": "Learn",
+                "vendor_compliance": None,
+                "n_episodes": 10,
+                "violations": 0,
+                "fallback_fires": 0,
+                # No max_slack / slack_l2 fields — pre-schema-v2 payload.
+            }
+        ],
+        "table_3": [],
+    }
+    legacy_path = tmp_path / "legacy.json"
+    legacy_path.write_text(json.dumps(legacy_payload), encoding="utf-8")
+    parsed = parse_three_tables(legacy_path)
+    assert parsed.table_2[0].max_slack == 0.0
+    assert parsed.table_2[0].slack_l2 == 0.0
+
+
+def test_markdown_renders_slack_columns(tmp_path: Path) -> None:
+    """Schema-v2 Markdown rendering carries the slack columns inline."""
+    report = ThreeTableReport(
+        table_1=(),
+        table_2=(
+            ConditionRow(
+                predictor="gt",
+                conformal_mode="Learn",
+                vendor_compliance=None,
+                n_episodes=1,
+                violations=0,
+                fallback_fires=0,
+                max_slack=0.012345,
+                slack_l2=0.06789,
+            ),
+        ),
+        table_3=(),
+    )
+    _, md_path = emit_three_tables(out_dir=tmp_path, report=report)
+    md = md_path.read_text(encoding="utf-8")
+    assert "Max slack" in md
+    assert "Slack L2" in md
+    # 6-significant-digit formatting matches Table 3 lambda-mean rendering.
+    assert "0.012345" in md
+    assert "0.06789" in md
