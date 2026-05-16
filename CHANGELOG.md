@@ -13,6 +13,7 @@ per SemVer §4.
 
 ### Features
 
+* **benchmarks:** EgoActionFactory Protocol + Tier-1 contract tests for the Stage-1 seam (plan/07 §T5b.2) ([#123](https://github.com/fsafaei/concerto/issues/123)) ([04be156](https://github.com/fsafaei/concerto/commit/04be156d05ef71ab3104c0ec42521020c6290709))
 * **cli:** chamber-spike summarize-month3 — Month-3 lock-priority report (plan/07 §T5b.10) ([#124](https://github.com/fsafaei/concerto/issues/124)) ([e06bda9](https://github.com/fsafaei/concerto/commit/e06bda93588bbc7db89f28fb28c0dff0ddd746fb))
 * **cli:** chamber-spike verify-prereg --all (plan/07 §6 [#5](https://github.com/fsafaei/concerto/issues/5)) ([#115](https://github.com/fsafaei/concerto/issues/115)) ([724e2bd](https://github.com/fsafaei/concerto/commit/724e2bdac349dfb778b0376f2aa3e3691402cdc6))
 * **training,adr:** reject non-frozen partner at trainer construction + amend ADR-002 §Risks [#1](https://github.com/fsafaei/concerto/issues/1) for slope test ([#119](https://github.com/fsafaei/concerto/issues/119)) ([ec57756](https://github.com/fsafaei/concerto/commit/ec5775649c62c6e55725ff517f569e869b7957c7))
