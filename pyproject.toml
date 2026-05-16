@@ -90,13 +90,6 @@ build-backend = "hatchling.build"
 [tool.hatch.version]
 path = "src/concerto/__init__.py"
 
-[tool.hatch.metadata]
-# ADR-002 §Decisions + plan/05 §2: the HARL fork is pinned by SHA via
-# ``harl @ git+https://...`` in [project.dependencies]. Hatchling rejects
-# direct references by default; opt-in here so the SHA pin is not
-# silently downgraded to a PyPI version match.
-allow-direct-references = true
-
 [tool.hatch.build.targets.wheel]
 packages = ["src/concerto", "src/chamber"]   # both top-level packages ship in one distribution
 

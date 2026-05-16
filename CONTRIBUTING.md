@@ -68,11 +68,13 @@ The trainer / partner tests that touch the
 [HARL fork](https://github.com/fsafaei/harl-fork) (e.g.
 `tests/unit/test_partner_frozen_harl.py`,
 `tests/unit/test_ego_ppo_trainer.py`,
+`tests/unit/test_ego_ppo_trainer_rejects_non_frozen_partner.py`,
+`tests/property/test_advantage_decomposition.py`,
 `tests/integration/test_draft_zoo.py`) require the `train` dependency
 group. `make install` installs it automatically; if you ran
-`uv sync --group dev` only, those tests skip via
-`pytest.importorskip` or raise the trainer's helpful
-`ModuleNotFoundError` (which itself names the install command). The
+`uv sync --group dev` only, those tests skip cleanly via
+`pytest.importorskip` (each file declares a module-level skip naming
+the install command). The
 HARL lazy-import contract is pinned by
 `tests/unit/test_harl_lazy_import.py`.
 

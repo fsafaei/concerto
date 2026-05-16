@@ -74,6 +74,20 @@ def block_harl_imports(monkeypatch: pytest.MonkeyPatch) -> None:
     Does *not* touch the chamber modules; use
     :func:`fresh_chamber_module_load` if the test needs a re-import of
     the lazy-import sites themselves.
+
+    Cleanup caveat: ``monkeypatch`` only restores entries it explicitly
+    evicted. When :class:`TestModuleImportContract` re-imports the
+    chamber modules under the blocker, the freshly-imported module
+    objects remain in :data:`sys.modules` after the fixture tears down.
+    ``_REGISTRY["frozen_harl"]`` is restored (via
+    :func:`fresh_chamber_module_load`) to the original class object, so
+    :func:`chamber.partners.registry.load_partner` keeps returning the
+    pre-fixture class — but ``from chamber.partners.frozen_harl import
+    FrozenHARLPartner`` in a later test would resolve to the freshly-
+    imported class. No current test depends on identity equality across
+    that boundary, so the asymmetry is benign; a future test author
+    relying on ``is`` checks should re-evict the chamber modules in
+    their own fixture.
     """
     real_import = builtins.__import__
 
