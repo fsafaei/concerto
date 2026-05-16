@@ -3,12 +3,24 @@ name: Release
 on:
   push:
     branches: [main]
+  # Manual re-fire for republishing an already-tagged release to
+  # TestPyPI (e.g. recovering from a transient publish failure
+  # without rotating the tag).
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Existing tag to republish to TestPyPI (e.g. v0.3.0).'
+        required: true
+        type: string
 
 permissions:
   contents: read
 
 jobs:
   release-please:
+    # Skipped on workflow_dispatch — that path only republishes an
+    # already-tagged release.
+    if: github.event_name == 'push'
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -27,28 +39,40 @@ jobs:
   publish:
     runs-on: ubuntu-latest
     needs: release-please
-    if: needs.release-please.outputs.release_created
+    if: |
+      always() && (
+        needs.release-please.outputs.release_created == 'true'
+        || github.event_name == 'workflow_dispatch'
+      )
     permissions:
       contents: write  # softprops/action-gh-release attaches SBOM to the GitHub release
       id-token: write  # PyPI trusted publishing + Sigstore signing for attestations
       attestations: write  # actions/attest-build-provenance writes SLSA provenance
+    env:
+      PUBLISH_TAG: ${{ github.event.inputs.tag || needs.release-please.outputs.tag_name }}
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
+        with:
+          ref: ${{ env.PUBLISH_TAG }}
       - uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b  # v8.1.0
         with:
           python-version: "3.11"
       - run: uv sync --group dev
-      # Generate SBOM and attach to release
+      # SBOM attach runs on the initial push-triggered release only.
+      # workflow_dispatch re-fires skip it; the SBOM is already on
+      # the GitHub release for an existing tag.
       - run: uv run cyclonedx-py environment -o sbom.spdx.json
+        if: github.event_name == 'push'
       - uses: softprops/action-gh-release@b4309332981a82ec1c5618f44dd2e27cc8bfbfda  # v3.0.0
+        if: github.event_name == 'push'
         with:
-          tag_name: ${{ needs.release-please.outputs.tag_name }}
+          tag_name: ${{ env.PUBLISH_TAG }}
           files: sbom.spdx.json
-      # Publish to test.pypi.org for v0.x
+      # Publish to test.pypi.org for v0.x via OIDC trusted publishing
+      # (no long-lived API token). Requires the TestPyPI-side
+      # trusted-publisher mapping for this repo + workflow.
       - run: uv build
       - uses: actions/attest-build-provenance@a2bbfa25375fe432b6a289bc6b6cd05ecd0c4c32  # v4.1.0
         with:
           subject-path: 'dist/*'
-      - run: uv publish --index testpypi
-        env:
-          UV_PUBLISH_TOKEN: ${{ secrets.TEST_PYPI_TOKEN }}
+      - run: uv publish --publish-url https://test.pypi.org/legacy/ --trusted-publishing always
