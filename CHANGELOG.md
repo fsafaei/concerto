@@ -8,6 +8,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 While the project is on `0.x`, MINOR-version bumps may break the public API
 per SemVer §4.
 
+## [0.3.0](https://github.com/fsafaei/concerto/compare/v0.2.0...v0.3.0) (2026-05-16)
+
+
+### Features
+
+* **cli:** chamber-spike summarize-month3 — Month-3 lock-priority report (plan/07 §T5b.10) ([#124](https://github.com/fsafaei/concerto/issues/124)) ([e06bda9](https://github.com/fsafaei/concerto/commit/e06bda93588bbc7db89f28fb28c0dff0ddd746fb))
+* **cli:** chamber-spike verify-prereg --all (plan/07 §6 [#5](https://github.com/fsafaei/concerto/issues/5)) ([#115](https://github.com/fsafaei/concerto/issues/115)) ([724e2bd](https://github.com/fsafaei/concerto/commit/724e2bdac349dfb778b0376f2aa3e3691402cdc6))
+* **training,adr:** reject non-frozen partner at trainer construction + amend ADR-002 §Risks [#1](https://github.com/fsafaei/concerto/issues/1) for slope test ([#119](https://github.com/fsafaei/concerto/issues/119)) ([ec57756](https://github.com/fsafaei/concerto/commit/ec5775649c62c6e55725ff517f569e869b7957c7))
+
+
+### Bug Fixes
+
+* **benchmarks:** OM tuple-collision in stage1_om — homo/hetero condition shape divergence ([#122](https://github.com/fsafaei/concerto/issues/122)) ([73070a1](https://github.com/fsafaei/concerto/commit/73070a1d2fa2023c22f0818dd5c55427b2594255))
+
+
+### Documentation
+
+* **adr-index:** ADR-002 §Risks [#1](https://github.com/fsafaei/concerto/issues/1) slope-test amendment open-work flag ([#120](https://github.com/fsafaei/concerto/issues/120)) ([3933c38](https://github.com/fsafaei/concerto/commit/3933c38e8eaa08955e4f721627ab5efc33d491db))
+* **adr:** ADR-007 revision 4 — introduce Stage 1a/1b sub-stages with Phase-1 trigger ([#121](https://github.com/fsafaei/concerto/issues/121)) ([06aaa8d](https://github.com/fsafaei/concerto/commit/06aaa8da9265711b018a55fa570bec19e44cad03))
+
 ## [0.2.0](https://github.com/fsafaei/concerto/compare/v0.1.1...v0.2.0) (2026-05-15)
 
 
