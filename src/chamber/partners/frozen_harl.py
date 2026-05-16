@@ -61,7 +61,6 @@ from typing import TYPE_CHECKING, Any
 import gymnasium as gym
 import numpy as np
 import torch
-from harl.models.policy_models.stochastic_policy import StochasticPolicy
 
 from chamber.partners.interface import PartnerBase
 from chamber.partners.registry import register_partner
@@ -70,6 +69,15 @@ from concerto.training.checkpoints import load_checkpoint
 if TYPE_CHECKING:
     from collections.abc import Mapping
 
+    # HARL is scoped to the `[dependency-groups].train` PEP 735 group
+    # (ADR-002 §Revision-history 2026-05-16; #131). The TYPE_CHECKING-
+    # only import here lets pyright resolve the `StochasticPolicy`
+    # annotation without forcing a runtime dependency on the import
+    # package; the runtime import lives in :meth:`_ensure_loaded` and
+    # surfaces a clear ``ModuleNotFoundError`` if the train group is
+    # missing. Registry lookups via
+    # :class:`chamber.partners.registry.load_partner` stay cheap.
+    from harl.models.policy_models.stochastic_policy import StochasticPolicy
     from numpy.typing import NDArray
 
     from chamber.partners.api import PartnerSpec
@@ -276,6 +284,28 @@ class FrozenHARLPartner(PartnerBase):
         """
         if self._actor is not None:
             return self._actor
+        # HARL is scoped to `[dependency-groups].train` (ADR-002
+        # §Revision-history 2026-05-16; #131) because PyPI rejects wheel
+        # METADATA containing `git+URL` direct refs. Importing here (rather
+        # than at module top) keeps registry lookups via
+        # :class:`chamber.partners.registry.load_partner` cheap for
+        # safety-stack-only consumers; the explicit error message points
+        # at the train-group install command and at the Phase-1 follow-up
+        # (#132 — publish `harl-aht` to PyPI).
+        try:
+            from harl.models.policy_models.stochastic_policy import StochasticPolicy
+        except ModuleNotFoundError as exc:
+            msg = (
+                "chamber.partners.frozen_harl.FrozenHARLPartner requires "
+                "the HARL fork, which is scoped to the "
+                "[dependency-groups].train PEP 735 group rather than a "
+                "runtime dependency (ADR-002 §Revision-history 2026-05-16). "
+                "Install it via `uv sync --group train` from a source "
+                "checkout, or see "
+                "https://github.com/fsafaei/concerto/issues/132 for the "
+                "Phase-1 plan to publish `harl-aht` to PyPI."
+            )
+            raise ModuleNotFoundError(msg) from exc
         artifacts_root = _resolve_artifacts_root()
         loaded, _meta = load_checkpoint(uri=self._weights_uri, artifacts_root=artifacts_root)
         actor_sd = _extract_actor_state_dict(loaded)

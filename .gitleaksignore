@@ -6,4 +6,4 @@
 # only public PyPI / git+ URL hashes; nothing in it is a credential.
 #
 # Format per gitleaks docs: ``<file>:<rule-id>:<line>``.
-uv.lock:square-access-token:2049
+uv.lock:square-access-token:2051

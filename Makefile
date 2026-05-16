@@ -5,7 +5,14 @@
         stage1-as stage1-om
 
 install:
-	uv sync --all-extras --group dev
+	# ADR-002 §Revision-history 2026-05-16 / #131: --group train pulls HARL
+	# via the PEP 735 dependency group. Source-checkout developers get the
+	# full test surface (including test_partner_frozen_harl and the lazy-
+	# import contract test); pip-install consumers of the wheel get only
+	# the safety stack and benchmark wrappers, since wheel METADATA cannot
+	# ship git+URL direct references. Phase-1 follow-up tracked in #132
+	# (publish harl-aht to PyPI).
+	uv sync --all-extras --group dev --group train
 
 test:
 	uv run pytest

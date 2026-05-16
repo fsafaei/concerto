@@ -34,7 +34,14 @@ repos:
         exclude: ^scripts/harl-fork-patches/
 
   - repo: https://github.com/astral-sh/uv-pre-commit
-    rev: 0.4.18
+    # 0.11.14 (latest stable at 2026-05-16) — bumped from 0.4.18 so the
+    # uv-lock hook understands PEP 735 [dependency-groups] entries. The
+    # 0.4.18 release predates PEP 735 lock support and silently drops
+    # train-group packages (and their transitives — harl, grpcio,
+    # tensorboard, …) from uv.lock, which breaks
+    # `uv sync --group train` reproducibility. See ADR-002
+    # §Revision-history 2026-05-16 / #131 for the dep-group rationale.
+    rev: 0.11.14
     hooks:
       - id: uv-lock
 

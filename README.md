@@ -87,11 +87,23 @@ contract, preregistered spikes, byte-identical CPU determinism via
 ```bash
 git clone https://github.com/fsafaei/concerto.git
 cd concerto
-pip install uv && uv sync --group dev
+pip install uv && uv sync --group dev --group train
 
 # Smoke test the rig (ADR-001 acceptance criterion).
 uv run pytest -m smoke -x -v
 ```
+
+> **Install groups.** `--group dev` pulls the developer toolchain (ruff,
+> pyright, pytest); `--group train` pulls the
+> [HARL fork](https://github.com/fsafaei/harl-fork) used by the ego-AHT
+> training loop. PyPI rejects wheel `METADATA` containing `git+URL`
+> direct references, so HARL is intentionally *not* part of the runtime
+> deps — installing `concerto-multirobot` from PyPI gives you the
+> safety stack and the benchmark wrappers but **not** the trainer
+> (omit `--group train` if you only want the safety stack /
+> evaluation paths). Phase-1 follow-up to publish a PyPI release of the
+> HARL fork is tracked in
+> [#132](https://github.com/fsafaei/concerto/issues/132).
 
 Compose a factory-floor channel (URLLC-anchored degradation profile
 from ADR-006) and round-trip a packet through `encode` &rarr; `decode`:

@@ -39,12 +39,16 @@ dependencies = [
   "rich>=15.0.0",                      # CLI rendering
   "structlog>=24.1",                 # structured logs
   "wandb>=0.17,<1.0",                # experiment tracking
-  # ADR-002 §Decisions + plan/05 §2: HARL fork pinned by SHA. The fork
-  # currently lives at fsafaei/harl-fork (the concerto-org GitHub
-  # organisation does not exist yet; that move is tracked separately).
-  # v0.1.0-aht layers the CONCERTO AHT-wrapper patch (EgoAHTHAPPO + the
-  # Hydra-driven runner + the env adapter) on top of v0.0.0-vendored.
-  "harl @ git+https://github.com/fsafaei/harl-fork.git@56436e4da9453cf124b2b814e0d270db58859dd9",  # T4b.7 v0.1.0-aht
+  # NOTE: HARL is intentionally *not* a runtime dependency. PyPI rejects
+  # any wheel METADATA that carries a `git+URL` direct reference (`Can't
+  # have direct dependency`, HTTP 400 from pypi.org/legacy/). HARL lives
+  # in the `[dependency-groups].train` group below — installed by
+  # `uv sync --group train` from a source checkout, not by `pip install
+  # concerto-multirobot`. The Phase-1 follow-up that restores a
+  # single-command training install is tracked in
+  # https://github.com/fsafaei/concerto/issues/132 (publish `harl-aht`
+  # to PyPI). See ADR-002 §Decisions and §Revision history (2026-05-16
+  # train-group scoping) for the design rationale.
 ]
 
 [project.optional-dependencies]
@@ -102,6 +106,20 @@ dev = [
   "pytest>=8.2", "pytest-cov>=5.0", "pytest-xdist>=3.6",
   "pytest-benchmark>=4.0", "hypothesis>=6.108",
   "pip-licenses>=4.0", "cyclonedx-bom>=4.0",
+]
+# ADR-002 §Decisions + §Revision-history (2026-05-16): HARL is scoped to
+# a PEP 735 dependency group rather than a runtime dependency because
+# PyPI rejects wheel METADATA containing `git+URL` direct references.
+# Dependency groups are uv-only and are NOT shipped in METADATA — the
+# wheel uploads cleanly while source-checkout users get HARL via
+# `uv sync --group train`. The Phase-1 follow-up (publish `harl-aht` to
+# PyPI, then move it back to `[project.optional-dependencies].train` or
+# `[project].dependencies`) is tracked in #132. The pin is by 40-char
+# SHA: the fork lives at fsafaei/harl-fork; v0.1.0-aht layers the
+# CONCERTO AHT-wrapper patch (EgoAHTHAPPO + Hydra runner + env adapter)
+# on top of v0.0.0-vendored.
+train = [
+  "harl @ git+https://github.com/fsafaei/harl-fork.git@56436e4da9453cf124b2b814e0d270db58859dd9",  # T4b.7 v0.1.0-aht
 ]
 
 [tool.pytest.ini_options]
