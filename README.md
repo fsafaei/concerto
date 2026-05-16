@@ -29,8 +29,8 @@
     <img alt="License" src="https://img.shields.io/badge/license-Apache%202.0-green"/></a>
   <a href="https://scorecard.dev/viewer/?uri=github.com/fsafaei/concerto">
     <img alt="OpenSSF Scorecard" src="https://api.scorecard.dev/projects/github.com/fsafaei/concerto/badge"/></a>
-  <a href="https://pypi.org/project/concerto-multirobot/">
-    <img alt="PyPI" src="https://img.shields.io/pypi/v/concerto-multirobot"/></a>
+  <a href="https://test.pypi.org/project/concerto-multirobot/">
+    <img alt="TestPyPI" src="https://img.shields.io/pypi/v/concerto-multirobot?pypiBaseUrl=https%3A%2F%2Ftest.pypi.org&amp;label=TestPyPI"/></a>
   <img alt="Status" src="https://img.shields.io/badge/status-alpha%20%C2%B7%20phase%200-orange"/>
 </p>
 
