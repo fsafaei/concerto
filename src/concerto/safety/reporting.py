@@ -47,7 +47,13 @@ if TYPE_CHECKING:
 
 #: ADR-014 schema version. Bumping is a breaking change to the
 #: three-table wire format and requires a new ADR.
-SCHEMA_VERSION: int = 1
+#:
+#: - **2**: ``ConditionRow`` gains ``max_slack`` and ``slack_l2`` columns
+#:   (external-review P0-3, 2026-05-16); see ADR-014 §Decision and
+#:   §Revision history. The corresponding telemetry on the OSCBF solver
+#:   side ships via :class:`concerto.safety.oscbf.OSCBFResult`.
+#: - **1**: Initial three-table format (M3).
+SCHEMA_VERSION: int = 2
 
 
 @dataclass(frozen=True)
@@ -99,6 +105,14 @@ class ConditionRow:
     force-pressure and ISO 10218-2 SIL/PL); ``None`` until Stage-3 SA
     resolves.
 
+    Schema v2 (2026-05-16; external-review P0-3) adds the per-condition
+    slack-aggregate columns ``max_slack`` and ``slack_l2``. These
+    distinguish *constraint-satisfaction* from *constraint-relaxation
+    via slack*: a row that "succeeds" only via large slack is not safe
+    in the intended sense. The source signal is
+    :class:`concerto.safety.oscbf.OSCBFResult.slack` aggregated across
+    the condition's steps.
+
     Attributes:
         predictor: ``"gt"`` (ground-truth) or ``"pred"`` (black-box).
         conformal_mode: ``"noLearn"`` (lambda=eta=0) or ``"Learn"``
@@ -109,6 +123,13 @@ class ConditionRow:
         violations: Count of CBF-constraint violations.
         fallback_fires: Count of braking-fallback fires (PR7;
             :func:`concerto.safety.braking.maybe_brake`).
+        max_slack: Maximum per-step OSCBF slack observed in this
+            condition. ``0.0`` for runs that do not exercise the OSCBF
+            inner filter (Phase-0 default; the EGO_ONLY outer filter is
+            untouched). Schema v2.
+        slack_l2: Mean across steps of ``||slack||_2`` from
+            :class:`concerto.safety.oscbf.OSCBFResult`. ``0.0`` under
+            the same caveat. Schema v2.
     """
 
     predictor: str
@@ -117,6 +138,8 @@ class ConditionRow:
     n_episodes: int
     violations: int
     fallback_fires: int
+    max_slack: float = 0.0
+    slack_l2: float = 0.0
 
     def to_jsonable(self) -> dict[str, Any]:
         """Return a JSON-serialisable dict (ADR-014 §Decision)."""
@@ -124,7 +147,12 @@ class ConditionRow:
 
     @classmethod
     def from_jsonable(cls, data: dict[str, Any]) -> ConditionRow:
-        """Reconstruct from the dict produced by :meth:`to_jsonable` (ADR-014 §Decision)."""
+        """Reconstruct from the dict produced by :meth:`to_jsonable` (ADR-014 §Decision).
+
+        The schema-v2 columns default to ``0.0`` when reading legacy
+        v1 payloads — see :data:`SCHEMA_VERSION` for the migration
+        envelope.
+        """
         vendor = data.get("vendor_compliance")
         return cls(
             predictor=str(data["predictor"]),
@@ -133,6 +161,8 @@ class ConditionRow:
             n_episodes=int(data["n_episodes"]),
             violations=int(data["violations"]),
             fallback_fires=int(data["fallback_fires"]),
+            max_slack=float(data.get("max_slack", 0.0)),
+            slack_l2=float(data.get("slack_l2", 0.0)),
         )
 
 
@@ -329,13 +359,15 @@ def _render_markdown(report: ThreeTableReport, content_hash: str) -> str:
         "## Table 2 — Per-condition violation rates",
         "",
         "| Predictor | Conformal mode | Vendor compliance "
-        "| N episodes | Violations | Fallback fires |",
-        "| --- | --- | --- | --- | --- | --- |",
+        "| N episodes | Violations | Fallback fires "
+        "| Max slack | Slack L2 |",
+        "| --- | --- | --- | --- | --- | --- | --- | --- |",
     ]
     lines.extend(
         f"| {row.predictor} | {row.conformal_mode} "
         f"| {'—' if row.vendor_compliance is None else row.vendor_compliance} "
-        f"| {row.n_episodes} | {row.violations} | {row.fallback_fires} |"
+        f"| {row.n_episodes} | {row.violations} | {row.fallback_fires} "
+        f"| {row.max_slack:.6g} | {row.slack_l2:.6g} |"
         for row in report.table_2
     )
     lines += [

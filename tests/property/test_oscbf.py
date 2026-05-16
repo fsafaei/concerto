@@ -170,12 +170,12 @@ def test_oscbf_well_separated_returns_q_dot_nom() -> None:
         rhs.append(b)
 
     oscbf = OSCBF(n_joints=n)
-    q_dot, _ = oscbf.solve(
+    q_dot = oscbf.solve(
         q_dot_nom=q_dot_nom,
         nu_nom=nu_nom,
         jacobian=j,
         constraints=_stack(rows, rhs),
-    )
+    ).q_dot
     np.testing.assert_allclose(q_dot, q_dot_nom, atol=1e-5)
 
 
@@ -194,12 +194,12 @@ def test_oscbf_respects_joint_velocity_upper_bound() -> None:
         rhs.append(b)
 
     oscbf = OSCBF(n_joints=n, weight_operational=0.0, slack_penalty=1e6)
-    q_dot, _ = oscbf.solve(
+    q_dot = oscbf.solve(
         q_dot_nom=q_dot_nom,
         nu_nom=nu_nom,
         jacobian=j,
         constraints=_stack(rows, rhs),
-    )
+    ).q_dot
     # All joints clamp at the upper bound 1.0 within solver tolerance.
     assert np.all(q_dot <= 1.0 + 1e-3)
 
@@ -258,15 +258,20 @@ def test_oscbf_slack_relaxation_keeps_qp_feasible_under_conflict() -> None:
     constraints = _stack([row_a, row_b], [-1.0, -1.0])
 
     oscbf = OSCBF(n_joints=n, slack_penalty=100.0)
-    q_dot, _ = oscbf.solve(
+    result = oscbf.solve(
         q_dot_nom=q_dot_nom,
         nu_nom=nu_nom,
         jacobian=j,
         constraints=constraints,
     )
     # No exception — the slack absorbed the conflict; result is finite.
-    assert q_dot.shape == (n,)
-    assert np.all(np.isfinite(q_dot))
+    assert result.q_dot.shape == (n,)
+    assert np.all(np.isfinite(result.q_dot))
+    # Conflict ⇒ at least one row is slack-active (ADR-014 Table 2
+    # external-review P0-3 telemetry contract; pre-fix this signal was
+    # silently dropped).
+    assert result.max_slack > 0.0
+    assert len(result.active_rows) >= 1
 
 
 def _build_seven_dof_problem(
@@ -327,12 +332,12 @@ def test_oscbf_mean_solve_time_under_1ms_on_7dof_arm() -> None:
         )
     times: list[float] = []
     for _ in range(50):
-        _, ms = oscbf.solve(
+        ms = oscbf.solve(
             q_dot_nom=q_dot_nom,
             nu_nom=nu_nom,
             jacobian=jac,
             constraints=constraints,
-        )
+        ).solve_ms
         times.append(ms)
     mean_ms = float(np.mean(times))
     p95_ms = float(np.percentile(times, 95))
@@ -372,12 +377,12 @@ def test_oscbf_random_nominal_within_action_rate_respects_joint_limits(
         rhs.append(b)
 
     oscbf = OSCBF(n_joints=n_joints, slack_penalty=1e6)
-    q_dot, _ = oscbf.solve(
+    q_dot = oscbf.solve(
         q_dot_nom=q_dot_nom,
         nu_nom=nu_nom,
         jacobian=j,
         constraints=_stack(rows, rhs),
-    )
+    ).q_dot
     # Joint-space limits respected within solver tolerance.
     assert np.all(q_dot <= upper + 1e-3)
     assert np.all(q_dot >= lower - 1e-3)

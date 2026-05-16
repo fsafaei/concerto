@@ -71,6 +71,61 @@ DEFAULT_CBF_ALPHA: float = 5.0
 #: (mirrors the geometry module's coincident-centre handling).
 _COINCIDENT_TOL: float = 1e-9
 
+#: Numerical floor for declaring a row "slack-active" in :class:`OSCBFResult`
+#: (ADR-014 Table 2; external-review P0-3, 2026-05-16). Slack values
+#: below this threshold are treated as interior-point round-off and
+#: excluded from the ``active_rows`` enumeration so the telemetry
+#: signal is not dominated by solver noise. Calibrated above Clarabel's
+#: observed feasible-interior round-off (~1e-5 on the OSCBF-shape QPs
+#: in `tests/unit/test_oscbf_returns_slack.py`); a real Phase-1 row
+#: that is genuinely slack-active will be orders of magnitude above
+#: this floor.
+_SLACK_ACTIVE_FLOOR: float = 1e-4
+
+
+@dataclass(frozen=True)
+class OSCBFResult:
+    """OSCBF QP-solve telemetry payload (ADR-004 §Decision; ADR-014 Table 2).
+
+    Returned by :meth:`OSCBF.solve`. Carries the QP-projected
+    joint-velocity command together with the per-row slack vector and
+    aggregate slack statistics, so the ADR-014 three-table report can
+    distinguish constraint-*satisfaction* from constraint-*relaxation
+    via slack* (external-review P0-3, 2026-05-16). The pre-amendment
+    return type ``(q_dot, solve_ms)`` silently dropped the slack
+    vector; a controller that "succeeds" only via large slack is not
+    safe in the intended sense, and aggregating slack at the Table 2
+    row was previously impossible.
+
+    Attributes:
+        q_dot: QP-projected joint velocity, shape ``(n_joints,)``,
+            dtype ``float64``.
+        slack: Per-row slack values from the QP, shape ``(m,)`` where
+            ``m`` is the number of CBF rows in
+            :class:`OSCBFConstraints`. Non-negative by construction
+            (the slack-non-negativity row is part of the QP).
+        solve_ms: Wall-clock QP solve time in milliseconds.
+        active_rows: Indices of constraint rows whose slack exceeds
+            :data:`_SLACK_ACTIVE_FLOOR` (i.e., the QP relaxed the row
+            rather than satisfying it). Empty when every row holds
+            within numerical tolerance.
+        max_slack: ``max(slack)``, in the slack variable's units.
+        slack_l2: ``||slack||_2``, in the slack variable's units.
+        solver_status: ``"optimal"`` on successful solve. Reserved for
+            future non-exception-based solver variants; the current
+            Clarabel / OSQP path raises
+            :class:`concerto.safety.errors.ConcertoSafetyInfeasible`
+            instead of returning a non-optimal status.
+    """
+
+    q_dot: FloatArray
+    slack: FloatArray
+    solve_ms: float
+    active_rows: tuple[int, ...]
+    max_slack: float
+    slack_l2: float
+    solver_status: str
+
 
 @dataclass(frozen=True)
 class OSCBFConstraints:
@@ -276,8 +331,8 @@ class OSCBF:
         nu_nom: FloatArray,
         jacobian: FloatArray,
         constraints: OSCBFConstraints,
-    ) -> tuple[FloatArray, float]:
-        """Solve the two-level QP, return ``(q_dot, solve_ms)`` (ADR-004 §Decision).
+    ) -> OSCBFResult:
+        """Solve the two-level QP, return an :class:`OSCBFResult` (ADR-004 §Decision).
 
         Variable layout: ``x = [q_dot; s]`` where ``s`` is the per-row
         slack vector of length ``m = constraints.a.shape[0]``. Cost::
@@ -300,10 +355,16 @@ class OSCBF:
             constraints: Stacked CBF rows.
 
         Returns:
-            ``(q_dot, solve_ms)`` — the QP-projected joint-velocity and
-            wall-clock solve time. The slack vector is dropped from the
-            return; callers can re-solve with diagnostic instrumentation
-            if slack-monitoring is needed.
+            An :class:`OSCBFResult` carrying the QP-projected
+            joint-velocity, the per-row slack vector with aggregate
+            statistics (``max_slack``, ``slack_l2``), the indices of
+            slack-active rows, the wall-clock solve time, and the
+            solver status. The slack telemetry is the diagnostic
+            signal ADR-014 Table 2 aggregates to distinguish
+            constraint-*satisfaction* from constraint-*relaxation*
+            (external-review P0-3, 2026-05-16; the pre-amendment
+            ``(q_dot, solve_ms)`` return silently dropped the slack
+            vector).
 
         Raises:
             ValueError: If input shapes are inconsistent.
@@ -356,7 +417,26 @@ class OSCBF:
         start = time.perf_counter()
         x, _ = self._solver.solve(p_full, q_full, a_full, b_full)
         solve_ms = (time.perf_counter() - start) * 1000.0
-        return x[:n].astype(np.float64, copy=False), solve_ms
+        q_dot: FloatArray = x[:n].astype(np.float64, copy=False)
+        # Slack is at x[n:n+m]; clip tiny negatives that can occur as
+        # solver round-off below the ``-s <= 0`` constraint surface so
+        # ``max_slack`` and ``slack_l2`` are always non-negative.
+        slack_raw: FloatArray = x[n : n + m].astype(np.float64, copy=False)
+        slack: FloatArray = np.maximum(slack_raw, 0.0)
+        active_rows: tuple[int, ...] = tuple(
+            int(i) for i in np.flatnonzero(slack > _SLACK_ACTIVE_FLOOR).tolist()
+        )
+        max_slack: float = float(slack.max()) if m > 0 else 0.0
+        slack_l2: float = float(np.linalg.norm(slack)) if m > 0 else 0.0
+        return OSCBFResult(
+            q_dot=q_dot,
+            slack=slack,
+            solve_ms=solve_ms,
+            active_rows=active_rows,
+            max_slack=max_slack,
+            slack_l2=slack_l2,
+            solver_status="optimal",
+        )
 
 
 __all__ = [
@@ -366,6 +446,7 @@ __all__ = [
     "DEFAULT_W_OPERATIONAL",
     "OSCBF",
     "OSCBFConstraints",
+    "OSCBFResult",
     "collision_constraint_row",
     "joint_limit_constraint_row",
 ]
