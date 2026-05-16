@@ -3,18 +3,31 @@
 #
 # Suppresses pyright's complaints about ``scipy.stats.linregress``
 # attribute access (see same suppression in
-# ``src/concerto/training/empirical_guarantee.py``).
-"""Unit tests for ``concerto.training.empirical_guarantee`` (T4b.13).
+# ``src/concerto/training/learning_signal_check.py``).
+"""Unit tests for the legacy ``concerto.training.empirical_guarantee`` shim (T4b.13).
+
+The module was renamed on 2026-05-16 (external-review P1-1) to
+:mod:`concerto.training.learning_signal_check`; this test file
+intentionally imports from the **legacy** path to exercise the
+deprecation shim end-to-end. The canonical taxonomy
+(:class:`CheckStatus`) is tested in
+:mod:`tests.unit.test_learning_signal_check`.
 
 Covers ADR-002 §Risks #1 (the trip-wire's pure-function side):
 
-- The canonical slope test (:func:`assert_positive_learning_slope`) and
-  its plotting helper.
+- The canonical slope check (renamed; the legacy alias
+  ``assert_positive_learning_slope`` is still served by the shim with
+  a :class:`DeprecationWarning`).
 - The legacy moving-window-of-K helper retained for backward
-  comparison (issue #62 root-cause writeup).
+  comparison (issue #62 root-cause writeup) — unchanged.
 
 The integration side — running the 100k-frame experiment end-to-end —
 lives in ``tests/integration/test_empirical_guarantee.py``.
+
+Module-level ``filterwarnings`` (in ``pyproject.toml`` if needed) is
+preferred over per-test suppression for the deprecation noise from the
+shim path. Tests in this file accept that the deprecation warning
+fires on every legacy-API call.
 """
 
 from __future__ import annotations
@@ -35,9 +48,22 @@ from concerto.training.empirical_guarantee import (
     GuaranteeReport,
     SlopeReport,
     assert_non_decreasing_window,
-    assert_positive_learning_slope,
     plot_reward_curve,
     plot_slope_curve,
+)
+
+# The legacy alias ``assert_positive_learning_slope`` is served by the
+# :mod:`concerto.training.empirical_guarantee` shim with a
+# :class:`DeprecationWarning`; the shim's behaviour is exercised in
+# :mod:`tests.unit.test_learning_signal_check`. This test file binds
+# the canonical name directly so pyright preserves the function's
+# return type — the legacy alias and the canonical function share the
+# same implementation, so the behavioural assertions below cover both.
+from concerto.training.learning_signal_check import (
+    CheckStatus,
+)
+from concerto.training.learning_signal_check import (
+    check_positive_learning_slope as assert_positive_learning_slope,
 )
 
 if TYPE_CHECKING:
@@ -171,21 +197,30 @@ class TestGuaranteeReport:
 
 
 class TestAssertPositiveLearningSlope:
-    def test_empty_curve_is_vacuously_passing(self) -> None:
-        """ADR-002 §Risks #1: empty curve returns vacuous pass (n=0, p=1, passed=True)."""
+    def test_empty_curve_is_insufficient_data(self) -> None:
+        """ADR-002 §Risks #1 (P1-2): empty curve → INSUFFICIENT_DATA, not vacuous pass.
+
+        The pre-amendment branch returned ``passed=True`` here, silently
+        masking the too-short condition. The renamed
+        ``check_positive_learning_slope`` returns
+        ``CheckStatus.INSUFFICIENT_DATA`` with ``passed=False``; the
+        legacy alias served by the shim inherits the new behaviour.
+        """
         report = assert_positive_learning_slope(_curve([]))
         assert report.n_episodes == 0
         assert report.slope == 0.0
         assert report.p_value == 1.0
-        assert report.passed is True
+        assert report.status is CheckStatus.INSUFFICIENT_DATA
+        assert report.passed is False
 
-    def test_curve_shorter_than_min_episodes_is_vacuous(self) -> None:
-        """ADR-002 §Risks #1: below DEFAULT_MIN_EPISODES → vacuous pass."""
+    def test_curve_shorter_than_min_episodes_is_insufficient_data(self) -> None:
+        """ADR-002 §Risks #1 (P1-2): below DEFAULT_MIN_EPISODES → INSUFFICIENT_DATA."""
         rewards = [float(i) for i in range(DEFAULT_MIN_EPISODES - 1)]
         report = assert_positive_learning_slope(_curve(rewards))
         assert report.n_episodes == DEFAULT_MIN_EPISODES - 1
         assert report.slope == 0.0
-        assert report.passed is True
+        assert report.status is CheckStatus.INSUFFICIENT_DATA
+        assert report.passed is False
 
     def test_strictly_increasing_curve_passes(self) -> None:
         """Issue #62: monotone-up curve clears the slope test with overwhelming significance."""
@@ -312,6 +347,7 @@ class TestSlopeReport:
             p_value=1e-20,
             alpha=0.05,
             n_episodes=2000,
+            status=CheckStatus.PASSED,
             passed=True,
         )
         with pytest.raises(dataclasses.FrozenInstanceError):

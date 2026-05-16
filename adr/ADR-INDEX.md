@@ -86,13 +86,16 @@ constraint-violation signal. Table content is stable; per-axis row
 counts firm up once ADR-008 lands its surviving-axis set.
 
 <sup>g</sup> §Risks #1 was amended on 2026-05-15: the canonical
-empirical-guarantee statistic is now a one-sided slope test at
-α = 0.05 (`concerto.training.empirical_guarantee.assert_positive_learning_slope`),
-replacing the legacy moving-window-of-10 non-decreasing-fraction
-wording. The amendment also surfaces the trainer-side partner-freeze
-gate (`chamber.benchmarks.ego_ppo_trainer._assert_partner_is_frozen`,
+learning-signal check is now a one-sided slope test at α = 0.05
+(`concerto.training.learning_signal_check.check_positive_learning_slope`,
+renamed from `concerto.training.empirical_guarantee.assert_positive_learning_slope`
+on 2026-05-16 per external-review P1-1; legacy alias preserved with
+DeprecationWarning, removal target v0.6.0), replacing the legacy
+moving-window-of-10 non-decreasing-fraction wording. The amendment
+also surfaces the trainer-side partner-freeze gate
+(`chamber.benchmarks.ego_ppo_trainer._assert_partner_is_frozen`,
 ADR-009 §Consequences; plan/05 §6 #3). See [ADR-002 §Revision history
-(2026-05-15)](ADR-002-rl-framework.md#revision-history).
+(2026-05-15 + 2026-05-16)](ADR-002-rl-framework.md#revision-history).
 
 ## Lock-by phases (per v0.2 §8 gates)
 - **Phase 0** (Month 3): ADRs 001, 002, 003, 004, 005, 006, 007, 012, 013.
