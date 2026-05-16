@@ -109,6 +109,20 @@ class TestCoverageFloors:
         assert "89" in captured.err
         assert "90" in captured.err
 
+    def test_missing_coverage_xml_is_named_loudly(
+        self,
+        script_module: ModuleType,
+        tmp_path: Path,
+        capsys: pytest.CaptureFixture[str],
+    ) -> None:
+        """A ``coverage.xml`` that doesn't exist → exit non-zero with stderr hint."""
+        missing = tmp_path / "does_not_exist.xml"
+        rc = script_module.main(["--coverage-xml", str(missing)])
+        assert rc != 0, f"expected non-zero exit, got {rc}"
+        captured = capsys.readouterr()
+        assert "not found" in captured.err
+        assert str(missing) in captured.err
+
     def test_missing_package_is_named_loudly(
         self,
         script_module: ModuleType,

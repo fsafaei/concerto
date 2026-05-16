@@ -198,7 +198,12 @@ def _check_floors(observed: dict[str, float]) -> list[_Violation]:
 
 
 def _print_pass_summary(observed: dict[str, float]) -> None:
-    """Emit a one-line-per-floor PASS summary on stdout."""
+    """Emit a one-line-per-floor PASS summary on stdout.
+
+    Called only when :func:`_check_floors` returned an empty list, so
+    every key in :data:`COVERAGE_FLOORS` is guaranteed to be present in
+    ``observed`` — the indexing below is safe by construction.
+    """
     print("check-coverage-floors: PASS")
     for package, spec in COVERAGE_FLOORS.items():
         rate = observed[package]
