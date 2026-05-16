@@ -193,6 +193,13 @@ class TrainerFactory(Protocol):
     :func:`chamber.benchmarks.training_runner.run_training` selects
     :meth:`EgoPPOTrainer.from_config <chamber.benchmarks.ego_ppo_trainer.EgoPPOTrainer.from_config>`
     by default (M4b-8a / plan/05 §3.5).
+
+    The factory receives the partner so it can refuse to construct
+    against a non-frozen partner before any tensor allocation
+    (ADR-009 §Consequences; plan/05 §6 #3). The default factory
+    :meth:`~chamber.benchmarks.ego_ppo_trainer.EgoPPOTrainer.from_config`
+    calls :func:`~chamber.benchmarks.ego_ppo_trainer._assert_partner_is_frozen`
+    on the partner as its first construction step.
     """
 
     def __call__(
@@ -200,9 +207,10 @@ class TrainerFactory(Protocol):
         cfg: EgoAHTConfig,
         *,
         env: EnvLike,
+        partner: PartnerLike,
         ego_uid: str,
     ) -> EgoTrainer:
-        """Build a trainer (ADR-002 §Decisions; plan/05 §3.5)."""
+        """Build a trainer (ADR-002 §Decisions; plan/05 §3.5; ADR-009 §Consequences)."""
         ...  # pragma: no cover
 
 
@@ -355,7 +363,7 @@ def train(
             root_seed=cfg.seed,
         )
     else:
-        trainer = trainer_factory(cfg, env=env, ego_uid=ego_uid)
+        trainer = trainer_factory(cfg, env=env, partner=partner, ego_uid=ego_uid)
 
     obs, _ = env.reset(seed=cfg.seed)
     partner.reset(seed=cfg.seed)

@@ -255,27 +255,30 @@ class TestTrainEndToEnd:
 
 class TestTrainerFactorySeam:
     def test_factory_is_called_with_cfg_and_env(self, tmp_path: Path) -> None:
-        """T4b.11: the factory seam receives (cfg, env=, ego_uid=) per the Protocol."""
+        """T4b.11 + plan/05 §6 #3: factory seam receives (cfg, env=, partner=, ego_uid=)."""
         captured: dict[str, Any] = {}
 
-        def factory(cfg, *, env, ego_uid):  # type: ignore[no-untyped-def]
+        def factory(cfg, *, env, partner, ego_uid):  # type: ignore[no-untyped-def]
             captured["cfg"] = cfg
             captured["env"] = env
+            captured["partner"] = partner
             captured["ego_uid"] = ego_uid
             return RandomEgoTrainer(ego_uid=ego_uid, action_dim=2, root_seed=cfg.seed)
 
         cfg = _tiny_cfg(tmp_path, total_frames=50)
         env = _FakeEnv()
+        partner = _FakePartner()
         train(
             cfg,
             env=env,
-            partner=_FakePartner(),
+            partner=partner,
             trainer_factory=factory,
             repo_root=tmp_path,
         )
         assert captured["cfg"] is cfg
         assert captured["ego_uid"] == "ego"
         assert captured["env"] is env
+        assert captured["partner"] is partner
 
     def test_factory_trainer_methods_get_called(self, tmp_path: Path) -> None:
         """T4b.11: act() / observe() / update() / state_dict() all fire on the loop."""

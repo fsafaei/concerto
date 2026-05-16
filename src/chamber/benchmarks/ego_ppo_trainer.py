@@ -67,7 +67,7 @@ if TYPE_CHECKING:  # pragma: no cover
     from numpy.typing import NDArray
 
     from concerto.training.config import EgoAHTConfig, HAPPOHyperparams
-    from concerto.training.ego_aht import EnvLike
+    from concerto.training.ego_aht import EnvLike, PartnerLike
 
 #: Keys HARL's :class:`HAPPO` + :class:`StochasticPolicy` + :class:`MLPBase` +
 #: :class:`DiagGaussian` read from a single ``args`` dict. Construction values
@@ -140,6 +140,84 @@ def _set_torch_determinism(enabled: bool) -> None:
     contract is per-tensor-op, not strict-mode.
     """
     torch.use_deterministic_algorithms(enabled, warn_only=True)
+
+
+def _assert_partner_is_frozen(partner: object) -> None:
+    """Refuse a partner with any trainable parameter (ADR-009 §Consequences; plan/05 §6 #3).
+
+    The black-box AHT contract (ADR-009 §Decision) requires every
+    partner to be frozen during ego training. Two enforcement paths
+    coexist in this project:
+
+    1. The :data:`chamber.partners.interface._FORBIDDEN_ATTRS` shield
+       on :class:`~chamber.partners.interface.PartnerBase` raises
+       :class:`AttributeError` on ``partner.named_parameters``
+       look-ups, citing ADR-009 §Consequences. Any project-shipped
+       partner subclasses :class:`PartnerBase` and therefore enters
+       this branch — we catch the :class:`AttributeError` and treat
+       it as ``contract enforced by the shield``.
+
+    2. A custom partner adapter (a research-fork experiment, a
+       regression-test fixture, a future zoo partner that bypasses
+       :class:`PartnerBase`) exposes ``named_parameters()`` directly.
+       We walk it and raise :class:`ValueError` on the first parameter
+       with ``requires_grad is True``. The error message cites
+       ``ADR-009 §Consequences`` and the offending parameter path
+       so the caller can jump straight to the unfrozen weight.
+
+    Wired into :meth:`EgoPPOTrainer.from_config` as the *first*
+    construction step (before any tensor allocation) so a bad partner
+    aborts the run cheaply, with a message that points at the
+    architectural rule it violates.
+
+    Note on the dual-path design: the obvious implementation would walk
+    ``partner.named_parameters()`` unconditionally, but the existing
+    :class:`PartnerBase` shield (project-wide since M4) intentionally
+    raises :class:`AttributeError` on that lookup — bypassing the
+    shield to walk the params is a project anti-pattern (the shield's
+    purpose is the same ADR-009 §Consequences contract this helper
+    enforces). The dual path preserves the shield's invariant for
+    every project-shipped partner *and* adds the explicit walk for
+    custom partners that lack a shield.
+    """
+    # The PartnerBase shield raises AttributeError on the *attribute*
+    # lookup (``partner.named_parameters``), not on the call. We narrow
+    # the AttributeError catch to the lookup only — a bug in a custom
+    # partner's ``named_parameters`` implementation (e.g. a property
+    # whose getter raises AttributeError on a misspelled internal
+    # attribute) must surface as a loud error rather than be silently
+    # swallowed as "no params, partner is frozen".
+    try:
+        params_method = partner.named_parameters  # type: ignore[attr-defined]
+    except AttributeError:
+        # Either the partner has no ``named_parameters`` at all (no
+        # torch state to leak — pure-Python heuristic partners), or
+        # the PartnerBase shield intercepted the look-up (the shield's
+        # AttributeError is itself an ADR-009 §Consequences ack, so the
+        # contract is enforced). Proceed to construct the trainer.
+        return
+    # Call the bound method explicitly. Any error raised here — TypeError
+    # from a non-callable attribute, a runtime error inside the
+    # method body — propagates so a bug in the partner adapter is loud,
+    # not silent.
+    params_iter = params_method()
+    # The partner exposed torch params: walk and refuse on the first
+    # parameter with ``requires_grad=True``.
+    for name, param in params_iter:
+        if getattr(param, "requires_grad", False):
+            cls_name = type(partner).__name__
+            msg = (
+                f"EgoPPOTrainer requires a frozen partner: partner of class "
+                f"{cls_name!r} has parameter {name!r} with requires_grad=True. "
+                f"ADR-009 §Consequences: black-box AHT — the partner is frozen "
+                f"during ego training; set ``param.requires_grad = False`` for "
+                f"every parameter before passing the partner to the trainer, "
+                f"or wrap the partner in a "
+                f"``chamber.partners.interface.PartnerBase`` subclass (which "
+                f"enforces the no-joint-training shield at attribute-lookup "
+                f"time). See plan/05 §6 #3 for the project rationale."
+            )
+            raise ValueError(msg)
 
 
 def _resolve_device(requested: str) -> torch.device:
@@ -429,6 +507,7 @@ class EgoPPOTrainer:
         ego_uid: str,
         ego_obs_space: gym.spaces.Box,  # type: ignore[type-arg]
         ego_act_space: gym.spaces.Box,  # type: ignore[type-arg]
+        partner: PartnerLike,
         device: torch.device | None = None,
     ) -> None:
         """Build the trainer (M4b-8a; ADR-002 §Decisions; plan/05 §3.5).
@@ -436,6 +515,13 @@ class EgoPPOTrainer:
         Prefer :meth:`from_config` over direct construction — it derives
         ``ego_obs_space`` and ``ego_act_space`` from the env so the call
         site cannot drift from the env's actual shapes.
+
+        The partner-freeze gate (ADR-009 §Consequences; plan/05 §6 #3)
+        runs first, before any tensor allocation: a partner with any
+        ``requires_grad=True`` parameter (and no
+        :class:`~chamber.partners.interface.PartnerBase` shield blocking
+        ``named_parameters`` access) aborts the construction with a
+        :class:`ValueError` that names the offending parameter path.
 
         Args:
             cfg: Validated :class:`~concerto.training.config.EgoAHTConfig`.
@@ -447,6 +533,12 @@ class EgoPPOTrainer:
                 observation_space.
             ego_act_space: The Box space for the ego's action vector.
                 Read directly from ``env.action_space[ego_uid]``.
+            partner: The frozen partner instance the ego will be trained
+                against. Validated via :func:`_assert_partner_is_frozen`
+                before any tensor allocation. The trainer does not retain
+                a reference — the partner is consumed by the training
+                loop in :func:`concerto.training.ego_aht.train`, not by
+                the trainer itself.
             device: Torch device. Defaults to CPU when called directly;
                 :meth:`from_config` resolves it from
                 :attr:`RuntimeConfig.device` (auto / cpu / cuda / mps)
@@ -454,7 +546,14 @@ class EgoPPOTrainer:
                 flag from :attr:`RuntimeConfig.deterministic_torch` on
                 CPU before constructing the trainer (ADR-002 §Decisions;
                 plan/08 §4).
+
+        Raises:
+            ValueError: If ``partner`` exposes a torch parameter with
+                ``requires_grad=True`` (ADR-009 §Consequences).
         """
+        # ADR-009 §Consequences + plan/05 §6 #3: partner-freeze gate is
+        # the first construction step, before any tensor allocation.
+        _assert_partner_is_frozen(partner)
         self._device = device or torch.device("cpu")
         self._ego_uid = ego_uid
         self._gamma = cfg.happo.gamma
@@ -515,15 +614,22 @@ class EgoPPOTrainer:
         cfg: EgoAHTConfig,
         *,
         env: EnvLike,
+        partner: PartnerLike,
         ego_uid: str,
     ) -> EgoPPOTrainer:
-        """Build from :class:`EgoAHTConfig` + a concrete env (TrainerFactory; ADR-002 §Decisions).
+        """Build from :class:`EgoAHTConfig` + a concrete env + the frozen partner.
+
+        ADR-002 §Decisions / ADR-009 §Consequences / plan/05 §3.5 + §6 #3.
 
         This is the :class:`~concerto.training.ego_aht.TrainerFactory`
         callable that :func:`concerto.training.ego_aht.train` plugs in via
         dependency injection. The factory reads the ego's observation +
         action shapes off the env directly so the trainer's network
         widths cannot drift from what the env actually emits.
+
+        The partner-freeze gate (:func:`_assert_partner_is_frozen`) runs
+        first, before any tensor allocation, so a bad partner aborts
+        cheaply (plan/05 §6 #3).
 
         Per plan/05 §3.5 the bridge from :class:`EgoAHTConfig` to HARL's
         args dict lives in this CONCERTO-side module rather than in the
@@ -538,6 +644,9 @@ class EgoPPOTrainer:
                 ``observation_space["agent"][ego_uid]["state"]`` as a
                 :class:`gym.spaces.Box` and ``action_space[ego_uid]``
                 as a :class:`gym.spaces.Box`.
+            partner: Frozen partner instance the ego will train against.
+                Validated by :func:`_assert_partner_is_frozen` as the
+                first construction step (ADR-009 §Consequences).
             ego_uid: The env-side uid the ego acts on.
 
         Returns:
@@ -545,9 +654,15 @@ class EgoPPOTrainer:
             :func:`concerto.training.ego_aht.train`.
 
         Raises:
+            ValueError: If ``partner`` exposes a torch parameter with
+                ``requires_grad=True`` (ADR-009 §Consequences).
             TypeError: If the env's ego observation or action space is
                 not a :class:`gym.spaces.Box`.
         """
+        # ADR-009 §Consequences / plan/05 §6 #3: partner-freeze gate
+        # runs first, before any env-space introspection or tensor
+        # allocation. A bad partner aborts the construction cheaply.
+        _assert_partner_is_frozen(partner)
         env_obs_space = env.observation_space  # type: ignore[attr-defined]
         ego_state_space = env_obs_space["agent"][ego_uid]["state"]
         if not isinstance(ego_state_space, gym.spaces.Box):
@@ -576,6 +691,7 @@ class EgoPPOTrainer:
             ego_uid=ego_uid,
             ego_obs_space=ego_state_space,
             ego_act_space=ego_act_space,
+            partner=partner,
             device=device,
         )
 
@@ -896,3 +1012,8 @@ __all__ = [
     "compute_gae",
     "normalize_advantages",
 ]
+# ``_assert_partner_is_frozen`` is intentionally private (leading underscore)
+# — the public partner-freeze surface is the trainer constructor itself,
+# which calls the helper. Tests import it directly for contract pinning
+# (tests/unit/test_ego_ppo_trainer_rejects_non_frozen_partner.py); the
+# helper's docstring + ADR-009 §Consequences citation are the documentation.
