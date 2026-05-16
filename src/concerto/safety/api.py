@@ -38,12 +38,64 @@ import numpy as np
 import numpy.typing as npt
 
 if TYPE_CHECKING:
-    from collections.abc import Callable
+    from collections.abc import Callable, Iterable
 
     from concerto.safety.cbf_qp import AgentSnapshot
 
 #: Per-agent action vector alias. Public so Protocol signatures stay readable.
 FloatArray = npt.NDArray[np.float64]
+
+
+def canonical_pair_order(uids: Iterable[str]) -> list[str]:
+    """Canonical lexicographic UID order for pair iteration (ADR-004 §Decision).
+
+    Public utility used by the three pair-iteration entry points
+    (:func:`concerto.safety.conformal.compute_prediction_gap_for_pairs`,
+    :meth:`concerto.safety.cbf_qp.ExpCBFQP._filter_ego_only`, and
+    :meth:`concerto.safety.cbf_qp.ExpCBFQP._filter_joint`); third-party
+    consumers building their own pair-iteration code over the safety
+    stack should call this helper to stay aligned with the same
+    canonical ordering :class:`SafetyState` ``lambda_`` is indexed
+    against. Returns
+    a list of the UIDs sorted lexicographically; downstream code
+    iterates upper-triangular pairs ``(uids[i], uids[j]) for i < j``
+    so the pair index for any ``(uid_a, uid_b)`` (with
+    ``uid_a < uid_b`` lexicographically) is stable across callers and
+    across dict reconstruction (external-review P1, 2026-05-16).
+
+    Pre-amendment, each entry point used ``list(<dict>.keys())`` and
+    relied on Python 3.7+'s insertion-order guarantee — but the
+    invariant was implicit, and any caller that reconstructed the
+    snapshot dict in a different order silently misaligned the
+    per-pair conformal-slack vector ``SafetyState.lambda_`` with the
+    pairwise CBF constraints. The canonical sort makes the pair index
+    a pure function of the uid set, eliminating the cross-call
+    misalignment failure mode.
+
+    The structurally cleanest fix (promoting ``lambda_`` to
+    ``dict[tuple[str, str], float]``) is deferred to Phase-1 — it
+    requires bumping the ADR-014 ``FilterInfo["lambda"]`` wire
+    contract and the three-table renderer at the same time, which
+    busts the Phase-0 diff budget. Tracking issue is opened alongside
+    the present PR; the Stage-1 AS spike is the natural integration
+    point.
+
+    Args:
+        uids: An iterable of agent UIDs.
+
+    Returns:
+        A new list containing the UIDs sorted lexicographically.
+
+    Raises:
+        ValueError: If the iterable contains duplicates (a partner-set
+            invariant the upstream filter already enforces, surfaced
+            here as a defensive check).
+    """
+    out = sorted(uids)
+    if len(set(out)) != len(out):
+        msg = f"duplicate uids in pair iteration: {out!r}"
+        raise ValueError(msg)
+    return out
 
 
 @dataclass(frozen=True)
@@ -723,4 +775,5 @@ __all__ = [
     "JointSafetyFilter",
     "SafetyMode",
     "SafetyState",
+    "canonical_pair_order",
 ]

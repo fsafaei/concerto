@@ -205,7 +205,13 @@ def test_compute_prediction_gap_for_pairs_three_agent_shape() -> None:
     np.testing.assert_array_equal(gap, np.zeros(3, dtype=np.float64))
 
 
-def test_compute_prediction_gap_for_pairs_rejects_key_order_mismatch() -> None:
+def test_compute_prediction_gap_for_pairs_accepts_distinct_key_orders() -> None:
+    """ADR-004 §Decision (2026-05-16 canonical pair-keying amendment): different
+    insertion orders are now tolerated — the function sorts both inputs
+    internally via ``concerto.safety.api.canonical_pair_order``. Only
+    differing key *sets* are still rejected (see
+    ``test_compute_prediction_gap_for_pairs_rejects_key_set_mismatch``).
+    """
     snaps_now = {
         "a": _snap(0.0, 0.0, 0.0, 0.0),
         "b": _snap(2.0, 0.0, 0.0, 0.0),
@@ -214,9 +220,22 @@ def test_compute_prediction_gap_for_pairs_rejects_key_order_mismatch() -> None:
         "b": _snap(2.0, 0.0, 0.0, 0.0),
         "a": _snap(0.0, 0.0, 0.0, 0.0),
     }
+    gap = compute_prediction_gap_for_pairs(
+        snaps_now, snaps_predicted, alpha_pair=_ALPHA_PAIR, gamma=_GAMMA
+    )
+    assert gap.shape == (1,)
+
+
+def test_compute_prediction_gap_for_pairs_rejects_key_set_mismatch() -> None:
+    """Missing uid in one of the two dicts still raises (only ordering is tolerated)."""
     import pytest
 
-    with pytest.raises(ValueError, match="key order"):
+    snaps_now = {
+        "a": _snap(0.0, 0.0, 0.0, 0.0),
+        "b": _snap(2.0, 0.0, 0.0, 0.0),
+    }
+    snaps_predicted = {"a": _snap(0.0, 0.0, 0.0, 0.0)}  # missing "b"
+    with pytest.raises(ValueError, match="key set"):
         compute_prediction_gap_for_pairs(
             snaps_now, snaps_predicted, alpha_pair=_ALPHA_PAIR, gamma=_GAMMA
         )

@@ -36,7 +36,7 @@ from typing import TYPE_CHECKING
 
 import numpy as np
 
-from concerto.safety.api import DEFAULT_WARMUP_STEPS
+from concerto.safety.api import DEFAULT_WARMUP_STEPS, canonical_pair_order
 from concerto.safety.cbf_qp import AgentSnapshot, pair_h_value
 
 if TYPE_CHECKING:
@@ -153,29 +153,35 @@ def compute_prediction_gap_for_pairs(
     Returns:
         Per-pair loss, shape ``(N_pairs,)``, dtype ``float64``. Pair
         order is the upper-triangular iteration ``(i, j) with i < j``
-        over the shared key order of ``snaps_now``.
+        over the canonical lexicographic UID order
+        (:func:`concerto.safety.api.canonical_pair_order`). Dict
+        insertion order does not affect the result; the only invariant
+        the caller must satisfy is that the *key sets* of
+        ``snaps_now`` and ``snaps_predicted`` match.
 
     Raises:
         ValueError: If the two snapshot dicts do not share identical
-            key order (the pair-index alignment with
-            ``state.lambda_`` depends on it).
+            key sets (the pair-index alignment with ``state.lambda_``
+            depends on it). Pre-amendment this also rejected differing
+            insertion orders; that constraint is lifted in this
+            release because both inputs are canonicalised internally
+            (external-review P1, 2026-05-16).
     """
     del gamma  # currently unused; kept on the signature for forward compat
-    uids_now = list(snaps_now.keys())
-    uids_pred = list(snaps_predicted.keys())
-    if uids_now != uids_pred:
+    if set(snaps_now.keys()) != set(snaps_predicted.keys()):
         msg = (
-            "snaps_now and snaps_predicted must share identical key order; "
-            f"got {uids_now!r} vs {uids_pred!r}"
+            "snaps_now and snaps_predicted must share identical key sets; "
+            f"got {sorted(snaps_now.keys())!r} vs {sorted(snaps_predicted.keys())!r}"
         )
         raise ValueError(msg)
-    n = len(uids_now)
+    uids = canonical_pair_order(snaps_now.keys())
+    n = len(uids)
     n_pairs = (n * (n - 1)) // 2
     predicted_h = np.zeros(n_pairs, dtype=np.float64)
     actual_h = np.zeros(n_pairs, dtype=np.float64)
     pair_idx = 0
-    for a, uid_i in enumerate(uids_now):
-        for uid_j in uids_now[a + 1 :]:
+    for a, uid_i in enumerate(uids):
+        for uid_j in uids[a + 1 :]:
             predicted_h[pair_idx] = pair_h_value(
                 snaps_predicted[uid_i], snaps_predicted[uid_j], alpha_pair=alpha_pair
             )
@@ -230,16 +236,18 @@ def update_lambda_from_predictor(
 
     Raises:
         ValueError: If ``snaps_now`` and ``snaps_prev`` do not share
-            identical key order, or if the resulting loss shape
+            identical key *sets* (insertion order is tolerated as of
+            the 2026-05-16 canonical-pair-keying amendment; see
+            ADR-004 §Decision), or if the resulting loss shape
             mismatches ``state.lambda_``.
     """
-    uids = list(snaps_now.keys())
-    if uids != list(snaps_prev.keys()):
+    if set(snaps_now.keys()) != set(snaps_prev.keys()):
         msg = (
-            "snaps_now and snaps_prev must share identical key order; "
-            f"got {uids!r} vs {list(snaps_prev.keys())!r}"
+            "snaps_now and snaps_prev must share identical key sets; "
+            f"got {sorted(snaps_now.keys())!r} vs {sorted(snaps_prev.keys())!r}"
         )
         raise ValueError(msg)
+    uids = canonical_pair_order(snaps_now.keys())
     snaps_predicted = {uid: constant_velocity_predict(snaps_prev[uid], dt) for uid in uids}
     loss = compute_prediction_gap_for_pairs(
         snaps_now,

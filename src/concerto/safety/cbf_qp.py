@@ -52,7 +52,7 @@ from typing import TYPE_CHECKING, cast, overload
 
 import numpy as np
 
-from concerto.safety.api import SafetyMode
+from concerto.safety.api import SafetyMode, canonical_pair_order
 from concerto.safety.budget_split import ProportionalBudgetSplit
 from concerto.safety.solvers import ClarabelSolver
 
@@ -778,7 +778,11 @@ class ExpCBFQP:
             raise KeyError(msg)
 
         ego_model = self._control_models[ego_uid]
-        partner_uids = [uid for uid in snaps if uid != ego_uid]
+        # Canonical lexicographic order over partner UIDs so the
+        # per-pair indexing into ``state.lambda_`` is stable across
+        # callers and across dict reconstruction (external-review P1,
+        # 2026-05-16; see :func:`concerto.safety.api.canonical_pair_order`).
+        partner_uids = canonical_pair_order(uid for uid in snaps if uid != ego_uid)
         n_pairs = len(partner_uids)
         if state.lambda_.shape != (n_pairs,):
             msg = (
@@ -912,7 +916,13 @@ class ExpCBFQP:
                 )
                 raise ValueError(msg)
 
-        uids = list(proposed_action.keys())
+        # Canonical lexicographic order over proposed_action UIDs so the
+        # QP variable layout, the per-pair slot assignments, and the
+        # per-pair indexing into ``state.lambda_`` are all stable
+        # across callers and across dict reconstruction (external-
+        # review P1, 2026-05-16; see
+        # :func:`concerto.safety.api.canonical_pair_order`).
+        uids = canonical_pair_order(proposed_action.keys())
         slot_of: dict[str, int] = {}
         offset = 0
         for uid in uids:
