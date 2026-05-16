@@ -21,7 +21,7 @@ evidence per their own §Validation criteria.
 | #   | Title                                                              | v0.2 ref           | Lock by    | Status                       |
 |-----|--------------------------------------------------------------------|--------------------|------------|------------------------------|
 | 001 | Fork ManiSkill2 vs. build standalone benchmark                     | §3.1               | Phase 0    | Accepted (2026-05-13)        |
-| 002 | RL framework — JAX (Mava) vs PyTorch (HARL)                        | §13                | Phase 0    | Accepted (2026-05-13)        |
+| 002 | RL framework — JAX (Mava) vs PyTorch (HARL)                        | §13                | Phase 0    | Accepted (2026-05-13)<sup>g</sup> |
 | 003 | Communication interface — fixed-format, learned, or both           | §13                | Phase 0    | Accepted (2026-05-13)        |
 | 004 | Safety filter formulation — exp CBF, HO-CBF, MPC, learned          | §6.2 + §13         | Phase 0    | Accepted (2026-05-13)<sup>a</sup> |
 | 005 | Simulator base — Isaac Lab, MuJoCo, PyBullet, ManiSkill            | §3.1, §3.9         | Phase 0    | Accepted (2026-05-13)        |
@@ -70,6 +70,15 @@ composition (footnote c) and by the PR-A2 conformal-loss
 instrumentation that separates prediction-gap loss from
 constraint-violation signal. Table content is stable; per-axis row
 counts firm up once ADR-008 lands its surviving-axis set.
+
+<sup>g</sup> §Risks #1 was amended on 2026-05-15: the canonical
+empirical-guarantee statistic is now a one-sided slope test at
+α = 0.05 (`concerto.training.empirical_guarantee.assert_positive_learning_slope`),
+replacing the legacy moving-window-of-10 non-decreasing-fraction
+wording. The amendment also surfaces the trainer-side partner-freeze
+gate (`chamber.benchmarks.ego_ppo_trainer._assert_partner_is_frozen`,
+ADR-009 §Consequences; plan/05 §6 #3). See [ADR-002 §Revision history
+(2026-05-15)](ADR-002-rl-framework.md#revision-history).
 
 ## Lock-by phases (per v0.2 §8 gates)
 - **Phase 0** (Month 3): ADRs 001, 002, 003, 004, 005, 006, 007, 012, 013.
