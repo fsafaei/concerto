@@ -431,13 +431,23 @@ class SlopeReport:
     passed: bool = False
 
     def __post_init__(self) -> None:
-        """Derive ``passed`` from ``status`` + emit the deprecation warning.
+        """Derive ``passed`` from ``status`` + emit the field-deprecation warning.
 
-        The ``passed`` boolean is a v0.5.x backwards-compat alias for
-        ``status is CheckStatus.PASSED``; it is recomputed here so the
-        two cannot drift even if a caller constructs the dataclass with
-        an inconsistent value (e.g. while round-tripping a legacy v1
-        JSON payload that has ``passed`` but no ``status``).
+        Two side effects, in order:
+
+        1. ``passed`` is recomputed from ``status`` so the two cannot
+           drift even when a caller supplies an inconsistent value
+           (e.g. while round-tripping a legacy v1 JSON payload that
+           has ``passed`` but no ``status``); the (rare) override uses
+           ``object.__setattr__`` because the dataclass is frozen.
+        2. A :class:`DeprecationWarning` is emitted **unconditionally,
+           on every construction**, signalling that the ``passed`` field
+           itself is deprecated. The warning fires whether or not the
+           caller supplied ``passed`` explicitly — the goal is to flag
+           the *field* to consumers, not just inconsistent inputs. New
+           code should branch on ``report.status is CheckStatus.PASSED``
+           and ignore ``passed`` entirely; ``passed`` is removed in
+           v0.6.0 along with this ``__post_init__`` warning.
         """
         derived = self.status is CheckStatus.PASSED
         if self.passed != derived:
