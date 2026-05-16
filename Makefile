@@ -1,7 +1,8 @@
 .PHONY: install test lint typecheck format docs docs-build \
         verify-licences verify-no-ai-mentions verify-coverage-floors \
         sbom smoke verify \
-        empirical-guarantee zoo-seed-gpu zoo-seed-pull zoo-seed-verify
+        empirical-guarantee zoo-seed-gpu zoo-seed-pull zoo-seed-verify \
+        stage1-as stage1-om
 
 install:
 	uv sync --all-extras --group dev
@@ -82,5 +83,17 @@ zoo-seed-pull:
 
 zoo-seed-verify:
 	uv run pytest tests/reproduction/test_zoo_seed_artifact.py -v --no-cov
+
+# Stage-1 AS / OM reproduction shells (ADR-007 §Implementation staging
+# Stage 1; plan/07 §5). Each target pre-flights the on-disk prereg
+# against its committed git tag (ADR-007 §Discipline), then runs the
+# chamber-side adapter + the ADR-008 evaluation pipeline. The
+# resulting SpikeRun + leaderboard artefacts land under
+# spikes/results/stage1-<axis>-<date>/.
+stage1-as:
+	bash scripts/repro/stage1_as.sh
+
+stage1-om:
+	bash scripts/repro/stage1_om.sh
 
 verify: lint typecheck test verify-coverage-floors docs-build verify-licences verify-no-ai-mentions
