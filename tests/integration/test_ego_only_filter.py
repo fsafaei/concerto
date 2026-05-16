@@ -113,6 +113,7 @@ def test_ego_only_safe_action_shape_matches_ego_action_dim() -> None:
         bounds=_bounds(),
         ego_uid="ego",
         partner_predicted_states={"partner": constant_velocity_predict(snaps["partner"], 0.05)},
+        dt=0.05,
     )
     safe = cast("FloatArray", raw_safe)
     assert safe.shape == (4,)
@@ -131,6 +132,7 @@ def test_ego_only_constraint_violation_has_one_entry_per_partner() -> None:
         bounds=_bounds(),
         ego_uid="ego",
         partner_predicted_states={"partner": constant_velocity_predict(snaps["partner"], 0.05)},
+        dt=0.05,
     )
     assert info["constraint_violation"].shape == (1,)
     assert info["lambda"].shape == (1,)
@@ -151,12 +153,18 @@ def test_ego_only_partner_disturbance_enters_via_rhs_not_variable() -> None:
     snaps = _snaps_head_on()
 
     def _shifted_partner(snap: AgentSnapshot) -> AgentSnapshot:
-        """Predict the partner with a non-trivial accel (a Phase-1-style predictor)."""
-        # Phase-1 will replace the constant-velocity stub; this synthesises
-        # a non-zero predicted accel by lengthening the partner's velocity.
+        """Predict the partner with a non-trivial accel (a Phase-1-style predictor).
+
+        Phase-1 will replace the constant-velocity stub; this synthesises
+        a small non-zero predicted accel by gently scaling the partner's
+        velocity over a 0.05 s lookahead. Kept small (Δv/dt ≈ 1 m/s², well
+        below the 5 m/s² action_norm) so the QP stays feasible while still
+        producing a measurably different safe ego action vs the baseline
+        — the contract the test pins.
+        """
         return AgentSnapshot(
             position=snap.position + snap.velocity * 0.05,
-            velocity=snap.velocity * 1.5,  # implied acceleration along x
+            velocity=snap.velocity * 1.05,  # ~1 m/s^2 along x at dt=0.05
             radius=snap.radius,
         )
 
@@ -177,6 +185,7 @@ def test_ego_only_partner_disturbance_enters_via_rhs_not_variable() -> None:
         partner_predicted_states={
             "partner": constant_velocity_predict(snaps["partner"], 0.05),
         },
+        dt=0.05,
     )
     raw_shifted, _ = cbf.filter(
         proposed_action=proposed,
@@ -185,6 +194,7 @@ def test_ego_only_partner_disturbance_enters_via_rhs_not_variable() -> None:
         bounds=bounds,
         ego_uid="ego",
         partner_predicted_states={"partner": _shifted_partner(snaps["partner"])},
+        dt=0.05,
     )
     safe_baseline = cast("FloatArray", raw_baseline)
     safe_shifted = cast("FloatArray", raw_shifted)
@@ -211,6 +221,7 @@ def test_ego_only_lambda_shape_is_partner_count() -> None:
             bounds=_bounds(),
             ego_uid="ego",
             partner_predicted_states={"partner": constant_velocity_predict(snaps["partner"], 0.05)},
+            dt=0.05,
         )
 
 
@@ -254,6 +265,7 @@ def test_ego_only_smoke_50_step_rollout_no_collision() -> None:
             bounds=_bounds(),
             ego_uid="ego",
             partner_predicted_states={"partner": predicted_partner},
+            dt=dt,
         )
         safe = cast("FloatArray", raw_safe)
         # Only the first two components of the ego action load Cartesian
@@ -322,6 +334,7 @@ def test_ego_only_three_agents_one_ego_two_partners() -> None:
             "p1": constant_velocity_predict(snaps["p1"], 0.05),
             "p2": constant_velocity_predict(snaps["p2"], 0.05),
         },
+        dt=0.05,
     )
     safe = cast("FloatArray", raw_safe)
     assert safe.shape == (4,)

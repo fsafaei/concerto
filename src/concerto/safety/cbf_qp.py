@@ -582,6 +582,7 @@ class ExpCBFQP:
         *,
         ego_uid: str,
         partner_predicted_states: dict[str, AgentSnapshot],
+        dt: float,
     ) -> tuple[FloatArray, FilterInfo]:
         """EGO_ONLY overload (ADR-004 §Public API; spike_004A §Three-mode taxonomy)."""
 
@@ -608,6 +609,7 @@ class ExpCBFQP:
         ego_uid: str | None = None,
         partner_predicted_states: dict[str, AgentSnapshot] | None = None,
         partner_action_bound: float | None = None,
+        dt: float | None = None,
     ) -> tuple[dict[str, FloatArray] | FloatArray, FilterInfo]:
         """Project ``proposed_action`` onto the CBF-safe set (ADR-004 §Decision).
 
@@ -656,6 +658,16 @@ class ExpCBFQP:
                 :attr:`SafetyMode.SHARED_CONTROL`. Strictly positive
                 L-infinity ball radius around each partner's proposed
                 action.
+            dt: Required for :attr:`SafetyMode.EGO_ONLY`. The
+                predictor's lookahead horizon in seconds (typically the
+                env's control-step duration), used to convert the
+                predicted velocity delta into a Cartesian acceleration
+                ``(v_pred - v_now) / dt`` on the constraint RHS
+                (ADR-004 §Decisions, "Predicted-acceleration units";
+                external-review P0-1, 2026-05-16). Must be strictly
+                positive. Ignored in :attr:`SafetyMode.CENTRALIZED`
+                and :attr:`SafetyMode.SHARED_CONTROL` (no partner-
+                disturbance term).
 
         Returns:
             ``(safe_action, info)`` — shape matches the input
@@ -695,6 +707,7 @@ class ExpCBFQP:
                 bounds=bounds,
                 ego_uid=ego_uid,
                 partner_predicted_states=partner_predicted_states,
+                dt=dt,
             )
         return self._filter_joint(
             proposed_action=proposed_action,
@@ -719,6 +732,7 @@ class ExpCBFQP:
         bounds: Bounds,
         ego_uid: str | None,
         partner_predicted_states: dict[str, AgentSnapshot] | None,
+        dt: float | None,
     ) -> tuple[FloatArray, FilterInfo]:
         """EGO_ONLY filter implementation (ADR-004 §Decision; spike_004A §Three-mode taxonomy).
 
@@ -733,6 +747,18 @@ class ExpCBFQP:
                 "(spike_004A §Three-mode taxonomy): the partner enters as a "
                 "predicted disturbance on the constraint RHS."
             )
+            raise ValueError(msg)
+        if dt is None:
+            msg = (
+                "dt is required in SafetyMode.EGO_ONLY: the predicted "
+                "Cartesian acceleration is (v_pred - v_now) / dt and the "
+                "filter cannot infer the predictor's lookahead horizon "
+                "(ADR-004 §Decisions, 'Predicted-acceleration units'; "
+                "external-review P0-1, 2026-05-16)."
+            )
+            raise ValueError(msg)
+        if dt <= 0.0:
+            msg = f"dt must be strictly positive in SafetyMode.EGO_ONLY; got {dt!r}."
             raise ValueError(msg)
         if not isinstance(proposed_action, np.ndarray):
             msg = (
@@ -795,6 +821,7 @@ class ExpCBFQP:
             partner_pred_accel = _predicted_cartesian_accel(
                 snap_now=snaps[partner_uid],
                 snap_pred=partner_predicted_states[partner_uid],
+                dt=dt,
             )
             cart_row, rhs, h_ij = _build_ego_only_row(
                 ego_snap=snaps[ego_uid],
@@ -1029,30 +1056,46 @@ def _predicted_cartesian_accel(
     *,
     snap_now: AgentSnapshot,
     snap_pred: AgentSnapshot,
+    dt: float,
 ) -> FloatArray:
     """Estimate the partner's Cartesian acceleration from successive snapshots (ADR-004 §Decision).
 
     Internal helper. Approximates ``ddot p_partner`` as the velocity
     difference between the predicted snapshot at step ``k+1`` and the
-    current snapshot at step ``k``. With the constant-velocity
-    predictor stub (Phase-0; see
-    :func:`concerto.safety.conformal.constant_velocity_predict`) this
-    evaluates to zero; a smarter Phase-1 predictor produces non-zero
-    accelerations and the row RHS carries the corresponding drift.
+    current snapshot at step ``k``, divided by the lookahead horizon
+    ``dt``: ``a = (v_pred - v_now) / dt`` (forward-difference Cartesian
+    acceleration consistent with the predictor's extrapolation
+    over ``dt``; cf. the same ``dt`` parameter on
+    :func:`concerto.safety.conformal.update_lambda_from_predictor` and
+    :func:`concerto.safety.conformal.constant_velocity_predict`).
+
+    With the constant-velocity predictor stub (Phase-0) the velocity
+    delta is zero and the result is zero for every ``dt``; a smarter
+    Phase-1 predictor (AoI-conditioned, learned) produces non-zero
+    accelerations and the row RHS carries the corresponding drift at
+    the correct physical scale.
 
     Args:
-        snap_now: Partner snapshot at the current step.
-        snap_pred: Partner snapshot predicted for the next step.
+        snap_now: Partner snapshot at the current step ``k``.
+        snap_pred: Partner snapshot predicted for the next step ``k+1``.
+        dt: Lookahead horizon used by the predictor, in seconds.
+            Strictly positive; the same value the predictor was called
+            with (typically the env's control-step duration).
 
     Returns:
         Predicted Cartesian acceleration of shape
         ``(position_dim,)``, dtype ``float64``.
+
+    Notes:
+        Closes external-review P0-1 (2026-05-16). The pre-fix form
+        returned the raw velocity delta without dividing by ``dt``,
+        making the CBF RHS wrong by a factor of ``1/dt`` for any
+        nonzero predictor; the bug was latent under the constant-
+        velocity stub. See
+        ``tests/property/test_predicted_acceleration_scales_with_dt.py``
+        for the pinned scaling law.
     """
-    # Note: the constant-velocity predictor preserves velocity, so this
-    # returns zeros under the Phase-0 stub. The predictor interface is
-    # the seam for AoI-conditioned (Phase-1) and learned (Phase-2)
-    # predictors that *do* produce non-zero accel deltas.
-    return (snap_pred.velocity - snap_now.velocity).astype(np.float64, copy=False)
+    return ((snap_pred.velocity - snap_now.velocity) / dt).astype(np.float64, copy=False)
 
 
 def _stack_constraints(
