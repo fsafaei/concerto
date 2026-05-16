@@ -175,13 +175,14 @@ class TestStage1OMConditionMapping:
         assert prereg.condition_pair.heterogeneous_id in _CONDITION_UIDS
 
     def test_om_homo_and_hetero_share_the_same_uid_tuple(self, prereg) -> None:
-        """plan/07 §3 OM: same panda+fetch agent pair across conditions (obs differs, not agents).
+        """plan/07 §3 OM: same panda+fetch agent pair across conditions.
 
-        Both prereg condition_ids map to the same ``agent_uids`` tuple
-        because OM is an observation-modality axis, not an action-space
-        axis. The Phase-0 stand-in env is therefore identical for both
-        conditions; the Phase-1 obs-modality factory will read
-        ``condition_id`` to pick the right obs builder.
+        OM is an observation-modality axis, not an action-space axis,
+        so both ``condition_id`` strings map to the same ``agent_uids``
+        tuple. The per-condition *obs* divergence is supplied by
+        :data:`_OBS_CHANNELS_BY_CONDITION` (Stage 1a stand-in) — see
+        :class:`TestStage1OMConditionDivergence` for the
+        obs-channel-shape and SpikeRun-divergence assertions.
         """
         homo_uids = _CONDITION_UIDS[prereg.condition_pair.homogeneous_id]
         hetero_uids = _CONDITION_UIDS[prereg.condition_pair.heterogeneous_id]
@@ -203,6 +204,78 @@ class TestStage1OMConditionMapping:
             _run_axis_with_factories(
                 prereg=bogus, env_factory=_fake_env_factory, ego_action_fn=_scripted_ego_action
             )
+
+
+class TestStage1OMConditionDivergence:
+    """OM conditions must resolve to distinct env builds (ADR-007 §Stage 1a; plan/07 §3).
+
+    Regression guard for the Phase-0 tuple-collision defect:
+    previously both ``condition_id`` strings mapped to identical
+    ``agent_uids`` tuples *and* the production ``_default_env_factory``
+    ignored ``condition_id`` entirely, so the OM SpikeRun was byte-
+    identical across homo and hetero. The fix (PR-B for Gap F) wraps
+    :class:`MPECooperativePushEnv` in
+    :class:`chamber.benchmarks.stage1_om._ObsChannelFilterEnv` and
+    exposes a distinct channel slice per condition.
+    """
+
+    def test_each_condition_resolves_to_a_distinct_obs_shape(self, prereg) -> None:
+        """``_default_env_factory`` builds envs whose obs shapes differ per condition."""
+        from chamber.benchmarks.stage1_om import _default_env_factory
+
+        homo_id = prereg.condition_pair.homogeneous_id
+        hetero_id = prereg.condition_pair.heterogeneous_id
+        homo_env = _default_env_factory(homo_id, _CONDITION_UIDS[homo_id], root_seed=0)
+        hetero_env = _default_env_factory(hetero_id, _CONDITION_UIDS[hetero_id], root_seed=0)
+        homo_state = homo_env.observation_space["agent"]["panda_wristcam"]["state"]  # type: ignore[index]
+        hetero_state = hetero_env.observation_space["agent"]["panda_wristcam"]["state"]  # type: ignore[index]
+        assert homo_state.shape != hetero_state.shape, (
+            f"OM tuple-collision regression: both conditions resolved to "
+            f"obs shape {homo_state.shape}; the channel-filter wrapper is "
+            "not active."
+        )
+
+    def test_spike_run_diverges_across_conditions(self, prereg) -> None:
+        """End-to-end SpikeRun on ``_default_env_factory`` diverges across conditions.
+
+        Runs the OM adapter end-to-end with the production env
+        factory (the MPE stand-in + the per-condition channel filter).
+        For at least one ``(seed, episode_idx)`` pair, the
+        ``mean_reward`` recorded under the homogeneous condition
+        must differ from the same pair under the heterogeneous
+        condition — i.e. the partner's actions, and therefore the
+        env's reward stream, depend on which obs slice is exposed.
+        """
+        from chamber.benchmarks.stage1_om import (
+            _default_env_factory,
+            _zero_ego_action,
+        )
+
+        run = _run_axis_with_factories(
+            prereg=prereg,
+            env_factory=_default_env_factory,
+            ego_action_fn=_zero_ego_action,
+        )
+        homo_id = prereg.condition_pair.homogeneous_id
+        hetero_id = prereg.condition_pair.heterogeneous_id
+        homo_rewards: dict[tuple[int, int], str] = {}
+        hetero_rewards: dict[tuple[int, int], str] = {}
+        for ep in run.episode_results:
+            key = (ep.seed, ep.episode_idx)
+            if ep.metadata["condition"] == homo_id:
+                homo_rewards[key] = ep.metadata["mean_reward"]
+            elif ep.metadata["condition"] == hetero_id:
+                hetero_rewards[key] = ep.metadata["mean_reward"]
+        # At least one paired (seed, episode_idx) tuple's mean_reward
+        # differs across conditions.
+        diverging = [
+            k for k in homo_rewards if k in hetero_rewards and homo_rewards[k] != hetero_rewards[k]
+        ]
+        assert diverging, (
+            "OM tuple-collision regression: homo and hetero produced "
+            "identical mean_reward across every (seed, episode_idx); "
+            "the channel-filter wrapper is not active or has no effect."
+        )
 
 
 class TestStage1OMEntryPointResolution:
