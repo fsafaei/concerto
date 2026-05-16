@@ -21,6 +21,14 @@
 # The resulting artefacts land under spikes/results/stage1-AS-<date>/;
 # the closing summary names both paths. Commit that directory under
 # the canonical spikes/results/<tag>/ path per plan/07 §2.
+#
+# `chamber-eval` is invoked with a single SpikeRun and emits a PARTIAL
+# leaderboard row by design — the canonical Stage-1 archive is per-axis
+# (plan/07 §5). The Month-3 summarise step (plan/07 §T5b.10) is what
+# combines the six per-axis archives into a complete HRS vector.
+#
+# The <date> in RUN_DIR is taken from UTC so two operators on opposite
+# sides of the dateline land in the same directory.
 
 set -euo pipefail
 
@@ -35,7 +43,7 @@ echo ""
 echo "==> Verifying pre-registration (ADR-007 §Discipline)"
 uv run chamber-spike verify-prereg --spike spikes/preregistration/AS.yaml
 
-RUN_DIR="spikes/results/stage1-AS-$(date +%Y%m%d)"
+RUN_DIR="spikes/results/stage1-AS-$(date -u +%Y%m%d)"
 mkdir -p "${RUN_DIR}"
 SPIKE_JSON="${RUN_DIR}/spike_as.json"
 LEADERBOARD_JSON="${RUN_DIR}/leaderboard.json"

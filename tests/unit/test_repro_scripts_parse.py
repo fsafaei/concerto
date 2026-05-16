@@ -30,7 +30,15 @@ def _repro_scripts() -> list[Path]:
     return sorted(_REPRO_DIR.glob("*.sh"))
 
 
-@pytest.mark.parametrize("script_path", _repro_scripts(), ids=lambda p: p.name)
+# Hardening guard: if a future refactor accidentally wipes
+# ``scripts/repro/`` (the only directory the parametrize loop draws
+# from), an empty parametrize list silently produces zero cases. Fail
+# at module load instead so the regression is loud.
+_SCRIPTS = _repro_scripts()
+assert _SCRIPTS, f"no repro scripts found under {_REPRO_DIR}"
+
+
+@pytest.mark.parametrize("script_path", _SCRIPTS, ids=lambda p: p.name)
 def test_repro_script_parses(script_path: Path) -> None:
     """``bash -n`` over the given script; pure-syntax check (plan/07 §5)."""
     bash = shutil.which("bash")
@@ -47,8 +55,12 @@ def test_repro_script_parses(script_path: Path) -> None:
 
 
 def test_stage1_repro_scripts_exist() -> None:
-    """Stage-1 AS and OM repro scripts are shipped (plan/07 §5)."""
+    """Stage-1 AS and OM repro scripts are shipped + executable (plan/07 §5)."""
     for axis in ("AS", "OM"):
         path = _REPRO_DIR / f"stage1_{axis.lower()}.sh"
         assert path.exists(), f"missing repro script {path}"
-        assert path.stat().st_mode & 0o111, f"repro script {path} is not executable"
+        # git tracks the owner-execute bit (mode 100755 vs 100644); the
+        # group/other bits are set by the local filesystem and aren't
+        # portable. Check owner-x specifically so the test fails on a
+        # script committed without `git update-index --chmod=+x`.
+        assert path.stat().st_mode & 0o100, f"repro script {path} is not executable"

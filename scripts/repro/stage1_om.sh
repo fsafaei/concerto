@@ -3,8 +3,9 @@
 # (ADR-007 §Implementation staging Stage 1; plan/07 §5).
 #
 # Twins scripts/repro/stage1_as.sh — same shape, different axis. See
-# that script's header for the operating contract; the only changes
-# here are the axis label (OM), the pre-registration path
+# that script's header for the operating contract, the PARTIAL-row
+# rationale, and the UTC-date convention. The only changes here are
+# the axis label (OM), the pre-registration path
 # (spikes/preregistration/OM.yaml), and the result-archive prefix
 # (spikes/results/stage1-OM-<date>/).
 #
@@ -30,7 +31,7 @@ echo ""
 echo "==> Verifying pre-registration (ADR-007 §Discipline)"
 uv run chamber-spike verify-prereg --spike spikes/preregistration/OM.yaml
 
-RUN_DIR="spikes/results/stage1-OM-$(date +%Y%m%d)"
+RUN_DIR="spikes/results/stage1-OM-$(date -u +%Y%m%d)"
 mkdir -p "${RUN_DIR}"
 SPIKE_JSON="${RUN_DIR}/spike_om.json"
 LEADERBOARD_JSON="${RUN_DIR}/leaderboard.json"
