@@ -8,6 +8,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 While the project is on `0.x`, MINOR-version bumps may break the public API
 per SemVer §4.
 
+## [0.4.0](https://github.com/fsafaei/concerto/compare/v0.3.1...v0.4.0) (2026-05-16)
+
+
+### Features
+
+* **packaging:** move HARL to [dependency-groups].train + lazy-import (closes [#131](https://github.com/fsafaei/concerto/issues/131)) ([#133](https://github.com/fsafaei/concerto/issues/133)) ([ac9ef22](https://github.com/fsafaei/concerto/commit/ac9ef228b29fe46313d5f9ca7ec929e6006da036))
+
 ## [0.3.1](https://github.com/fsafaei/concerto/compare/v0.3.0...v0.3.1) (2026-05-16)
 
 
