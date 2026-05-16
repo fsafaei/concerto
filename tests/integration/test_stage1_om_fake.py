@@ -366,6 +366,11 @@ class TestStage1OMEntryPointResolution:
         from chamber.benchmarks import stage1_om
 
         monkeypatch.setattr(stage1_om, "_default_env_factory", _fake_env_factory, raising=True)
+        # Patch the adapter-local name (re-bound by ``from … import``)
+        # rather than the source in ``stage1_common`` because
+        # ``run_axis`` references the unqualified symbol. If a future
+        # refactor switches to a qualified ``stage1_common._zero_ego_action_factory``
+        # access, this monkeypatch target needs to move.
         monkeypatch.setattr(
             stage1_om, "_zero_ego_action_factory", _scripted_ego_action_factory, raising=True
         )
