@@ -50,6 +50,13 @@ Stage 2: CR + CM; Stage 3: PF + SA) is committed but the spikes have
 not yet been run; the ≥20 pp gate has not yet been measured for any
 axis. Promotion to **Validated** requires the per-axis spike evidence
 named in [ADR-007 §Validation criteria](ADR-007-heterogeneity-axis-selection.md#validation-criteria).
+Revision 4 (2026-05-15) splits Stage 1 into Stage 1a (Phase-0
+rig-validation on the MPE stand-in; no ≥20 pp measurement) and
+Stage 1b (Phase-1 real-env science evaluation; the ≥20 pp gate);
+Stage 1b's trigger guardrail pins it to the first Phase-1 milestone,
+before any Stage-2 spike, no later than 4 weeks after the Month-3
+lock review (see
+[ADR-007 §Stage 1a / §Stage 1b](ADR-007-heterogeneity-axis-selection.md#stage-1a--rig-validation-phase-0-mpe-stand-in)).
 
 <sup>c</sup> The HRS bundle's third axis (CM × PF × CR vs the
 fallback latency × drop × degraded-partner formula) depends on which
