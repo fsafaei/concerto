@@ -56,17 +56,24 @@ proxy — it is not the AS/OM gap ADR-007 §Validation criteria
 demands. Stage 1b's real ManiSkill v3 obs builders supply the actual
 OM signal; the channel-filter wrapper goes away in that path.
 
-The ego trainer integration (``concerto.training.ego_aht.train``
-per plan/07 §T5b.2) is scaffolded behind the ``_zero_ego_action``
-callable injection point (the ``ego_action_fn`` kwarg on
-:func:`_run_axis_with_factories`) — Phase-1 work wires a trained
-``EgoTrainer`` here without touching the SpikeRun aggregation
-shape. Same for the real Stage-1 obs-modality factory: replacing
-:func:`_default_env_factory` is a one-spot edit.
+Stage-1a uses :func:`_zero_ego_action_factory` as the production
+default; the trained-ego path is Stage-1b (Phase-1, ADR-007 §Stage 1b).
+The ego-action injection seam is the
+:class:`chamber.benchmarks.stage1_common.EgoActionFactory` Protocol —
+called once per ``(seed, condition)`` pair so the Phase-1 trained
+policy is built once and reused across the 20 evaluation episodes
+within that cell. Replacing the production default is a one-line
+swap in :func:`_run_axis_with_factories`'s call site once the
+trained-policy factory lands (see
+:mod:`chamber.benchmarks.stage1_common` for the verbatim Phase-1
+wiring contract).
 
 The Tier-1 fake-env test injects :class:`tests.fakes.FakeMultiAgentEnv`
-via the ``env_factory`` kwarg; the Tier-2 SAPIEN-gated test runs
-the real env path on a Vulkan host.
+via the ``env_factory`` kwarg and a fake :class:`EgoActionFactory`
+to pin the seam's per-cell lifecycle contract (factory called
+exactly ``n_seeds x n_conditions = 5 x 2 = 10`` times per
+``run_axis`` invocation); the Tier-2 SAPIEN-gated test runs the
+real env path on a Vulkan host.
 
 Twinning with :mod:`chamber.benchmarks.stage1_as`. The OM adapter
 mirrors the AS adapter's shape verbatim — same prereg loader,
@@ -86,6 +93,11 @@ from typing import TYPE_CHECKING, Any
 import gymnasium as gym
 import numpy as np
 
+from chamber.benchmarks.stage1_common import (
+    EgoActionCallable,
+    EgoActionFactory,
+    _zero_ego_action_factory,
+)
 from chamber.envs.mpe_cooperative_push import MPECooperativePushEnv
 from chamber.evaluation.prereg import PreregistrationSpec, load_prereg
 from chamber.evaluation.results import EpisodeResult, SpikeRun
@@ -100,7 +112,6 @@ if TYPE_CHECKING:
     from numpy.typing import NDArray
 
     EnvFactory = Callable[[str, tuple[str, str], int], gym.Env[Any, Any]]
-    EgoActionFn = Callable[[str, Mapping[str, Any], NDArray[np.float32]], NDArray[np.float32]]
 
 #: ADR-007 §3.4 axis label this adapter implements.
 _AXIS: str = "OM"
@@ -291,7 +302,7 @@ def run_axis(args: argparse.Namespace) -> SpikeRun:
     return _run_axis_with_factories(
         prereg=_load_canonical_prereg(),
         env_factory=_default_env_factory,
-        ego_action_fn=_zero_ego_action,
+        ego_action_factory=_zero_ego_action_factory,
     )
 
 
@@ -314,23 +325,33 @@ def _run_axis_with_factories(
     *,
     prereg: PreregistrationSpec,
     env_factory: EnvFactory,
-    ego_action_fn: EgoActionFn,
+    ego_action_factory: EgoActionFactory,
 ) -> SpikeRun:
     """Drive the spike with injectable env + ego factories (T5b.2; plan/07 §3).
 
     Pulled out of :func:`run_axis` so the Tier-1 fake-env test can
     inject :class:`tests.fakes.FakeMultiAgentEnv` and a synthetic
-    ego-action callable without monkey-patching module globals.
-    Phase-1 will inject a real ``concerto.training.ego_aht.train``-
-    backed ego instead of the zero-action placeholder.
+    :class:`~chamber.benchmarks.stage1_common.EgoActionFactory` without
+    monkey-patching module globals. The factory is called *once per*
+    ``(seed, condition)`` pair (5 x 2 = 10 calls per Stage-1 spike);
+    the returned per-step callable is then re-used across the 20
+    evaluation episodes within that cell. Phase-1 (Stage 1b) supplies
+    a factory that wires :func:`concerto.training.ego_aht.train` — see
+    :mod:`chamber.benchmarks.stage1_common` for the verbatim contract.
+
+    Env construction is also hoisted to *once per ``(seed, condition)``*
+    (rather than once per episode) so the factory and the env see the
+    same instance; ``env.reset(seed=initial_state_seed)`` re-seeds the
+    per-episode RNG inside the env without re-allocating it.
 
     Args:
         prereg: The loaded :class:`PreregistrationSpec`.
         env_factory: Callable returning the per-condition env;
             signature ``(condition_id, agent_uids, root_seed) -> gym.Env``.
-        ego_action_fn: Callable returning the ego action vector for
-            one step; signature
-            ``(ego_uid, obs, partner_action) -> NDArray[float32]``.
+        ego_action_factory: Stage-1 ego-action factory satisfying the
+            :class:`~chamber.benchmarks.stage1_common.EgoActionFactory`
+            Protocol. Stage-1a production default is
+            :func:`~chamber.benchmarks.stage1_common._zero_ego_action_factory`.
 
     Returns:
         The aggregated :class:`SpikeRun`.
@@ -353,13 +374,15 @@ def _run_axis_with_factories(
                 )
                 raise ValueError(msg)
             ego_uid, partner_uid = agent_uids
+            # Build env + ego-action callable once per (seed, condition).
+            # The factory contract names this cadence explicitly so the
+            # Phase-1 trained-policy path can amortise its 100k-frame
+            # training run across the 20 evaluation episodes within
+            # the cell (ADR-007 §Stage 1b).
+            env = env_factory(condition_id, agent_uids, seed)
+            ego_action = ego_action_factory(env, seed)
             for episode_idx in range(prereg.episodes_per_seed):
                 initial_state_seed = _derive_episode_seed(seed=seed, episode_idx=episode_idx)
-                # Phase-1: hoist env construction to the per-condition
-                # loop (real ManiSkill envs take seconds each, MPE / Fake
-                # take microseconds). The per-episode reset already
-                # threads ``initial_state_seed`` into the inner RNG.
-                env = env_factory(condition_id, agent_uids, seed)
                 partner = _make_scripted_partner(partner_uid=partner_uid)
                 episode_results.append(
                     _run_one_episode(
@@ -367,7 +390,7 @@ def _run_axis_with_factories(
                         partner=partner,
                         ego_uid=ego_uid,
                         partner_uid=partner_uid,
-                        ego_action_fn=ego_action_fn,
+                        ego_action=ego_action,
                         seed=seed,
                         episode_idx=episode_idx,
                         initial_state_seed=initial_state_seed,
@@ -392,7 +415,7 @@ def _run_one_episode(
     partner: ScriptedHeuristicPartner,
     ego_uid: str,
     partner_uid: str,
-    ego_action_fn: EgoActionFn,
+    ego_action: EgoActionCallable,
     seed: int,
     episode_idx: int,
     initial_state_seed: int,
@@ -408,8 +431,8 @@ def _run_one_episode(
     truncated = False
     while n_steps < _MAX_STEPS_PER_EPISODE:
         partner_action = partner.act(obs, deterministic=True)
-        ego_action = ego_action_fn(ego_uid, obs, partner_action)
-        action_dict = {ego_uid: ego_action, partner_uid: partner_action}
+        ego_action_vec = ego_action(obs)
+        action_dict = {ego_uid: ego_action_vec, partner_uid: partner_action}
         step_out = env.step(action_dict)
         obs = step_out[0]
         reward = float(step_out[1])
@@ -475,19 +498,6 @@ def _default_env_factory(
         raise ValueError(msg)
     inner = MPECooperativePushEnv(agent_uids=agent_uids, root_seed=root_seed)
     return _ObsChannelFilterEnv(inner, channel_indices=channels)
-
-
-def _zero_ego_action(
-    ego_uid: str, obs: Mapping[str, Any], partner_action: NDArray[np.float32]
-) -> NDArray[np.float32]:
-    """Ego policy placeholder: always-zero action vector (Phase-0; plan/07 §T5b.2 deferral).
-
-    Phase-1 swaps this for a ``concerto.training.ego_aht.train``-
-    backed ego that loads a trained checkpoint and runs deterministic
-    inference. The function's signature is the injection contract.
-    """
-    del ego_uid, obs
-    return np.zeros_like(partner_action, dtype=np.float32)
 
 
 def _make_scripted_partner(*, partner_uid: str) -> ScriptedHeuristicPartner:
