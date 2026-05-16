@@ -13,15 +13,23 @@ purpose is to surface a violated assumption (Huriot-Sibai 2025 Theorem
 7's frozen-partner monotonicity), and silencing it would defeat ADR-002
 §Risks #1.
 
-**Canonical statistic (issue #62):** the slope test
-:func:`assert_positive_learning_slope` replaced the original moving-
+**Canonical statistic (issue #62):** the slope check
+:func:`check_positive_learning_slope` replaced the original moving-
 window-of-K non-decreasing-fraction (:func:`assert_non_decreasing_window`)
 because the per-episode reward noise (stdev ~20) dominates the
 moving-window mean's signal at 100k frames — the moving-window fraction
 sat near 0.5 (random walk) even when the trainer was materially
-improving. The slope test integrates over the whole curve and rejects
+improving. The slope check integrates over the whole curve and rejects
 "slope <= 0" with p ≪ 1e-10 across seeds once the truncation fix in
 :func:`chamber.benchmarks.ego_ppo_trainer.compute_gae` is in place.
+
+**Naming note (external-review P1-1, 2026-05-16):** the slope check was
+renamed from ``assert_positive_learning_slope`` to
+``check_positive_learning_slope`` — the function returns a report
+rather than raising, and the check is a *trip-wire* for ADR-002 §Risks
+#1, not a formal guarantee. The pre-rename name remains available via
+the :mod:`concerto.training.empirical_guarantee` shim (deprecated;
+removal v0.6.0). See ADR-002 §Revision history.
 """
 
 from __future__ import annotations
@@ -33,10 +41,11 @@ import pytest
 
 from chamber.benchmarks.training_runner import run_training
 from concerto.training.config import load_config
-from concerto.training.empirical_guarantee import (
+from concerto.training.learning_signal_check import (
     DEFAULT_ALPHA,
     DEFAULT_MIN_EPISODES,
-    assert_positive_learning_slope,
+    CheckStatus,
+    check_positive_learning_slope,
 )
 
 #: Wallclock budget for the 100k-frame run (plan/05 §8).
@@ -75,14 +84,15 @@ def test_empirical_guarantee_holds_on_100k_frames(tmp_path: Path) -> None:
         "complexity rather than raising the budget."
     )
 
-    report = assert_positive_learning_slope(
+    report = check_positive_learning_slope(
         curve, alpha=DEFAULT_ALPHA, min_episodes=DEFAULT_MIN_EPISODES
     )
-    assert report.passed, (
-        "ADR-002 risk-mitigation #1 trip-wire fired: empirical guarantee "
-        "(slope test) failed. "
-        f"slope={report.slope:.5f}, p_value={report.p_value:.4e}, "
-        f"alpha={report.alpha}, n_episodes={report.n_episodes}. "
+    assert report.status is CheckStatus.PASSED, (
+        "ADR-002 risk-mitigation #1 trip-wire fired: learning-signal "
+        "check (slope test) did not pass. "
+        f"status={report.status.name}, slope={report.slope:.5f}, "
+        f"p_value={report.p_value:.4e}, alpha={report.alpha}, "
+        f"n_episodes={report.n_episodes}. "
         "DO NOT silence by lowering alpha or shortening the budget; open "
         "a #scope-revision issue and hand control back to the maintainer "
         "(plan/05 §6 #4)."

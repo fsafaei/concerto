@@ -19,7 +19,10 @@ from typing import TYPE_CHECKING
 
 from chamber.benchmarks.training_runner import run_training
 from concerto.training.config import load_config
-from concerto.training.empirical_guarantee import assert_positive_learning_slope
+from concerto.training.learning_signal_check import (
+    CheckStatus,
+    check_positive_learning_slope,
+)
 
 if TYPE_CHECKING:
     import argparse
@@ -66,9 +69,9 @@ def add_parser(sub: argparse._SubParsersAction) -> None:  # type: ignore[type-ar
         "--check-guarantee",
         action="store_true",
         help=(
-            "After training, run assert_positive_learning_slope on the curve and exit "
+            "After training, run check_positive_learning_slope on the curve and exit "
             f"with code {_TRIP_WIRE_EXIT_CODE} if the trip-wire fires "
-            "(ADR-002 §Risks #1; issue #62)."
+            "(ADR-002 §Risks #1; issue #62; external-review P1-1, 2026-05-16)."
         ),
     )
 
@@ -123,13 +126,13 @@ def _train_command(
         f"mean_reward_last_{len(tail)}={mean_tail:.4f}"
     )
     if check_guarantee:
-        report = assert_positive_learning_slope(curve)
+        report = check_positive_learning_slope(curve)
         print(
-            f"empirical_guarantee slope={report.slope:.6f} "
+            f"learning_signal_check slope={report.slope:.6f} "
             f"p_value={report.p_value:.2e} alpha={report.alpha} "
-            f"n_episodes={report.n_episodes} passed={report.passed}"
+            f"n_episodes={report.n_episodes} status={report.status.name}"
         )
-        if not report.passed:
+        if report.status is not CheckStatus.PASSED:
             return _TRIP_WIRE_EXIT_CODE
     return 0
 
