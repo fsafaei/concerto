@@ -73,6 +73,9 @@ class _NonFrozenPartner(nn.Module):
     ``_assert_partner_is_frozen`` check is the only line of defence.
     """
 
+    # The ``PartnerLike`` Protocol requires a ``spec`` attribute (Any).
+    spec: object = None
+
     def __init__(self) -> None:
         super().__init__()
         # One named parameter whose path is predictable in the error message.
@@ -93,6 +96,8 @@ class _NonFrozenPartner(nn.Module):
 
 class _FrozenBareModulePartner(nn.Module):
     """Bare ``nn.Module`` partner with every parameter explicitly frozen."""
+
+    spec: object = None  # PartnerLike Protocol requirement.
 
     def __init__(self) -> None:
         super().__init__()
@@ -186,3 +191,23 @@ class TestAssertPartnerIsFrozenHelper:
 
         with pytest.raises(ValueError, match=r"ADR-009 §Consequences"):
             _assert_partner_is_frozen(_NonFrozenPartner())
+
+    def test_helper_propagates_typeerror_when_attribute_is_not_callable(self) -> None:
+        """A partner with a non-callable ``named_parameters`` raises TypeError loudly.
+
+        Regression guard: if a custom partner adapter shadows
+        ``named_parameters`` with a string (or any non-callable), the
+        helper must NOT silently treat the partner as frozen — the
+        partner's API is broken and the project's no-joint-training
+        contract cannot be checked. The narrow AttributeError catch
+        in the helper lets TypeError propagate so the bug is loud.
+        """
+        from chamber.benchmarks.ego_ppo_trainer import _assert_partner_is_frozen
+
+        class _PartnerWithBadAttr:
+            """Partner whose ``named_parameters`` is a string, not a method."""
+
+            named_parameters: str = "not a method"
+
+        with pytest.raises(TypeError):
+            _assert_partner_is_frozen(_PartnerWithBadAttr())  # type: ignore[arg-type]

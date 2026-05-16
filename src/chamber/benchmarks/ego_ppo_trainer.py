@@ -67,7 +67,7 @@ if TYPE_CHECKING:  # pragma: no cover
     from numpy.typing import NDArray
 
     from concerto.training.config import EgoAHTConfig, HAPPOHyperparams
-    from concerto.training.ego_aht import EnvLike
+    from concerto.training.ego_aht import EnvLike, PartnerLike
 
 #: Keys HARL's :class:`HAPPO` + :class:`StochasticPolicy` + :class:`MLPBase` +
 #: :class:`DiagGaussian` read from a single ``args`` dict. Construction values
@@ -181,19 +181,26 @@ def _assert_partner_is_frozen(partner: object) -> None:
     custom partners that lack a shield.
     """
     # The PartnerBase shield raises AttributeError on the *attribute*
-    # lookup (``partner.named_parameters``), not on the call. Catch that
-    # path with a single try around the lookup-then-call, since either
-    # step can raise depending on the partner's class.
+    # lookup (``partner.named_parameters``), not on the call. We narrow
+    # the AttributeError catch to the lookup only — a bug in a custom
+    # partner's ``named_parameters`` implementation (e.g. a property
+    # whose getter raises AttributeError on a misspelled internal
+    # attribute) must surface as a loud error rather than be silently
+    # swallowed as "no params, partner is frozen".
     try:
         params_method = partner.named_parameters  # type: ignore[attr-defined]
-        params_iter = params_method()
     except AttributeError:
         # Either the partner has no ``named_parameters`` at all (no
         # torch state to leak — pure-Python heuristic partners), or
-        # the PartnerBase shield blocked the call (the shield's
+        # the PartnerBase shield intercepted the look-up (the shield's
         # AttributeError is itself an ADR-009 §Consequences ack, so the
         # contract is enforced). Proceed to construct the trainer.
         return
+    # Call the bound method explicitly. Any error raised here — TypeError
+    # from a non-callable attribute, a runtime error inside the
+    # method body — propagates so a bug in the partner adapter is loud,
+    # not silent.
+    params_iter = params_method()
     # The partner exposed torch params: walk and refuse on the first
     # parameter with ``requires_grad=True``.
     for name, param in params_iter:
@@ -500,7 +507,7 @@ class EgoPPOTrainer:
         ego_uid: str,
         ego_obs_space: gym.spaces.Box,  # type: ignore[type-arg]
         ego_act_space: gym.spaces.Box,  # type: ignore[type-arg]
-        partner: object,
+        partner: PartnerLike,
         device: torch.device | None = None,
     ) -> None:
         """Build the trainer (M4b-8a; ADR-002 §Decisions; plan/05 §3.5).
@@ -607,7 +614,7 @@ class EgoPPOTrainer:
         cfg: EgoAHTConfig,
         *,
         env: EnvLike,
-        partner: object,
+        partner: PartnerLike,
         ego_uid: str,
     ) -> EgoPPOTrainer:
         """Build from :class:`EgoAHTConfig` + a concrete env + the frozen partner.
