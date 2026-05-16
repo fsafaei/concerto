@@ -8,6 +8,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 While the project is on `0.x`, MINOR-version bumps may break the public API
 per SemVer §4.
 
+## [0.5.0](https://github.com/fsafaei/concerto/compare/v0.4.0...v0.5.0) (2026-05-16)
+
+
+### Features
+
+* **ci:** verify-changelog-completeness guardrail (closes [#126](https://github.com/fsafaei/concerto/issues/126)) ([#135](https://github.com/fsafaei/concerto/issues/135)) ([255940e](https://github.com/fsafaei/concerto/commit/255940ee81907b5752be3228de4150e913aaf70c))
+
+
+### Documentation
+
+* **readme:** sync TestPyPI badge + CITATION.cff for v0.4.0 ([#137](https://github.com/fsafaei/concerto/issues/137)) ([e83e940](https://github.com/fsafaei/concerto/commit/e83e9407a91dec99c93bcc9e1dea0b737eba2e78))
+
 ## [0.4.0](https://github.com/fsafaei/concerto/compare/v0.3.1...v0.4.0) (2026-05-16)
 
 
