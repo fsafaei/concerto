@@ -35,6 +35,17 @@ import numpy as np
 import pytest
 from torch import nn
 
+# HARL is scoped to the ``[dependency-groups].train`` PEP 735 group
+# (ADR-002 §Revision-history 2026-05-16; #131). The trainer-rejection
+# tests below construct :class:`EgoPPOTrainer.from_config`, which lazily
+# imports HARL inside ``__init__``. Skip the whole module if the train
+# group is not installed so ``uv sync --group dev``-only environments
+# do not see spurious failures pointing at the trainer's helpful error.
+pytest.importorskip(
+    "harl.algorithms.actors.happo",
+    reason="HARL not installed; run `uv sync --group train` to enable HARL tests.",
+)
+
 from chamber.benchmarks.ego_ppo_trainer import EgoPPOTrainer
 from chamber.envs.mpe_cooperative_push import MPECooperativePushEnv
 from chamber.partners.api import PartnerSpec

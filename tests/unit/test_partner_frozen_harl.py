@@ -23,14 +23,24 @@ import gymnasium as gym
 import numpy as np
 import pytest
 import torch
-from harl.models.policy_models.stochastic_policy import StochasticPolicy
 
-from chamber.partners.api import PartnerSpec
-from chamber.partners.frozen_harl import (
+# HARL is scoped to the ``[dependency-groups].train`` PEP 735 group
+# (ADR-002 §Revision-history 2026-05-16; #131; pyproject.toml). Skip the
+# whole module if the group is not installed. ``pytest.importorskip``
+# returns the imported module; the module-level binding below mirrors
+# the original ``from`` import so test bodies do not need to change.
+_harl_stochastic_policy = pytest.importorskip(
+    "harl.models.policy_models.stochastic_policy",
+    reason="HARL not installed; run `uv sync --group train` to enable HARL tests.",
+)
+StochasticPolicy = _harl_stochastic_policy.StochasticPolicy
+
+from chamber.partners.api import PartnerSpec  # noqa: E402
+from chamber.partners.frozen_harl import (  # noqa: E402
     _HARL_INFERENCE_ARGS,
     FrozenHARLPartner,
 )
-from concerto.training.checkpoints import (
+from concerto.training.checkpoints import (  # noqa: E402
     CheckpointError,
     CheckpointMetadata,
     save_checkpoint,

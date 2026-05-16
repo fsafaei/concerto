@@ -37,7 +37,7 @@ jobs:
       - uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b  # v5.4.1
         with:
           python-version: ${{ matrix.python-version }}
-      - run: uv sync --group dev
+      - run: uv sync --group dev --group train
       - run: uv run ruff check src tests
       - run: uv run ruff format --check src tests
 
@@ -52,7 +52,7 @@ jobs:
       - uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b  # v5.4.1
         with:
           python-version: ${{ matrix.python-version }}
-      - run: uv sync --group dev
+      - run: uv sync --group dev --group train
       - run: uv run pyright
 
   test-unit:
@@ -66,7 +66,7 @@ jobs:
       - uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b  # v5.4.1
         with:
           python-version: ${{ matrix.python-version }}
-      - run: uv sync --group dev
+      - run: uv sync --group dev --group train
       - run: uv run pytest tests/unit -n auto --no-cov
 
   test-property:
@@ -80,7 +80,7 @@ jobs:
       - uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b  # v5.4.1
         with:
           python-version: ${{ matrix.python-version }}
-      - run: uv sync --group dev
+      - run: uv sync --group dev --group train
       - run: uv run pytest tests/property --no-cov
 
   test-integration:
@@ -94,7 +94,7 @@ jobs:
       - uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b  # v5.4.1
         with:
           python-version: ${{ matrix.python-version }}
-      - run: uv sync --group dev
+      - run: uv sync --group dev --group train
       - run: uv run pytest tests/integration -n auto -m "not gpu" --no-cov
 
   coverage-gate:
@@ -106,7 +106,7 @@ jobs:
       - uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b  # v5.4.1
         with:
           python-version: "3.11"
-      - run: uv sync --group dev
+      - run: uv sync --group dev --group train
       - run: uv run pytest --cov=concerto --cov=chamber --cov-fail-under=80 --cov-report=xml
       - uses: codecov/codecov-action@57e3a136b779b570ffcdbf80b3bdc90e7fab3de2  # v6.0.0
         with:
@@ -121,7 +121,7 @@ jobs:
       - uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b  # v5.4.1
         with:
           python-version: "3.11"
-      - run: uv sync --extra docs --group dev
+      - run: uv sync --extra docs --group dev --group train
       - run: uv run mkdocs build --strict
 
   licence-scan:
@@ -132,7 +132,7 @@ jobs:
       - uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b  # v5.4.1
         with:
           python-version: "3.11"
-      - run: uv sync --group dev
+      - run: uv sync --group dev --group train
       - run: uv run pip-licenses --format=json --with-license-file --with-notice-file --output-file=licences.json
       - run: uv run python scripts/check_licences.py < licences.json
 
@@ -144,7 +144,7 @@ jobs:
       - uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b  # v5.4.1
         with:
           python-version: "3.11"
-      - run: uv sync --group dev
+      - run: uv sync --group dev --group train
       - run: uv run cyclonedx-py environment -o sbom.spdx.json
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
         with:
@@ -162,7 +162,7 @@ jobs:
       - uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b  # v5.4.1
         with:
           python-version: ${{ matrix.python-version }}
-      - run: uv sync --group dev
+      - run: uv sync --group dev --group train
       # GPU-less runners: Tier-1 (fake env) tests run; Tier-2 (real ManiSkill) tests skip.
       - run: uv run pytest -m smoke --no-cov
 

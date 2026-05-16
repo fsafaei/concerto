@@ -20,9 +20,20 @@ Thank you for your interest in contributing.
 git clone https://github.com/concerto-org/concerto.git
 cd concerto
 pip install uv
-uv sync --group dev
+uv sync --group dev --group train
 pre-commit install --install-hooks
 ```
+
+`--group train` pulls the
+[HARL fork](https://github.com/fsafaei/harl-fork) used by
+`chamber.benchmarks.ego_ppo_trainer` and
+`chamber.partners.frozen_harl`. It is *not* part of the runtime
+dependencies because PyPI rejects wheel `METADATA` containing
+`git+URL` direct references; see ADR-002 §Revision-history
+(2026-05-16) and [#131](https://github.com/fsafaei/concerto/issues/131)
+for the design rationale, and
+[#132](https://github.com/fsafaei/concerto/issues/132) for the
+Phase-1 follow-up that publishes the fork to PyPI.
 
 ## Workflow
 
@@ -52,6 +63,20 @@ uv run pytest -m smoke  # Stage-0 smoke (requires M1 complete)
 ```
 
 Coverage gates: ≥80% overall; ≥95% on ADR-bearing modules.
+
+The trainer / partner tests that touch the
+[HARL fork](https://github.com/fsafaei/harl-fork) (e.g.
+`tests/unit/test_partner_frozen_harl.py`,
+`tests/unit/test_ego_ppo_trainer.py`,
+`tests/unit/test_ego_ppo_trainer_rejects_non_frozen_partner.py`,
+`tests/property/test_advantage_decomposition.py`,
+`tests/integration/test_draft_zoo.py`) require the `train` dependency
+group. `make install` installs it automatically; if you ran
+`uv sync --group dev` only, those tests skip cleanly via
+`pytest.importorskip` (each file declares a module-level skip naming
+the install command). The
+HARL lazy-import contract is pinned by
+`tests/unit/test_harl_lazy_import.py`.
 
 ## Dependency changes
 

@@ -56,7 +56,6 @@ from typing import TYPE_CHECKING, Any, ClassVar
 import gymnasium as gym
 import numpy as np
 import torch
-from harl.algorithms.actors.happo import HAPPO
 from torch import nn
 
 from concerto.training.seeding import derive_substream
@@ -64,6 +63,13 @@ from concerto.training.seeding import derive_substream
 if TYPE_CHECKING:  # pragma: no cover
     from collections.abc import Mapping
 
+    # HARL is scoped to the `[dependency-groups].train` PEP 735 group
+    # (ADR-002 §Revision-history 2026-05-16; #131). The TYPE_CHECKING-
+    # only import here lets pyright resolve the `HAPPO` annotation
+    # without forcing a runtime dependency on the import package; the
+    # runtime import lives in ``EgoPPOTrainer.__init__`` and surfaces a
+    # clear ``ModuleNotFoundError`` if the train group is missing.
+    from harl.algorithms.actors.happo import HAPPO
     from numpy.typing import NDArray
 
     from concerto.training.config import EgoAHTConfig, HAPPOHyperparams
@@ -577,6 +583,27 @@ class EgoPPOTrainer:
 
         harl_args = _build_harl_args(happo=cfg.happo)
         self._harl_args = harl_args
+        # HARL is scoped to `[dependency-groups].train` (ADR-002
+        # §Revision-history 2026-05-16; #131) because PyPI rejects wheel
+        # METADATA containing `git+URL` direct refs. Importing here (rather
+        # than at module top) keeps `import chamber.benchmarks` cheap for
+        # safety-stack-only consumers; the explicit error message points at
+        # the train-group install command and at the Phase-1 follow-up
+        # (#132 — publish `harl-aht` to PyPI).
+        try:
+            from harl.algorithms.actors.happo import HAPPO
+        except ModuleNotFoundError as exc:
+            msg = (
+                "chamber.benchmarks.ego_ppo_trainer.EgoPPOTrainer requires "
+                "the HARL fork, which is scoped to the "
+                "[dependency-groups].train PEP 735 group rather than a "
+                "runtime dependency (ADR-002 §Revision-history 2026-05-16). "
+                "Install it via `uv sync --group train` from a source "
+                "checkout, or see "
+                "https://github.com/fsafaei/concerto/issues/132 for the "
+                "Phase-1 plan to publish `harl-aht` to PyPI."
+            )
+            raise ModuleNotFoundError(msg) from exc
         self._happo: HAPPO = HAPPO(harl_args, ego_obs_space, ego_act_space, self._device)
         obs_dim = int(ego_obs_space.shape[0])
         self._obs_dim = obs_dim
