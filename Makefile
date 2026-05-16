@@ -1,5 +1,6 @@
 .PHONY: install test lint typecheck format docs docs-build \
         verify-licences verify-no-ai-mentions verify-coverage-floors \
+        verify-changelog-completeness \
         sbom smoke verify \
         empirical-guarantee zoo-seed-gpu zoo-seed-pull zoo-seed-verify \
         stage1-as stage1-om
@@ -41,6 +42,15 @@ verify-licences:
 
 verify-no-ai-mentions:
 	bash scripts/check_no_ai_mentions.sh
+
+# Guard against the release-please CHANGELOG-skip bug (#126). Re-runs a
+# minimal Conventional-Commits filter over `git log <prev-tag>..HEAD` and
+# asserts every release-worthy commit's short SHA appears in the top
+# CHANGELOG.md section. Silent on non-release branches (top section already
+# matches the latest tag → nothing to verify). Load-bearing on the
+# release-please PR.
+verify-changelog-completeness:
+	uv run python scripts/check_changelog_completeness.py
 
 # Per-package line-coverage floors (plan/02 §6 #2; plan/03 §6 #8;
 # plan/04 §6 #5; plan/05 §6 #8; plan/06 §6 #6). Reads coverage.xml
@@ -103,4 +113,4 @@ stage1-as:
 stage1-om:
 	bash scripts/repro/stage1_om.sh
 
-verify: lint typecheck test verify-coverage-floors docs-build verify-licences verify-no-ai-mentions
+verify: lint typecheck test verify-coverage-floors docs-build verify-licences verify-no-ai-mentions verify-changelog-completeness
