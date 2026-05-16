@@ -42,7 +42,14 @@ evidence per their own §Validation criteria.
 is not yet established — the conformal layer gives an average-loss
 bound (Huriot & Sibai 2025 Theorem 3); sharpening to per-step is
 gated by the Stage-1 AS spike and the follow-up safety-stack refactor.
-See [ADR-004 §Open questions](ADR-004-safety-filter.md#open-questions-deferred-to-a-later-adr)
+The partner-swap reset value
+`concerto.safety.conformal.reset_on_partner_swap(..., lambda_safe=0.0, ...)`
+ships with a Phase-0 placeholder default; the derived form
+`lambda_safe(bounds, predictor_error_bound, dt, pair_geometry)` that
+would preserve QP feasibility under the worst-case bounded prediction
+error is deferred alongside the per-step bound (external-review P0-4,
+2026-05-16). See
+[ADR-004 §Open questions](ADR-004-safety-filter.md#open-questions-deferred-to-a-later-adr)
 and [ADR-006 §Open questions](ADR-006-partner-policy-assumptions.md#open-questions-deferred-to-a-later-adr).
 
 <sup>b</sup> The staged Phase-0 spike protocol (Stage 1: AS + OM;

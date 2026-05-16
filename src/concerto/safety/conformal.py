@@ -20,10 +20,14 @@ Phase-1 upgrade.
 
 Partner-swap (ADR-004 risk-mitigation #2; ADR-006 risk #3): on
 ``obs["meta"]["partner_id"]`` identity change, ``lambda`` is reset to
-``lambda_safe`` (the QP-feasibility-preserving value derived from
-:class:`Bounds`) and the next ``warmup_steps_remaining`` steps run with
+``lambda_safe`` and the next ``warmup_steps_remaining`` steps run with
 ``eps_warmup = 1.5 * eps`` (narrower target — for the default negative
-``eps``, "narrower" means more negative, i.e., tighter still).
+``eps``, "narrower" means more negative, i.e., tighter still). The
+default ``lambda_safe=0.0`` is a Phase-0 conservative *placeholder*,
+not a derived QP-feasibility-preserving value; the derivation
+``lambda_safe(bounds, predictor_error_bound, dt, pair_geometry)`` is
+deferred to ADR-004 §Open questions. See :func:`reset_on_partner_swap`
+for the per-caller override guidance.
 """
 
 from __future__ import annotations
@@ -294,12 +298,28 @@ def reset_on_partner_swap(
     ``n_warmup_steps`` calls to :func:`update_lambda` use the narrower
     warmup target.
 
+    The default ``lambda_safe=0.0`` is a Phase-0 conservative
+    *placeholder*, **not** a derived QP-feasibility-preserving value.
+    The derived form ``lambda_safe(bounds, predictor_error_bound, dt,
+    pair_geometry)`` — the worst-case bounded-prediction-error envelope
+    that would preserve QP feasibility — has not been implemented; its
+    derivation is deferred to ADR-004 §"Open questions deferred to a
+    later ADR" (see also the ADR-INDEX open-work footnote ``a``).
+    Callers who require provable safety should override ``lambda_safe``
+    explicitly with a value derived from their own problem's bounds,
+    not rely on the default. The Phase-0 partner-swap tests
+    (``tests/integration/test_partner_swap.py``) exercise both the
+    default and explicit-override paths.
+
     Args:
         state: Mutable :class:`SafetyState`.
         n_pairs: Number of agent pairs (sets the new ``lambda_`` length).
-        lambda_safe: QP-feasibility-preserving value (default ``0.0``;
-            ADR-006 §Decision specifies the worst-case bounded-prediction-
-            error envelope at ``lambda``).
+        lambda_safe: Per-pair slack used at reset. **Phase-0 placeholder
+            default: ``0.0``.** The derived QP-feasibility-preserving form
+            named in ADR-006 §Decision is not implemented; see the
+            ADR-004 §Open questions entry above. Callers that need a
+            provable safety envelope MUST pass an explicitly-derived
+            value.
         n_warmup_steps: Length of the high-caution window (default
             :data:`concerto.safety.api.DEFAULT_WARMUP_STEPS` = 50).
     """
