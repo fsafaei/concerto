@@ -42,6 +42,7 @@ for the row builders that turn high-level safety specs into linear
 from __future__ import annotations
 
 import time
+import warnings
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
@@ -75,12 +76,27 @@ _COINCIDENT_TOL: float = 1e-9
 #: (ADR-014 Table 2; external-review P0-3, 2026-05-16). Slack values
 #: below this threshold are treated as interior-point round-off and
 #: excluded from the ``active_rows`` enumeration so the telemetry
-#: signal is not dominated by solver noise. Calibrated above Clarabel's
-#: observed feasible-interior round-off (~1e-5 on the OSCBF-shape QPs
-#: in `tests/unit/test_oscbf_returns_slack.py`); a real Phase-1 row
-#: that is genuinely slack-active will be orders of magnitude above
-#: this floor.
+#: signal is not dominated by solver noise.
+#:
+#: Calibration: Clarabel's observed feasible-interior round-off on the
+#: OSCBF-shape QPs in ``tests/unit/test_oscbf_returns_slack.py`` is
+#: ~5e-6; OSQP under :data:`concerto.safety.solvers._OSQP_TIGHT_SETTINGS`
+#: (``eps_abs = eps_rel = 1e-9``, polishing on) converges to a similar
+#: order of magnitude. The 1e-4 floor sits one to two orders of
+#: magnitude above this round-off ceiling and the same value works
+#: for both solvers; a real Phase-1 slack-active row will be orders of
+#: magnitude above the floor (the QP penalty cost grows quadratically
+#: in slack so meaningful relaxation is loud).
 _SLACK_ACTIVE_FLOOR: float = 1e-4
+
+#: Threshold for surfacing a "raw slack went negative" warning before
+#: the non-negativity clip in :meth:`OSCBF.solve`. The QP's ``-s <= 0``
+#: row guarantees slack >= 0 mathematically; tiny negative excursions
+#: are interior-point round-off below the constraint surface and are
+#: clipped silently to zero. A negative excursion *below* this floor
+#: indicates a solver bug or numerical pathology and is logged so the
+#: clip does not silently mask it (review P0-3 reviewer follow-up).
+_NEGATIVE_SLACK_WARN_FLOOR: float = -1e-6
 
 
 @dataclass(frozen=True)
@@ -420,8 +436,24 @@ class OSCBF:
         q_dot: FloatArray = x[:n].astype(np.float64, copy=False)
         # Slack is at x[n:n+m]; clip tiny negatives that can occur as
         # solver round-off below the ``-s <= 0`` constraint surface so
-        # ``max_slack`` and ``slack_l2`` are always non-negative.
+        # ``max_slack`` and ``slack_l2`` are always non-negative. A
+        # negative excursion *below* :data:`_NEGATIVE_SLACK_WARN_FLOOR`
+        # is too large to be round-off and indicates a solver bug; we
+        # log it via :class:`UserWarning` so the silent clip doesn't
+        # mask it (review P0-3 reviewer follow-up).
         slack_raw: FloatArray = x[n : n + m].astype(np.float64, copy=False)
+        if m > 0:
+            min_raw = float(slack_raw.min())
+            if min_raw < _NEGATIVE_SLACK_WARN_FLOOR:
+                warnings.warn(
+                    "OSCBF: raw slack went below the round-off floor "
+                    f"(min={min_raw!r} < {_NEGATIVE_SLACK_WARN_FLOOR!r}); "
+                    "clipping to zero. This indicates the QP solver "
+                    "returned an infeasible iterate — investigate before "
+                    "trusting the OSCBFResult.slack telemetry.",
+                    UserWarning,
+                    stacklevel=2,
+                )
         slack: FloatArray = np.maximum(slack_raw, 0.0)
         active_rows: tuple[int, ...] = tuple(
             int(i) for i in np.flatnonzero(slack > _SLACK_ACTIVE_FLOOR).tolist()

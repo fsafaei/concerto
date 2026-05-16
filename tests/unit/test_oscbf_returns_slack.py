@@ -182,6 +182,49 @@ def test_oscbf_aggregates_consistent_with_slack_vector() -> None:
     assert result.slack_l2 == pytest.approx(float(np.linalg.norm(result.slack)))
 
 
+def test_oscbf_warns_when_raw_slack_below_round_off_floor() -> None:
+    """A real solver bug returning materially-negative slack triggers a UserWarning.
+
+    The QP's ``-s <= 0`` row makes slack non-negative mathematically; the
+    helper clips tiny round-off excursions silently but emits a
+    :class:`UserWarning` when the excursion is below
+    ``_NEGATIVE_SLACK_WARN_FLOOR`` (review P0-3 reviewer follow-up).
+    The test stubs the solver to return a negative slack iterate.
+    """
+    from concerto.safety.oscbf import OSCBF as _OSCBF  # local rebind for stubbing
+
+    class _NegativeSlackSolver:
+        """Stub: returns an x with materially-negative slack to simulate a solver bug."""
+
+        def solve(
+            self,
+            P: np.ndarray,
+            q: np.ndarray,
+            A: np.ndarray,
+            b: np.ndarray,
+            *,
+            warm_start: bool = True,
+        ) -> tuple[np.ndarray, float]:
+            del P, q, A, b, warm_start
+            n = 3
+            m = 1
+            x = np.zeros(n + m, dtype=np.float64)
+            x[n] = -1e-3  # well below _NEGATIVE_SLACK_WARN_FLOOR = -1e-6
+            return x, 0.0
+
+    n = 3
+    oscbf = _OSCBF(n_joints=n, solver=_NegativeSlackSolver())
+    with pytest.warns(UserWarning, match="raw slack went below"):
+        result = oscbf.solve(
+            q_dot_nom=np.zeros(n, dtype=np.float64),
+            nu_nom=np.zeros(6, dtype=np.float64),
+            jacobian=np.zeros((6, n), dtype=np.float64),
+            constraints=_feasible_constraints(n),
+        )
+    # The clip still fires — the public-facing slack is non-negative.
+    assert result.slack.min() >= 0.0
+
+
 def test_oscbf_active_rows_match_nonzero_slack_indices() -> None:
     """``active_rows`` enumerates exactly the indices with slack above the floor."""
     n = 3

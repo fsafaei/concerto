@@ -46,7 +46,13 @@ if TYPE_CHECKING:
     import pathlib
 
 #: ADR-014 schema version. Bumping is a breaking change to the
-#: three-table wire format and requires a new ADR.
+#: three-table wire format. A *forward-additive* bump (legacy payloads
+#: parse cleanly with the new fields defaulting) lands via an ADR-014
+#: §Revision history amendment; a *backward-incompatible* bump (a
+#: field is renamed, removed, or changes semantics) requires a fresh
+#: ADR-014a. The 2026-05-16 v1 → v2 bump follows the first pattern:
+#: ``ConditionRow.max_slack`` and ``ConditionRow.slack_l2`` default to
+#: ``0.0`` on read so v1 payloads survive the parse.
 #:
 #: - **2**: ``ConditionRow`` gains ``max_slack`` and ``slack_l2`` columns
 #:   (external-review P0-3, 2026-05-16); see ADR-014 §Decision and
