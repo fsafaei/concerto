@@ -1,5 +1,5 @@
 [project]
-name = "concerto"
+name = "concerto-multirobot"
 version = "0.3.1"
 description = "Heterogeneous Multi-Robot Ad-Hoc Teamwork — benchmark + safety stack."
 readme = "README.md"

@@ -34,7 +34,7 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           release-type: python
-          package-name: concerto
+          package-name: concerto-multirobot
 
   publish:
     runs-on: ubuntu-latest
