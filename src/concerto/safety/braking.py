@@ -49,6 +49,7 @@ from typing import TYPE_CHECKING
 
 import numpy as np
 
+from concerto.safety.api import canonical_pair_order
 from concerto.safety.emergency import (
     CartesianAccelEmergencyController,
 )
@@ -130,13 +131,17 @@ def compute_min_ttc(
             :class:`concerto.safety.cbf_qp.AgentSnapshot`).
 
     Returns:
-        Mapping from ``(uid_i, uid_j)`` (lexicographic uid order
-        preserved from input dict insertion) to TTC in seconds. Empty
-        dict when fewer than two agents are present. ``0.0`` indicates
-        already in collision; ``+inf`` indicates no collision on the
-        current trajectory.
+        Mapping from ``(uid_i, uid_j)`` (canonical lexicographic uid
+        order, ``uid_i < uid_j``) to TTC in seconds. Empty dict when
+        fewer than two agents are present. ``0.0`` indicates already
+        in collision; ``+inf`` indicates no collision on the current
+        trajectory. The return type is a ``dict`` so consumers index
+        by uid-pair tuple regardless of iteration order; the keys are
+        emitted under :func:`concerto.safety.api.canonical_pair_order`
+        for consistency with the conformal-slack indexing
+        (external-review P1, 2026-05-16; ADR-004 §Decision).
     """
-    uids = list(snaps.keys())
+    uids = canonical_pair_order(snaps.keys())
     ttc: dict[tuple[str, str], float] = {}
     for i, uid_i in enumerate(uids):
         for uid_j in uids[i + 1 :]:

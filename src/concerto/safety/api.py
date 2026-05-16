@@ -49,10 +49,14 @@ FloatArray = npt.NDArray[np.float64]
 def canonical_pair_order(uids: Iterable[str]) -> list[str]:
     """Canonical lexicographic UID order for pair iteration (ADR-004 §Decision).
 
-    Internal helper for the three pair-iteration entry points
+    Public utility used by the three pair-iteration entry points
     (:func:`concerto.safety.conformal.compute_prediction_gap_for_pairs`,
     :meth:`concerto.safety.cbf_qp.ExpCBFQP._filter_ego_only`, and
-    :meth:`concerto.safety.cbf_qp.ExpCBFQP._filter_joint`). Returns
+    :meth:`concerto.safety.cbf_qp.ExpCBFQP._filter_joint`); third-party
+    consumers building their own pair-iteration code over the safety
+    stack should call this helper to stay aligned with the same
+    canonical ordering :class:`SafetyState` ``lambda_`` is indexed
+    against. Returns
     a list of the UIDs sorted lexicographically; downstream code
     iterates upper-triangular pairs ``(uids[i], uids[j]) for i < j``
     so the pair index for any ``(uid_a, uid_b)`` (with

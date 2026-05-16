@@ -13,7 +13,7 @@ kind of safety bug — the wrong constraint gets the wrong slack.
 
 This PR implements **Option (c)** from the Plan subagent's design
 pass: canonical lexicographic UID sort at every entry point that
-iterates pairs (the helper is `concerto.safety.api._canonical_pair_order`).
+iterates pairs (the helper is `concerto.safety.api.canonical_pair_order`).
 The runtime invariant is "pair iteration is sorted-by-uid"; the
 structural fix that promotes `lambda_` to `dict[tuple[str, str],
 float]` is deferred to Phase-1 (it requires bumping ADR-014's
@@ -33,7 +33,7 @@ These tests pin the alignment under three reconstruction stressors:
 References:
 - ADR-004 §Decisions (2026-05-16 amendment: canonical-pair-keying
   invariant).
-- ``src/concerto/safety/api.py::_canonical_pair_order`` — the helper.
+- ``src/concerto/safety/api.py::canonical_pair_order`` — the helper.
 - Plan subagent design pass — recommended Option (c) at ~120 LOC.
 """
 

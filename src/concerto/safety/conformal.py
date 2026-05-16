@@ -236,7 +236,9 @@ def update_lambda_from_predictor(
 
     Raises:
         ValueError: If ``snaps_now`` and ``snaps_prev`` do not share
-            identical key order, or if the resulting loss shape
+            identical key *sets* (insertion order is tolerated as of
+            the 2026-05-16 canonical-pair-keying amendment; see
+            ADR-004 §Decision), or if the resulting loss shape
             mismatches ``state.lambda_``.
     """
     if set(snaps_now.keys()) != set(snaps_prev.keys()):
