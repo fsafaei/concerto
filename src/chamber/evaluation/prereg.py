@@ -34,6 +34,18 @@ if TYPE_CHECKING:
 #: Permitted ADR-007 §3.4 axis labels (Option D shortlist).
 _AXIS_LABELS = frozenset({"CR", "AS", "OM", "CM", "PF", "SA"})
 
+#: Canonical iteration order for the six ADR-007 §3.4 axes (ADR-007
+#: §Implementation staging).
+#:
+#: Order is Stage 1 (AS, OM) → Stage 2 (CR, CM) → Stage 3 (PF, SA), matching
+#: the staged spike protocol committed in ADR-007 §Decision. Consumers
+#: that need to iterate the axis set deterministically — ``chamber-spike
+#: verify-prereg --all`` (plan/07 §6 #5), the Month-3 summarize report
+#: (plan/07 §T5b.10) — walk this tuple rather than sorting the unordered
+#: :data:`_AXIS_LABELS` frozenset, so user-facing output is stable and
+#: stage-grouped.
+CANONICAL_AXIS_ORDER: tuple[str, ...] = ("AS", "OM", "CR", "CM", "PF", "SA")
+
 #: Exit code consumers should emit when an ADR-007 §Discipline check fails
 #: (missing tag, file outside repo, or blob-SHA mismatch). Distinct from
 #: argparse's 2 ("bad usage") and the training trip-wire's 3 so reproduction
@@ -255,6 +267,7 @@ def verify_git_tag(
 
 
 __all__ = [
+    "CANONICAL_AXIS_ORDER",
     "PREREG_MISMATCH_EXIT_CODE",
     "BootstrapMethod",
     "FailurePolicy",

@@ -8,7 +8,9 @@ Covers the three subcommands B6 ships:
   commits a real prereg YAML, cuts the tag, and asserts the CLI exits
   0 with a ``PASS — ... blob_sha=...`` line. The unhappy-path tests
   pin the three documented failure modes: missing tag, on-disk
-  tamper, and missing file.
+  tamper, and missing file. ``--all`` (plan/07 §6 #5) walks the six
+  canonical axes in their staged order (AS → OM → CR → CM → PF → SA)
+  and aggregates per-axis pass/fail without short-circuiting.
 - ``list-axes`` — the six ADR-007 §3.4 axis labels appear in stdout
   along with their Phase-0 stage assignment.
 - ``list-profiles`` — every key in :data:`chamber.comm.URLLC_3GPP_R17`
@@ -23,6 +25,7 @@ no-subcommand path.
 from __future__ import annotations
 
 import os
+import re
 import shutil
 import subprocess
 from typing import TYPE_CHECKING
@@ -30,6 +33,7 @@ from typing import TYPE_CHECKING
 import pytest
 
 from chamber.cli.spike import main
+from chamber.evaluation.prereg import PREREG_MISMATCH_EXIT_CODE
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -249,6 +253,174 @@ class TestVerifyPreregRepoRootInference:
         assert rc == 0, f"expected exit 0, got {rc}"
         captured = capsys.readouterr()
         assert "PASS" in captured.out
+
+
+# ---------------------------------------------------------------------------
+# verify-prereg --all
+# ---------------------------------------------------------------------------
+
+
+def _make_axis_yaml(axis: str) -> str:
+    """Build a minimal-but-valid prereg YAML body for a given axis label."""
+    return (
+        f"axis: {axis}\n"
+        "condition_pair:\n"
+        f"  homogeneous_id: stage_homo_{axis.lower()}\n"
+        f"  heterogeneous_id: stage_hetero_{axis.lower()}\n"
+        "seeds: [0, 1, 2, 3, 4]\n"
+        "episodes_per_seed: 20\n"
+        "estimator: iqm_success_rate\n"
+        "bootstrap_method: cluster\n"
+        "failure_policy: strict\n"
+        "run_purpose: leaderboard\n"
+        f"git_tag: prereg-{axis}-test\n"
+        "notes: Throwaway fixture for verify-prereg --all test.\n"
+    )
+
+
+@pytest.fixture
+def six_axis_tagged_repo(tmp_path: Path) -> tuple[Path, dict[str, Path]]:
+    """Build a tmp git repo with all six canonical prereg YAMLs committed + tagged.
+
+    Returns ``(repo_root, {axis: prereg_path})``.
+    """
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    _git("init", "--initial-branch=main", "--quiet", str(repo), repo=tmp_path)
+    prereg_dir = repo / "spikes" / "preregistration"
+    prereg_dir.mkdir(parents=True)
+    paths: dict[str, Path] = {}
+    for axis in ("AS", "OM", "CR", "CM", "PF", "SA"):
+        path = prereg_dir / f"{axis}.yaml"
+        path.write_text(_make_axis_yaml(axis), encoding="utf-8")
+        _git("add", f"spikes/preregistration/{axis}.yaml", repo=repo)
+        _git("commit", "--no-gpg-sign", "-m", f"add {axis} prereg", repo=repo)
+        _git("tag", "-a", f"prereg-{axis}-test", "-m", f"tag {axis} prereg", repo=repo)
+        paths[axis] = path
+    return repo, paths
+
+
+_AXIS_LINE_RE = re.compile(r"axis=([A-Z]{2})")
+
+
+class TestVerifyPreregAll:
+    """``chamber-spike verify-prereg --all`` (plan/07 §6 #5)."""
+
+    def test_passes_on_clean_corpus(
+        self,
+        six_axis_tagged_repo: tuple[Path, dict[str, Path]],
+        capsys: pytest.CaptureFixture[str],
+    ) -> None:
+        """Six clean YAMLs ⇒ exit 0; one PASS line per axis in canonical order."""
+        repo, _paths = six_axis_tagged_repo
+        rc = main(["verify-prereg", "--all", "--repo-root", str(repo)])
+        assert rc == 0, f"expected exit 0, got {rc}"
+        captured = capsys.readouterr()
+        axis_lines = [ln for ln in captured.out.splitlines() if "axis=" in ln]
+        assert len(axis_lines) == 6, f"expected 6 axis lines, got {axis_lines!r}"
+        seen = [_AXIS_LINE_RE.search(ln).group(1) for ln in axis_lines]  # type: ignore[union-attr]
+        assert seen == ["AS", "OM", "CR", "CM", "PF", "SA"], f"axes printed out of order: {seen!r}"
+        for ln in axis_lines:
+            assert "PASS" in ln, f"expected PASS on line {ln!r}"
+            assert "blob_sha=" in ln, f"expected blob_sha on line {ln!r}"
+
+    def test_fails_loud_on_one_tamper(
+        self,
+        six_axis_tagged_repo: tuple[Path, dict[str, Path]],
+        capsys: pytest.CaptureFixture[str],
+    ) -> None:
+        """One tampered YAML ⇒ exit 4; offending axis on stderr; other five PASS."""
+        repo, paths = six_axis_tagged_repo
+        tampered_path = paths["OM"]
+        original = tampered_path.read_text(encoding="utf-8")
+        tampered = original.replace("stage_homo_om", "stage_homo_TAMP")
+        assert tampered != original
+        tampered_path.write_text(tampered, encoding="utf-8")
+
+        rc = main(["verify-prereg", "--all", "--repo-root", str(repo)])
+        assert rc == PREREG_MISMATCH_EXIT_CODE, (
+            f"expected exit {PREREG_MISMATCH_EXIT_CODE}, got {rc}"
+        )
+        captured = capsys.readouterr()
+        # Offending axis named explicitly on stderr.
+        assert "axis=OM" in captured.err, (
+            f"expected offending axis OM on stderr; got: {captured.err!r}"
+        )
+        assert "FAIL" in captured.err
+        # The other five still report PASS on stdout — user sees the full picture.
+        for axis in ("AS", "CR", "CM", "PF", "SA"):
+            assert f"axis={axis}" in captured.out, (
+                f"expected non-failing axis {axis} on stdout; got: {captured.out!r}"
+            )
+
+    def test_mutually_exclusive_with_spike(
+        self,
+        six_axis_tagged_repo: tuple[Path, dict[str, Path]],
+        capsys: pytest.CaptureFixture[str],
+    ) -> None:
+        """Passing both --spike and --all is rejected by argparse (exit 2)."""
+        repo, paths = six_axis_tagged_repo
+        with pytest.raises(SystemExit) as excinfo:
+            main(
+                [
+                    "verify-prereg",
+                    "--spike",
+                    str(paths["AS"]),
+                    "--all",
+                    "--repo-root",
+                    str(repo),
+                ]
+            )
+        assert excinfo.value.code == 2
+
+    def test_requires_either_spike_or_all(self, tmp_path: Path) -> None:
+        """``verify-prereg`` with neither flag is rejected by argparse (exit 2)."""
+        del tmp_path
+        with pytest.raises(SystemExit) as excinfo:
+            main(["verify-prereg"])
+        assert excinfo.value.code == 2
+
+    def test_fails_loud_on_missing_axis_yaml(
+        self,
+        six_axis_tagged_repo: tuple[Path, dict[str, Path]],
+        capsys: pytest.CaptureFixture[str],
+    ) -> None:
+        """A canonical axis YAML deleted post-corpus ⇒ exit 4; the gap is named loudly."""
+        repo, paths = six_axis_tagged_repo
+        # Pretend the PF YAML was never checked in.
+        paths["PF"].unlink()
+        rc = main(["verify-prereg", "--all", "--repo-root", str(repo)])
+        assert rc == PREREG_MISMATCH_EXIT_CODE, (
+            f"expected exit {PREREG_MISMATCH_EXIT_CODE}, got {rc}"
+        )
+        captured = capsys.readouterr()
+        assert "axis=PF" in captured.err
+        assert "not found" in captured.err
+        for axis in ("AS", "OM", "CR", "CM", "SA"):
+            assert f"axis={axis}" in captured.out, (
+                f"expected non-failing axis {axis} on stdout; got: {captured.out!r}"
+            )
+
+    def test_skips_non_axis_yamls(
+        self,
+        six_axis_tagged_repo: tuple[Path, dict[str, Path]],
+        capsys: pytest.CaptureFixture[str],
+    ) -> None:
+        """A stray ``_template.yaml`` / ``README.md`` in the prereg dir is ignored."""
+        repo, _paths = six_axis_tagged_repo
+        prereg_dir = repo / "spikes" / "preregistration"
+        (prereg_dir / "_template.yaml").write_text(
+            "axis: GARBAGE\nthis is intentionally invalid\n",
+            encoding="utf-8",
+        )
+        (prereg_dir / "README.md").write_text("# decoy\n", encoding="utf-8")
+        rc = main(["verify-prereg", "--all", "--repo-root", str(repo)])
+        assert rc == 0, f"expected exit 0 (strays ignored), got {rc}"
+        captured = capsys.readouterr()
+        assert "_template" not in captured.out
+        assert "_template" not in captured.err
+        assert "README" not in captured.out
+        assert "README" not in captured.err
 
 
 # ---------------------------------------------------------------------------
