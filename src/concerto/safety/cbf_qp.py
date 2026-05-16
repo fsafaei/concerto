@@ -757,8 +757,11 @@ class ExpCBFQP:
                 "external-review P0-1, 2026-05-16)."
             )
             raise ValueError(msg)
-        if dt <= 0.0:
-            msg = f"dt must be strictly positive in SafetyMode.EGO_ONLY; got {dt!r}."
+        # ``not (dt > 0)`` catches NaN, 0.0, and negative values in one shot;
+        # the separate ``isfinite`` rejects ``+inf`` (which would silently
+        # mask the partner-disturbance term to zero on the constraint RHS).
+        if not (dt > 0.0) or not np.isfinite(dt):
+            msg = f"dt must be a finite strictly-positive float in SafetyMode.EGO_ONLY; got {dt!r}."
             raise ValueError(msg)
         if not isinstance(proposed_action, np.ndarray):
             msg = (

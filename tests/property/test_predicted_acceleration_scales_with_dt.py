@@ -46,6 +46,14 @@ def _snap(position: np.ndarray, velocity: np.ndarray, *, radius: float = 0.1) ->
     )
 
 
+# ``min_value=1e-4`` matches the smallest control-step duration any
+# realistic Phase-0 env produces (kHz-scale loops); below that the QP
+# RHS would be dominated by predictor noise rather than physics. The
+# upper bound 1.0 s covers slow-loop spike configurations. NaN / inf
+# are excluded here because the production guard in
+# ``ExpCBFQP._filter_ego_only`` rejects them with a ValueError before
+# the helper is reached; their behaviour is pinned separately in
+# ``tests/property/test_cbf_qp.py``.
 @given(
     dt=st.floats(min_value=1e-4, max_value=1.0, allow_nan=False, allow_infinity=False),
     delta=st.lists(

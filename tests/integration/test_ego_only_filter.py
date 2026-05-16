@@ -161,6 +161,16 @@ def test_ego_only_partner_disturbance_enters_via_rhs_not_variable() -> None:
         below the 5 m/s² action_norm) so the QP stays feasible while still
         producing a measurably different safe ego action vs the baseline
         — the contract the test pins.
+
+        Calibration note: under the corrected ``(v_pred - v_now) / dt``
+        formula at ``dt=0.05``, a 1.5x scaling (the pre-fix value) yields
+        ``|Δv|/dt = 0.5 / 0.05 = 10 m/s²`` which exceeds the 5 m/s²
+        ``action_norm`` and renders the QP infeasible. The 1.05x value
+        keeps the synthetic accel in the feasible regime while leaving
+        the baseline-vs-shifted divergence loud enough for
+        ``not np.allclose`` to fire reliably. The contract being pinned
+        (partner-predicted accel changes the constraint RHS, not the
+        decision variable set) is unchanged from the pre-fix test.
         """
         return AgentSnapshot(
             position=snap.position + snap.velocity * 0.05,
