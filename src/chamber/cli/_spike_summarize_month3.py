@@ -51,6 +51,8 @@ report and do not trigger Stop / Accept-Validated transitions.
 from __future__ import annotations
 
 import datetime as _dt
+import shutil
+import subprocess
 import sys
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -63,6 +65,8 @@ from concerto.training.seeding import derive_substream
 
 if TYPE_CHECKING:
     import argparse
+
+    import numpy as np
 
 
 #: ADR-007 §Validation criteria default gate threshold (percentage
@@ -628,7 +632,14 @@ def run(args: argparse.Namespace) -> int:
         )
         if result is not None:
             results.append(result)
-    report = render_report(results)
+    provenance = _build_provenance(
+        results=results,
+        gate_pp=args.gate_pp,
+        n_resamples=args.n_resamples,
+        seed=args.seed,
+        repo_root=results_dir.resolve().parent,
+    )
+    report = render_report(results, provenance=provenance)
     if args.output is None:
         print(report, end="")
     else:
@@ -637,12 +648,56 @@ def run(args: argparse.Namespace) -> int:
     return 0
 
 
+def _build_provenance(
+    *,
+    results: list[_AxisResult],
+    gate_pp: float,
+    n_resamples: int,
+    seed: int,
+    repo_root: Path,
+) -> _ProvenanceFooter:
+    """Assemble the provenance footer (Section 8) from the loaded archives."""
+    archives: list[tuple[str, str, str, str]] = []
+    for r in results:
+        if r.spike_run_path is None:
+            continue
+        archives.append((r.axis, str(r.spike_run_path), r.prereg_sha, r.git_tag))
+    return _ProvenanceFooter(
+        chamber_version=chamber.__version__,
+        git_sha=_resolve_git_sha(repo_root),
+        timestamp_utc=_dt.datetime.now(tz=_dt.UTC).isoformat(),
+        gate_pp=gate_pp,
+        n_resamples=n_resamples,
+        seed=seed,
+        axis_archives=archives,
+    )
+
+
+def _resolve_git_sha(repo_root: Path) -> str:
+    """Best-effort ``git rev-parse HEAD`` for the provenance footer."""
+    git = shutil.which("git")
+    if git is None:
+        return "unknown"
+    try:
+        result = subprocess.run(  # noqa: S603 — fully-resolved git binary
+            [git, "rev-parse", "HEAD"],
+            cwd=repo_root,
+            capture_output=True,
+            check=True,
+            text=True,
+            timeout=5,
+        )
+    except (subprocess.CalledProcessError, subprocess.TimeoutExpired, OSError):
+        return "unknown"
+    return result.stdout.strip() or "unknown"
+
+
 def _bootstrap_axis_result(
     run_: SpikeRun,
     *,
     spike_run_path: Path,
     n_resamples: int,
-    rng: object,
+    rng: np.random.Generator,
     gate_pp: float,
 ) -> _AxisResult | None:
     """Build one :class:`_AxisResult` from a SpikeRun + the pacluster bootstrap."""
@@ -663,7 +718,7 @@ def _bootstrap_axis_result(
             git_tag=run_.git_tag,
             gate_pp=gate_pp,
         )
-    ci = pacluster_bootstrap(pairs, n_resamples=n_resamples, rng=rng)  # type: ignore[arg-type]
+    ci = pacluster_bootstrap(pairs, n_resamples=n_resamples, rng=rng)
     return _AxisResult(
         axis=run_.axis,
         stage=stage,

@@ -188,7 +188,9 @@ class TestRenderReportStop:
         assert "**Recommendation: Stop — ADR re-review**" in report
 
     def test_report_surfaces_stage_1_gate_trigger(self, report: str) -> None:
-        assert "ADR-007 §Stage 1 gate" in report
+        # Pin the full trigger phrase so a future re-labelling that introduces
+        # "ADR-007 §Stage 1b gate trigger fired" doesn't silently match.
+        assert "ADR-007 §Stage 1 gate trigger" in report
 
     def test_adr_007_action_says_re_review(self, report: str) -> None:
         adr_007_lines = [line for line in report.splitlines() if "ADR-007" in line and "|" in line]
@@ -222,7 +224,7 @@ class TestRenderReportDefer:
 
 
 class TestReportProvenance:
-    """Section 8: provenance footer carries chamber version + axis count."""
+    """Section 8: provenance footer carries chamber version + per-axis archives."""
 
     def test_provenance_section_mentions_chamber_version(self) -> None:
         import chamber
@@ -230,6 +232,62 @@ class TestReportProvenance:
         report = render_report(_all_pass_fixture())
         assert "Provenance" in report
         assert chamber.__version__ in report
+
+    def test_provenance_lists_per_axis_archives_when_threaded(self) -> None:
+        """When the caller threads a ``_ProvenanceFooter`` with archives, they appear."""
+        import chamber
+        from chamber.cli._spike_summarize_month3 import _ProvenanceFooter
+
+        provenance = _ProvenanceFooter(
+            chamber_version=chamber.__version__,
+            git_sha="deadbeef",
+            timestamp_utc="2026-05-15T00:00:00+00:00",
+            gate_pp=20.0,
+            n_resamples=2000,
+            seed=0,
+            axis_archives=[
+                ("AS", "spikes/results/stage1-AS-test/spike_as.json", "abc", "tag-AS"),
+                ("OM", "spikes/results/stage1-OM-test/spike_om.json", "def", "tag-OM"),
+            ],
+        )
+        report = render_report(_all_pass_fixture(), provenance=provenance)
+        assert "deadbeef" in report
+        assert "spikes/results/stage1-AS-test/spike_as.json" in report
+        assert "tag-OM" in report
+
+
+class TestBundleCompositionPhrase:
+    """ADR-008 §Decision bundle composition (Option A / Option B / hold paths)."""
+
+    def test_default_when_all_three_headline_axes_pass(self) -> None:
+        from chamber.cli._spike_summarize_month3 import _bundle_composition_phrase
+
+        phrase = _bundle_composition_phrase({"AS", "OM", "CR", "CM", "PF", "SA"})
+        assert "CM x PF x CR" in phrase
+        assert "default" in phrase
+
+    def test_option_a_when_cr_failed(self) -> None:
+        """CR ∉ passed but CM, PF ∈ passed → Option A."""
+        from chamber.cli._spike_summarize_month3 import _bundle_composition_phrase
+
+        phrase = _bundle_composition_phrase({"AS", "OM", "CM", "PF"})
+        assert "Option A" in phrase
+        assert "partner-familiarity" in phrase
+
+    def test_option_b_when_pf_failed(self) -> None:
+        """PF ∉ passed but CM, CR ∈ passed → Option B."""
+        from chamber.cli._spike_summarize_month3 import _bundle_composition_phrase
+
+        phrase = _bundle_composition_phrase({"AS", "OM", "CM", "CR"})
+        assert "Option B" in phrase
+        assert "degraded-partner" in phrase
+
+    def test_hold_when_more_than_one_headline_axis_failed(self) -> None:
+        """Neither Option A nor B reachable → hold the bundle lock."""
+        from chamber.cli._spike_summarize_month3 import _bundle_composition_phrase
+
+        phrase = _bundle_composition_phrase({"AS", "OM"})
+        assert "hold" in phrase.lower()
 
 
 class TestSummarizeMonth3CLI:
@@ -277,3 +335,31 @@ class TestSummarizeMonth3CLI:
         assert rc != 0
         captured = capsys.readouterr()
         assert "not found" in captured.err
+
+    def test_output_flag_writes_report_to_disk(
+        self,
+        tmp_path,
+        capsys: pytest.CaptureFixture[str],
+    ) -> None:
+        """``--output <path>`` writes the report; stderr carries the "wrote" status."""
+        from chamber.cli.spike import main
+
+        results_dir = tmp_path / "results"
+        results_dir.mkdir()
+        output_path = tmp_path / "report.md"
+        rc = main(
+            [
+                "summarize-month3",
+                "--results-dir",
+                str(results_dir),
+                "--output",
+                str(output_path),
+            ]
+        )
+        assert rc == 0
+        assert output_path.exists()
+        body = output_path.read_text(encoding="utf-8")
+        assert "**Recommendation: Defer" in body
+        captured = capsys.readouterr()
+        assert "wrote" in captured.err
+        assert str(output_path) in captured.err
