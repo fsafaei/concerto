@@ -8,6 +8,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 While the project is on `0.x`, MINOR-version bumps may break the public API
 per SemVer §4.
 
+## [0.3.1](https://github.com/fsafaei/concerto/compare/v0.3.0...v0.3.1) (2026-05-16)
+
+
+### Bug Fixes
+
+* **ci:** correct uv TestPyPI publish target + add workflow_dispatch for re-fires ([#128](https://github.com/fsafaei/concerto/issues/128)) ([8d49566](https://github.com/fsafaei/concerto/commit/8d495662d3baef45ff4dc04d726f62785d217a6f))
+
 ## [0.3.0](https://github.com/fsafaei/concerto/compare/v0.2.0...v0.3.0) (2026-05-16)
 
 
