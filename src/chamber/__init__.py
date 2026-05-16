@@ -15,5 +15,6 @@ direction is forbidden (CI-enforced).
 from importlib.metadata import version as _dist_version
 
 # CHAMBER ships in the same wheel as CONCERTO, so the distribution name is
-# ``concerto`` (see ``[tool.hatch.build.targets.wheel]`` in pyproject.toml).
-__version__ = _dist_version("concerto")
+# ``concerto-multirobot`` (see ``[tool.hatch.build.targets.wheel]`` in
+# pyproject.toml). The import package is ``chamber``.
+__version__ = _dist_version("concerto-multirobot")
