@@ -36,6 +36,31 @@ Ames, Xu, Grizzle, and Tabuada (2017) establish the canonical CBF-QP safety filt
 
 The conformal update rule λ_{k+1} = λ_k + η(ε − l_k) (Huriot & Sibai 2025 §IV.A; Theorem 3) is driven by the **prediction-gap loss** l_k = max(0, predicted_h − actual_h), evaluated by the partner-trajectory predictor against the realised partner state — not by the per-step constraint-violation signal max(0, −h_ij) that the exp CBF-QP backbone produces. Theorem 3's distribution-free ε + o(1) average-loss bound is stated against the prediction gap; driving the update from −h would conflate predictor error with per-step CBF feasibility and break the cited guarantee. The implementation reflects this separation: `concerto.safety.cbf_qp.ExpCBFQP` populates `FilterInfo["constraint_violation"]` only, and `concerto.safety.conformal.update_lambda_from_predictor` (with the M3 constant-velocity predictor stub) computes and applies the prediction-gap loss, populating `FilterInfo["prediction_gap_loss"]`. The ADR-014 three-table report carries the two signals in distinct cells so per-step violations and predictor error are visible side-by-side.
 
+**Canonical pair-keying (2026-05-16; external-review P1).** The
+conformal slack vector `SafetyState.lambda_: numpy.ndarray` is
+indexed by *pair position*, where the pair set is iterated upper-
+triangular over a list of UIDs. Pre-amendment, each of the three pair-
+iteration entry points (`concerto.safety.conformal.compute_prediction_gap_for_pairs`,
+`concerto.safety.cbf_qp.ExpCBFQP._filter_ego_only`,
+`concerto.safety.cbf_qp.ExpCBFQP._filter_joint`) computed its UID list
+from `list(<dict>.keys())` — relying on Python 3.7+'s insertion-order
+guarantee. That invariant was implicit, and any caller that
+reconstructed the snapshot or proposed-action dict in a different
+insertion order between consecutive calls silently misaligned the
+per-pair lambda vector with the pairwise CBF constraints; the wrong
+slack landed on the wrong constraint. The amendment introduces
+`concerto.safety.api.canonical_pair_order(uids) -> list[str]` (a thin
+lexicographic sort with duplicate-uid validation) and routes the
+three entry points through it. The pair index for any
+`(uid_a, uid_b)` (with `uid_a < uid_b` lexicographically) is now a
+pure function of the uid set, independent of caller's dict insertion
+order. The invariant is pinned by
+`tests/property/test_canonical_pair_order.py`. The structurally
+cleanest fix (promoting `lambda_` to `dict[tuple[str, str], float]`)
+remains deferred to Phase-1 — it requires bumping the ADR-014
+`FilterInfo["lambda"]` wire contract and the renderer at the same
+time; tracking issue opened with the present PR.
+
 **Predicted-acceleration units (2026-05-16; external-review P0-1).** The EGO_ONLY filter routes the partner's motion onto the constraint RHS as a Cartesian acceleration drift term `n_hat^T ddot p_partner_pred`. The partner-predicted acceleration is the *finite-difference* of velocity between the predictor's forecast at step `k+1` and the current snapshot at step `k`, divided by the predictor's lookahead horizon `dt`: `a_partner = (v_pred - v_now) / dt`. The `dt` parameter is a required keyword argument on `EgoOnlySafetyFilter.filter` and on the internal `concerto.safety.cbf_qp._predicted_cartesian_accel` helper; callers MUST pass the same `dt` they used when calling the partner-trajectory predictor (e.g. `concerto.safety.conformal.constant_velocity_predict`). Under the Phase-0 constant-velocity stub the velocity delta is identically zero so the corrected formula and the pre-fix raw-delta form agree at zero; the unit error was latent. A Phase-1 predictor (AoI-conditioned, learned) supplies a nonzero forecast, and any caller that previously omitted the `1/dt` scaling would have the CBF RHS wrong by a factor of `1/dt`. The scaling law is pinned by `tests/property/test_predicted_acceleration_scales_with_dt.py`.
 
 ## Mode and per-agent control model
@@ -97,4 +122,5 @@ By Phase-2 end: (1) B0 with CBF-QP + conformal safety filter achieves <2% inter-
 - 2026-05-13 amendment (reviewer P0-2 follow-up): adds §"Public API" splitting the single `SafetyFilter` Protocol into `EgoOnlySafetyFilter` and `JointSafetyFilter`, with typed `ExpCBFQP.ego_only` / `.centralized` / `.shared_control` classmethod constructors and `typing.overload` declarations on `ExpCBFQP.filter`. The pre-refactor `SafetyFilter` name remains as a deprecated union alias (`DeprecationWarning` via module `__getattr__`; removal target 0.3.0). No change to the Decision; status stays **Accepted (2026-05-13)**.
 - 2026-05-13 amendment (reviewer P0-3 follow-up): extends §Risks entry 4 with a sign-convention test suite as an additional mitigation. Exposes the private `concerto.safety.cbf_qp._build_ego_only_row` helper as the internal row-builder seam that `_filter_ego_only` consumes directly; adds `tests/unit/test_cbf_qp_ego_only_signs.py` with six analytic scenarios, a hand-rolled mutant-detector that proves the assertions catch the flipped-sign bug class, and a reduction test pinning the spike_004A §Reduction promise. No change to the Decision; status stays **Accepted (2026-05-13)**.
 - 2026-05-16 amendment (external-review P0-4): adds an explicit §Open question entry naming the `lambda_safe` derivation as deferred (four dependencies: `Bounds`, predictor error bound, `dt`, pair geometry). Updates the `reset_on_partner_swap` docstring and the `concerto.safety.conformal` module docstring to mark the `lambda_safe=0.0` default as a Phase-0 placeholder rather than a derived QP-feasibility-preserving value, and to direct callers requiring provable safety to override the parameter explicitly. The ADR-INDEX [footnote a](ADR-INDEX.md#open-work-flags) is extended to surface the deferral. No change to the Decision; status stays **Accepted (2026-05-13)**.
+- 2026-05-16 amendment (external-review P1, pair-keying): adds the "Canonical pair-keying" paragraph to §Decision; introduces `concerto.safety.api.canonical_pair_order` and routes the three pair-iteration entry points (`compute_prediction_gap_for_pairs`, `_filter_ego_only`, `_filter_joint`) through it. The pre-amendment code relied on Python's dict-insertion-order guarantee — a stable property of the language but an implicit invariant of the safety stack; any caller that reconstructed a snapshot dict in different order silently misaligned `SafetyState.lambda_` with the pairwise CBF constraints. Invariant pinned by `tests/property/test_canonical_pair_order.py`. The structural dict-keyed refactor is deferred to Phase-1 (tracks against the ADR-014 `FilterInfo["lambda"]` wire contract). No change to the Decision; status stays **Accepted (2026-05-13)**.
 - 2026-05-16 amendment (external-review P0-1): adds the "Predicted-acceleration units" paragraph to §Decision. The partner-predicted Cartesian acceleration on the EGO_ONLY filter's constraint RHS is now `(v_pred - v_now) / dt` (was: `v_pred - v_now` — velocity delta, wrong units). The `dt` parameter is threaded through `EgoOnlySafetyFilter.filter`, `ExpCBFQP.filter`, and the internal `_predicted_cartesian_accel` helper; the scaling law is pinned by `tests/property/test_predicted_acceleration_scales_with_dt.py`. Latent under the Phase-0 constant-velocity predictor stub (zero delta ⇒ zero accel ⇒ no observable change at scale `1/dt`); becomes load-bearing the moment a Phase-1 predictor supplies a nonzero forecast. No change to the Decision; status stays **Accepted (2026-05-13)**.
