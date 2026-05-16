@@ -1371,6 +1371,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#concerto.training.CheckStatus" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        CheckStatus
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#concerto.training.GuaranteeReport" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1389,6 +1400,23 @@
       
     </span>
   </a>
+  
+    <nav class="md-nav" aria-label="SlopeReport">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#concerto.training.SlopeReport.__post_init__" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        __post_init__
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -1421,10 +1449,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#concerto.training.assert_positive_learning_slope" class="md-nav__link">
+  <a href="#concerto.training.check_positive_learning_slope" class="md-nav__link">
     <span class="md-ellipsis">
       
-        assert_positive_learning_slope
+        check_positive_learning_slope
       
     </span>
   </a>
@@ -5401,6 +5429,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#concerto.training.CheckStatus" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        CheckStatus
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#concerto.training.GuaranteeReport" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -5419,6 +5458,23 @@
       
     </span>
   </a>
+  
+    <nav class="md-nav" aria-label="SlopeReport">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#concerto.training.SlopeReport.__post_init__" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        __post_init__
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -5451,10 +5507,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#concerto.training.assert_positive_learning_slope" class="md-nav__link">
+  <a href="#concerto.training.check_positive_learning_slope" class="md-nav__link">
     <span class="md-ellipsis">
       
-        assert_positive_learning_slope
+        check_positive_learning_slope
       
     </span>
   </a>
@@ -12877,6 +12933,140 @@ provides the determinism harness required by project principle P6.</p>
 
 
 
+<h2 id="concerto.training.CheckStatus" class="doc doc-heading">
+            <span class="doc doc-object-name doc-class-name">CheckStatus</span>
+
+
+</h2>
+
+
+    <div class="doc doc-contents ">
+            <p class="doc doc-class-bases">
+              Bases: <code><span title="enum.Enum">Enum</span></code></p>
+
+
+
+        <p>Outcome taxonomy for :class:<code>SlopeReport</code> (ADR-002 §Risks #1; review P1-2).</p>
+<p>Replaces the pre-amendment binary <code>passed: bool</code> shape so callers
+can distinguish "trip-wire cleared" from "data too short" from
+"curve contained NaN / inf". The legacy <code>passed</code> boolean is
+preserved for v0.5.x backwards-compat but is derived from
+<code>status</code>; <code>passed = status is CheckStatus.PASSED</code>.</p>
+
+
+<details class="values" open>
+  <summary>Values</summary>
+  <p>PASSED: <code>slope &gt; 0</code> and <code>p_value &lt; alpha</code>.
+FAILED: Slope non-positive (flat or regressing) OR p-value
+    above <code>alpha</code>.
+INSUFFICIENT_DATA: Curve has fewer than <code>min_episodes</code>
+    entries. The pre-amendment code returned <code>passed=True</code>
+    here (vacuous-pass-on-short-curves bug, external-review
+    P1-2); the new branch returns this status with
+    <code>passed=False</code> so consumers do not silently consume a
+    too-short curve as a passing trip-wire.
+INVALID: Curve contains NaN or +/- inf. The pre-amendment code
+    would crash inside <code>scipy.stats.linregress</code> (on NaN) or
+    silently propagate inf through the slope; the new branch
+    detects them up front and returns this status with
+    <code>passed=False</code>.</p>
+</details>
+
+
+
+
+
+
+
+              <details class="mkdocstrings-source">
+                <summary>Source code in <code>src/concerto/training/learning_signal_check.py</code></summary>
+                <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">115</span>
+<span class="normal">116</span>
+<span class="normal">117</span>
+<span class="normal">118</span>
+<span class="normal">119</span>
+<span class="normal">120</span>
+<span class="normal">121</span>
+<span class="normal">122</span>
+<span class="normal">123</span>
+<span class="normal">124</span>
+<span class="normal">125</span>
+<span class="normal">126</span>
+<span class="normal">127</span>
+<span class="normal">128</span>
+<span class="normal">129</span>
+<span class="normal">130</span>
+<span class="normal">131</span>
+<span class="normal">132</span>
+<span class="normal">133</span>
+<span class="normal">134</span>
+<span class="normal">135</span>
+<span class="normal">136</span>
+<span class="normal">137</span>
+<span class="normal">138</span>
+<span class="normal">139</span>
+<span class="normal">140</span>
+<span class="normal">141</span>
+<span class="normal">142</span>
+<span class="normal">143</span>
+<span class="normal">144</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">CheckStatus</span><span class="p">(</span><span class="n">Enum</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Outcome taxonomy for :class:`SlopeReport` (ADR-002 §Risks #1; review P1-2).</span>
+
+<span class="sd">    Replaces the pre-amendment binary ``passed: bool`` shape so callers</span>
+<span class="sd">    can distinguish &quot;trip-wire cleared&quot; from &quot;data too short&quot; from</span>
+<span class="sd">    &quot;curve contained NaN / inf&quot;. The legacy ``passed`` boolean is</span>
+<span class="sd">    preserved for v0.5.x backwards-compat but is derived from</span>
+<span class="sd">    ``status``; ``passed = status is CheckStatus.PASSED``.</span>
+
+<span class="sd">    Values:</span>
+<span class="sd">        PASSED: ``slope &gt; 0`` and ``p_value &lt; alpha``.</span>
+<span class="sd">        FAILED: Slope non-positive (flat or regressing) OR p-value</span>
+<span class="sd">            above ``alpha``.</span>
+<span class="sd">        INSUFFICIENT_DATA: Curve has fewer than ``min_episodes``</span>
+<span class="sd">            entries. The pre-amendment code returned ``passed=True``</span>
+<span class="sd">            here (vacuous-pass-on-short-curves bug, external-review</span>
+<span class="sd">            P1-2); the new branch returns this status with</span>
+<span class="sd">            ``passed=False`` so consumers do not silently consume a</span>
+<span class="sd">            too-short curve as a passing trip-wire.</span>
+<span class="sd">        INVALID: Curve contains NaN or +/- inf. The pre-amendment code</span>
+<span class="sd">            would crash inside ``scipy.stats.linregress`` (on NaN) or</span>
+<span class="sd">            silently propagate inf through the slope; the new branch</span>
+<span class="sd">            detects them up front and returns this status with</span>
+<span class="sd">            ``passed=False``.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">PASSED</span> <span class="o">=</span> <span class="s2">&quot;passed&quot;</span>
+    <span class="n">FAILED</span> <span class="o">=</span> <span class="s2">&quot;failed&quot;</span>
+    <span class="n">INSUFFICIENT_DATA</span> <span class="o">=</span> <span class="s2">&quot;insufficient_data&quot;</span>
+    <span class="n">INVALID</span> <span class="o">=</span> <span class="s2">&quot;invalid&quot;</span>
+</code></pre></div></td></tr></table></div>
+              </details>
+
+
+
+<div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+
+
+  </div>
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-class">
+
+
+
 <h2 id="concerto.training.GuaranteeReport" class="doc doc-heading">
             <span class="doc doc-object-name doc-class-name">GuaranteeReport</span>
 
@@ -12892,11 +13082,17 @@ provides the determinism harness required by project principle P6.</p>
 
 
 
-        <p>Result of one empirical-guarantee assertion (T4b.13; ADR-002 §Risks #1).</p>
+        <p>Result of one moving-window non-decreasing-fraction check (T4b.13; ADR-002 §Risks #1).</p>
 <p>The dataclass is frozen so a returned report cannot be mutated after
 the fact (the project's reproducibility contract: provenance bundles
 are immutable). Serialise to JSON via :func:<code>dataclasses.asdict</code>
 (used by :func:<code>plot_reward_curve</code>).</p>
+<p>The "Guarantee" in the name is a legacy label held over from the
+pre-rename <code>empirical_guarantee</code> module — the value is a
+trip-wire, not a formal guarantee; see the module docstring +
+:class:<code>CheckStatus</code> for the renamed canonical taxonomy. The
+dataclass name is preserved for v0.5.x backwards-compat with
+consumers that import it directly.</p>
 
 
 <p><span class="doc-section-title">Attributes:</span></p>
@@ -12969,48 +13165,62 @@ regime).</p>
 
 
               <details class="mkdocstrings-source">
-                <summary>Source code in <code>src/concerto/training/empirical_guarantee.py</code></summary>
-                <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 95</span>
-<span class="normal"> 96</span>
-<span class="normal"> 97</span>
-<span class="normal"> 98</span>
-<span class="normal"> 99</span>
-<span class="normal">100</span>
-<span class="normal">101</span>
-<span class="normal">102</span>
-<span class="normal">103</span>
-<span class="normal">104</span>
-<span class="normal">105</span>
-<span class="normal">106</span>
-<span class="normal">107</span>
-<span class="normal">108</span>
-<span class="normal">109</span>
-<span class="normal">110</span>
-<span class="normal">111</span>
-<span class="normal">112</span>
-<span class="normal">113</span>
-<span class="normal">114</span>
-<span class="normal">115</span>
-<span class="normal">116</span>
-<span class="normal">117</span>
-<span class="normal">118</span>
-<span class="normal">119</span>
-<span class="normal">120</span>
-<span class="normal">121</span>
-<span class="normal">122</span>
-<span class="normal">123</span>
-<span class="normal">124</span>
-<span class="normal">125</span>
-<span class="normal">126</span>
-<span class="normal">127</span>
-<span class="normal">128</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                <summary>Source code in <code>src/concerto/training/learning_signal_check.py</code></summary>
+                <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">147</span>
+<span class="normal">148</span>
+<span class="normal">149</span>
+<span class="normal">150</span>
+<span class="normal">151</span>
+<span class="normal">152</span>
+<span class="normal">153</span>
+<span class="normal">154</span>
+<span class="normal">155</span>
+<span class="normal">156</span>
+<span class="normal">157</span>
+<span class="normal">158</span>
+<span class="normal">159</span>
+<span class="normal">160</span>
+<span class="normal">161</span>
+<span class="normal">162</span>
+<span class="normal">163</span>
+<span class="normal">164</span>
+<span class="normal">165</span>
+<span class="normal">166</span>
+<span class="normal">167</span>
+<span class="normal">168</span>
+<span class="normal">169</span>
+<span class="normal">170</span>
+<span class="normal">171</span>
+<span class="normal">172</span>
+<span class="normal">173</span>
+<span class="normal">174</span>
+<span class="normal">175</span>
+<span class="normal">176</span>
+<span class="normal">177</span>
+<span class="normal">178</span>
+<span class="normal">179</span>
+<span class="normal">180</span>
+<span class="normal">181</span>
+<span class="normal">182</span>
+<span class="normal">183</span>
+<span class="normal">184</span>
+<span class="normal">185</span>
+<span class="normal">186</span>
+<span class="normal">187</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">GuaranteeReport</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Result of one empirical-guarantee assertion (T4b.13; ADR-002 §Risks #1).</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Result of one moving-window non-decreasing-fraction check (T4b.13; ADR-002 §Risks #1).</span>
 
 <span class="sd">    The dataclass is frozen so a returned report cannot be mutated after</span>
 <span class="sd">    the fact (the project&#39;s reproducibility contract: provenance bundles</span>
 <span class="sd">    are immutable). Serialise to JSON via :func:`dataclasses.asdict`</span>
 <span class="sd">    (used by :func:`plot_reward_curve`).</span>
+
+<span class="sd">    The &quot;Guarantee&quot; in the name is a legacy label held over from the</span>
+<span class="sd">    pre-rename ``empirical_guarantee`` module — the value is a</span>
+<span class="sd">    trip-wire, not a formal guarantee; see the module docstring +</span>
+<span class="sd">    :class:`CheckStatus` for the renamed canonical taxonomy. The</span>
+<span class="sd">    dataclass name is preserved for v0.5.x backwards-compat with</span>
+<span class="sd">    consumers that import it directly.</span>
 
 <span class="sd">    Attributes:</span>
 <span class="sd">        window: Moving-average window length the report was computed</span>
@@ -13080,13 +13290,14 @@ regime).</p>
 
 
 
-        <p>Result of one slope-test empirical-guarantee assertion (T4b.13; ADR-002 §Risks #1).</p>
-<p>Captures everything an external reader needs to interpret the trip-
-wire outcome without re-running the experiment: the least-squares
-slope itself, the coefficient of determination, the one-sided
-p-value, the alpha threshold the run was checked against, the number
-of episodes the regression saw, and whether the run cleared the
-gate.</p>
+        <p>Result of one slope-test learning-signal check (T4b.13; ADR-002 §Risks #1).</p>
+<p>Captures everything an external reader needs to interpret the
+trip-wire outcome without re-running the experiment: the
+least-squares slope itself, the coefficient of determination, the
+one-sided p-value, the alpha threshold the run was checked against,
+the number of episodes the regression saw, the :class:<code>CheckStatus</code>
+taxon, and the deprecated <code>passed</code> boolean (kept for v0.5.x
+backwards-compat).</p>
 <p>The dataclass is frozen so a returned report cannot be mutated after
 the fact (the project's reproducibility contract: provenance bundles
 are immutable). Serialise to JSON via :func:<code>dataclasses.asdict</code>
@@ -13121,7 +13332,7 @@ on the early-rollout reward scale.</p>
           –
           <div class="doc-md-description">
             <p>Coefficient of determination <code>R²</code>. Low <code>R²</code> plus
-<code>passed=True</code> is acceptable on noisy tasks (the slope is
+<code>status=PASSED</code> is acceptable on noisy tasks (the slope is
 still statistically significant); the project does not gate
 on <code>R²</code> directly.</p>
           </div>
@@ -13143,7 +13354,7 @@ two-sided p-value comes from
               (<code><span title="float">float</span></code>)
           –
           <div class="doc-md-description">
-            <p>Significance threshold the assertion was checked against
+            <p>Significance threshold the check was run against
 (default :data:<code>DEFAULT_ALPHA</code>).</p>
           </div>
         </li>
@@ -13153,7 +13364,17 @@ two-sided p-value comes from
           –
           <div class="doc-md-description">
             <p>Number of episodes in the regressed curve. Below
-:data:<code>DEFAULT_MIN_EPISODES</code> the report is vacuously passing.</p>
+:data:<code>DEFAULT_MIN_EPISODES</code> the report carries
+:attr:<code>CheckStatus.INSUFFICIENT_DATA</code>.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+          <b><code><span title="concerto.training.SlopeReport.status">status</span></code></b>
+              (<code><a class="autorefs autorefs-internal" title="CheckStatus (concerto.training.learning_signal_check.CheckStatus)" href="#concerto.training.CheckStatus">CheckStatus</a></code>)
+          –
+          <div class="doc-md-description">
+            <p>Outcome taxon (:class:<code>CheckStatus</code>). Canonical signal;
+new code should branch on this, not on <code>passed</code>.</p>
           </div>
         </li>
         <li class="doc-section-item field-body">
@@ -13161,8 +13382,10 @@ two-sided p-value comes from
               (<code><span title="bool">bool</span></code>)
           –
           <div class="doc-md-description">
-            <p><code>slope &gt; 0</code> and <code>p_value &lt; alpha</code>. Vacuously
-<code>True</code> when <code>n_episodes</code> is below the minimum.</p>
+            <p><strong>Deprecated</strong> — derived from <code>status</code> (<code>passed ==
+status is CheckStatus.PASSED</code>). Kept for v0.5.x consumers;
+removal target v0.6.0. Construction emits a
+:class:<code>DeprecationWarning</code> in <code>__post_init__</code>.</p>
           </div>
         </li>
     </ul>
@@ -13175,543 +13398,8 @@ two-sided p-value comes from
 
 
               <details class="mkdocstrings-source">
-                <summary>Source code in <code>src/concerto/training/empirical_guarantee.py</code></summary>
-                <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">322</span>
-<span class="normal">323</span>
-<span class="normal">324</span>
-<span class="normal">325</span>
-<span class="normal">326</span>
-<span class="normal">327</span>
-<span class="normal">328</span>
-<span class="normal">329</span>
-<span class="normal">330</span>
-<span class="normal">331</span>
-<span class="normal">332</span>
-<span class="normal">333</span>
-<span class="normal">334</span>
-<span class="normal">335</span>
-<span class="normal">336</span>
-<span class="normal">337</span>
-<span class="normal">338</span>
-<span class="normal">339</span>
-<span class="normal">340</span>
-<span class="normal">341</span>
-<span class="normal">342</span>
-<span class="normal">343</span>
-<span class="normal">344</span>
-<span class="normal">345</span>
-<span class="normal">346</span>
-<span class="normal">347</span>
-<span class="normal">348</span>
-<span class="normal">349</span>
-<span class="normal">350</span>
-<span class="normal">351</span>
-<span class="normal">352</span>
-<span class="normal">353</span>
-<span class="normal">354</span>
-<span class="normal">355</span>
-<span class="normal">356</span>
-<span class="normal">357</span>
-<span class="normal">358</span>
-<span class="normal">359</span>
-<span class="normal">360</span>
-<span class="normal">361</span>
-<span class="normal">362</span>
-<span class="normal">363</span>
-<span class="normal">364</span>
-<span class="normal">365</span>
-<span class="normal">366</span>
-<span class="normal">367</span>
-<span class="normal">368</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="k">class</span><span class="w"> </span><span class="nc">SlopeReport</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Result of one slope-test empirical-guarantee assertion (T4b.13; ADR-002 §Risks #1).</span>
-
-<span class="sd">    Captures everything an external reader needs to interpret the trip-</span>
-<span class="sd">    wire outcome without re-running the experiment: the least-squares</span>
-<span class="sd">    slope itself, the coefficient of determination, the one-sided</span>
-<span class="sd">    p-value, the alpha threshold the run was checked against, the number</span>
-<span class="sd">    of episodes the regression saw, and whether the run cleared the</span>
-<span class="sd">    gate.</span>
-
-<span class="sd">    The dataclass is frozen so a returned report cannot be mutated after</span>
-<span class="sd">    the fact (the project&#39;s reproducibility contract: provenance bundles</span>
-<span class="sd">    are immutable). Serialise to JSON via :func:`dataclasses.asdict`</span>
-<span class="sd">    (used by :func:`plot_slope_curve`).</span>
-
-<span class="sd">    Attributes:</span>
-<span class="sd">        slope: Least-squares slope of per-episode reward versus episode</span>
-<span class="sd">            index, in reward-units-per-episode. Positive ⇒ learning;</span>
-<span class="sd">            zero or negative ⇒ no learning or regressing.</span>
-<span class="sd">        intercept: Least-squares intercept. Useful for the regression</span>
-<span class="sd">            overlay in :func:`plot_slope_curve` and as a sanity check</span>
-<span class="sd">            on the early-rollout reward scale.</span>
-<span class="sd">        r_squared: Coefficient of determination ``R²``. Low ``R²`` plus</span>
-<span class="sd">            ``passed=True`` is acceptable on noisy tasks (the slope is</span>
-<span class="sd">            still statistically significant); the project does not gate</span>
-<span class="sd">            on ``R²`` directly.</span>
-<span class="sd">        p_value: One-sided p-value for the null &quot;slope &lt;= 0&quot;, computed</span>
-<span class="sd">            as ``two_sided_p / 2`` when the observed slope is positive</span>
-<span class="sd">            and ``1 - two_sided_p / 2`` when non-positive. The</span>
-<span class="sd">            two-sided p-value comes from</span>
-<span class="sd">            :func:`scipy.stats.linregress`.</span>
-<span class="sd">        alpha: Significance threshold the assertion was checked against</span>
-<span class="sd">            (default :data:`DEFAULT_ALPHA`).</span>
-<span class="sd">        n_episodes: Number of episodes in the regressed curve. Below</span>
-<span class="sd">            :data:`DEFAULT_MIN_EPISODES` the report is vacuously passing.</span>
-<span class="sd">        passed: ``slope &gt; 0`` and ``p_value &lt; alpha``. Vacuously</span>
-<span class="sd">            ``True`` when ``n_episodes`` is below the minimum.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-
-    <span class="n">slope</span><span class="p">:</span> <span class="nb">float</span>
-    <span class="n">intercept</span><span class="p">:</span> <span class="nb">float</span>
-    <span class="n">r_squared</span><span class="p">:</span> <span class="nb">float</span>
-    <span class="n">p_value</span><span class="p">:</span> <span class="nb">float</span>
-    <span class="n">alpha</span><span class="p">:</span> <span class="nb">float</span>
-    <span class="n">n_episodes</span><span class="p">:</span> <span class="nb">int</span>
-    <span class="n">passed</span><span class="p">:</span> <span class="nb">bool</span>
-</code></pre></div></td></tr></table></div>
-              </details>
-
-
-
-<div class="doc doc-children">
-
-
-
-
-
-
-
-
-
-
-
-
-  </div>
-
-    </div>
-
-</div>
-
-
-<div class="doc doc-object doc-function">
-
-
-<h2 id="concerto.training.assert_non_decreasing_window" class="doc doc-heading">
-            <span class="doc doc-object-name doc-function-name">assert_non_decreasing_window</span>
-
-
-</h2>
-<div class="doc-signature highlight"><pre><span></span><code><span class="nf">assert_non_decreasing_window</span><span class="p">(</span>
-    <span class="n">curve</span><span class="p">:</span> <span class="n">RewardCurve</span><span class="p">,</span>
-    <span class="o">*</span><span class="p">,</span>
-    <span class="n">window</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">DEFAULT_WINDOW</span><span class="p">,</span>
-    <span class="n">threshold</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">DEFAULT_THRESHOLD</span><span class="p">,</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">GuaranteeReport</span>
-</code></pre></div>
-
-    <div class="doc doc-contents ">
-
-        <p>Check the moving-window-of-K mean for non-decreasing intervals (ADR-002 §Risks #1).</p>
-<p>Slides a window of length <code>window</code> over <code>curve.per_episode_ego_rewards</code>
-and counts the fraction of consecutive interval pairs whose later-window
-mean is <code>&gt;=</code> the earlier-window mean. A run is considered to have
-cleared the trip-wire when that fraction is <code>&gt;= threshold</code>.</p>
-<p>Plan/05 §6 criterion 4 names the canonical setting:
-<code>window=10, threshold=0.8</code>. Callers MUST NOT silently widen the
-window or lower the threshold to coerce a passing report — if the
-assertion fires under the production config, hand control back to
-the maintainer and open a <code>#scope-revision</code> issue (ADR-002 §Risks</p>
-<h3 id="concerto.training.assert_non_decreasing_window--1-mitigation-policy">1 mitigation policy).</h3>
-<p>Degenerate inputs (empty curve, <code>len(curve) &lt; window</code>) return a
-report with <code>n_intervals=0</code> and <code>passed=True</code>. The pass is
-<em>vacuous</em> — there is not enough signal to assert anything — and is
-only useful as a sentinel for unit tests of the helper itself; do
-not rely on it to mask a too-short production run.</p>
-
-
-<p><span class="doc-section-title">Parameters:</span></p>
-    <ul>
-        <li class="doc-section-item field-body">
-            <b><code>curve</code></b>
-              (<code><a class="autorefs autorefs-internal" title="RewardCurve
-
-
-  
-      dataclass
-   (concerto.training.ego_aht.RewardCurve)" href="#concerto.training.ego_aht.RewardCurve">RewardCurve</a></code>)
-          –
-          <div class="doc-md-description">
-            <p>The reward curve produced by
-:func:<code>concerto.training.ego_aht.train</code>. Only the
-<code>per_episode_ego_rewards</code> field is read; the per-step
-series is deliberately ignored because the assertion is
-episode-aggregated (Huriot-Sibai 2025 Theorem 7 is stated
-over the policy-improvement step, which lives at episode
-granularity).</p>
-          </div>
-        </li>
-        <li class="doc-section-item field-body">
-            <b><code>window</code></b>
-              (<code><span title="int">int</span></code>, default:
-                  <code><span title="concerto.training.empirical_guarantee.DEFAULT_WINDOW">DEFAULT_WINDOW</span></code>
-)
-          –
-          <div class="doc-md-description">
-            <p>Window size (default :data:<code>DEFAULT_WINDOW</code>).</p>
-          </div>
-        </li>
-        <li class="doc-section-item field-body">
-            <b><code>threshold</code></b>
-              (<code><span title="float">float</span></code>, default:
-                  <code><span title="concerto.training.empirical_guarantee.DEFAULT_THRESHOLD">DEFAULT_THRESHOLD</span></code>
-)
-          –
-          <div class="doc-md-description">
-            <p>Pass threshold on the non-decreasing fraction
-(default :data:<code>DEFAULT_THRESHOLD</code>).</p>
-          </div>
-        </li>
-    </ul>
-
-
-<p><span class="doc-section-title">Returns:</span></p>
-    <ul>
-        <li class="doc-section-item field-body">
-<b><code>Frozen</code></b> (              <code><a class="autorefs autorefs-internal" title="GuaranteeReport
-
-
-  
-      dataclass
-   (concerto.training.empirical_guarantee.GuaranteeReport)" href="#concerto.training.GuaranteeReport">GuaranteeReport</a></code>
-)          –
-          <div class="doc-md-description">
-            <p>class:<code>GuaranteeReport</code>. Does NOT raise on failure — the</p>
-          </div>
-        </li>
-        <li class="doc-section-item field-body">
-              <code><a class="autorefs autorefs-internal" title="GuaranteeReport
-
-
-  
-      dataclass
-   (concerto.training.empirical_guarantee.GuaranteeReport)" href="#concerto.training.GuaranteeReport">GuaranteeReport</a></code>
-          –
-          <div class="doc-md-description">
-            <p>caller decides whether to fail the test, exit the CLI non-zero,</p>
-          </div>
-        </li>
-        <li class="doc-section-item field-body">
-              <code><a class="autorefs autorefs-internal" title="GuaranteeReport
-
-
-  
-      dataclass
-   (concerto.training.empirical_guarantee.GuaranteeReport)" href="#concerto.training.GuaranteeReport">GuaranteeReport</a></code>
-          –
-          <div class="doc-md-description">
-            <p>or just log the report.</p>
-          </div>
-        </li>
-    </ul>
-
-
-            <details class="mkdocstrings-source">
-              <summary>Source code in <code>src/concerto/training/empirical_guarantee.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">131</span>
-<span class="normal">132</span>
-<span class="normal">133</span>
-<span class="normal">134</span>
-<span class="normal">135</span>
-<span class="normal">136</span>
-<span class="normal">137</span>
-<span class="normal">138</span>
-<span class="normal">139</span>
-<span class="normal">140</span>
-<span class="normal">141</span>
-<span class="normal">142</span>
-<span class="normal">143</span>
-<span class="normal">144</span>
-<span class="normal">145</span>
-<span class="normal">146</span>
-<span class="normal">147</span>
-<span class="normal">148</span>
-<span class="normal">149</span>
-<span class="normal">150</span>
-<span class="normal">151</span>
-<span class="normal">152</span>
-<span class="normal">153</span>
-<span class="normal">154</span>
-<span class="normal">155</span>
-<span class="normal">156</span>
-<span class="normal">157</span>
-<span class="normal">158</span>
-<span class="normal">159</span>
-<span class="normal">160</span>
-<span class="normal">161</span>
-<span class="normal">162</span>
-<span class="normal">163</span>
-<span class="normal">164</span>
-<span class="normal">165</span>
-<span class="normal">166</span>
-<span class="normal">167</span>
-<span class="normal">168</span>
-<span class="normal">169</span>
-<span class="normal">170</span>
-<span class="normal">171</span>
-<span class="normal">172</span>
-<span class="normal">173</span>
-<span class="normal">174</span>
-<span class="normal">175</span>
-<span class="normal">176</span>
-<span class="normal">177</span>
-<span class="normal">178</span>
-<span class="normal">179</span>
-<span class="normal">180</span>
-<span class="normal">181</span>
-<span class="normal">182</span>
-<span class="normal">183</span>
-<span class="normal">184</span>
-<span class="normal">185</span>
-<span class="normal">186</span>
-<span class="normal">187</span>
-<span class="normal">188</span>
-<span class="normal">189</span>
-<span class="normal">190</span>
-<span class="normal">191</span>
-<span class="normal">192</span>
-<span class="normal">193</span>
-<span class="normal">194</span>
-<span class="normal">195</span>
-<span class="normal">196</span>
-<span class="normal">197</span>
-<span class="normal">198</span>
-<span class="normal">199</span>
-<span class="normal">200</span>
-<span class="normal">201</span>
-<span class="normal">202</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">assert_non_decreasing_window</span><span class="p">(</span>
-    <span class="n">curve</span><span class="p">:</span> <span class="n">RewardCurve</span><span class="p">,</span>
-    <span class="o">*</span><span class="p">,</span>
-    <span class="n">window</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">DEFAULT_WINDOW</span><span class="p">,</span>
-    <span class="n">threshold</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">DEFAULT_THRESHOLD</span><span class="p">,</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">GuaranteeReport</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Check the moving-window-of-K mean for non-decreasing intervals (ADR-002 §Risks #1).</span>
-
-<span class="sd">    Slides a window of length ``window`` over ``curve.per_episode_ego_rewards``</span>
-<span class="sd">    and counts the fraction of consecutive interval pairs whose later-window</span>
-<span class="sd">    mean is ``&gt;=`` the earlier-window mean. A run is considered to have</span>
-<span class="sd">    cleared the trip-wire when that fraction is ``&gt;= threshold``.</span>
-
-<span class="sd">    Plan/05 §6 criterion 4 names the canonical setting:</span>
-<span class="sd">    ``window=10, threshold=0.8``. Callers MUST NOT silently widen the</span>
-<span class="sd">    window or lower the threshold to coerce a passing report — if the</span>
-<span class="sd">    assertion fires under the production config, hand control back to</span>
-<span class="sd">    the maintainer and open a ``#scope-revision`` issue (ADR-002 §Risks</span>
-<span class="sd">    #1 mitigation policy).</span>
-
-<span class="sd">    Degenerate inputs (empty curve, ``len(curve) &lt; window``) return a</span>
-<span class="sd">    report with ``n_intervals=0`` and ``passed=True``. The pass is</span>
-<span class="sd">    *vacuous* — there is not enough signal to assert anything — and is</span>
-<span class="sd">    only useful as a sentinel for unit tests of the helper itself; do</span>
-<span class="sd">    not rely on it to mask a too-short production run.</span>
-
-<span class="sd">    Args:</span>
-<span class="sd">        curve: The reward curve produced by</span>
-<span class="sd">            :func:`concerto.training.ego_aht.train`. Only the</span>
-<span class="sd">            ``per_episode_ego_rewards`` field is read; the per-step</span>
-<span class="sd">            series is deliberately ignored because the assertion is</span>
-<span class="sd">            episode-aggregated (Huriot-Sibai 2025 Theorem 7 is stated</span>
-<span class="sd">            over the policy-improvement step, which lives at episode</span>
-<span class="sd">            granularity).</span>
-<span class="sd">        window: Window size (default :data:`DEFAULT_WINDOW`).</span>
-<span class="sd">        threshold: Pass threshold on the non-decreasing fraction</span>
-<span class="sd">            (default :data:`DEFAULT_THRESHOLD`).</span>
-
-<span class="sd">    Returns:</span>
-<span class="sd">        Frozen :class:`GuaranteeReport`. Does NOT raise on failure — the</span>
-<span class="sd">        caller decides whether to fail the test, exit the CLI non-zero,</span>
-<span class="sd">        or just log the report.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">rewards</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">curve</span><span class="o">.</span><span class="n">per_episode_ego_rewards</span><span class="p">)</span>
-    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">rewards</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">window</span> <span class="ow">or</span> <span class="n">window</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">GuaranteeReport</span><span class="p">(</span>
-            <span class="n">window</span><span class="o">=</span><span class="n">window</span><span class="p">,</span>
-            <span class="n">threshold</span><span class="o">=</span><span class="n">threshold</span><span class="p">,</span>
-            <span class="n">n_intervals</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
-            <span class="n">n_nondecreasing</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
-            <span class="n">fraction</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
-            <span class="n">passed</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-        <span class="p">)</span>
-    <span class="c1"># Compute consecutive window means; n_intervals = len(means) - 1</span>
-    <span class="c1"># because we count *pairs* of adjacent windows.</span>
-    <span class="n">means</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="n">running_sum</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">rewards</span><span class="p">[:</span><span class="n">window</span><span class="p">])</span>
-    <span class="n">means</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">running_sum</span> <span class="o">/</span> <span class="n">window</span><span class="p">)</span>
-    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">window</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">rewards</span><span class="p">)):</span>
-        <span class="n">running_sum</span> <span class="o">+=</span> <span class="n">rewards</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">-</span> <span class="n">rewards</span><span class="p">[</span><span class="n">i</span> <span class="o">-</span> <span class="n">window</span><span class="p">]</span>
-        <span class="n">means</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">running_sum</span> <span class="o">/</span> <span class="n">window</span><span class="p">)</span>
-    <span class="n">n_intervals</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">means</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span>
-    <span class="n">n_nondecreasing</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="mi">1</span> <span class="k">for</span> <span class="n">prev</span><span class="p">,</span> <span class="n">nxt</span> <span class="ow">in</span> <span class="n">pairwise</span><span class="p">(</span><span class="n">means</span><span class="p">)</span> <span class="k">if</span> <span class="n">nxt</span> <span class="o">&gt;=</span> <span class="n">prev</span><span class="p">)</span>
-    <span class="n">fraction</span> <span class="o">=</span> <span class="n">n_nondecreasing</span> <span class="o">/</span> <span class="n">n_intervals</span> <span class="k">if</span> <span class="n">n_intervals</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="mf">1.0</span>
-    <span class="k">return</span> <span class="n">GuaranteeReport</span><span class="p">(</span>
-        <span class="n">window</span><span class="o">=</span><span class="n">window</span><span class="p">,</span>
-        <span class="n">threshold</span><span class="o">=</span><span class="n">threshold</span><span class="p">,</span>
-        <span class="n">n_intervals</span><span class="o">=</span><span class="n">n_intervals</span><span class="p">,</span>
-        <span class="n">n_nondecreasing</span><span class="o">=</span><span class="n">n_nondecreasing</span><span class="p">,</span>
-        <span class="n">fraction</span><span class="o">=</span><span class="n">fraction</span><span class="p">,</span>
-        <span class="n">passed</span><span class="o">=</span><span class="n">fraction</span> <span class="o">&gt;=</span> <span class="n">threshold</span><span class="p">,</span>
-    <span class="p">)</span>
-</code></pre></div></td></tr></table></div>
-            </details>
-    </div>
-
-</div>
-
-<div class="doc doc-object doc-function">
-
-
-<h2 id="concerto.training.assert_positive_learning_slope" class="doc doc-heading">
-            <span class="doc doc-object-name doc-function-name">assert_positive_learning_slope</span>
-
-
-</h2>
-<div class="doc-signature highlight"><pre><span></span><code><span class="nf">assert_positive_learning_slope</span><span class="p">(</span>
-    <span class="n">curve</span><span class="p">:</span> <span class="n">RewardCurve</span><span class="p">,</span>
-    <span class="o">*</span><span class="p">,</span>
-    <span class="n">alpha</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">DEFAULT_ALPHA</span><span class="p">,</span>
-    <span class="n">min_episodes</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">DEFAULT_MIN_EPISODES</span><span class="p">,</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SlopeReport</span>
-</code></pre></div>
-
-    <div class="doc doc-contents ">
-
-        <p>Least-squares slope test on per-episode reward (ADR-002 §Risks #1; canonical).</p>
-<p>Issue #62 root-cause writeup: the legacy
-:func:<code>assert_non_decreasing_window</code> statistic has poor signal-to-
-noise on per-episode rewards at the Phase-0 100k-frame budget — the
-moving-window-of-10 mean stdev (~6.3) is comparable to the total
-drift (~10-20 reward units) the trainer can produce, and the
-non-decreasing-fraction sits near 0.5 (a random walk) even when the
-policy is materially improving. The slope test integrates over the
-whole curve and rejects the null "slope &lt;= 0" with p-values
-astronomically below any reasonable alpha when learning is real.</p>
-<p>The test:</p>
-<ol>
-<li>Fit <code>rewards ~ slope * episode_index + intercept</code> via least
-   squares (:func:<code>scipy.stats.linregress</code>).</li>
-<li>Take the one-sided p-value: <code>two_sided / 2</code> when the observed
-   slope is positive, otherwise <code>1 - two_sided / 2</code>. (scipy
-   reports two-sided by default; the one-sided form is the natural
-   gate for "positive learning".)</li>
-<li>Pass when <code>slope &gt; 0</code> AND <code>p_value &lt; alpha</code>.</li>
-</ol>
-<p>Plan/05 §6 criterion 4 uses <code>alpha=0.05</code> as the canonical
-threshold; the project's production config gives <code>p_value &lt; 1e-14</code>
-across seeds, so the gate has very wide margin.</p>
-<p>Degenerate inputs:</p>
-<ul>
-<li>Empty curve, or fewer than <code>min_episodes</code> entries: vacuously
-  passing with <code>slope=0</code>, <code>p_value=1.0</code>. Documented as a
-  sentinel for too-short unit-test smoke runs; do not rely on it to
-  mask an undersized production run.</li>
-<li>Constant (zero-variance) curve: <code>slope=0</code> and <code>p_value=1.0</code>;
-  report is failing because the slope is not strictly positive.</li>
-</ul>
-
-
-<p><span class="doc-section-title">Parameters:</span></p>
-    <ul>
-        <li class="doc-section-item field-body">
-            <b><code>curve</code></b>
-              (<code><a class="autorefs autorefs-internal" title="RewardCurve
-
-
-  
-      dataclass
-   (concerto.training.ego_aht.RewardCurve)" href="#concerto.training.ego_aht.RewardCurve">RewardCurve</a></code>)
-          –
-          <div class="doc-md-description">
-            <p>The reward curve produced by
-:func:<code>concerto.training.ego_aht.train</code>. Only
-<code>per_episode_ego_rewards</code> is read.</p>
-          </div>
-        </li>
-        <li class="doc-section-item field-body">
-            <b><code>alpha</code></b>
-              (<code><span title="float">float</span></code>, default:
-                  <code><span title="concerto.training.empirical_guarantee.DEFAULT_ALPHA">DEFAULT_ALPHA</span></code>
-)
-          –
-          <div class="doc-md-description">
-            <p>One-sided significance threshold. Default
-:data:<code>DEFAULT_ALPHA</code>.</p>
-          </div>
-        </li>
-        <li class="doc-section-item field-body">
-            <b><code>min_episodes</code></b>
-              (<code><span title="int">int</span></code>, default:
-                  <code><span title="concerto.training.empirical_guarantee.DEFAULT_MIN_EPISODES">DEFAULT_MIN_EPISODES</span></code>
-)
-          –
-          <div class="doc-md-description">
-            <p>Minimum episode count for a non-vacuous report.
-Default :data:<code>DEFAULT_MIN_EPISODES</code>.</p>
-          </div>
-        </li>
-    </ul>
-
-
-<p><span class="doc-section-title">Returns:</span></p>
-    <ul>
-        <li class="doc-section-item field-body">
-<b><code>Frozen</code></b> (              <code><a class="autorefs autorefs-internal" title="SlopeReport
-
-
-  
-      dataclass
-   (concerto.training.empirical_guarantee.SlopeReport)" href="#concerto.training.SlopeReport">SlopeReport</a></code>
-)          –
-          <div class="doc-md-description">
-            <p>class:<code>SlopeReport</code>. Does NOT raise on failure — the</p>
-          </div>
-        </li>
-        <li class="doc-section-item field-body">
-              <code><a class="autorefs autorefs-internal" title="SlopeReport
-
-
-  
-      dataclass
-   (concerto.training.empirical_guarantee.SlopeReport)" href="#concerto.training.SlopeReport">SlopeReport</a></code>
-          –
-          <div class="doc-md-description">
-            <p>caller decides whether to fail the test, exit the CLI non-zero,</p>
-          </div>
-        </li>
-        <li class="doc-section-item field-body">
-              <code><a class="autorefs autorefs-internal" title="SlopeReport
-
-
-  
-      dataclass
-   (concerto.training.empirical_guarantee.SlopeReport)" href="#concerto.training.SlopeReport">SlopeReport</a></code>
-          –
-          <div class="doc-md-description">
-            <p>or just log the report.</p>
-          </div>
-        </li>
-    </ul>
-
-
-            <details class="mkdocstrings-source">
-              <summary>Source code in <code>src/concerto/training/empirical_guarantee.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">371</span>
-<span class="normal">372</span>
-<span class="normal">373</span>
-<span class="normal">374</span>
-<span class="normal">375</span>
-<span class="normal">376</span>
-<span class="normal">377</span>
-<span class="normal">378</span>
+                <summary>Source code in <code>src/concerto/training/learning_signal_check.py</code></summary>
+                <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">378</span>
 <span class="normal">379</span>
 <span class="normal">380</span>
 <span class="normal">381</span>
@@ -13795,117 +13483,199 @@ Default :data:<code>DEFAULT_MIN_EPISODES</code>.</p>
 <span class="normal">459</span>
 <span class="normal">460</span>
 <span class="normal">461</span>
-<span class="normal">462</span>
-<span class="normal">463</span>
-<span class="normal">464</span>
-<span class="normal">465</span>
-<span class="normal">466</span>
-<span class="normal">467</span>
-<span class="normal">468</span>
-<span class="normal">469</span>
-<span class="normal">470</span>
-<span class="normal">471</span>
-<span class="normal">472</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">assert_positive_learning_slope</span><span class="p">(</span>
-    <span class="n">curve</span><span class="p">:</span> <span class="n">RewardCurve</span><span class="p">,</span>
-    <span class="o">*</span><span class="p">,</span>
-    <span class="n">alpha</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">DEFAULT_ALPHA</span><span class="p">,</span>
-    <span class="n">min_episodes</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">DEFAULT_MIN_EPISODES</span><span class="p">,</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SlopeReport</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Least-squares slope test on per-episode reward (ADR-002 §Risks #1; canonical).</span>
+<span class="normal">462</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">SlopeReport</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Result of one slope-test learning-signal check (T4b.13; ADR-002 §Risks #1).</span>
 
-<span class="sd">    Issue #62 root-cause writeup: the legacy</span>
-<span class="sd">    :func:`assert_non_decreasing_window` statistic has poor signal-to-</span>
-<span class="sd">    noise on per-episode rewards at the Phase-0 100k-frame budget — the</span>
-<span class="sd">    moving-window-of-10 mean stdev (~6.3) is comparable to the total</span>
-<span class="sd">    drift (~10-20 reward units) the trainer can produce, and the</span>
-<span class="sd">    non-decreasing-fraction sits near 0.5 (a random walk) even when the</span>
-<span class="sd">    policy is materially improving. The slope test integrates over the</span>
-<span class="sd">    whole curve and rejects the null &quot;slope &lt;= 0&quot; with p-values</span>
-<span class="sd">    astronomically below any reasonable alpha when learning is real.</span>
+<span class="sd">    Captures everything an external reader needs to interpret the</span>
+<span class="sd">    trip-wire outcome without re-running the experiment: the</span>
+<span class="sd">    least-squares slope itself, the coefficient of determination, the</span>
+<span class="sd">    one-sided p-value, the alpha threshold the run was checked against,</span>
+<span class="sd">    the number of episodes the regression saw, the :class:`CheckStatus`</span>
+<span class="sd">    taxon, and the deprecated ``passed`` boolean (kept for v0.5.x</span>
+<span class="sd">    backwards-compat).</span>
 
-<span class="sd">    The test:</span>
+<span class="sd">    The dataclass is frozen so a returned report cannot be mutated after</span>
+<span class="sd">    the fact (the project&#39;s reproducibility contract: provenance bundles</span>
+<span class="sd">    are immutable). Serialise to JSON via :func:`dataclasses.asdict`</span>
+<span class="sd">    (used by :func:`plot_slope_curve`).</span>
 
-<span class="sd">    1. Fit ``rewards ~ slope * episode_index + intercept`` via least</span>
-<span class="sd">       squares (:func:`scipy.stats.linregress`).</span>
-<span class="sd">    2. Take the one-sided p-value: ``two_sided / 2`` when the observed</span>
-<span class="sd">       slope is positive, otherwise ``1 - two_sided / 2``. (scipy</span>
-<span class="sd">       reports two-sided by default; the one-sided form is the natural</span>
-<span class="sd">       gate for &quot;positive learning&quot;.)</span>
-<span class="sd">    3. Pass when ``slope &gt; 0`` AND ``p_value &lt; alpha``.</span>
-
-<span class="sd">    Plan/05 §6 criterion 4 uses ``alpha=0.05`` as the canonical</span>
-<span class="sd">    threshold; the project&#39;s production config gives ``p_value &lt; 1e-14``</span>
-<span class="sd">    across seeds, so the gate has very wide margin.</span>
-
-<span class="sd">    Degenerate inputs:</span>
-
-<span class="sd">    - Empty curve, or fewer than ``min_episodes`` entries: vacuously</span>
-<span class="sd">      passing with ``slope=0``, ``p_value=1.0``. Documented as a</span>
-<span class="sd">      sentinel for too-short unit-test smoke runs; do not rely on it to</span>
-<span class="sd">      mask an undersized production run.</span>
-<span class="sd">    - Constant (zero-variance) curve: ``slope=0`` and ``p_value=1.0``;</span>
-<span class="sd">      report is failing because the slope is not strictly positive.</span>
-
-<span class="sd">    Args:</span>
-<span class="sd">        curve: The reward curve produced by</span>
-<span class="sd">            :func:`concerto.training.ego_aht.train`. Only</span>
-<span class="sd">            ``per_episode_ego_rewards`` is read.</span>
-<span class="sd">        alpha: One-sided significance threshold. Default</span>
-<span class="sd">            :data:`DEFAULT_ALPHA`.</span>
-<span class="sd">        min_episodes: Minimum episode count for a non-vacuous report.</span>
-<span class="sd">            Default :data:`DEFAULT_MIN_EPISODES`.</span>
-
-<span class="sd">    Returns:</span>
-<span class="sd">        Frozen :class:`SlopeReport`. Does NOT raise on failure — the</span>
-<span class="sd">        caller decides whether to fail the test, exit the CLI non-zero,</span>
-<span class="sd">        or just log the report.</span>
+<span class="sd">    Attributes:</span>
+<span class="sd">        slope: Least-squares slope of per-episode reward versus episode</span>
+<span class="sd">            index, in reward-units-per-episode. Positive ⇒ learning;</span>
+<span class="sd">            zero or negative ⇒ no learning or regressing.</span>
+<span class="sd">        intercept: Least-squares intercept. Useful for the regression</span>
+<span class="sd">            overlay in :func:`plot_slope_curve` and as a sanity check</span>
+<span class="sd">            on the early-rollout reward scale.</span>
+<span class="sd">        r_squared: Coefficient of determination ``R²``. Low ``R²`` plus</span>
+<span class="sd">            ``status=PASSED`` is acceptable on noisy tasks (the slope is</span>
+<span class="sd">            still statistically significant); the project does not gate</span>
+<span class="sd">            on ``R²`` directly.</span>
+<span class="sd">        p_value: One-sided p-value for the null &quot;slope &lt;= 0&quot;, computed</span>
+<span class="sd">            as ``two_sided_p / 2`` when the observed slope is positive</span>
+<span class="sd">            and ``1 - two_sided_p / 2`` when non-positive. The</span>
+<span class="sd">            two-sided p-value comes from</span>
+<span class="sd">            :func:`scipy.stats.linregress`.</span>
+<span class="sd">        alpha: Significance threshold the check was run against</span>
+<span class="sd">            (default :data:`DEFAULT_ALPHA`).</span>
+<span class="sd">        n_episodes: Number of episodes in the regressed curve. Below</span>
+<span class="sd">            :data:`DEFAULT_MIN_EPISODES` the report carries</span>
+<span class="sd">            :attr:`CheckStatus.INSUFFICIENT_DATA`.</span>
+<span class="sd">        status: Outcome taxon (:class:`CheckStatus`). Canonical signal;</span>
+<span class="sd">            new code should branch on this, not on ``passed``.</span>
+<span class="sd">        passed: **Deprecated** — derived from ``status`` (``passed ==</span>
+<span class="sd">            status is CheckStatus.PASSED``). Kept for v0.5.x consumers;</span>
+<span class="sd">            removal target v0.6.0. Construction emits a</span>
+<span class="sd">            :class:`DeprecationWarning` in ``__post_init__``.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">rewards</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">curve</span><span class="o">.</span><span class="n">per_episode_ego_rewards</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
-    <span class="n">n</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">rewards</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
-    <span class="k">if</span> <span class="n">n</span> <span class="o">&lt;</span> <span class="n">min_episodes</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">SlopeReport</span><span class="p">(</span>
-            <span class="n">slope</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
-            <span class="n">intercept</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
-            <span class="n">r_squared</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
-            <span class="n">p_value</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
-            <span class="n">alpha</span><span class="o">=</span><span class="n">alpha</span><span class="p">,</span>
-            <span class="n">n_episodes</span><span class="o">=</span><span class="n">n</span><span class="p">,</span>
-            <span class="n">passed</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+
+    <span class="n">slope</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">intercept</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">r_squared</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">p_value</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">alpha</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">n_episodes</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">status</span><span class="p">:</span> <span class="n">CheckStatus</span>
+    <span class="n">passed</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">__post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Derive ``passed`` from ``status`` + emit the field-deprecation warning.</span>
+
+<span class="sd">        Two side effects, in order:</span>
+
+<span class="sd">        1. ``passed`` is recomputed from ``status`` so the two cannot</span>
+<span class="sd">           drift even when a caller supplies an inconsistent value</span>
+<span class="sd">           (e.g. while round-tripping a legacy v1 JSON payload that</span>
+<span class="sd">           has ``passed`` but no ``status``); the (rare) override uses</span>
+<span class="sd">           ``object.__setattr__`` because the dataclass is frozen.</span>
+<span class="sd">        2. A :class:`DeprecationWarning` is emitted **unconditionally,</span>
+<span class="sd">           on every construction**, signalling that the ``passed`` field</span>
+<span class="sd">           itself is deprecated. The warning fires whether or not the</span>
+<span class="sd">           caller supplied ``passed`` explicitly — the goal is to flag</span>
+<span class="sd">           the *field* to consumers, not just inconsistent inputs. New</span>
+<span class="sd">           code should branch on ``report.status is CheckStatus.PASSED``</span>
+<span class="sd">           and ignore ``passed`` entirely; ``passed`` is removed in</span>
+<span class="sd">           v0.6.0 along with this ``__post_init__`` warning.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">derived</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">status</span> <span class="ow">is</span> <span class="n">CheckStatus</span><span class="o">.</span><span class="n">PASSED</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">passed</span> <span class="o">!=</span> <span class="n">derived</span><span class="p">:</span>
+            <span class="nb">object</span><span class="o">.</span><span class="fm">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;passed&quot;</span><span class="p">,</span> <span class="n">derived</span><span class="p">)</span>
+        <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+            <span class="s2">&quot;SlopeReport.passed is deprecated; use &quot;</span>
+            <span class="s2">&quot;`report.status is CheckStatus.PASSED` instead &quot;</span>
+            <span class="s2">&quot;(removal target: v0.6.0; external-review P1-1/P1-2, &quot;</span>
+            <span class="s2">&quot;2026-05-16).&quot;</span><span class="p">,</span>
+            <span class="ne">DeprecationWarning</span><span class="p">,</span>
+            <span class="n">stacklevel</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
         <span class="p">)</span>
-    <span class="c1"># scipy.stats.linregress raises on zero-variance x or zero-variance</span>
-    <span class="c1"># y. The episode index x = arange(n) always has positive variance</span>
-    <span class="c1"># for n &gt;= 2 (which is guaranteed by min_episodes &gt;= 2), so we only</span>
-    <span class="c1"># need to handle the constant-y case.</span>
-    <span class="k">if</span> <span class="nb">float</span><span class="p">(</span><span class="n">rewards</span><span class="o">.</span><span class="n">std</span><span class="p">())</span> <span class="o">==</span> <span class="mf">0.0</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">SlopeReport</span><span class="p">(</span>
-            <span class="n">slope</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
-            <span class="n">intercept</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">rewards</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="k">if</span> <span class="n">n</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="mf">0.0</span><span class="p">,</span>
-            <span class="n">r_squared</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
-            <span class="n">p_value</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
-            <span class="n">alpha</span><span class="o">=</span><span class="n">alpha</span><span class="p">,</span>
-            <span class="n">n_episodes</span><span class="o">=</span><span class="n">n</span><span class="p">,</span>
-            <span class="n">passed</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-        <span class="p">)</span>
-    <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
-    <span class="n">result</span> <span class="o">=</span> <span class="n">stats</span><span class="o">.</span><span class="n">linregress</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">rewards</span><span class="p">)</span>
-    <span class="n">slope</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">slope</span><span class="p">)</span>
-    <span class="n">intercept</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">intercept</span><span class="p">)</span>
-    <span class="n">r_squared</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">rvalue</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span>
-    <span class="n">two_sided_p</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">pvalue</span><span class="p">)</span>
-    <span class="c1"># One-sided p for &quot;slope &gt; 0&quot;. scipy reports two-sided; halving is</span>
-    <span class="c1"># correct under the standard t-distribution symmetry. For a</span>
-    <span class="c1"># non-positive observed slope the one-sided p flips to the</span>
-    <span class="c1"># complement so the assertion correctly fails.</span>
-    <span class="n">p_value</span> <span class="o">=</span> <span class="n">two_sided_p</span> <span class="o">/</span> <span class="mf">2.0</span> <span class="k">if</span> <span class="n">slope</span> <span class="o">&gt;</span> <span class="mf">0.0</span> <span class="k">else</span> <span class="mf">1.0</span> <span class="o">-</span> <span class="n">two_sided_p</span> <span class="o">/</span> <span class="mf">2.0</span>
-    <span class="n">passed</span> <span class="o">=</span> <span class="n">slope</span> <span class="o">&gt;</span> <span class="mf">0.0</span> <span class="ow">and</span> <span class="n">p_value</span> <span class="o">&lt;</span> <span class="n">alpha</span>
-    <span class="k">return</span> <span class="n">SlopeReport</span><span class="p">(</span>
-        <span class="n">slope</span><span class="o">=</span><span class="n">slope</span><span class="p">,</span>
-        <span class="n">intercept</span><span class="o">=</span><span class="n">intercept</span><span class="p">,</span>
-        <span class="n">r_squared</span><span class="o">=</span><span class="n">r_squared</span><span class="p">,</span>
-        <span class="n">p_value</span><span class="o">=</span><span class="n">p_value</span><span class="p">,</span>
-        <span class="n">alpha</span><span class="o">=</span><span class="n">alpha</span><span class="p">,</span>
-        <span class="n">n_episodes</span><span class="o">=</span><span class="n">n</span><span class="p">,</span>
-        <span class="n">passed</span><span class="o">=</span><span class="n">passed</span><span class="p">,</span>
+</code></pre></div></td></tr></table></div>
+              </details>
+
+
+
+<div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="concerto.training.SlopeReport.__post_init__" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">__post_init__</span>
+
+
+</h3>
+<div class="doc-signature highlight"><pre><span></span><code><span class="nf">__post_init__</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Derive <code>passed</code> from <code>status</code> + emit the field-deprecation warning.</p>
+<p>Two side effects, in order:</p>
+<ol>
+<li><code>passed</code> is recomputed from <code>status</code> so the two cannot
+   drift even when a caller supplies an inconsistent value
+   (e.g. while round-tripping a legacy v1 JSON payload that
+   has <code>passed</code> but no <code>status</code>); the (rare) override uses
+   <code>object.__setattr__</code> because the dataclass is frozen.</li>
+<li>A :class:<code>DeprecationWarning</code> is emitted <strong>unconditionally,
+   on every construction</strong>, signalling that the <code>passed</code> field
+   itself is deprecated. The warning fires whether or not the
+   caller supplied <code>passed</code> explicitly — the goal is to flag
+   the <em>field</em> to consumers, not just inconsistent inputs. New
+   code should branch on <code>report.status is CheckStatus.PASSED</code>
+   and ignore <code>passed</code> entirely; <code>passed</code> is removed in
+   v0.6.0 along with this <code>__post_init__</code> warning.</li>
+</ol>
+
+
+            <details class="mkdocstrings-source">
+              <summary>Source code in <code>src/concerto/training/learning_signal_check.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">433</span>
+<span class="normal">434</span>
+<span class="normal">435</span>
+<span class="normal">436</span>
+<span class="normal">437</span>
+<span class="normal">438</span>
+<span class="normal">439</span>
+<span class="normal">440</span>
+<span class="normal">441</span>
+<span class="normal">442</span>
+<span class="normal">443</span>
+<span class="normal">444</span>
+<span class="normal">445</span>
+<span class="normal">446</span>
+<span class="normal">447</span>
+<span class="normal">448</span>
+<span class="normal">449</span>
+<span class="normal">450</span>
+<span class="normal">451</span>
+<span class="normal">452</span>
+<span class="normal">453</span>
+<span class="normal">454</span>
+<span class="normal">455</span>
+<span class="normal">456</span>
+<span class="normal">457</span>
+<span class="normal">458</span>
+<span class="normal">459</span>
+<span class="normal">460</span>
+<span class="normal">461</span>
+<span class="normal">462</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">__post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Derive ``passed`` from ``status`` + emit the field-deprecation warning.</span>
+
+<span class="sd">    Two side effects, in order:</span>
+
+<span class="sd">    1. ``passed`` is recomputed from ``status`` so the two cannot</span>
+<span class="sd">       drift even when a caller supplies an inconsistent value</span>
+<span class="sd">       (e.g. while round-tripping a legacy v1 JSON payload that</span>
+<span class="sd">       has ``passed`` but no ``status``); the (rare) override uses</span>
+<span class="sd">       ``object.__setattr__`` because the dataclass is frozen.</span>
+<span class="sd">    2. A :class:`DeprecationWarning` is emitted **unconditionally,</span>
+<span class="sd">       on every construction**, signalling that the ``passed`` field</span>
+<span class="sd">       itself is deprecated. The warning fires whether or not the</span>
+<span class="sd">       caller supplied ``passed`` explicitly — the goal is to flag</span>
+<span class="sd">       the *field* to consumers, not just inconsistent inputs. New</span>
+<span class="sd">       code should branch on ``report.status is CheckStatus.PASSED``</span>
+<span class="sd">       and ignore ``passed`` entirely; ``passed`` is removed in</span>
+<span class="sd">       v0.6.0 along with this ``__post_init__`` warning.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">derived</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">status</span> <span class="ow">is</span> <span class="n">CheckStatus</span><span class="o">.</span><span class="n">PASSED</span>
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">passed</span> <span class="o">!=</span> <span class="n">derived</span><span class="p">:</span>
+        <span class="nb">object</span><span class="o">.</span><span class="fm">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;passed&quot;</span><span class="p">,</span> <span class="n">derived</span><span class="p">)</span>
+    <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+        <span class="s2">&quot;SlopeReport.passed is deprecated; use &quot;</span>
+        <span class="s2">&quot;`report.status is CheckStatus.PASSED` instead &quot;</span>
+        <span class="s2">&quot;(removal target: v0.6.0; external-review P1-1/P1-2, &quot;</span>
+        <span class="s2">&quot;2026-05-16).&quot;</span><span class="p">,</span>
+        <span class="ne">DeprecationWarning</span><span class="p">,</span>
+        <span class="n">stacklevel</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
     <span class="p">)</span>
 </code></pre></div></td></tr></table></div>
             </details>
@@ -13913,39 +13683,53 @@ Default :data:<code>DEFAULT_MIN_EPISODES</code>.</p>
 
 </div>
 
+
+
+  </div>
+
+    </div>
+
+</div>
+
+
 <div class="doc doc-object doc-function">
 
 
-<h2 id="concerto.training.plot_reward_curve" class="doc doc-heading">
-            <span class="doc doc-object-name doc-function-name">plot_reward_curve</span>
+<h2 id="concerto.training.assert_non_decreasing_window" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">assert_non_decreasing_window</span>
 
 
 </h2>
-<div class="doc-signature highlight"><pre><span></span><code><span class="nf">plot_reward_curve</span><span class="p">(</span>
+<div class="doc-signature highlight"><pre><span></span><code><span class="nf">assert_non_decreasing_window</span><span class="p">(</span>
     <span class="n">curve</span><span class="p">:</span> <span class="n">RewardCurve</span><span class="p">,</span>
     <span class="o">*</span><span class="p">,</span>
-    <span class="n">report</span><span class="p">:</span> <span class="n">GuaranteeReport</span><span class="p">,</span>
-    <span class="n">out_dir</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Path</span><span class="p">,</span> <span class="n">Path</span><span class="p">]</span>
+    <span class="n">window</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">DEFAULT_WINDOW</span><span class="p">,</span>
+    <span class="n">threshold</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">DEFAULT_THRESHOLD</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">GuaranteeReport</span>
 </code></pre></div>
 
     <div class="doc doc-contents ">
 
-        <p>Emit <code>&lt;run_id&gt;.png</code> + <code>&lt;run_id&gt;.json</code> for the assertion plot (T4b.13; ADR-002 §Risks #1).</p>
-<p>Writes two files under <code>out_dir</code>:</p>
-<ul>
-<li><code>&lt;run_id&gt;.png</code>: matplotlib line plot of the per-episode reward
-  with the moving-window-of-<code>report.window</code> mean overlaid. The
-  report's <code>fraction</code> / <code>passed</code> are stamped into the title so
-  <code>docs/explanation/why-aht.md</code> can embed the figure unchanged.</li>
-<li><code>&lt;run_id&gt;.json</code>: machine-replayable sidecar carrying the raw
-  per-episode curve + the report. A future reader regenerates the
-  figure by replaying the JSON through this function.</li>
-</ul>
-<p><code>matplotlib</code> is imported lazily inside the function so the
-surrounding module stays importable in environments without the
-<code>viz</code> extra (Phase-0 CI, headless containers). Callers that need
-the plot must install the <code>viz</code> extra (<code>uv sync --extra viz</code>).</p>
+        <p>Check the moving-window-of-K mean for non-decreasing intervals (ADR-002 §Risks #1).</p>
+<p>Slides a window of length <code>window</code> over <code>curve.per_episode_ego_rewards</code>
+and counts the fraction of consecutive interval pairs whose later-window
+mean is <code>&gt;=</code> the earlier-window mean. A run is considered to have
+cleared the trip-wire when that fraction is <code>&gt;= threshold</code>.</p>
+<p>Plan/05 §6 criterion 4 names the canonical setting:
+<code>window=10, threshold=0.8</code>. Callers MUST NOT silently widen the
+window or lower the threshold to coerce a passing report — if the
+assertion fires under the production config, hand control back to
+the maintainer and open a <code>#scope-revision</code> issue (ADR-002 §Risks</p>
+<h3 id="concerto.training.assert_non_decreasing_window--1-mitigation-policy">1 mitigation policy).</h3>
+<p>Degenerate inputs (empty curve, <code>len(curve) &lt; window</code>) return a
+report with <code>n_intervals=0</code> and <code>passed=True</code>. The pass is
+<em>vacuous</em> — there is not enough signal to assert anything — and is
+only useful as a sentinel for unit tests of the helper itself; do
+not rely on it to mask a too-short production run. The canonical
+slope test :func:<code>check_positive_learning_slope</code> resolves this
+vacuous-pass class of failure (external-review P1-2) by returning
+<code>CheckStatus.INSUFFICIENT_DATA</code> with <code>passed=False</code> on
+too-short curves.</p>
 
 
 <p><span class="doc-section-title">Parameters:</span></p>
@@ -13961,31 +13745,33 @@ the plot must install the <code>viz</code> extra (<code>uv sync --extra viz</cod
           –
           <div class="doc-md-description">
             <p>The reward curve produced by
-:func:<code>concerto.training.ego_aht.train</code>. <code>curve.run_id</code>
-is used as the filename stem.</p>
+:func:<code>concerto.training.ego_aht.train</code>. Only the
+<code>per_episode_ego_rewards</code> field is read; the per-step
+series is deliberately ignored because the assertion is
+episode-aggregated (Huriot-Sibai 2025 Theorem 7 is stated
+over the policy-improvement step, which lives at episode
+granularity).</p>
           </div>
         </li>
         <li class="doc-section-item field-body">
-            <b><code>report</code></b>
-              (<code><a class="autorefs autorefs-internal" title="GuaranteeReport
-
-
-  
-      dataclass
-   (concerto.training.empirical_guarantee.GuaranteeReport)" href="#concerto.training.GuaranteeReport">GuaranteeReport</a></code>)
+            <b><code>window</code></b>
+              (<code><span title="int">int</span></code>, default:
+                  <code><span title="concerto.training.learning_signal_check.DEFAULT_WINDOW">DEFAULT_WINDOW</span></code>
+)
           –
           <div class="doc-md-description">
-            <p>The :class:<code>GuaranteeReport</code> produced by
-:func:<code>assert_non_decreasing_window</code>. Stamped into the figure
-title and copied into the JSON sidecar.</p>
+            <p>Window size (default :data:<code>DEFAULT_WINDOW</code>).</p>
           </div>
         </li>
         <li class="doc-section-item field-body">
-            <b><code>out_dir</code></b>
-              (<code><span title="pathlib.Path">Path</span></code>)
+            <b><code>threshold</code></b>
+              (<code><span title="float">float</span></code>, default:
+                  <code><span title="concerto.training.learning_signal_check.DEFAULT_THRESHOLD">DEFAULT_THRESHOLD</span></code>
+)
           –
           <div class="doc-md-description">
-            <p>Output directory. Created if missing.</p>
+            <p>Pass threshold on the non-decreasing fraction
+(default :data:<code>DEFAULT_THRESHOLD</code>).</p>
           </div>
         </li>
     </ul>
@@ -13994,25 +13780,62 @@ title and copied into the JSON sidecar.</p>
 <p><span class="doc-section-title">Returns:</span></p>
     <ul>
         <li class="doc-section-item field-body">
-              <code><span title="pathlib.Path">Path</span></code>
-          –
+<b><code>Frozen</code></b> (              <code><a class="autorefs autorefs-internal" title="GuaranteeReport
+
+
+  
+      dataclass
+   (concerto.training.learning_signal_check.GuaranteeReport)" href="#concerto.training.GuaranteeReport">GuaranteeReport</a></code>
+)          –
           <div class="doc-md-description">
-            <p><code>(png_path, json_path)</code> tuple — the absolute paths of the two</p>
+            <p>class:<code>GuaranteeReport</code>. Does NOT raise on failure — the</p>
           </div>
         </li>
         <li class="doc-section-item field-body">
-              <code><span title="pathlib.Path">Path</span></code>
+              <code><a class="autorefs autorefs-internal" title="GuaranteeReport
+
+
+  
+      dataclass
+   (concerto.training.learning_signal_check.GuaranteeReport)" href="#concerto.training.GuaranteeReport">GuaranteeReport</a></code>
           –
           <div class="doc-md-description">
-            <p>emitted files.</p>
+            <p>caller decides whether to fail the test, exit the CLI non-zero,</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+              <code><a class="autorefs autorefs-internal" title="GuaranteeReport
+
+
+  
+      dataclass
+   (concerto.training.learning_signal_check.GuaranteeReport)" href="#concerto.training.GuaranteeReport">GuaranteeReport</a></code>
+          –
+          <div class="doc-md-description">
+            <p>or just log the report.</p>
           </div>
         </li>
     </ul>
 
 
             <details class="mkdocstrings-source">
-              <summary>Source code in <code>src/concerto/training/empirical_guarantee.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">205</span>
+              <summary>Source code in <code>src/concerto/training/learning_signal_check.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">190</span>
+<span class="normal">191</span>
+<span class="normal">192</span>
+<span class="normal">193</span>
+<span class="normal">194</span>
+<span class="normal">195</span>
+<span class="normal">196</span>
+<span class="normal">197</span>
+<span class="normal">198</span>
+<span class="normal">199</span>
+<span class="normal">200</span>
+<span class="normal">201</span>
+<span class="normal">202</span>
+<span class="normal">203</span>
+<span class="normal">204</span>
+<span class="normal">205</span>
 <span class="normal">206</span>
 <span class="normal">207</span>
 <span class="normal">208</span>
@@ -14070,135 +13893,80 @@ title and copied into the JSON sidecar.</p>
 <span class="normal">260</span>
 <span class="normal">261</span>
 <span class="normal">262</span>
-<span class="normal">263</span>
-<span class="normal">264</span>
-<span class="normal">265</span>
-<span class="normal">266</span>
-<span class="normal">267</span>
-<span class="normal">268</span>
-<span class="normal">269</span>
-<span class="normal">270</span>
-<span class="normal">271</span>
-<span class="normal">272</span>
-<span class="normal">273</span>
-<span class="normal">274</span>
-<span class="normal">275</span>
-<span class="normal">276</span>
-<span class="normal">277</span>
-<span class="normal">278</span>
-<span class="normal">279</span>
-<span class="normal">280</span>
-<span class="normal">281</span>
-<span class="normal">282</span>
-<span class="normal">283</span>
-<span class="normal">284</span>
-<span class="normal">285</span>
-<span class="normal">286</span>
-<span class="normal">287</span>
-<span class="normal">288</span>
-<span class="normal">289</span>
-<span class="normal">290</span>
-<span class="normal">291</span>
-<span class="normal">292</span>
-<span class="normal">293</span>
-<span class="normal">294</span>
-<span class="normal">295</span>
-<span class="normal">296</span>
-<span class="normal">297</span>
-<span class="normal">298</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">plot_reward_curve</span><span class="p">(</span>
+<span class="normal">263</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">assert_non_decreasing_window</span><span class="p">(</span>
     <span class="n">curve</span><span class="p">:</span> <span class="n">RewardCurve</span><span class="p">,</span>
     <span class="o">*</span><span class="p">,</span>
-    <span class="n">report</span><span class="p">:</span> <span class="n">GuaranteeReport</span><span class="p">,</span>
-    <span class="n">out_dir</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Path</span><span class="p">,</span> <span class="n">Path</span><span class="p">]:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Emit ``&lt;run_id&gt;.png`` + ``&lt;run_id&gt;.json`` for the assertion plot (T4b.13; ADR-002 §Risks #1).</span>
+    <span class="n">window</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">DEFAULT_WINDOW</span><span class="p">,</span>
+    <span class="n">threshold</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">DEFAULT_THRESHOLD</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">GuaranteeReport</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Check the moving-window-of-K mean for non-decreasing intervals (ADR-002 §Risks #1).</span>
 
-<span class="sd">    Writes two files under ``out_dir``:</span>
+<span class="sd">    Slides a window of length ``window`` over ``curve.per_episode_ego_rewards``</span>
+<span class="sd">    and counts the fraction of consecutive interval pairs whose later-window</span>
+<span class="sd">    mean is ``&gt;=`` the earlier-window mean. A run is considered to have</span>
+<span class="sd">    cleared the trip-wire when that fraction is ``&gt;= threshold``.</span>
 
-<span class="sd">    - ``&lt;run_id&gt;.png``: matplotlib line plot of the per-episode reward</span>
-<span class="sd">      with the moving-window-of-``report.window`` mean overlaid. The</span>
-<span class="sd">      report&#39;s ``fraction`` / ``passed`` are stamped into the title so</span>
-<span class="sd">      ``docs/explanation/why-aht.md`` can embed the figure unchanged.</span>
-<span class="sd">    - ``&lt;run_id&gt;.json``: machine-replayable sidecar carrying the raw</span>
-<span class="sd">      per-episode curve + the report. A future reader regenerates the</span>
-<span class="sd">      figure by replaying the JSON through this function.</span>
+<span class="sd">    Plan/05 §6 criterion 4 names the canonical setting:</span>
+<span class="sd">    ``window=10, threshold=0.8``. Callers MUST NOT silently widen the</span>
+<span class="sd">    window or lower the threshold to coerce a passing report — if the</span>
+<span class="sd">    assertion fires under the production config, hand control back to</span>
+<span class="sd">    the maintainer and open a ``#scope-revision`` issue (ADR-002 §Risks</span>
+<span class="sd">    #1 mitigation policy).</span>
 
-<span class="sd">    ``matplotlib`` is imported lazily inside the function so the</span>
-<span class="sd">    surrounding module stays importable in environments without the</span>
-<span class="sd">    ``viz`` extra (Phase-0 CI, headless containers). Callers that need</span>
-<span class="sd">    the plot must install the ``viz`` extra (``uv sync --extra viz``).</span>
+<span class="sd">    Degenerate inputs (empty curve, ``len(curve) &lt; window``) return a</span>
+<span class="sd">    report with ``n_intervals=0`` and ``passed=True``. The pass is</span>
+<span class="sd">    *vacuous* — there is not enough signal to assert anything — and is</span>
+<span class="sd">    only useful as a sentinel for unit tests of the helper itself; do</span>
+<span class="sd">    not rely on it to mask a too-short production run. The canonical</span>
+<span class="sd">    slope test :func:`check_positive_learning_slope` resolves this</span>
+<span class="sd">    vacuous-pass class of failure (external-review P1-2) by returning</span>
+<span class="sd">    ``CheckStatus.INSUFFICIENT_DATA`` with ``passed=False`` on</span>
+<span class="sd">    too-short curves.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        curve: The reward curve produced by</span>
-<span class="sd">            :func:`concerto.training.ego_aht.train`. ``curve.run_id``</span>
-<span class="sd">            is used as the filename stem.</span>
-<span class="sd">        report: The :class:`GuaranteeReport` produced by</span>
-<span class="sd">            :func:`assert_non_decreasing_window`. Stamped into the figure</span>
-<span class="sd">            title and copied into the JSON sidecar.</span>
-<span class="sd">        out_dir: Output directory. Created if missing.</span>
+<span class="sd">            :func:`concerto.training.ego_aht.train`. Only the</span>
+<span class="sd">            ``per_episode_ego_rewards`` field is read; the per-step</span>
+<span class="sd">            series is deliberately ignored because the assertion is</span>
+<span class="sd">            episode-aggregated (Huriot-Sibai 2025 Theorem 7 is stated</span>
+<span class="sd">            over the policy-improvement step, which lives at episode</span>
+<span class="sd">            granularity).</span>
+<span class="sd">        window: Window size (default :data:`DEFAULT_WINDOW`).</span>
+<span class="sd">        threshold: Pass threshold on the non-decreasing fraction</span>
+<span class="sd">            (default :data:`DEFAULT_THRESHOLD`).</span>
 
 <span class="sd">    Returns:</span>
-<span class="sd">        ``(png_path, json_path)`` tuple — the absolute paths of the two</span>
-<span class="sd">        emitted files.</span>
+<span class="sd">        Frozen :class:`GuaranteeReport`. Does NOT raise on failure — the</span>
+<span class="sd">        caller decides whether to fail the test, exit the CLI non-zero,</span>
+<span class="sd">        or just log the report.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="c1"># Lazy import: matplotlib is in the ``viz`` extra (pyproject.toml),</span>
-    <span class="c1"># not the base install. Importing at module top would force every</span>
-    <span class="c1"># caller of ``concerto.training`` to install matplotlib even when</span>
-    <span class="c1"># they only want the assertion helper (e.g. CI, ``chamber-spike</span>
-    <span class="c1"># train --check-guarantee``).</span>
-    <span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib</span>  <span class="c1"># noqa: PLC0415  # see lazy-import comment above.</span>
-
-    <span class="n">matplotlib</span><span class="o">.</span><span class="n">use</span><span class="p">(</span><span class="s2">&quot;Agg&quot;</span><span class="p">,</span> <span class="n">force</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-    <span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>  <span class="c1"># noqa: PLC0415  # ditto.</span>
-
-    <span class="n">out_dir</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
     <span class="n">rewards</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">curve</span><span class="o">.</span><span class="n">per_episode_ego_rewards</span><span class="p">)</span>
-
-    <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="mf">4.5</span><span class="p">))</span>
-    <span class="k">if</span> <span class="n">rewards</span><span class="p">:</span>
-        <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">rewards</span><span class="p">)),</span> <span class="n">rewards</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;per-episode ego reward&quot;</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.4</span><span class="p">)</span>
-        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">rewards</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="n">report</span><span class="o">.</span><span class="n">window</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="n">running_sum</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">rewards</span><span class="p">[:</span> <span class="n">report</span><span class="o">.</span><span class="n">window</span><span class="p">])</span>
-            <span class="n">means</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">running_sum</span> <span class="o">/</span> <span class="n">report</span><span class="o">.</span><span class="n">window</span><span class="p">]</span>
-            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">report</span><span class="o">.</span><span class="n">window</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">rewards</span><span class="p">)):</span>
-                <span class="n">running_sum</span> <span class="o">+=</span> <span class="n">rewards</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">-</span> <span class="n">rewards</span><span class="p">[</span><span class="n">i</span> <span class="o">-</span> <span class="n">report</span><span class="o">.</span><span class="n">window</span><span class="p">]</span>
-                <span class="n">means</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">running_sum</span> <span class="o">/</span> <span class="n">report</span><span class="o">.</span><span class="n">window</span><span class="p">)</span>
-            <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
-                <span class="nb">range</span><span class="p">(</span><span class="n">report</span><span class="o">.</span><span class="n">window</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">rewards</span><span class="p">)),</span>
-                <span class="n">means</span><span class="p">,</span>
-                <span class="n">label</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;moving mean (window=</span><span class="si">{</span><span class="n">report</span><span class="o">.</span><span class="n">window</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">,</span>
-                <span class="n">linewidth</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
-            <span class="p">)</span>
-    <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;episode index&quot;</span><span class="p">)</span>
-    <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;ego reward (sum over episode)&quot;</span><span class="p">)</span>
-    <span class="n">status</span> <span class="o">=</span> <span class="s2">&quot;PASS&quot;</span> <span class="k">if</span> <span class="n">report</span><span class="o">.</span><span class="n">passed</span> <span class="k">else</span> <span class="s2">&quot;FAIL&quot;</span>
-    <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span>
-        <span class="sa">f</span><span class="s2">&quot;Empirical guarantee — run </span><span class="si">{</span><span class="n">curve</span><span class="o">.</span><span class="n">run_id</span><span class="si">}</span><span class="s2"> — </span><span class="si">{</span><span class="n">status</span><span class="si">}</span><span class="s2"> &quot;</span>
-        <span class="sa">f</span><span class="s2">&quot;(</span><span class="si">{</span><span class="n">report</span><span class="o">.</span><span class="n">n_nondecreasing</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">report</span><span class="o">.</span><span class="n">n_intervals</span><span class="si">}</span><span class="s2"> &quot;</span>
-        <span class="sa">f</span><span class="s2">&quot;non-decreasing, threshold=</span><span class="si">{</span><span class="n">report</span><span class="o">.</span><span class="n">threshold</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">)&quot;</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">rewards</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">window</span> <span class="ow">or</span> <span class="n">window</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">GuaranteeReport</span><span class="p">(</span>
+            <span class="n">window</span><span class="o">=</span><span class="n">window</span><span class="p">,</span>
+            <span class="n">threshold</span><span class="o">=</span><span class="n">threshold</span><span class="p">,</span>
+            <span class="n">n_intervals</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+            <span class="n">n_nondecreasing</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+            <span class="n">fraction</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
+            <span class="n">passed</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="n">means</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">running_sum</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">rewards</span><span class="p">[:</span><span class="n">window</span><span class="p">])</span>
+    <span class="n">means</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">running_sum</span> <span class="o">/</span> <span class="n">window</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">window</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">rewards</span><span class="p">)):</span>
+        <span class="n">running_sum</span> <span class="o">+=</span> <span class="n">rewards</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">-</span> <span class="n">rewards</span><span class="p">[</span><span class="n">i</span> <span class="o">-</span> <span class="n">window</span><span class="p">]</span>
+        <span class="n">means</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">running_sum</span> <span class="o">/</span> <span class="n">window</span><span class="p">)</span>
+    <span class="n">n_intervals</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">means</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span>
+    <span class="n">n_nondecreasing</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="mi">1</span> <span class="k">for</span> <span class="n">prev</span><span class="p">,</span> <span class="n">nxt</span> <span class="ow">in</span> <span class="n">pairwise</span><span class="p">(</span><span class="n">means</span><span class="p">)</span> <span class="k">if</span> <span class="n">nxt</span> <span class="o">&gt;=</span> <span class="n">prev</span><span class="p">)</span>
+    <span class="n">fraction</span> <span class="o">=</span> <span class="n">n_nondecreasing</span> <span class="o">/</span> <span class="n">n_intervals</span> <span class="k">if</span> <span class="n">n_intervals</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="mf">1.0</span>
+    <span class="k">return</span> <span class="n">GuaranteeReport</span><span class="p">(</span>
+        <span class="n">window</span><span class="o">=</span><span class="n">window</span><span class="p">,</span>
+        <span class="n">threshold</span><span class="o">=</span><span class="n">threshold</span><span class="p">,</span>
+        <span class="n">n_intervals</span><span class="o">=</span><span class="n">n_intervals</span><span class="p">,</span>
+        <span class="n">n_nondecreasing</span><span class="o">=</span><span class="n">n_nondecreasing</span><span class="p">,</span>
+        <span class="n">fraction</span><span class="o">=</span><span class="n">fraction</span><span class="p">,</span>
+        <span class="n">passed</span><span class="o">=</span><span class="n">fraction</span> <span class="o">&gt;=</span> <span class="n">threshold</span><span class="p">,</span>
     <span class="p">)</span>
-    <span class="k">if</span> <span class="n">rewards</span><span class="p">:</span>
-        <span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="s2">&quot;lower right&quot;</span><span class="p">)</span>
-    <span class="n">ax</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="n">visible</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.3</span><span class="p">)</span>
-    <span class="n">fig</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
-    <span class="n">png_path</span> <span class="o">=</span> <span class="n">out_dir</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">curve</span><span class="o">.</span><span class="n">run_id</span><span class="si">}</span><span class="s2">.png&quot;</span>
-    <span class="n">fig</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">png_path</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">120</span><span class="p">)</span>
-    <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">(</span><span class="n">fig</span><span class="p">)</span>
-
-    <span class="n">json_path</span> <span class="o">=</span> <span class="n">out_dir</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">curve</span><span class="o">.</span><span class="n">run_id</span><span class="si">}</span><span class="s2">.json&quot;</span>
-    <span class="n">json_path</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span>
-        <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span>
-            <span class="p">{</span>
-                <span class="s2">&quot;run_id&quot;</span><span class="p">:</span> <span class="n">curve</span><span class="o">.</span><span class="n">run_id</span><span class="p">,</span>
-                <span class="s2">&quot;per_episode_ego_rewards&quot;</span><span class="p">:</span> <span class="n">rewards</span><span class="p">,</span>
-                <span class="s2">&quot;report&quot;</span><span class="p">:</span> <span class="n">asdict</span><span class="p">(</span><span class="n">report</span><span class="p">),</span>
-            <span class="p">},</span>
-            <span class="n">sort_keys</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-            <span class="n">indent</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
-        <span class="p">),</span>
-        <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">,</span>
-    <span class="p">)</span>
-    <span class="k">return</span> <span class="n">png_path</span><span class="p">,</span> <span class="n">json_path</span>
 </code></pre></div></td></tr></table></div>
             </details>
     </div>
@@ -14208,27 +13976,58 @@ title and copied into the JSON sidecar.</p>
 <div class="doc doc-object doc-function">
 
 
-<h2 id="concerto.training.plot_slope_curve" class="doc doc-heading">
-            <span class="doc doc-object-name doc-function-name">plot_slope_curve</span>
+<h2 id="concerto.training.check_positive_learning_slope" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">check_positive_learning_slope</span>
 
 
 </h2>
-<div class="doc-signature highlight"><pre><span></span><code><span class="nf">plot_slope_curve</span><span class="p">(</span>
+<div class="doc-signature highlight"><pre><span></span><code><span class="nf">check_positive_learning_slope</span><span class="p">(</span>
     <span class="n">curve</span><span class="p">:</span> <span class="n">RewardCurve</span><span class="p">,</span>
     <span class="o">*</span><span class="p">,</span>
-    <span class="n">report</span><span class="p">:</span> <span class="n">SlopeReport</span><span class="p">,</span>
-    <span class="n">out_dir</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Path</span><span class="p">,</span> <span class="n">Path</span><span class="p">]</span>
+    <span class="n">alpha</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">DEFAULT_ALPHA</span><span class="p">,</span>
+    <span class="n">min_episodes</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">DEFAULT_MIN_EPISODES</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SlopeReport</span>
 </code></pre></div>
 
     <div class="doc doc-contents ">
 
-        <p>Emit <code>&lt;run_id&gt;.png</code> + <code>&lt;run_id&gt;.json</code> for the slope plot (T4b.13; ADR-002 §Risks #1).</p>
-<p>Mirrors :func:<code>plot_reward_curve</code>'s contract but overlays the
-least-squares regression line instead of the moving-window mean.
-The status line in the title carries the slope, p-value, and
-pass/fail flag so <code>docs/explanation/why-aht.md</code> can embed the
-figure unchanged.</p>
+        <p>Least-squares slope check on per-episode reward (ADR-002 §Risks #1; canonical).</p>
+<p>Renames the pre-amendment <code>assert_positive_learning_slope</code> (the
+"assert" verb overclaimed — the function returns a report rather
+than raising, and the slope check is a <em>trip-wire</em> for ADR-002
+§Risks #1, not a formal monotonic-improvement guarantee). The old
+name remains available via a deprecation shim at
+<code>concerto.training.empirical_guarantee.assert_positive_learning_slope</code>;
+removal target v0.6.0.</p>
+<p>Issue #62 root-cause writeup: the legacy
+:func:<code>assert_non_decreasing_window</code> statistic has poor signal-to-
+noise on per-episode rewards at the Phase-0 100k-frame budget — the
+moving-window-of-10 mean stdev (~6.3) is comparable to the total
+drift (~10-20 reward units) the trainer can produce, and the
+non-decreasing-fraction sits near 0.5 (a random walk) even when the
+policy is materially improving. The slope check integrates over the
+whole curve and rejects the null "slope &lt;= 0" with p-values
+astronomically below any reasonable alpha when learning is real.</p>
+<p>The check:</p>
+<ol>
+<li>Validate the curve. NaN / +/- inf ⇒
+   :attr:<code>CheckStatus.INVALID</code> immediately.</li>
+<li>If <code>n &lt; min_episodes</code> ⇒ :attr:<code>CheckStatus.INSUFFICIENT_DATA</code>
+   with <code>passed=False</code>. (Pre-amendment code returned
+   <code>passed=True</code> here; external-review P1-2 flagged this as
+   silently masking too-short curves.)</li>
+<li>Fit <code>rewards ~ slope * episode_index + intercept</code> via least
+   squares (:func:<code>scipy.stats.linregress</code>).</li>
+<li>Take the one-sided p-value: <code>two_sided / 2</code> when the observed
+   slope is positive, otherwise <code>1 - two_sided / 2</code>. (scipy
+   reports two-sided by default; the one-sided form is the natural
+   gate for "positive learning".)</li>
+<li>Pass when <code>slope &gt; 0</code> AND <code>p_value &lt; alpha</code> ⇒
+   :attr:<code>CheckStatus.PASSED</code>. Else :attr:<code>CheckStatus.FAILED</code>.</li>
+</ol>
+<p>Plan/05 §6 criterion 4 uses <code>alpha=0.05</code> as the canonical
+threshold; the project's production config gives <code>p_value &lt; 1e-14</code>
+across seeds, so the gate has very wide margin.</p>
 
 
 <p><span class="doc-section-title">Parameters:</span></p>
@@ -14244,31 +14043,32 @@ figure unchanged.</p>
           –
           <div class="doc-md-description">
             <p>The reward curve produced by
-:func:<code>concerto.training.ego_aht.train</code>. <code>curve.run_id</code>
-is the filename stem.</p>
+:func:<code>concerto.training.ego_aht.train</code>. Only
+<code>per_episode_ego_rewards</code> is read.</p>
           </div>
         </li>
         <li class="doc-section-item field-body">
-            <b><code>report</code></b>
-              (<code><a class="autorefs autorefs-internal" title="SlopeReport
-
-
-  
-      dataclass
-   (concerto.training.empirical_guarantee.SlopeReport)" href="#concerto.training.SlopeReport">SlopeReport</a></code>)
+            <b><code>alpha</code></b>
+              (<code><span title="float">float</span></code>, default:
+                  <code><span title="concerto.training.learning_signal_check.DEFAULT_ALPHA">DEFAULT_ALPHA</span></code>
+)
           –
           <div class="doc-md-description">
-            <p>The :class:<code>SlopeReport</code> produced by
-:func:<code>assert_positive_learning_slope</code>. Stamped into the
-figure title and copied into the JSON sidecar.</p>
+            <p>One-sided significance threshold. Default
+:data:<code>DEFAULT_ALPHA</code>.</p>
           </div>
         </li>
         <li class="doc-section-item field-body">
-            <b><code>out_dir</code></b>
-              (<code><span title="pathlib.Path">Path</span></code>)
+            <b><code>min_episodes</code></b>
+              (<code><span title="int">int</span></code>, default:
+                  <code><span title="concerto.training.learning_signal_check.DEFAULT_MIN_EPISODES">DEFAULT_MIN_EPISODES</span></code>
+)
           –
           <div class="doc-md-description">
-            <p>Output directory. Created if missing.</p>
+            <p>Minimum episode count for a non-vacuous report.
+Below this the report carries
+:attr:<code>CheckStatus.INSUFFICIENT_DATA</code>. Default
+:data:<code>DEFAULT_MIN_EPISODES</code>.</p>
           </div>
         </li>
     </ul>
@@ -14277,25 +14077,57 @@ figure title and copied into the JSON sidecar.</p>
 <p><span class="doc-section-title">Returns:</span></p>
     <ul>
         <li class="doc-section-item field-body">
-              <code><span title="pathlib.Path">Path</span></code>
-          –
+<b><code>Frozen</code></b> (              <code><a class="autorefs autorefs-internal" title="SlopeReport
+
+
+  
+      dataclass
+   (concerto.training.learning_signal_check.SlopeReport)" href="#concerto.training.SlopeReport">SlopeReport</a></code>
+)          –
           <div class="doc-md-description">
-            <p><code>(png_path, json_path)</code> tuple — the absolute paths of the two</p>
+            <p>class:<code>SlopeReport</code>. Does NOT raise on failure — the</p>
           </div>
         </li>
         <li class="doc-section-item field-body">
-              <code><span title="pathlib.Path">Path</span></code>
+              <code><a class="autorefs autorefs-internal" title="SlopeReport
+
+
+  
+      dataclass
+   (concerto.training.learning_signal_check.SlopeReport)" href="#concerto.training.SlopeReport">SlopeReport</a></code>
           –
           <div class="doc-md-description">
-            <p>emitted files.</p>
+            <p>caller decides whether to fail the test, exit the CLI non-zero,</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+              <code><a class="autorefs autorefs-internal" title="SlopeReport
+
+
+  
+      dataclass
+   (concerto.training.learning_signal_check.SlopeReport)" href="#concerto.training.SlopeReport">SlopeReport</a></code>
+          –
+          <div class="doc-md-description">
+            <p>or just log the report.</p>
           </div>
         </li>
     </ul>
 
 
             <details class="mkdocstrings-source">
-              <summary>Source code in <code>src/concerto/training/empirical_guarantee.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">475</span>
+              <summary>Source code in <code>src/concerto/training/learning_signal_check.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">465</span>
+<span class="normal">466</span>
+<span class="normal">467</span>
+<span class="normal">468</span>
+<span class="normal">469</span>
+<span class="normal">470</span>
+<span class="normal">471</span>
+<span class="normal">472</span>
+<span class="normal">473</span>
+<span class="normal">474</span>
+<span class="normal">475</span>
 <span class="normal">476</span>
 <span class="normal">477</span>
 <span class="normal">478</span>
@@ -14374,7 +14206,616 @@ figure title and copied into the JSON sidecar.</p>
 <span class="normal">551</span>
 <span class="normal">552</span>
 <span class="normal">553</span>
-<span class="normal">554</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">plot_slope_curve</span><span class="p">(</span>
+<span class="normal">554</span>
+<span class="normal">555</span>
+<span class="normal">556</span>
+<span class="normal">557</span>
+<span class="normal">558</span>
+<span class="normal">559</span>
+<span class="normal">560</span>
+<span class="normal">561</span>
+<span class="normal">562</span>
+<span class="normal">563</span>
+<span class="normal">564</span>
+<span class="normal">565</span>
+<span class="normal">566</span>
+<span class="normal">567</span>
+<span class="normal">568</span>
+<span class="normal">569</span>
+<span class="normal">570</span>
+<span class="normal">571</span>
+<span class="normal">572</span>
+<span class="normal">573</span>
+<span class="normal">574</span>
+<span class="normal">575</span>
+<span class="normal">576</span>
+<span class="normal">577</span>
+<span class="normal">578</span>
+<span class="normal">579</span>
+<span class="normal">580</span>
+<span class="normal">581</span>
+<span class="normal">582</span>
+<span class="normal">583</span>
+<span class="normal">584</span>
+<span class="normal">585</span>
+<span class="normal">586</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">check_positive_learning_slope</span><span class="p">(</span>
+    <span class="n">curve</span><span class="p">:</span> <span class="n">RewardCurve</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">alpha</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">DEFAULT_ALPHA</span><span class="p">,</span>
+    <span class="n">min_episodes</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">DEFAULT_MIN_EPISODES</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SlopeReport</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Least-squares slope check on per-episode reward (ADR-002 §Risks #1; canonical).</span>
+
+<span class="sd">    Renames the pre-amendment ``assert_positive_learning_slope`` (the</span>
+<span class="sd">    &quot;assert&quot; verb overclaimed — the function returns a report rather</span>
+<span class="sd">    than raising, and the slope check is a *trip-wire* for ADR-002</span>
+<span class="sd">    §Risks #1, not a formal monotonic-improvement guarantee). The old</span>
+<span class="sd">    name remains available via a deprecation shim at</span>
+<span class="sd">    ``concerto.training.empirical_guarantee.assert_positive_learning_slope``;</span>
+<span class="sd">    removal target v0.6.0.</span>
+
+<span class="sd">    Issue #62 root-cause writeup: the legacy</span>
+<span class="sd">    :func:`assert_non_decreasing_window` statistic has poor signal-to-</span>
+<span class="sd">    noise on per-episode rewards at the Phase-0 100k-frame budget — the</span>
+<span class="sd">    moving-window-of-10 mean stdev (~6.3) is comparable to the total</span>
+<span class="sd">    drift (~10-20 reward units) the trainer can produce, and the</span>
+<span class="sd">    non-decreasing-fraction sits near 0.5 (a random walk) even when the</span>
+<span class="sd">    policy is materially improving. The slope check integrates over the</span>
+<span class="sd">    whole curve and rejects the null &quot;slope &lt;= 0&quot; with p-values</span>
+<span class="sd">    astronomically below any reasonable alpha when learning is real.</span>
+
+<span class="sd">    The check:</span>
+
+<span class="sd">    1. Validate the curve. NaN / +/- inf ⇒</span>
+<span class="sd">       :attr:`CheckStatus.INVALID` immediately.</span>
+<span class="sd">    2. If ``n &lt; min_episodes`` ⇒ :attr:`CheckStatus.INSUFFICIENT_DATA`</span>
+<span class="sd">       with ``passed=False``. (Pre-amendment code returned</span>
+<span class="sd">       ``passed=True`` here; external-review P1-2 flagged this as</span>
+<span class="sd">       silently masking too-short curves.)</span>
+<span class="sd">    3. Fit ``rewards ~ slope * episode_index + intercept`` via least</span>
+<span class="sd">       squares (:func:`scipy.stats.linregress`).</span>
+<span class="sd">    4. Take the one-sided p-value: ``two_sided / 2`` when the observed</span>
+<span class="sd">       slope is positive, otherwise ``1 - two_sided / 2``. (scipy</span>
+<span class="sd">       reports two-sided by default; the one-sided form is the natural</span>
+<span class="sd">       gate for &quot;positive learning&quot;.)</span>
+<span class="sd">    5. Pass when ``slope &gt; 0`` AND ``p_value &lt; alpha`` ⇒</span>
+<span class="sd">       :attr:`CheckStatus.PASSED`. Else :attr:`CheckStatus.FAILED`.</span>
+
+<span class="sd">    Plan/05 §6 criterion 4 uses ``alpha=0.05`` as the canonical</span>
+<span class="sd">    threshold; the project&#39;s production config gives ``p_value &lt; 1e-14``</span>
+<span class="sd">    across seeds, so the gate has very wide margin.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        curve: The reward curve produced by</span>
+<span class="sd">            :func:`concerto.training.ego_aht.train`. Only</span>
+<span class="sd">            ``per_episode_ego_rewards`` is read.</span>
+<span class="sd">        alpha: One-sided significance threshold. Default</span>
+<span class="sd">            :data:`DEFAULT_ALPHA`.</span>
+<span class="sd">        min_episodes: Minimum episode count for a non-vacuous report.</span>
+<span class="sd">            Below this the report carries</span>
+<span class="sd">            :attr:`CheckStatus.INSUFFICIENT_DATA`. Default</span>
+<span class="sd">            :data:`DEFAULT_MIN_EPISODES`.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        Frozen :class:`SlopeReport`. Does NOT raise on failure — the</span>
+<span class="sd">        caller decides whether to fail the test, exit the CLI non-zero,</span>
+<span class="sd">        or just log the report.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">rewards</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">curve</span><span class="o">.</span><span class="n">per_episode_ego_rewards</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+    <span class="n">n</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">rewards</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+    <span class="c1"># 1. Validate. NaN / +/- inf surface as INVALID before any solver</span>
+    <span class="c1"># path touches the array.</span>
+    <span class="k">if</span> <span class="n">n</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">rewards</span><span class="p">)):</span>
+        <span class="k">return</span> <span class="n">SlopeReport</span><span class="p">(</span>
+            <span class="n">slope</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
+            <span class="n">intercept</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
+            <span class="n">r_squared</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
+            <span class="n">p_value</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
+            <span class="n">alpha</span><span class="o">=</span><span class="n">alpha</span><span class="p">,</span>
+            <span class="n">n_episodes</span><span class="o">=</span><span class="n">n</span><span class="p">,</span>
+            <span class="n">status</span><span class="o">=</span><span class="n">CheckStatus</span><span class="o">.</span><span class="n">INVALID</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="c1"># 2. Insufficient data. Replaces the pre-amendment vacuous-pass</span>
+    <span class="c1"># branch (external-review P1-2) that returned passed=True.</span>
+    <span class="k">if</span> <span class="n">n</span> <span class="o">&lt;</span> <span class="n">min_episodes</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">SlopeReport</span><span class="p">(</span>
+            <span class="n">slope</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
+            <span class="n">intercept</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
+            <span class="n">r_squared</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
+            <span class="n">p_value</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
+            <span class="n">alpha</span><span class="o">=</span><span class="n">alpha</span><span class="p">,</span>
+            <span class="n">n_episodes</span><span class="o">=</span><span class="n">n</span><span class="p">,</span>
+            <span class="n">status</span><span class="o">=</span><span class="n">CheckStatus</span><span class="o">.</span><span class="n">INSUFFICIENT_DATA</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="c1"># 3-5. Slope regression. Zero-variance y is a degenerate case that</span>
+    <span class="c1"># scipy.stats.linregress rejects, so handle it ahead of the call</span>
+    <span class="c1"># and emit FAILED (the slope is not strictly positive).</span>
+    <span class="k">if</span> <span class="nb">float</span><span class="p">(</span><span class="n">rewards</span><span class="o">.</span><span class="n">std</span><span class="p">())</span> <span class="o">==</span> <span class="mf">0.0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">SlopeReport</span><span class="p">(</span>
+            <span class="n">slope</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
+            <span class="n">intercept</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">rewards</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="k">if</span> <span class="n">n</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="mf">0.0</span><span class="p">,</span>
+            <span class="n">r_squared</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
+            <span class="n">p_value</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
+            <span class="n">alpha</span><span class="o">=</span><span class="n">alpha</span><span class="p">,</span>
+            <span class="n">n_episodes</span><span class="o">=</span><span class="n">n</span><span class="p">,</span>
+            <span class="n">status</span><span class="o">=</span><span class="n">CheckStatus</span><span class="o">.</span><span class="n">FAILED</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="n">stats</span><span class="o">.</span><span class="n">linregress</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">rewards</span><span class="p">)</span>
+    <span class="n">slope</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">slope</span><span class="p">)</span>
+    <span class="n">intercept</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">intercept</span><span class="p">)</span>
+    <span class="n">r_squared</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">rvalue</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span>
+    <span class="n">two_sided_p</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">pvalue</span><span class="p">)</span>
+    <span class="n">p_value</span> <span class="o">=</span> <span class="n">two_sided_p</span> <span class="o">/</span> <span class="mf">2.0</span> <span class="k">if</span> <span class="n">slope</span> <span class="o">&gt;</span> <span class="mf">0.0</span> <span class="k">else</span> <span class="mf">1.0</span> <span class="o">-</span> <span class="n">two_sided_p</span> <span class="o">/</span> <span class="mf">2.0</span>
+    <span class="n">status</span> <span class="o">=</span> <span class="n">CheckStatus</span><span class="o">.</span><span class="n">PASSED</span> <span class="k">if</span> <span class="n">slope</span> <span class="o">&gt;</span> <span class="mf">0.0</span> <span class="ow">and</span> <span class="n">p_value</span> <span class="o">&lt;</span> <span class="n">alpha</span> <span class="k">else</span> <span class="n">CheckStatus</span><span class="o">.</span><span class="n">FAILED</span>
+    <span class="k">return</span> <span class="n">SlopeReport</span><span class="p">(</span>
+        <span class="n">slope</span><span class="o">=</span><span class="n">slope</span><span class="p">,</span>
+        <span class="n">intercept</span><span class="o">=</span><span class="n">intercept</span><span class="p">,</span>
+        <span class="n">r_squared</span><span class="o">=</span><span class="n">r_squared</span><span class="p">,</span>
+        <span class="n">p_value</span><span class="o">=</span><span class="n">p_value</span><span class="p">,</span>
+        <span class="n">alpha</span><span class="o">=</span><span class="n">alpha</span><span class="p">,</span>
+        <span class="n">n_episodes</span><span class="o">=</span><span class="n">n</span><span class="p">,</span>
+        <span class="n">status</span><span class="o">=</span><span class="n">status</span><span class="p">,</span>
+    <span class="p">)</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h2 id="concerto.training.plot_reward_curve" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">plot_reward_curve</span>
+
+
+</h2>
+<div class="doc-signature highlight"><pre><span></span><code><span class="nf">plot_reward_curve</span><span class="p">(</span>
+    <span class="n">curve</span><span class="p">:</span> <span class="n">RewardCurve</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">report</span><span class="p">:</span> <span class="n">GuaranteeReport</span><span class="p">,</span>
+    <span class="n">out_dir</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Path</span><span class="p">,</span> <span class="n">Path</span><span class="p">]</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Emit <code>&lt;run_id&gt;.png</code> + <code>&lt;run_id&gt;.json</code> for the assertion plot (T4b.13; ADR-002 §Risks #1).</p>
+<p>Writes two files under <code>out_dir</code>:</p>
+<ul>
+<li><code>&lt;run_id&gt;.png</code>: matplotlib line plot of the per-episode reward
+  with the moving-window-of-<code>report.window</code> mean overlaid. The
+  report's <code>fraction</code> / <code>passed</code> are stamped into the title so
+  <code>docs/explanation/why-aht.md</code> can embed the figure unchanged.</li>
+<li><code>&lt;run_id&gt;.json</code>: machine-replayable sidecar carrying the raw
+  per-episode curve + the report. A future reader regenerates the
+  figure by replaying the JSON through this function.</li>
+</ul>
+<p><code>matplotlib</code> is imported lazily inside the function so the
+surrounding module stays importable in environments without the
+<code>viz</code> extra (Phase-0 CI, headless containers). Callers that need
+the plot must install the <code>viz</code> extra (<code>uv sync --extra viz</code>).</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <ul>
+        <li class="doc-section-item field-body">
+            <b><code>curve</code></b>
+              (<code><a class="autorefs autorefs-internal" title="RewardCurve
+
+
+  
+      dataclass
+   (concerto.training.ego_aht.RewardCurve)" href="#concerto.training.ego_aht.RewardCurve">RewardCurve</a></code>)
+          –
+          <div class="doc-md-description">
+            <p>The reward curve produced by
+:func:<code>concerto.training.ego_aht.train</code>. <code>curve.run_id</code>
+is used as the filename stem.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+            <b><code>report</code></b>
+              (<code><a class="autorefs autorefs-internal" title="GuaranteeReport
+
+
+  
+      dataclass
+   (concerto.training.learning_signal_check.GuaranteeReport)" href="#concerto.training.GuaranteeReport">GuaranteeReport</a></code>)
+          –
+          <div class="doc-md-description">
+            <p>The :class:<code>GuaranteeReport</code> produced by
+:func:<code>assert_non_decreasing_window</code>. Stamped into the figure
+title and copied into the JSON sidecar.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+            <b><code>out_dir</code></b>
+              (<code><span title="pathlib.Path">Path</span></code>)
+          –
+          <div class="doc-md-description">
+            <p>Output directory. Created if missing.</p>
+          </div>
+        </li>
+    </ul>
+
+
+<p><span class="doc-section-title">Returns:</span></p>
+    <ul>
+        <li class="doc-section-item field-body">
+              <code><span title="pathlib.Path">Path</span></code>
+          –
+          <div class="doc-md-description">
+            <p><code>(png_path, json_path)</code> tuple — the absolute paths of the two</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+              <code><span title="pathlib.Path">Path</span></code>
+          –
+          <div class="doc-md-description">
+            <p>emitted files.</p>
+          </div>
+        </li>
+    </ul>
+
+
+            <details class="mkdocstrings-source">
+              <summary>Source code in <code>src/concerto/training/learning_signal_check.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">266</span>
+<span class="normal">267</span>
+<span class="normal">268</span>
+<span class="normal">269</span>
+<span class="normal">270</span>
+<span class="normal">271</span>
+<span class="normal">272</span>
+<span class="normal">273</span>
+<span class="normal">274</span>
+<span class="normal">275</span>
+<span class="normal">276</span>
+<span class="normal">277</span>
+<span class="normal">278</span>
+<span class="normal">279</span>
+<span class="normal">280</span>
+<span class="normal">281</span>
+<span class="normal">282</span>
+<span class="normal">283</span>
+<span class="normal">284</span>
+<span class="normal">285</span>
+<span class="normal">286</span>
+<span class="normal">287</span>
+<span class="normal">288</span>
+<span class="normal">289</span>
+<span class="normal">290</span>
+<span class="normal">291</span>
+<span class="normal">292</span>
+<span class="normal">293</span>
+<span class="normal">294</span>
+<span class="normal">295</span>
+<span class="normal">296</span>
+<span class="normal">297</span>
+<span class="normal">298</span>
+<span class="normal">299</span>
+<span class="normal">300</span>
+<span class="normal">301</span>
+<span class="normal">302</span>
+<span class="normal">303</span>
+<span class="normal">304</span>
+<span class="normal">305</span>
+<span class="normal">306</span>
+<span class="normal">307</span>
+<span class="normal">308</span>
+<span class="normal">309</span>
+<span class="normal">310</span>
+<span class="normal">311</span>
+<span class="normal">312</span>
+<span class="normal">313</span>
+<span class="normal">314</span>
+<span class="normal">315</span>
+<span class="normal">316</span>
+<span class="normal">317</span>
+<span class="normal">318</span>
+<span class="normal">319</span>
+<span class="normal">320</span>
+<span class="normal">321</span>
+<span class="normal">322</span>
+<span class="normal">323</span>
+<span class="normal">324</span>
+<span class="normal">325</span>
+<span class="normal">326</span>
+<span class="normal">327</span>
+<span class="normal">328</span>
+<span class="normal">329</span>
+<span class="normal">330</span>
+<span class="normal">331</span>
+<span class="normal">332</span>
+<span class="normal">333</span>
+<span class="normal">334</span>
+<span class="normal">335</span>
+<span class="normal">336</span>
+<span class="normal">337</span>
+<span class="normal">338</span>
+<span class="normal">339</span>
+<span class="normal">340</span>
+<span class="normal">341</span>
+<span class="normal">342</span>
+<span class="normal">343</span>
+<span class="normal">344</span>
+<span class="normal">345</span>
+<span class="normal">346</span>
+<span class="normal">347</span>
+<span class="normal">348</span>
+<span class="normal">349</span>
+<span class="normal">350</span>
+<span class="normal">351</span>
+<span class="normal">352</span>
+<span class="normal">353</span>
+<span class="normal">354</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">plot_reward_curve</span><span class="p">(</span>
+    <span class="n">curve</span><span class="p">:</span> <span class="n">RewardCurve</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">report</span><span class="p">:</span> <span class="n">GuaranteeReport</span><span class="p">,</span>
+    <span class="n">out_dir</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Path</span><span class="p">,</span> <span class="n">Path</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Emit ``&lt;run_id&gt;.png`` + ``&lt;run_id&gt;.json`` for the assertion plot (T4b.13; ADR-002 §Risks #1).</span>
+
+<span class="sd">    Writes two files under ``out_dir``:</span>
+
+<span class="sd">    - ``&lt;run_id&gt;.png``: matplotlib line plot of the per-episode reward</span>
+<span class="sd">      with the moving-window-of-``report.window`` mean overlaid. The</span>
+<span class="sd">      report&#39;s ``fraction`` / ``passed`` are stamped into the title so</span>
+<span class="sd">      ``docs/explanation/why-aht.md`` can embed the figure unchanged.</span>
+<span class="sd">    - ``&lt;run_id&gt;.json``: machine-replayable sidecar carrying the raw</span>
+<span class="sd">      per-episode curve + the report. A future reader regenerates the</span>
+<span class="sd">      figure by replaying the JSON through this function.</span>
+
+<span class="sd">    ``matplotlib`` is imported lazily inside the function so the</span>
+<span class="sd">    surrounding module stays importable in environments without the</span>
+<span class="sd">    ``viz`` extra (Phase-0 CI, headless containers). Callers that need</span>
+<span class="sd">    the plot must install the ``viz`` extra (``uv sync --extra viz``).</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        curve: The reward curve produced by</span>
+<span class="sd">            :func:`concerto.training.ego_aht.train`. ``curve.run_id``</span>
+<span class="sd">            is used as the filename stem.</span>
+<span class="sd">        report: The :class:`GuaranteeReport` produced by</span>
+<span class="sd">            :func:`assert_non_decreasing_window`. Stamped into the figure</span>
+<span class="sd">            title and copied into the JSON sidecar.</span>
+<span class="sd">        out_dir: Output directory. Created if missing.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        ``(png_path, json_path)`` tuple — the absolute paths of the two</span>
+<span class="sd">        emitted files.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib</span>  <span class="c1"># noqa: PLC0415</span>
+
+    <span class="n">matplotlib</span><span class="o">.</span><span class="n">use</span><span class="p">(</span><span class="s2">&quot;Agg&quot;</span><span class="p">,</span> <span class="n">force</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>  <span class="c1"># noqa: PLC0415</span>
+
+    <span class="n">out_dir</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">rewards</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">curve</span><span class="o">.</span><span class="n">per_episode_ego_rewards</span><span class="p">)</span>
+
+    <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="mf">4.5</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">rewards</span><span class="p">:</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">rewards</span><span class="p">)),</span> <span class="n">rewards</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;per-episode ego reward&quot;</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.4</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">rewards</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="n">report</span><span class="o">.</span><span class="n">window</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">running_sum</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">rewards</span><span class="p">[:</span> <span class="n">report</span><span class="o">.</span><span class="n">window</span><span class="p">])</span>
+            <span class="n">means</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">running_sum</span> <span class="o">/</span> <span class="n">report</span><span class="o">.</span><span class="n">window</span><span class="p">]</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">report</span><span class="o">.</span><span class="n">window</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">rewards</span><span class="p">)):</span>
+                <span class="n">running_sum</span> <span class="o">+=</span> <span class="n">rewards</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">-</span> <span class="n">rewards</span><span class="p">[</span><span class="n">i</span> <span class="o">-</span> <span class="n">report</span><span class="o">.</span><span class="n">window</span><span class="p">]</span>
+                <span class="n">means</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">running_sum</span> <span class="o">/</span> <span class="n">report</span><span class="o">.</span><span class="n">window</span><span class="p">)</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
+                <span class="nb">range</span><span class="p">(</span><span class="n">report</span><span class="o">.</span><span class="n">window</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">rewards</span><span class="p">)),</span>
+                <span class="n">means</span><span class="p">,</span>
+                <span class="n">label</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;moving mean (window=</span><span class="si">{</span><span class="n">report</span><span class="o">.</span><span class="n">window</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">,</span>
+                <span class="n">linewidth</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+            <span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;episode index&quot;</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;ego reward (sum over episode)&quot;</span><span class="p">)</span>
+    <span class="n">status</span> <span class="o">=</span> <span class="s2">&quot;PASS&quot;</span> <span class="k">if</span> <span class="n">report</span><span class="o">.</span><span class="n">passed</span> <span class="k">else</span> <span class="s2">&quot;FAIL&quot;</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span>
+        <span class="sa">f</span><span class="s2">&quot;Learning-signal check (moving window) — run </span><span class="si">{</span><span class="n">curve</span><span class="o">.</span><span class="n">run_id</span><span class="si">}</span><span class="s2"> — </span><span class="si">{</span><span class="n">status</span><span class="si">}</span><span class="s2"> &quot;</span>
+        <span class="sa">f</span><span class="s2">&quot;(</span><span class="si">{</span><span class="n">report</span><span class="o">.</span><span class="n">n_nondecreasing</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">report</span><span class="o">.</span><span class="n">n_intervals</span><span class="si">}</span><span class="s2"> &quot;</span>
+        <span class="sa">f</span><span class="s2">&quot;non-decreasing, threshold=</span><span class="si">{</span><span class="n">report</span><span class="o">.</span><span class="n">threshold</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">)&quot;</span>
+    <span class="p">)</span>
+    <span class="k">if</span> <span class="n">rewards</span><span class="p">:</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="s2">&quot;lower right&quot;</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="n">visible</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.3</span><span class="p">)</span>
+    <span class="n">fig</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+    <span class="n">png_path</span> <span class="o">=</span> <span class="n">out_dir</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">curve</span><span class="o">.</span><span class="n">run_id</span><span class="si">}</span><span class="s2">.png&quot;</span>
+    <span class="n">fig</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">png_path</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">120</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">(</span><span class="n">fig</span><span class="p">)</span>
+
+    <span class="n">json_path</span> <span class="o">=</span> <span class="n">out_dir</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">curve</span><span class="o">.</span><span class="n">run_id</span><span class="si">}</span><span class="s2">.json&quot;</span>
+    <span class="n">json_path</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span>
+        <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span>
+            <span class="p">{</span>
+                <span class="s2">&quot;run_id&quot;</span><span class="p">:</span> <span class="n">curve</span><span class="o">.</span><span class="n">run_id</span><span class="p">,</span>
+                <span class="s2">&quot;per_episode_ego_rewards&quot;</span><span class="p">:</span> <span class="n">rewards</span><span class="p">,</span>
+                <span class="s2">&quot;report&quot;</span><span class="p">:</span> <span class="n">asdict</span><span class="p">(</span><span class="n">report</span><span class="p">),</span>
+            <span class="p">},</span>
+            <span class="n">sort_keys</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">indent</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+        <span class="p">),</span>
+        <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="n">png_path</span><span class="p">,</span> <span class="n">json_path</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h2 id="concerto.training.plot_slope_curve" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">plot_slope_curve</span>
+
+
+</h2>
+<div class="doc-signature highlight"><pre><span></span><code><span class="nf">plot_slope_curve</span><span class="p">(</span>
+    <span class="n">curve</span><span class="p">:</span> <span class="n">RewardCurve</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">report</span><span class="p">:</span> <span class="n">SlopeReport</span><span class="p">,</span>
+    <span class="n">out_dir</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Path</span><span class="p">,</span> <span class="n">Path</span><span class="p">]</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Emit <code>&lt;run_id&gt;.png</code> + <code>&lt;run_id&gt;.json</code> for the slope plot (T4b.13; ADR-002 §Risks #1).</p>
+<p>Mirrors :func:<code>plot_reward_curve</code>'s contract but overlays the
+least-squares regression line instead of the moving-window mean.
+The status line in the title carries the slope, p-value, status,
+and pass/fail flag so <code>docs/explanation/why-aht.md</code> can embed
+the figure unchanged.</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <ul>
+        <li class="doc-section-item field-body">
+            <b><code>curve</code></b>
+              (<code><a class="autorefs autorefs-internal" title="RewardCurve
+
+
+  
+      dataclass
+   (concerto.training.ego_aht.RewardCurve)" href="#concerto.training.ego_aht.RewardCurve">RewardCurve</a></code>)
+          –
+          <div class="doc-md-description">
+            <p>The reward curve produced by
+:func:<code>concerto.training.ego_aht.train</code>. <code>curve.run_id</code>
+is the filename stem.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+            <b><code>report</code></b>
+              (<code><a class="autorefs autorefs-internal" title="SlopeReport
+
+
+  
+      dataclass
+   (concerto.training.learning_signal_check.SlopeReport)" href="#concerto.training.SlopeReport">SlopeReport</a></code>)
+          –
+          <div class="doc-md-description">
+            <p>The :class:<code>SlopeReport</code> produced by
+:func:<code>check_positive_learning_slope</code>. Stamped into the
+figure title and copied into the JSON sidecar.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+            <b><code>out_dir</code></b>
+              (<code><span title="pathlib.Path">Path</span></code>)
+          –
+          <div class="doc-md-description">
+            <p>Output directory. Created if missing.</p>
+          </div>
+        </li>
+    </ul>
+
+
+<p><span class="doc-section-title">Returns:</span></p>
+    <ul>
+        <li class="doc-section-item field-body">
+              <code><span title="pathlib.Path">Path</span></code>
+          –
+          <div class="doc-md-description">
+            <p><code>(png_path, json_path)</code> tuple — the absolute paths of the two</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+              <code><span title="pathlib.Path">Path</span></code>
+          –
+          <div class="doc-md-description">
+            <p>emitted files.</p>
+          </div>
+        </li>
+    </ul>
+
+
+            <details class="mkdocstrings-source">
+              <summary>Source code in <code>src/concerto/training/learning_signal_check.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">589</span>
+<span class="normal">590</span>
+<span class="normal">591</span>
+<span class="normal">592</span>
+<span class="normal">593</span>
+<span class="normal">594</span>
+<span class="normal">595</span>
+<span class="normal">596</span>
+<span class="normal">597</span>
+<span class="normal">598</span>
+<span class="normal">599</span>
+<span class="normal">600</span>
+<span class="normal">601</span>
+<span class="normal">602</span>
+<span class="normal">603</span>
+<span class="normal">604</span>
+<span class="normal">605</span>
+<span class="normal">606</span>
+<span class="normal">607</span>
+<span class="normal">608</span>
+<span class="normal">609</span>
+<span class="normal">610</span>
+<span class="normal">611</span>
+<span class="normal">612</span>
+<span class="normal">613</span>
+<span class="normal">614</span>
+<span class="normal">615</span>
+<span class="normal">616</span>
+<span class="normal">617</span>
+<span class="normal">618</span>
+<span class="normal">619</span>
+<span class="normal">620</span>
+<span class="normal">621</span>
+<span class="normal">622</span>
+<span class="normal">623</span>
+<span class="normal">624</span>
+<span class="normal">625</span>
+<span class="normal">626</span>
+<span class="normal">627</span>
+<span class="normal">628</span>
+<span class="normal">629</span>
+<span class="normal">630</span>
+<span class="normal">631</span>
+<span class="normal">632</span>
+<span class="normal">633</span>
+<span class="normal">634</span>
+<span class="normal">635</span>
+<span class="normal">636</span>
+<span class="normal">637</span>
+<span class="normal">638</span>
+<span class="normal">639</span>
+<span class="normal">640</span>
+<span class="normal">641</span>
+<span class="normal">642</span>
+<span class="normal">643</span>
+<span class="normal">644</span>
+<span class="normal">645</span>
+<span class="normal">646</span>
+<span class="normal">647</span>
+<span class="normal">648</span>
+<span class="normal">649</span>
+<span class="normal">650</span>
+<span class="normal">651</span>
+<span class="normal">652</span>
+<span class="normal">653</span>
+<span class="normal">654</span>
+<span class="normal">655</span>
+<span class="normal">656</span>
+<span class="normal">657</span>
+<span class="normal">658</span>
+<span class="normal">659</span>
+<span class="normal">660</span>
+<span class="normal">661</span>
+<span class="normal">662</span>
+<span class="normal">663</span>
+<span class="normal">664</span>
+<span class="normal">665</span>
+<span class="normal">666</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">plot_slope_curve</span><span class="p">(</span>
     <span class="n">curve</span><span class="p">:</span> <span class="n">RewardCurve</span><span class="p">,</span>
     <span class="o">*</span><span class="p">,</span>
     <span class="n">report</span><span class="p">:</span> <span class="n">SlopeReport</span><span class="p">,</span>
@@ -14384,16 +14825,16 @@ figure title and copied into the JSON sidecar.</p>
 
 <span class="sd">    Mirrors :func:`plot_reward_curve`&#39;s contract but overlays the</span>
 <span class="sd">    least-squares regression line instead of the moving-window mean.</span>
-<span class="sd">    The status line in the title carries the slope, p-value, and</span>
-<span class="sd">    pass/fail flag so ``docs/explanation/why-aht.md`` can embed the</span>
-<span class="sd">    figure unchanged.</span>
+<span class="sd">    The status line in the title carries the slope, p-value, status,</span>
+<span class="sd">    and pass/fail flag so ``docs/explanation/why-aht.md`` can embed</span>
+<span class="sd">    the figure unchanged.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        curve: The reward curve produced by</span>
 <span class="sd">            :func:`concerto.training.ego_aht.train`. ``curve.run_id``</span>
 <span class="sd">            is the filename stem.</span>
 <span class="sd">        report: The :class:`SlopeReport` produced by</span>
-<span class="sd">            :func:`assert_positive_learning_slope`. Stamped into the</span>
+<span class="sd">            :func:`check_positive_learning_slope`. Stamped into the</span>
 <span class="sd">            figure title and copied into the JSON sidecar.</span>
 <span class="sd">        out_dir: Output directory. Created if missing.</span>
 
@@ -14401,13 +14842,10 @@ figure title and copied into the JSON sidecar.</p>
 <span class="sd">        ``(png_path, json_path)`` tuple — the absolute paths of the two</span>
 <span class="sd">        emitted files.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="c1"># Lazy import: matplotlib is in the ``viz`` extra (pyproject.toml).</span>
-    <span class="c1"># See the docstring + import on :func:`plot_reward_curve` for the</span>
-    <span class="c1"># rationale.</span>
-    <span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib</span>  <span class="c1"># noqa: PLC0415  # see lazy-import comment above.</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib</span>  <span class="c1"># noqa: PLC0415</span>
 
     <span class="n">matplotlib</span><span class="o">.</span><span class="n">use</span><span class="p">(</span><span class="s2">&quot;Agg&quot;</span><span class="p">,</span> <span class="n">force</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-    <span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>  <span class="c1"># noqa: PLC0415  # ditto.</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>  <span class="c1"># noqa: PLC0415</span>
 
     <span class="n">out_dir</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
     <span class="n">rewards</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">curve</span><span class="o">.</span><span class="n">per_episode_ego_rewards</span><span class="p">)</span>
@@ -14426,9 +14864,9 @@ figure title and copied into the JSON sidecar.</p>
         <span class="p">)</span>
     <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;episode index&quot;</span><span class="p">)</span>
     <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;ego reward (sum over episode)&quot;</span><span class="p">)</span>
-    <span class="n">status</span> <span class="o">=</span> <span class="s2">&quot;PASS&quot;</span> <span class="k">if</span> <span class="n">report</span><span class="o">.</span><span class="n">passed</span> <span class="k">else</span> <span class="s2">&quot;FAIL&quot;</span>
+    <span class="n">status_label</span> <span class="o">=</span> <span class="n">report</span><span class="o">.</span><span class="n">status</span><span class="o">.</span><span class="n">name</span>
     <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span>
-        <span class="sa">f</span><span class="s2">&quot;Empirical guarantee (slope test) — run </span><span class="si">{</span><span class="n">curve</span><span class="o">.</span><span class="n">run_id</span><span class="si">}</span><span class="s2"> — </span><span class="si">{</span><span class="n">status</span><span class="si">}</span><span class="s2"> &quot;</span>
+        <span class="sa">f</span><span class="s2">&quot;Learning-signal check (slope) — run </span><span class="si">{</span><span class="n">curve</span><span class="o">.</span><span class="n">run_id</span><span class="si">}</span><span class="s2"> — </span><span class="si">{</span><span class="n">status_label</span><span class="si">}</span><span class="s2"> &quot;</span>
         <span class="sa">f</span><span class="s2">&quot;(p=</span><span class="si">{</span><span class="n">report</span><span class="o">.</span><span class="n">p_value</span><span class="si">:</span><span class="s2">.2e</span><span class="si">}</span><span class="s2">, alpha=</span><span class="si">{</span><span class="n">report</span><span class="o">.</span><span class="n">alpha</span><span class="si">:</span><span class="s2">.2g</span><span class="si">}</span><span class="s2">, &quot;</span>
         <span class="sa">f</span><span class="s2">&quot;n=</span><span class="si">{</span><span class="n">report</span><span class="o">.</span><span class="n">n_episodes</span><span class="si">}</span><span class="s2">)&quot;</span>
     <span class="p">)</span>
@@ -14450,6 +14888,7 @@ figure title and copied into the JSON sidecar.</p>
             <span class="p">},</span>
             <span class="n">sort_keys</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
             <span class="n">indent</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+            <span class="n">default</span><span class="o">=</span><span class="k">lambda</span> <span class="n">o</span><span class="p">:</span> <span class="n">o</span><span class="o">.</span><span class="n">value</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">o</span><span class="p">,</span> <span class="n">Enum</span><span class="p">)</span> <span class="k">else</span> <span class="nb">str</span><span class="p">(</span><span class="n">o</span><span class="p">),</span>
         <span class="p">),</span>
         <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">,</span>
     <span class="p">)</span>
