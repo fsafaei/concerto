@@ -243,8 +243,11 @@ class _ObsChannelFilterEnv(gym.Env):  # type: ignore[type-arg]
         indices = list(self._channel_indices)
         filtered_agents: dict[str, dict[str, NDArray[np.float32]]] = {}
         for uid, agent_obs in obs["agent"].items():
+            # The inner MPE env emits float32 state already; the
+            # ``np.asarray`` is defensive (in case a future wrapper
+            # upstream returns a list) and the slice carries dtype.
             state = np.asarray(agent_obs["state"], dtype=np.float32)
-            filtered_agents[uid] = {"state": state[indices].astype(np.float32)}
+            filtered_agents[uid] = {"state": state[indices]}
         return {"agent": filtered_agents}
 
 
