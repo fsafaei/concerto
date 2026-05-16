@@ -29,7 +29,7 @@ from chamber.evaluation.prereg import load_prereg
 from tests.fakes import FakeMultiAgentEnv
 
 if TYPE_CHECKING:
-    from collections.abc import Mapping
+    from collections.abc import Callable, Mapping
 
     import gymnasium as gym
     from numpy.typing import NDArray
@@ -51,14 +51,23 @@ def _fake_env_factory(
     return FakeMultiAgentEnv(agent_uids=agent_uids)
 
 
-def _scripted_ego_action(
-    ego_uid: str,
-    obs: Mapping[str, Any],
-    partner_action: NDArray[np.float32],
-) -> NDArray[np.float32]:
-    """Deterministic ego policy for the fake-env test (always-zero, like prod stub)."""
-    del ego_uid, obs
-    return np.zeros_like(partner_action, dtype=np.float32)
+def _scripted_ego_action_factory(
+    env: gym.Env[Any, Any],
+    seed: int,
+) -> Callable[[Mapping[str, Any]], NDArray[np.float32]]:
+    """Deterministic always-zero EgoActionFactory for the fake-env test.
+
+    Mirrors the production Stage-1a default (`_zero_ego_action_factory`)
+    but kept locally so the test exercises the Protocol-shaped seam
+    end-to-end.
+    """
+    del env, seed
+
+    def _act(obs: Mapping[str, Any]) -> NDArray[np.float32]:
+        del obs
+        return np.zeros(2, dtype=np.float32)
+
+    return _act
 
 
 @pytest.fixture
@@ -72,34 +81,44 @@ class TestStage1OMShapesMatchPrereg:
 
     def test_spike_run_axis_is_om(self, prereg) -> None:
         run = _run_axis_with_factories(
-            prereg=prereg, env_factory=_fake_env_factory, ego_action_fn=_scripted_ego_action
+            prereg=prereg,
+            env_factory=_fake_env_factory,
+            ego_action_factory=_scripted_ego_action_factory,
         )
         assert run.axis == "OM"
 
     def test_condition_pair_round_trips(self, prereg) -> None:
         run = _run_axis_with_factories(
-            prereg=prereg, env_factory=_fake_env_factory, ego_action_fn=_scripted_ego_action
+            prereg=prereg,
+            env_factory=_fake_env_factory,
+            ego_action_factory=_scripted_ego_action_factory,
         )
         assert run.condition_pair.homogeneous_id == prereg.condition_pair.homogeneous_id
         assert run.condition_pair.heterogeneous_id == prereg.condition_pair.heterogeneous_id
 
     def test_seeds_round_trip(self, prereg) -> None:
         run = _run_axis_with_factories(
-            prereg=prereg, env_factory=_fake_env_factory, ego_action_fn=_scripted_ego_action
+            prereg=prereg,
+            env_factory=_fake_env_factory,
+            ego_action_factory=_scripted_ego_action_factory,
         )
         assert run.seeds == list(prereg.seeds)
 
     def test_episode_count_matches_sample_size_contract(self, prereg) -> None:
         """plan/07 §2: 5 seeds x 20 episodes x 2 conditions = 200 episodes per spike."""
         run = _run_axis_with_factories(
-            prereg=prereg, env_factory=_fake_env_factory, ego_action_fn=_scripted_ego_action
+            prereg=prereg,
+            env_factory=_fake_env_factory,
+            ego_action_factory=_scripted_ego_action_factory,
         )
         expected = len(prereg.seeds) * prereg.episodes_per_seed * 2
         assert len(run.episode_results) == expected
 
     def test_git_tag_passes_through_to_spike_id(self, prereg) -> None:
         run = _run_axis_with_factories(
-            prereg=prereg, env_factory=_fake_env_factory, ego_action_fn=_scripted_ego_action
+            prereg=prereg,
+            env_factory=_fake_env_factory,
+            ego_action_factory=_scripted_ego_action_factory,
         )
         assert run.git_tag == prereg.git_tag
         assert prereg.git_tag in run.spike_id
@@ -112,7 +131,9 @@ class TestStage1OMEpisodeMetadata:
 
     def test_condition_metadata_is_homo_or_hetero(self, prereg) -> None:
         run = _run_axis_with_factories(
-            prereg=prereg, env_factory=_fake_env_factory, ego_action_fn=_scripted_ego_action
+            prereg=prereg,
+            env_factory=_fake_env_factory,
+            ego_action_factory=_scripted_ego_action_factory,
         )
         homo = prereg.condition_pair.homogeneous_id
         hetero = prereg.condition_pair.heterogeneous_id
@@ -121,7 +142,9 @@ class TestStage1OMEpisodeMetadata:
 
     def test_split_is_fifty_fifty(self, prereg) -> None:
         run = _run_axis_with_factories(
-            prereg=prereg, env_factory=_fake_env_factory, ego_action_fn=_scripted_ego_action
+            prereg=prereg,
+            env_factory=_fake_env_factory,
+            ego_action_factory=_scripted_ego_action_factory,
         )
         homo = prereg.condition_pair.homogeneous_id
         hetero = prereg.condition_pair.heterogeneous_id
@@ -131,7 +154,9 @@ class TestStage1OMEpisodeMetadata:
 
     def test_mean_reward_and_step_count_recorded(self, prereg) -> None:
         run = _run_axis_with_factories(
-            prereg=prereg, env_factory=_fake_env_factory, ego_action_fn=_scripted_ego_action
+            prereg=prereg,
+            env_factory=_fake_env_factory,
+            ego_action_factory=_scripted_ego_action_factory,
         )
         for ep in run.episode_results:
             assert "mean_reward" in ep.metadata
@@ -142,7 +167,9 @@ class TestStage1OMEpisodeMetadata:
     def test_initial_state_seed_unique_per_episode(self, prereg) -> None:
         """ADR-007 §Validation criteria: pairing on (seed, episode_idx, initial_state_seed)."""
         run = _run_axis_with_factories(
-            prereg=prereg, env_factory=_fake_env_factory, ego_action_fn=_scripted_ego_action
+            prereg=prereg,
+            env_factory=_fake_env_factory,
+            ego_action_factory=_scripted_ego_action_factory,
         )
         homo_id = prereg.condition_pair.homogeneous_id
         for s in prereg.seeds:
@@ -159,10 +186,14 @@ class TestStage1OMDeterminism:
 
     def test_two_runs_byte_identical(self, prereg) -> None:
         run_a = _run_axis_with_factories(
-            prereg=prereg, env_factory=_fake_env_factory, ego_action_fn=_scripted_ego_action
+            prereg=prereg,
+            env_factory=_fake_env_factory,
+            ego_action_factory=_scripted_ego_action_factory,
         )
         run_b = _run_axis_with_factories(
-            prereg=prereg, env_factory=_fake_env_factory, ego_action_fn=_scripted_ego_action
+            prereg=prereg,
+            env_factory=_fake_env_factory,
+            ego_action_factory=_scripted_ego_action_factory,
         )
         assert run_a.model_dump_json() == run_b.model_dump_json()
 
@@ -202,7 +233,9 @@ class TestStage1OMConditionMapping:
         )
         with pytest.raises(ValueError, match="condition_id"):
             _run_axis_with_factories(
-                prereg=bogus, env_factory=_fake_env_factory, ego_action_fn=_scripted_ego_action
+                prereg=bogus,
+                env_factory=_fake_env_factory,
+                ego_action_factory=_scripted_ego_action_factory,
             )
 
 
@@ -246,15 +279,13 @@ class TestStage1OMConditionDivergence:
         condition — i.e. the partner's actions, and therefore the
         env's reward stream, depend on which obs slice is exposed.
         """
-        from chamber.benchmarks.stage1_om import (
-            _default_env_factory,
-            _zero_ego_action,
-        )
+        from chamber.benchmarks.stage1_common import _zero_ego_action_factory
+        from chamber.benchmarks.stage1_om import _default_env_factory
 
         run = _run_axis_with_factories(
             prereg=prereg,
             env_factory=_default_env_factory,
-            ego_action_fn=_zero_ego_action,
+            ego_action_factory=_zero_ego_action_factory,
         )
         homo_id = prereg.condition_pair.homogeneous_id
         hetero_id = prereg.condition_pair.heterogeneous_id
@@ -278,6 +309,55 @@ class TestStage1OMConditionDivergence:
         )
 
 
+class TestStage1OMEgoActionFactoryContract:
+    """The EgoActionFactory seam is called once per ``(seed, condition)`` pair.
+
+    Twin of :class:`tests.integration.test_stage1_as_fake.TestStage1ASEgoActionFactoryContract`
+    for the OM axis. Pins the lifecycle contract named in
+    :mod:`chamber.benchmarks.stage1_common`.
+    """
+
+    def test_factory_is_called_once_per_seed_condition_pair(self, prereg) -> None:
+        """Factory invocation count = ``n_seeds x n_conditions`` (5 x 2 = 10)."""
+        call_log: list[tuple[int, int]] = []
+
+        def _counting_factory(
+            env: gym.Env[Any, Any], seed: int
+        ) -> Callable[[Mapping[str, Any]], NDArray[np.float32]]:
+            call_log.append((seed, len(call_log)))
+            action_space = env.action_space
+            sample_uid = next(iter(action_space.spaces.keys()))  # type: ignore[union-attr]
+            ego_box = action_space.spaces[sample_uid]  # type: ignore[union-attr]
+            rng = np.random.default_rng(seed)
+
+            def _act(obs: Mapping[str, Any]) -> NDArray[np.float32]:
+                del obs
+                return rng.uniform(
+                    low=float(ego_box.low.min()),
+                    high=float(ego_box.high.max()),
+                    size=ego_box.shape,
+                ).astype(np.float32)
+
+            return _act
+
+        _run_axis_with_factories(
+            prereg=prereg,
+            env_factory=_fake_env_factory,
+            ego_action_factory=_counting_factory,
+        )
+        expected = len(prereg.seeds) * 2
+        assert len(call_log) == expected, (
+            f"EgoActionFactory contract regression: expected "
+            f"{expected} factory calls (n_seeds x n_conditions), got "
+            f"{len(call_log)}. Seam may have shifted to "
+            "once-per-episode or once-per-spike."
+        )
+        per_seed_counts = {s: sum(1 for entry in call_log if entry[0] == s) for s in prereg.seeds}
+        assert all(c == 2 for c in per_seed_counts.values()), (
+            f"per-seed factory call counts uneven: {per_seed_counts}"
+        )
+
+
 class TestStage1OMEntryPointResolution:
     """plan/07 §T5b.1: chamber-spike run --axis OM dispatches to this adapter."""
 
@@ -286,7 +366,14 @@ class TestStage1OMEntryPointResolution:
         from chamber.benchmarks import stage1_om
 
         monkeypatch.setattr(stage1_om, "_default_env_factory", _fake_env_factory, raising=True)
-        monkeypatch.setattr(stage1_om, "_zero_ego_action", _scripted_ego_action, raising=True)
+        # Patch the adapter-local name (re-bound by ``from … import``)
+        # rather than the source in ``stage1_common`` because
+        # ``run_axis`` references the unqualified symbol. If a future
+        # refactor switches to a qualified ``stage1_common._zero_ego_action_factory``
+        # access, this monkeypatch target needs to move.
+        monkeypatch.setattr(
+            stage1_om, "_zero_ego_action_factory", _scripted_ego_action_factory, raising=True
+        )
         run = run_axis(_make_args("OM"))
         assert run.axis == "OM"
         # The shipped prereg has 5 seeds x 20 episodes per (seed, condition) = 200 episodes.
