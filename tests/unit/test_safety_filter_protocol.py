@@ -130,6 +130,7 @@ def test_ego_only_filter_returns_array_shape_matching_ego_action_dim() -> None:
         Bounds(action_norm=2.0, action_rate=0.5, comm_latency_ms=1.0, force_limit=20.0),
         ego_uid="ego",
         partner_predicted_states={"partner": snaps["partner"]},
+        dt=0.05,
     )
     assert safe.shape == (2,)
     assert info["constraint_violation"].shape == (1,)

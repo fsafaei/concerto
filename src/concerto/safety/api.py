@@ -551,6 +551,7 @@ class EgoOnlySafetyFilter(Protocol):
         *,
         ego_uid: str,
         partner_predicted_states: dict[str, AgentSnapshot],
+        dt: float,
     ) -> tuple[FloatArray, FilterInfo]:
         """Project the nominal ego action onto the safe set (ADR-004 §Public API).
 
@@ -575,6 +576,15 @@ class EgoOnlySafetyFilter(Protocol):
                 *next* control step, used to evaluate the partner's
                 predicted Cartesian acceleration; this enters the
                 constraint RHS as a known drift term.
+            dt: Predictor lookahead horizon in seconds (typically the
+                env's control-step duration). Used to convert the
+                predicted velocity delta into a Cartesian acceleration
+                ``(v_pred - v_now) / dt`` on the constraint RHS
+                (ADR-004 §Decisions, "Predicted-acceleration units";
+                external-review P0-1, 2026-05-16). Must be strictly
+                positive and consistent with the value passed to the
+                partner-trajectory predictor (e.g.
+                :func:`concerto.safety.conformal.constant_velocity_predict`).
 
         Returns:
             A pair ``(safe_action, info)`` where ``safe_action`` is the

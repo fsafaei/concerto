@@ -318,7 +318,13 @@ def test_centralized_requires_dict_action() -> None:
 
 
 def test_ego_only_requires_ego_uid_and_partner_predicted_states() -> None:
-    """EGO_ONLY mode raises on the partner-disturbance and ego-uid arguments missing."""
+    """EGO_ONLY mode raises on the partner-disturbance and ego-uid arguments missing.
+
+    Also asserts the ``dt`` validation guard (ADR-004 §Decisions
+    "Predicted-acceleration units"; external-review P0-1) fires when
+    ``dt`` is omitted or non-positive — the partner-disturbance term
+    is ``(v_pred - v_now) / dt`` and the filter cannot infer ``dt``.
+    """
     snaps = {"a": _snap(0.0, 0.0, 0.0, 0.0), "b": _snap(10.0, 0.0, 0.0, 0.0)}
     # Use the low-level constructor so we can exercise the missing-kwarg
     # validation guards without tripping the typed overload's required
@@ -342,6 +348,39 @@ def test_ego_only_requires_ego_uid_and_partner_predicted_states() -> None:
             bounds=_bounds(),
             ego_uid="a",
         )
+    with pytest.raises(ValueError, match="dt is required"):
+        cbf.filter(  # pyright: ignore[reportCallIssue]
+            proposed_action=np.zeros(2, dtype=np.float64),
+            obs={"agent_states": snaps},
+            state=_state(1),
+            bounds=_bounds(),
+            ego_uid="a",
+            partner_predicted_states={"b": snaps["b"]},
+        )
+    with pytest.raises(ValueError, match="dt must be a finite"):
+        cbf.filter(
+            proposed_action=np.zeros(2, dtype=np.float64),
+            obs={"agent_states": snaps},
+            state=_state(1),
+            bounds=_bounds(),
+            ego_uid="a",
+            partner_predicted_states={"b": snaps["b"]},
+            dt=0.0,
+        )
+    # NaN and +inf must also be rejected; both would otherwise silently
+    # corrupt the partner-disturbance term on the QP RHS (review P0-1
+    # reviewer follow-up).
+    for bad_dt in (float("nan"), float("inf"), -0.05):
+        with pytest.raises(ValueError, match="dt must be a finite"):
+            cbf.filter(
+                proposed_action=np.zeros(2, dtype=np.float64),
+                obs={"agent_states": snaps},
+                state=_state(1),
+                bounds=_bounds(),
+                ego_uid="a",
+                partner_predicted_states={"b": snaps["b"]},
+                dt=bad_dt,
+            )
 
 
 def test_shared_control_requires_partner_action_bound() -> None:
