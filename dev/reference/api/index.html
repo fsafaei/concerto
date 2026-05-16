@@ -10477,7 +10477,17 @@ catch shape mismatches at construction time (spike_004A
 <span class="normal">587</span>
 <span class="normal">588</span>
 <span class="normal">589</span>
-<span class="normal">590</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@runtime_checkable</span>
+<span class="normal">590</span>
+<span class="normal">591</span>
+<span class="normal">592</span>
+<span class="normal">593</span>
+<span class="normal">594</span>
+<span class="normal">595</span>
+<span class="normal">596</span>
+<span class="normal">597</span>
+<span class="normal">598</span>
+<span class="normal">599</span>
+<span class="normal">600</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@runtime_checkable</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">EgoOnlySafetyFilter</span><span class="p">(</span><span class="n">Protocol</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Contract for an :attr:`SafetyMode.EGO_ONLY` safety-filter pipeline (ADR-004 §Public API).</span>
 
@@ -10526,6 +10536,7 @@ catch shape mismatches at construction time (spike_004A
         <span class="o">*</span><span class="p">,</span>
         <span class="n">ego_uid</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
         <span class="n">partner_predicted_states</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">AgentSnapshot</span><span class="p">],</span>
+        <span class="n">dt</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">FloatArray</span><span class="p">,</span> <span class="n">FilterInfo</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Project the nominal ego action onto the safe set (ADR-004 §Public API).</span>
 
@@ -10550,6 +10561,15 @@ catch shape mismatches at construction time (spike_004A
 <span class="sd">                *next* control step, used to evaluate the partner&#39;s</span>
 <span class="sd">                predicted Cartesian acceleration; this enters the</span>
 <span class="sd">                constraint RHS as a known drift term.</span>
+<span class="sd">            dt: Predictor lookahead horizon in seconds (typically the</span>
+<span class="sd">                env&#39;s control-step duration). Used to convert the</span>
+<span class="sd">                predicted velocity delta into a Cartesian acceleration</span>
+<span class="sd">                ``(v_pred - v_now) / dt`` on the constraint RHS</span>
+<span class="sd">                (ADR-004 §Decisions, &quot;Predicted-acceleration units&quot;;</span>
+<span class="sd">                external-review P0-1, 2026-05-16). Must be strictly</span>
+<span class="sd">                positive and consistent with the value passed to the</span>
+<span class="sd">                partner-trajectory predictor (e.g.</span>
+<span class="sd">                :func:`concerto.safety.conformal.constant_velocity_predict`).</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            A pair ``(safe_action, info)`` where ``safe_action`` is the</span>
@@ -10595,6 +10615,7 @@ catch shape mismatches at construction time (spike_004A
     <span class="o">*</span><span class="p">,</span>
     <span class="n">ego_uid</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
     <span class="n">partner_predicted_states</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">AgentSnapshot</span><span class="p">],</span>
+    <span class="n">dt</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">FloatArray</span><span class="p">,</span> <span class="n">FilterInfo</span><span class="p">]</span>
 </code></pre></div>
 
@@ -10675,6 +10696,22 @@ the ego.</p>
 <em>next</em> control step, used to evaluate the partner's
 predicted Cartesian acceleration; this enters the
 constraint RHS as a known drift term.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+            <b><code>dt</code></b>
+              (<code><span title="float">float</span></code>)
+          –
+          <div class="doc-md-description">
+            <p>Predictor lookahead horizon in seconds (typically the
+env's control-step duration). Used to convert the
+predicted velocity delta into a Cartesian acceleration
+<code>(v_pred - v_now) / dt</code> on the constraint RHS
+(ADR-004 §Decisions, "Predicted-acceleration units";
+external-review P0-1, 2026-05-16). Must be strictly
+positive and consistent with the value passed to the
+partner-trajectory predictor (e.g.
+:func:<code>concerto.safety.conformal.constant_velocity_predict</code>).</p>
           </div>
         </li>
     </ul>
@@ -10789,7 +10826,17 @@ caller MUST route to the braking fallback in this case.</p>
 <span class="normal">587</span>
 <span class="normal">588</span>
 <span class="normal">589</span>
-<span class="normal">590</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">filter</span><span class="p">(</span>
+<span class="normal">590</span>
+<span class="normal">591</span>
+<span class="normal">592</span>
+<span class="normal">593</span>
+<span class="normal">594</span>
+<span class="normal">595</span>
+<span class="normal">596</span>
+<span class="normal">597</span>
+<span class="normal">598</span>
+<span class="normal">599</span>
+<span class="normal">600</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">filter</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
     <span class="n">proposed_action</span><span class="p">:</span> <span class="n">FloatArray</span><span class="p">,</span>
     <span class="n">obs</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">object</span><span class="p">],</span>
@@ -10798,6 +10845,7 @@ caller MUST route to the braking fallback in this case.</p>
     <span class="o">*</span><span class="p">,</span>
     <span class="n">ego_uid</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
     <span class="n">partner_predicted_states</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">AgentSnapshot</span><span class="p">],</span>
+    <span class="n">dt</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">FloatArray</span><span class="p">,</span> <span class="n">FilterInfo</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Project the nominal ego action onto the safe set (ADR-004 §Public API).</span>
 
@@ -10822,6 +10870,15 @@ caller MUST route to the braking fallback in this case.</p>
 <span class="sd">            *next* control step, used to evaluate the partner&#39;s</span>
 <span class="sd">            predicted Cartesian acceleration; this enters the</span>
 <span class="sd">            constraint RHS as a known drift term.</span>
+<span class="sd">        dt: Predictor lookahead horizon in seconds (typically the</span>
+<span class="sd">            env&#39;s control-step duration). Used to convert the</span>
+<span class="sd">            predicted velocity delta into a Cartesian acceleration</span>
+<span class="sd">            ``(v_pred - v_now) / dt`` on the constraint RHS</span>
+<span class="sd">            (ADR-004 §Decisions, &quot;Predicted-acceleration units&quot;;</span>
+<span class="sd">            external-review P0-1, 2026-05-16). Must be strictly</span>
+<span class="sd">            positive and consistent with the value passed to the</span>
+<span class="sd">            partner-trajectory predictor (e.g.</span>
+<span class="sd">            :func:`concerto.safety.conformal.constant_velocity_predict`).</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        A pair ``(safe_action, info)`` where ``safe_action`` is the</span>
@@ -11840,17 +11897,7 @@ return value's first element is likewise a dict.</p>
 
               <details class="mkdocstrings-source">
                 <summary>Source code in <code>src/concerto/safety/api.py</code></summary>
-                <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">593</span>
-<span class="normal">594</span>
-<span class="normal">595</span>
-<span class="normal">596</span>
-<span class="normal">597</span>
-<span class="normal">598</span>
-<span class="normal">599</span>
-<span class="normal">600</span>
-<span class="normal">601</span>
-<span class="normal">602</span>
-<span class="normal">603</span>
+                <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">603</span>
 <span class="normal">604</span>
 <span class="normal">605</span>
 <span class="normal">606</span>
@@ -11905,7 +11952,17 @@ return value's first element is likewise a dict.</p>
 <span class="normal">655</span>
 <span class="normal">656</span>
 <span class="normal">657</span>
-<span class="normal">658</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@runtime_checkable</span>
+<span class="normal">658</span>
+<span class="normal">659</span>
+<span class="normal">660</span>
+<span class="normal">661</span>
+<span class="normal">662</span>
+<span class="normal">663</span>
+<span class="normal">664</span>
+<span class="normal">665</span>
+<span class="normal">666</span>
+<span class="normal">667</span>
+<span class="normal">668</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@runtime_checkable</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">JointSafetyFilter</span><span class="p">(</span><span class="n">Protocol</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Joint-action filter contract for CENTRALIZED / SHARED_CONTROL (ADR-004 §Public API).</span>
 
@@ -12128,17 +12185,7 @@ slack relaxation (ADR-004 §Decision; ADR-006 §Risks).</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/concerto/safety/api.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">619</span>
-<span class="normal">620</span>
-<span class="normal">621</span>
-<span class="normal">622</span>
-<span class="normal">623</span>
-<span class="normal">624</span>
-<span class="normal">625</span>
-<span class="normal">626</span>
-<span class="normal">627</span>
-<span class="normal">628</span>
-<span class="normal">629</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">629</span>
 <span class="normal">630</span>
 <span class="normal">631</span>
 <span class="normal">632</span>
@@ -12167,7 +12214,17 @@ slack relaxation (ADR-004 §Decision; ADR-006 §Risks).</p>
 <span class="normal">655</span>
 <span class="normal">656</span>
 <span class="normal">657</span>
-<span class="normal">658</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">filter</span><span class="p">(</span>
+<span class="normal">658</span>
+<span class="normal">659</span>
+<span class="normal">660</span>
+<span class="normal">661</span>
+<span class="normal">662</span>
+<span class="normal">663</span>
+<span class="normal">664</span>
+<span class="normal">665</span>
+<span class="normal">666</span>
+<span class="normal">667</span>
+<span class="normal">668</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">filter</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
     <span class="n">proposed_action</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">FloatArray</span><span class="p">],</span>
     <span class="n">obs</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">object</span><span class="p">],</span>
@@ -12233,13 +12290,13 @@ contract (P6 seeding).</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/concerto/safety/api.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">611</span>
-<span class="normal">612</span>
-<span class="normal">613</span>
-<span class="normal">614</span>
-<span class="normal">615</span>
-<span class="normal">616</span>
-<span class="normal">617</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">reset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">seed</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">621</span>
+<span class="normal">622</span>
+<span class="normal">623</span>
+<span class="normal">624</span>
+<span class="normal">625</span>
+<span class="normal">626</span>
+<span class="normal">627</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">reset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">seed</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Reset filter state at episode start (ADR-004 §Decision).</span>
 
 <span class="sd">    See :meth:`EgoOnlySafetyFilter.reset` for the determinism</span>
