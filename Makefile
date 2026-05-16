@@ -1,5 +1,6 @@
 .PHONY: install test lint typecheck format docs docs-build \
-        verify-licences verify-no-ai-mentions sbom smoke verify \
+        verify-licences verify-no-ai-mentions verify-coverage-floors \
+        sbom smoke verify \
         empirical-guarantee zoo-seed-gpu zoo-seed-pull zoo-seed-verify
 
 install:
@@ -32,6 +33,14 @@ verify-licences:
 
 verify-no-ai-mentions:
 	bash scripts/check_no_ai_mentions.sh
+
+# Per-package line-coverage floors (plan/02 §6 #2; plan/03 §6 #8;
+# plan/04 §6 #5; plan/05 §6 #8; plan/06 §6 #6). Reads coverage.xml
+# emitted by `make test` — runs after it in the verify chain so the
+# report is fresh. Project-wide aggregate floor (80%) is still
+# enforced by pyproject.toml's `[tool.coverage.report] fail_under`.
+verify-coverage-floors:
+	uv run python scripts/check_coverage_floors.py
 
 sbom:
 	uv run cyclonedx-py environment -o sbom.spdx.json
@@ -74,4 +83,4 @@ zoo-seed-pull:
 zoo-seed-verify:
 	uv run pytest tests/reproduction/test_zoo_seed_artifact.py -v --no-cov
 
-verify: lint typecheck test docs-build verify-licences verify-no-ai-mentions
+verify: lint typecheck test verify-coverage-floors docs-build verify-licences verify-no-ai-mentions
