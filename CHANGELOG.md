@@ -8,6 +8,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 While the project is on `0.x`, MINOR-version bumps may break the public API
 per SemVer §4.
 
+## [0.7.0](https://github.com/fsafaei/concerto/compare/v0.6.0...v0.7.0) (2026-05-17)
+
+
+### Features
+
+* **evaluation,benchmarks:** SpikeRun sub_stage field + summarize-month3 Stage-1a routing ([#152](https://github.com/fsafaei/concerto/issues/152)) ([a89a260](https://github.com/fsafaei/concerto/commit/a89a26031863657cd8270c6abb6f866e9452243b))
+
+
+### Bug Fixes
+
+* **spikes:** summarize-month3 ignores leaderboard.json + stage1 adapter records prereg_sha ([#150](https://github.com/fsafaei/concerto/issues/150)) ([8a13260](https://github.com/fsafaei/concerto/commit/8a13260464f5d09bd3f5dc6242ded544c7a93fe4))
+
+
+### Documentation
+
+* **explanation:** capture Month-3 lock-priority report (2026-05-17 Defer state) ([#154](https://github.com/fsafaei/concerto/issues/154)) ([2bc86fe](https://github.com/fsafaei/concerto/commit/2bc86fee434ba7b58a4c02c102ac5590e6d2886b))
+
 ## [0.6.0](https://github.com/fsafaei/concerto/compare/v0.5.0...v0.6.0) (2026-05-17)
 
 
