@@ -8,6 +8,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 While the project is on `0.x`, MINOR-version bumps may break the public API
 per SemVer §4.
 
+## [0.6.0](https://github.com/fsafaei/concerto/compare/v0.5.0...v0.6.0) (2026-05-17)
+
+
+### Features
+
+* **safety:** OSCBF returns slack telemetry + ADR-014 Table 2 schema-v2 (closes review P0-3) ([#141](https://github.com/fsafaei/concerto/issues/141)) ([3b30001](https://github.com/fsafaei/concerto/commit/3b300018e831ef09b3df84ab66a0ee636081764f))
+
+
+### Bug Fixes
+
+* **safety:** scale predicted Cartesian acceleration by dt (closes review P0-1) ([#140](https://github.com/fsafaei/concerto/issues/140)) ([c342d9f](https://github.com/fsafaei/concerto/commit/c342d9f847adb409e213e3623b0cf2cd3ba16c8f))
+
+
+### Documentation
+
+* **release:** sync CITATION.cff to v0.6.0 + add release-please extra-files config ([#148](https://github.com/fsafaei/concerto/issues/148)) ([4e8da9c](https://github.com/fsafaei/concerto/commit/4e8da9c3dd2e70586a3998ce4183bee42a8f3275))
+* **safety:** mark Bounds.action_norm semantic inconsistency + xfail (closes review P1-3) ([#147](https://github.com/fsafaei/concerto/issues/147)) ([281fa2f](https://github.com/fsafaei/concerto/commit/281fa2fccf6ae8b40193e452ed9fe4c884879ba3))
+* **safety:** mark lambda_safe=0.0 as Phase-0 placeholder (closes review P0-4) ([#138](https://github.com/fsafaei/concerto/issues/138)) ([9bd9397](https://github.com/fsafaei/concerto/commit/9bd9397f9b2163d9f170098d55ea6551bf5d1b3f))
+
 ## [0.5.0](https://github.com/fsafaei/concerto/compare/v0.4.0...v0.5.0) (2026-05-16)
 
 
