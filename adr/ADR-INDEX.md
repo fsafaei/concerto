@@ -35,6 +35,7 @@ evidence per their own §Validation criteria.
 | 013 | Real-robot demo platform & vendor                                  | §5.1               | Phase 0    | RFC<sup>e</sup>              |
 | 014 | Safety violation reporting protocol                                | §6.3               | Phase 1    | Accepted (2026-05-13)<sup>f</sup> |
 | 015 | Tier-task scope freeze                                             | §3.3 + §7.3        | Phase 1    | RFC<sup>e</sup>              |
+| 016 | SpikeRun schema lifecycle (Stage 1a / 1b disambiguation)           | §3.4 + §3.7        | Phase 0    | Accepted (2026-05-17)<sup>b</sup> |
 
 ### Open work flags
 
@@ -64,6 +65,13 @@ Stage 1b's trigger guardrail pins it to the first Phase-1 milestone,
 before any Stage-2 spike, no later than 4 weeks after the Month-3
 lock review (see
 [ADR-007 §Stage 1a / §Stage 1b](ADR-007-heterogeneity-axis-selection.md#stage-1a--rig-validation-phase-0-mpe-stand-in)).
+The Stage-1a vs Stage-1b disambiguation at the SpikeRun wire-format
+layer is locked by
+[ADR-016](ADR-016-spike-run-schema.md) (2026-05-17),
+which adds the typed `sub_stage` field, bumps the result-archive
+`SCHEMA_VERSION` 1 → 2, and retires the prior informal
+`EpisodeResult.metadata["stage"]` contract that caused the
+2026-05-17 mis-routing incident.
 
 <sup>c</sup> The HRS bundle's third axis (CM × PF × CR vs the
 fallback latency × drop × degraded-partner formula) depends on which
@@ -98,7 +106,7 @@ ADR-009 §Consequences; plan/05 §6 #3). See [ADR-002 §Revision history
 (2026-05-15 + 2026-05-16)](ADR-002-rl-framework.md#revision-history).
 
 ## Lock-by phases (per v0.2 §8 gates)
-- **Phase 0** (Month 3): ADRs 001, 002, 003, 004, 005, 006, 007, 012, 013.
+- **Phase 0** (Month 3): ADRs 001, 002, 003, 004, 005, 006, 007, 012, 013, 016.
 - **Phase 0–1** (Month 3–7): ADRs 008, 011.
 - **Phase 1** (Month 7): ADRs 009, 010, 014.
 - **Phase 1** (Month 12 gate): ADR 015.

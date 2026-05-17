@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: Apache-2.0
-"""Result schema for CHAMBER spike runs and leaderboard entries (ADR-007, ADR-008).
+"""Result schema for CHAMBER spike runs and leaderboard entries (ADR-007, ADR-008, ADR-016).
 
 ADR-007 §Discipline requires every spike run to be traceable to a
 pre-registration YAML pinned to a git tag whose tree-SHA matches the
@@ -12,23 +12,52 @@ spike-run side to the renderers in
 The schema is versioned independently of the comm wire format. The
 :data:`SCHEMA_VERSION` constant in this module is **not** the same as
 :data:`chamber.comm.SCHEMA_VERSION` — the former pins the leaderboard
-result-archive format (ADR-008 §Decision); the latter pins the
-fixed-format packet shape (ADR-003 §Decision). Bumping either is a
-breaking change requiring a new ADR.
+result-archive format (ADR-008 §Decision; ADR-016 §Decision); the
+latter pins the fixed-format packet shape (ADR-003 §Decision).
+Bumping either is a breaking change requiring a new ADR.
+
+ADR-016 §Decision bumped this constant 1 → 2 to introduce the typed
+``SpikeRun.sub_stage`` field that distinguishes Stage-1a (rig
+validation, MPE stand-in, ≥20 pp gate NOT measured) from Stage-1b
+(science evaluation, real ManiSkill env, ≥20 pp gate measured). The
+prior v1 informal contract (``EpisodeResult.metadata["stage"]`` with
+a silent default-by-axis fallback in the summarizer) is retired —
+the metadata-dict slot is type-unenforced and the silent default was
+the 2026-05-17 incident's root cause.
 """
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, NonNegativeFloat, NonNegativeInt
 
-#: Schema version for the CHAMBER evaluation result archive (ADR-008 §Decision).
+#: Schema version for the CHAMBER evaluation result archive
+#: (ADR-008 §Decision; ADR-016 §Decision).
 #:
 #: Distinct from :data:`chamber.comm.SCHEMA_VERSION`. Bumping is a
 #: breaking change to :class:`SpikeRun` / :class:`LeaderboardEntry`
-#: serialised shape and requires a new ADR.
-SCHEMA_VERSION: int = 1
+#: serialised shape and requires a new ADR. The current value is 2
+#: per ADR-016 (introduces :attr:`SpikeRun.sub_stage`); v1 archives
+#: produced before that ADR do not load against this schema and must
+#: be regenerated (the migration is one-shot per ADR-016 §Decision).
+#:
+#: Both :class:`SpikeRun` and :class:`LeaderboardEntry` alias this
+#: constant for their ``schema_version`` defaults; bumping it
+#: co-bumps both. ADR-008's 2026-05-17 §Consequences amendment
+#: documents the LeaderboardEntry wire-shape at v2 is identical to
+#: v1 — the bump is driven entirely by SpikeRun's new field.
+SCHEMA_VERSION: int = 2
+
+#: ADR-007 §Implementation-staging sub-stage labels (ADR-016 §Decision).
+#:
+#: Re-exported as a type alias so adapters and tests share a single
+#: source of truth for the set of valid sub-stage strings.
+#: ``"1a"`` = rig validation; ``"1b"`` = science evaluation; ``"2"``
+#: and ``"3"`` are reserved for the Stage-2 / Stage-3 adapters that
+#: ADR-007 §Decision pre-registers but have not yet been written
+#: (Phase-1 work).
+SubStage = Literal["1a", "1b", "2", "3"]
 
 
 class EpisodeResult(BaseModel):
@@ -94,7 +123,7 @@ class ConditionPair(BaseModel):
 
 
 class SpikeRun(BaseModel):
-    """Full record of one ADR-007 staged spike (ADR-007 §Discipline).
+    """Full record of one ADR-007 staged spike (ADR-007 §Discipline; ADR-016 §Decision).
 
     Carries the pre-registration provenance (``prereg_sha`` /
     ``git_tag``) so the leaderboard renderer can refuse entries that
@@ -113,12 +142,18 @@ class SpikeRun(BaseModel):
         axis: Name of the ADR-007 heterogeneity axis under test
             (one of ``"CR"``, ``"AS"``, ``"OM"``, ``"CM"``,
             ``"PF"``, ``"SA"``).
+        sub_stage: ADR-007 §Implementation-staging sub-stage label
+            (one of ``"1a"`` / ``"1b"`` / ``"2"`` / ``"3"``).
+            Required, no default — see ADR-016 §Decision and
+            §Rationale for why the silent default-by-axis fallback
+            the v1 schema relied on was retired.
         condition_pair: Homogeneous-vs-heterogeneous pair.
         seeds: List of root seeds used in this spike (ADR-002 P6).
         episode_results: Flat list of per-episode results across all
             seeds and both pair sides.
         schema_version: Result-archive schema version
-            (default :data:`SCHEMA_VERSION`).
+            (default :data:`SCHEMA_VERSION`; currently 2 per
+            ADR-016 §Decision).
     """
 
     model_config = ConfigDict(extra="forbid", frozen=True)
@@ -127,6 +162,7 @@ class SpikeRun(BaseModel):
     prereg_sha: str
     git_tag: str
     axis: str
+    sub_stage: SubStage
     condition_pair: ConditionPair
     seeds: list[int]
     episode_results: list[EpisodeResult]
@@ -262,4 +298,5 @@ __all__ = [
     "HRSVectorEntry",
     "LeaderboardEntry",
     "SpikeRun",
+    "SubStage",
 ]

@@ -39,13 +39,17 @@ so the test suite (``tests/unit/test_summarize_month3.py``) can pin
 the report contract without re-running the bootstrap.
 
 Stage metadata: the per-axis stage label (``"1a"`` / ``"1b"`` / ``"2"``
-/ ``"3"``) is read from the SpikeRun's first
-:attr:`EpisodeResult.metadata["stage"]` value; absent → default to
-the axis's canonical stage per ADR-007 §Implementation staging
-(AS/OM → 1b, CR/CM → 2, PF/SA → 3). The optional ``"stage"`` key is
-a load-bearing affordance for Stage 1a runs (rig validation only;
-no ≥20 pp measurement) so they render as ``gate_pass = n/a`` in the
-report and do not trigger Stop / Accept-Validated transitions.
+/ ``"3"``) is read from the SpikeRun's :attr:`SpikeRun.sub_stage`
+field (ADR-016 §Decision). The prior v1 affordance — an optional
+``"stage"`` key on :attr:`EpisodeResult.metadata` with a silent
+default-by-axis fallback — is retired: it was type-unenforced (the
+metadata dict's value type is ``Any``), and the silent fallback
+mis-routed Stage-1a archives to ``Stop`` (the 2026-05-17 incident
+root cause that ADR-016 closes).
+
+Stage-1a runs (rig validation only; no ≥20 pp measurement) carry
+``sub_stage == "1a"`` and render as ``gate_pass = n/a`` in the
+report; they do not trigger Stop / Accept-Validated transitions.
 """
 
 from __future__ import annotations
@@ -80,8 +84,10 @@ _DEFAULT_N_RESAMPLES: int = 2000
 _DEFAULT_SEED: int = 0
 
 #: Canonical per-axis Phase-0 stage assignments (ADR-007
-#: §Implementation staging). Used as the fallback when an
-#: :class:`EpisodeResult` does not carry a ``"stage"`` metadata key.
+#: §Implementation staging). Used only by the per-axis-evidence-table
+#: renderer to fill the ``Stage`` cell of *Missing* rows — the
+#: previous v1 routing-fallback role was retired in ADR-016 §Decision
+#: (the routing now reads :attr:`SpikeRun.sub_stage` directly).
 _DEFAULT_STAGE_BY_AXIS: dict[str, str] = {
     "AS": "1b",
     "OM": "1b",
@@ -755,18 +761,19 @@ def _bootstrap_axis_result(
 
 
 def _stage_from_spike_run(run_: SpikeRun) -> str:
-    """Read the per-axis stage label from the first episode's metadata.
+    """Read the per-axis stage label from :attr:`SpikeRun.sub_stage` (ADR-016 §Decision).
 
-    Falls back to the canonical per-axis stage
-    (:data:`_DEFAULT_STAGE_BY_AXIS`) when no episode carries a
-    ``"stage"`` key — that's the path for legacy archives that
-    pre-date the Stage 1a / Stage 1b split.
+    No fallback — ADR-016 §Rationale: the v1 silent-default behaviour
+    mis-routed Stage-1a archives by rendering them as Stage-1b (the
+    AS/OM canonical default) and was the 2026-05-17 incident root
+    cause. Bumping to schema v2 makes the field mandatory at the
+    Pydantic-validation layer, so by the time this helper is called
+    the field is guaranteed non-empty and a load-time
+    :class:`pydantic.ValidationError` is the loud-fail mode for a
+    v1 archive on disk (which must be regenerated rather than
+    auto-migrated).
     """
-    for ep in run_.episode_results:
-        stage = ep.metadata.get("stage")
-        if isinstance(stage, str) and stage:
-            return stage
-    return _DEFAULT_STAGE_BY_AXIS.get(run_.axis, "1b")
+    return run_.sub_stage
 
 
 __all__ = [

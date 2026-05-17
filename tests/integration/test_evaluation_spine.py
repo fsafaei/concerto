@@ -82,6 +82,9 @@ def _build_spike_run() -> SpikeRun:
         prereg_sha="0" * 40,
         git_tag="prereg/stage2-cm-golden-v0",
         axis="CM",
+        # ADR-016 §Decision: SpikeRun.sub_stage is required. CM lives
+        # at Stage 2 per ADR-007 §Implementation staging.
+        sub_stage="2",
         condition_pair=ConditionPair(
             homogeneous_id=homo_id,
             heterogeneous_id=hetero_id,
