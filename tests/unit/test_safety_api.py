@@ -30,13 +30,20 @@ if TYPE_CHECKING:
 
 
 def test_bounds_is_frozen_dataclass() -> None:
-    bounds = Bounds(action_norm=1.0, action_rate=0.5, comm_latency_ms=1.0, force_limit=20.0)
-    assert bounds.action_norm == 1.0
+    bounds = Bounds(
+        action_linf_component=1.0,
+        cartesian_accel_capacity=1.0,
+        action_rate=0.5,
+        comm_latency_ms=1.0,
+        force_limit=20.0,
+    )
+    assert bounds.action_linf_component == 1.0
+    assert bounds.cartesian_accel_capacity == 1.0
     assert bounds.action_rate == 0.5
     assert bounds.comm_latency_ms == 1.0
     assert bounds.force_limit == 20.0
     with pytest.raises(dataclasses.FrozenInstanceError):
-        bounds.action_norm = 99.0  # type: ignore[misc]
+        bounds.action_linf_component = 99.0  # type: ignore[misc]
 
 
 def test_safety_state_defaults_match_adr_004() -> None:
@@ -117,7 +124,13 @@ def test_safety_filter_protocol_runtime_checkable() -> None:
 def test_safety_filter_stub_round_trip_returns_typed_payload() -> None:
     stub = _StubFilter()
     state = SafetyState(lambda_=np.zeros(2, dtype=np.float64))
-    bounds = Bounds(action_norm=1.0, action_rate=0.5, comm_latency_ms=1.0, force_limit=20.0)
+    bounds = Bounds(
+        action_linf_component=1.0,
+        cartesian_accel_capacity=1.0,
+        action_rate=0.5,
+        comm_latency_ms=1.0,
+        force_limit=20.0,
+    )
     proposed = {"agent_a": np.zeros(3, dtype=np.float64)}
     safe, info = stub.filter(
         proposed_action=proposed, obs={"meta": {"partner_id": None}}, state=state, bounds=bounds

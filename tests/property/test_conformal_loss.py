@@ -50,7 +50,7 @@ def _snap(x: float, y: float, vx: float, vy: float, r: float = 0.2) -> AgentSnap
     )
 
 
-_ALPHA_PAIR = 4.0  # 2 * action_norm for action_norm=2.0
+_ALPHA_PAIR = 4.0  # 2 * cartesian_accel_capacity for capacity=2.0
 _GAMMA = 2.0
 
 

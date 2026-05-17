@@ -156,7 +156,13 @@ def test_partner_swap_consumer_gates_on_partner_id_none() -> None:
     control_models["a"] = DoubleIntegratorControlModel(uid="a", action_dim=2)
     control_models["b"] = DoubleIntegratorControlModel(uid="b", action_dim=2)
     cbf = ExpCBFQP.centralized(control_models=control_models)
-    bounds = Bounds(action_norm=2.0, action_rate=0.5, comm_latency_ms=1.0, force_limit=20.0)
+    bounds = Bounds(
+        action_linf_component=2.0,
+        cartesian_accel_capacity=2.0,
+        action_rate=0.5,
+        comm_latency_ms=1.0,
+        force_limit=20.0,
+    )
     snaps = {
         "a": AgentSnapshot(
             position=np.zeros(2, dtype=np.float64),

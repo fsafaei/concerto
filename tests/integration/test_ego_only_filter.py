@@ -68,12 +68,13 @@ class _FourDArmLikeModel:
         return out
 
     def max_cartesian_accel(self, bounds: Bounds) -> float:
-        return float(bounds.action_norm)
+        return float(bounds.cartesian_accel_capacity)
 
 
 def _bounds(action_norm: float = 5.0) -> Bounds:
     return Bounds(
-        action_norm=action_norm,
+        action_linf_component=action_norm,
+        cartesian_accel_capacity=action_norm,
         action_rate=0.5,
         comm_latency_ms=1.0,
         force_limit=20.0,
@@ -158,14 +159,14 @@ def test_ego_only_partner_disturbance_enters_via_rhs_not_variable() -> None:
         Phase-1 will replace the constant-velocity stub; this synthesises
         a small non-zero predicted accel by gently scaling the partner's
         velocity over a 0.05 s lookahead. Kept small (Δv/dt ≈ 1 m/s², well
-        below the 5 m/s² action_norm) so the QP stays feasible while still
+        below the 5 m/s² action_linf_component) so the QP stays feasible while still
         producing a measurably different safe ego action vs the baseline
         — the contract the test pins.
 
         Calibration note: under the corrected ``(v_pred - v_now) / dt``
         formula at ``dt=0.05``, a 1.5x scaling (the pre-fix value) yields
         ``|Δv|/dt = 0.5 / 0.05 = 10 m/s²`` which exceeds the 5 m/s²
-        ``action_norm`` and renders the QP infeasible. The 1.05x value
+        ``action_linf_component`` and renders the QP infeasible. The 1.05x value
         keeps the synthetic accel in the feasible regime while leaving
         the baseline-vs-shifted divergence loud enough for
         ``not np.allclose`` to fire reliably. The contract being pinned

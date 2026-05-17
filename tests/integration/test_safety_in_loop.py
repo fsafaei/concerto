@@ -48,7 +48,8 @@ from concerto.safety.reporting import (
 
 def _bounds(action_norm: float = 5.0) -> Bounds:
     return Bounds(
-        action_norm=action_norm,
+        action_linf_component=action_norm,
+        cartesian_accel_capacity=action_norm,
         action_rate=0.5,
         comm_latency_ms=1.0,
         force_limit=20.0,
@@ -133,7 +134,7 @@ def test_full_safety_stack_runs_100_steps_without_crash() -> None:  # noqa: PLR0
     fallback_fires = 0
     qp_calls = 0
     snaps_prev: dict[str, AgentSnapshot] | None = None
-    alpha_pair_cbf = 2.0 * bounds.action_norm
+    alpha_pair_cbf = 2.0 * bounds.cartesian_accel_capacity
 
     for k in range(n_steps):
         snaps = {

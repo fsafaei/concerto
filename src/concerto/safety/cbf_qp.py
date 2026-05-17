@@ -852,14 +852,15 @@ class ExpCBFQP:
 
         # Per-component action-space L-infinity bound; the Cartesian
         # capacity drives ``alpha_pair`` only — the action-space envelope
-        # is the agent's own component-wise bound (Bounds.action_norm in
-        # Phase-0; future models may override this). NOTE: ``action_norm``
-        # is consumed here as L-infinity but as L2 in the emergency
-        # controller — a documented inconsistency tracked at issue #146
-        # (see :class:`concerto.safety.api.Bounds` "Known semantic
-        # inconsistency"; ADR-004 §Open questions).
+        # is the agent's own component-wise bound
+        # (``Bounds.action_linf_component``; future models may override
+        # this). Post-P1.02 the L-infinity / L2 semantic ambiguity is
+        # closed by the explicit field split — this read is now
+        # unambiguously L-infinity-per-component (see
+        # :class:`concerto.safety.api.Bounds` "Field split"; ADR-004
+        # §Revision history 2026-05-17).
         identity = np.eye(n_total, dtype=np.float64)
-        ego_action_bound = np.full(n_total, bounds.action_norm, dtype=np.float64)
+        ego_action_bound = np.full(n_total, bounds.action_linf_component, dtype=np.float64)
         bound_rows = np.vstack([identity, -identity])
         bound_rhs = np.concatenate([ego_action_bound, ego_action_bound])
 
@@ -1004,11 +1005,11 @@ class ExpCBFQP:
             model = self._control_models[uid]
             # Per-component action-space L-infinity bound, matching the
             # pre-refactor convention; the per-agent Cartesian capacity
-            # affects ``alpha_pair`` only. NOTE: see the analogous
-            # comment in ``_filter_ego_only`` and issue #146 — the
-            # ``Bounds.action_norm`` semantic inconsistency is shared
-            # between both joint-mode call sites and the EGO_ONLY path.
-            action_bound = np.full(model.action_dim, bounds.action_norm, dtype=np.float64)
+            # affects ``alpha_pair`` only. Post-P1.02 the L-infinity / L2
+            # semantic ambiguity (issue #146) is closed by the explicit
+            # field split — see the analogous comment in
+            # ``_filter_ego_only`` and ADR-004 §Revision history 2026-05-17.
+            action_bound = np.full(model.action_dim, bounds.action_linf_component, dtype=np.float64)
             if (
                 self._mode is SafetyMode.SHARED_CONTROL
                 and uid != ego_uid

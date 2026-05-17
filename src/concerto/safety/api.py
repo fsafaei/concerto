@@ -106,48 +106,56 @@ class Bounds:
     decision: bounds gate QP feasibility and reportability while the
     conformal slack (:class:`SafetyState`) governs online adaptation. The
     enumerated values track ADR-006 §Consequences — the comm-latency bound
-    is anchored to the URLLC-3GPP-R17 sweep table from M2; ``action_norm``
-    and ``action_rate`` are task-specific (Phase-1 fills them; Phase-0
-    ships sane defaults). The ``force_limit`` field is a Phase-0 stub for
+    is anchored to the URLLC-3GPP-R17 sweep table from M2;
+    ``action_linf_component``, ``cartesian_accel_capacity``, and
+    ``action_rate`` are task-specific (Phase-1 fills them; Phase-0 ships
+    sane defaults). The ``force_limit`` field is a Phase-0 stub for
     ADR-007 Open Question #4 (per-vendor decomposition, ADR-004 Open
     Question #5) — a strategy-interfaced per-vendor handler slots in once
     Stage-3 SA resolves the open question.
 
-    **Known semantic inconsistency (2026-05-16; external-review P1-3):**
-    ``action_norm`` is consumed by two safety layers with mismatched
-    semantics. The exponential CBF-QP outer filter
-    (:class:`concerto.safety.cbf_qp.ExpCBFQP`) enforces it as a
-    per-component **L-infinity** bound (``|u_i[k]| <= action_norm`` for
-    every component ``k``). The Cartesian emergency controller
-    (:mod:`concerto.safety.emergency`, around line 174) reads it as an
-    **L2** magnitude cap on the emergency acceleration. For a ``d``-
-    dimensional action these are inconsistent: an action with
-    ``||u||_inf <= action_norm`` can have
-    ``||u||_2 ~ sqrt(d) * action_norm``. The CBF derivation may
-    therefore authorise an action the emergency fallback cannot deliver.
-    This is tracked as Phase-1 safety-critical work in ADR-004 §Open
-    questions (issue #146); the correct fix is to split ``Bounds`` into
-    two fields with explicit semantics (``action_linf_component`` +
-    ``cartesian_accel_capacity``). **Until the split lands, callers
-    should treat ``action_norm`` as the stricter L2 cap (i.e. set
-    ``action_norm = capacity / sqrt(d)``) so the emergency-fallback
-    constraint is preserved.**
+    **Field split (issue #146, closed by P1.02; 2026-05-17).** The prior
+    single ``action_norm`` field was consumed by two safety layers with
+    mismatched semantics (L-infinity per-component in the CBF-QP outer
+    filter; L2 magnitude cap in the Cartesian emergency controller). The
+    field is now split into two explicit fields, each named for its
+    semantics:
 
-    The inconsistency is pinned by
-    ``tests/property/test_bounds_action_norm_inconsistency_documented.py``
-    with ``@pytest.mark.xfail(strict=True)`` so that when the field
-    split lands, the test flips from ``xfail`` to ``xpass`` and forces
-    a follow-up PR to remove the marker — a built-in regression flag
-    for the safety fix.
+    - ``action_linf_component`` — per-component L-infinity bound on the
+      action vector (``|u[k]| <= action_linf_component`` for every
+      component ``k``). Enforced by
+      :class:`concerto.safety.cbf_qp.ExpCBFQP`'s action-space bound rows
+      and (post-Jacobian) by :class:`~concerto.safety.emergency.JacobianEmergencyController`'s
+      per-joint clip.
+    - ``cartesian_accel_capacity`` — L2 magnitude cap on the Cartesian
+      acceleration. The semantic source of the per-agent ``alpha`` in
+      the Wang-Ames-Egerstedt 2017 §III barrier value (``alpha_pair =
+      2 * cartesian_accel_capacity`` for symmetric agents) and of the
+      :class:`~concerto.safety.emergency.CartesianAccelEmergencyController`'s
+      saturation step.
+
+    For a ``d``-dimensional action the two are related but not equal:
+    an action drawn from the L-infinity envelope has worst-case L2
+    magnitude ``sqrt(d) * action_linf_component``. The conservative
+    operator pattern is ``cartesian_accel_capacity =
+    action_linf_component`` (matches the pre-split semantics under the
+    safe-operator workaround the 2026-05-16 docstring named); a less
+    conservative deployment sets ``cartesian_accel_capacity =
+    sqrt(d) * action_linf_component`` to use the full envelope. Either
+    pin is the operator's call; the safety stack treats the two fields
+    as independent inputs.
 
     Attributes:
-        action_norm: **Deprecated semantics — see "Known semantic
-            inconsistency" above.** The current consumers split as:
-            ``ExpCBFQP`` reads this as per-component L-infinity; the
-            emergency controller reads it as an L2 magnitude cap. The
-            safe operator pattern is ``action_norm = capacity / sqrt(d)``
-            for ``d``-dim actions so both layers agree on the stricter
-            envelope. Removal/split target: tracked in issue #146.
+        action_linf_component: Per-component L-infinity bound enforced
+            by the CBF-QP outer filter
+            (:class:`concerto.safety.cbf_qp.ExpCBFQP`) and as the
+            post-Jacobian per-joint clip in
+            :class:`~concerto.safety.emergency.JacobianEmergencyController`.
+        cartesian_accel_capacity: L2 magnitude cap on Cartesian
+            acceleration. Source of the per-agent ``alpha`` consumed
+            by the conformal-barrier ``alpha_pair`` and the saturation
+            step in
+            :class:`~concerto.safety.emergency.CartesianAccelEmergencyController`.
         action_rate: Maximum :math:`\lVert u_k - u_{k-1} \rVert_2` per
             agent, per task. Bounds the actuator-rate slack the conformal
             CBF must remain feasible under (ADR-006 §Decision).
@@ -159,7 +167,8 @@ class Bounds:
             in once Stage-3 SA resolves the decomposition).
     """
 
-    action_norm: float
+    action_linf_component: float
+    cartesian_accel_capacity: float
     action_rate: float
     comm_latency_ms: float
     force_limit: float
@@ -359,11 +368,16 @@ class AgentControlModel(Protocol):
         """Right-inverse for QP projection back into action space (ADR-004 §Decision).
 
         Used by the CBF-QP to express the per-agent action-space slot
-        coefficients of a Cartesian constraint row. For an
-        over-actuated agent the right-inverse selects one of the many
-        actions that realise the same Cartesian acceleration; the
-        damped-least-squares pseudo-inverse is the canonical choice
-        (see :class:`JacobianControlModel`).
+        coefficients of a Cartesian constraint row, and (via
+        :class:`~concerto.safety.emergency.JacobianEmergencyController`)
+        by the braking fallback to translate the Cartesian repulsion
+        target into joint-space torques. For an over-actuated agent the
+        right-inverse selects one of the many actions that realise the
+        same Cartesian acceleration; the damped-least-squares
+        pseudo-inverse is the canonical choice (see
+        :class:`JacobianControlModel`) and is the single source of
+        truth for the Cartesian-to-joint map across the CBF row
+        projection and the emergency fallback (ADR-004 §Decision; P1.02).
 
         Args:
             state: Current :class:`concerto.safety.cbf_qp.AgentSnapshot`.
@@ -382,8 +396,8 @@ class AgentControlModel(Protocol):
         ``alpha_pair = alpha_i_cart + alpha_j_cart`` and to drive the
         proportional Wang-Ames-Egerstedt 2017 §IV budget split for
         heterogeneous embodiments. For a double-integrator agent
-        whose action space *is* Cartesian acceleration this is just
-        ``bounds.action_norm``.
+        whose action space *is* Cartesian acceleration this is
+        ``bounds.cartesian_accel_capacity`` (the L2 magnitude cap).
 
         Args:
             bounds: Per-task :class:`Bounds` envelope.
@@ -458,12 +472,19 @@ class DoubleIntegratorControlModel:
         return cartesian_accel.astype(np.float64, copy=False)
 
     def max_cartesian_accel(self, bounds: Bounds) -> float:
-        """Return ``bounds.action_norm`` (ADR-004 §Decision; spike_004A §Per-agent alpha).
+        """Return ``bounds.cartesian_accel_capacity`` (ADR-004 §Decision; spike_004A).
 
-        For a double integrator the action-space L-infinity bound *is*
-        the Cartesian acceleration capacity.
+        For a double integrator the L2 magnitude cap *is* the Cartesian
+        acceleration capacity by definition of the embodiment. The
+        Wang-Ames-Egerstedt 2017 §III barrier formula's ``alpha`` is a
+        Cartesian acceleration capacity (it appears inside
+        ``sqrt(2 * alpha * ...)``); pre-split this read
+        ``bounds.action_norm`` under the operator pattern
+        ``action_norm = capacity / sqrt(d)``, but the post-split field
+        names this semantic explicitly (ADR-004 §Revision history
+        2026-05-17 + ADR-INDEX footnote (a)).
         """
-        return float(bounds.action_norm)
+        return float(bounds.cartesian_accel_capacity)
 
 
 #: Default damping parameter for the damped-least-squares pseudo-inverse

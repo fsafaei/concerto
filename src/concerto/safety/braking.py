@@ -205,9 +205,10 @@ def maybe_brake(
             used as the no-override fallback for uids in zero dangerous
             pairs.
         snaps: Per-agent kinematic state at the current step.
-        bounds: Per-task :class:`Bounds`; the per-uid override magnitude
-            is capped at ``bounds.action_norm`` inside each
-            controller's saturation step.
+        bounds: Per-task :class:`Bounds`; the Cartesian controller caps
+            the override magnitude at ``bounds.cartesian_accel_capacity``,
+            and the Jacobian controller additionally clips post-Jacobian
+            per-joint torques at ``bounds.action_linf_component``.
         tau_brake: TTC threshold in seconds (default
             :data:`DEFAULT_TAU_BRAKE` = 100 ms; ADR-004 §Decision row
             "Braking fallback trigger").
@@ -216,9 +217,14 @@ def maybe_brake(
             :class:`CartesianAccelEmergencyController` is built per uid;
             this preserves the toy-crossing behaviour for the Phase-0
             smoke tests. Callers integrating a 7-DOF arm uid MUST pass
-            an entry that is *not* the Cartesian default (the
-            :class:`JacobianEmergencyController` placeholder will raise
-            until Stage-1 lands the real controller).
+            an entry that is *not* the Cartesian default — typically a
+            :class:`JacobianEmergencyController` constructed with the
+            uid's :class:`~concerto.safety.api.JacobianControlModel`,
+            which post-P1.02 ships the real damped-pseudoinverse
+            Cartesian-to-joint map (ADR-004 §Revision history 2026-05-17).
+            Writing a Cartesian-shaped override into a 7-vector slot
+            would still silently corrupt the action — the dispatch
+            check is *which controller* is wired, not whether one is.
 
     Returns:
         ``(override, fired)``: when ``fired=True``, ``override`` is a
