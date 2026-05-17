@@ -8,6 +8,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 While the project is on `0.x`, MINOR-version bumps may break the public API
 per SemVer §4.
 
+## [0.7.1](https://github.com/fsafaei/concerto/compare/v0.7.0...v0.7.1) (2026-05-17)
+
+
+### Bug Fixes
+
+* **cli:** chamber-spike next-stage skips Stage-1a archives with stderr note (closes ADR-016 §Open questions) ([#155](https://github.com/fsafaei/concerto/issues/155)) ([01ff673](https://github.com/fsafaei/concerto/commit/01ff67309ab5e48d8b16cf7c5895172fe0435ffe))
+
 ## [0.7.0](https://github.com/fsafaei/concerto/compare/v0.6.0...v0.7.0) (2026-05-17)
 
 
