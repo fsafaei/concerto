@@ -171,11 +171,12 @@ deferred to the Stage-3 launch itself.
   stage per ADR-007 §Implementation staging.
 - (Phase-1 correctness debt from the 2026-05-16 external review,
   flagged by ADR-INDEX footnote (a) and several follow-ups)
-  `Bounds.action_norm` field split into `action_linf_component` +
-  `cartesian_accel_capacity`; `JacobianEmergencyController` real
-  implementation; structural dict-keyed `lambda_` per the Option-(a)
-  pair-keying refactor; position-aware joint CBFs; force-limit /
-  contact-force constraints in OSCBF.
+  Structural dict-keyed `lambda_` per the Option-(a) pair-keying
+  refactor; position-aware joint CBFs; force-limit /
+  contact-force constraints in OSCBF. (The `Bounds.action_norm`
+  field split and the `JacobianEmergencyController` real
+  implementation closed in P1.02; remaining items above are still
+  pending Phase-1 follow-ups.)
 
 [snapshot]: _assets/month3-lock-priority-2026-05-17.md
 [adr-001-validation]: https://github.com/fsafaei/concerto/blob/main/adr/ADR-001-fork-vs-build.md#validation-criteria

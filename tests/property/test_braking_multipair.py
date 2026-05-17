@@ -9,7 +9,7 @@ Covers ADR-004 risk-mitigation #1 corrections:
    only. Property test constructs the three-agent case where uid_0
    sits between two simultaneously-dangerous partners and asserts the
    uid_0 override reflects the *sum* of the two pairwise unit vectors
-   (then scaled to ``bounds.action_norm``), not the last-iteration
+   (then scaled to ``bounds.cartesian_accel_capacity``), not the last-iteration
    value.
 
 2. Embodiment dispatch via
@@ -40,7 +40,8 @@ from concerto.safety.emergency import (
 
 def _bounds(action_norm: float = 5.0) -> Bounds:
     return Bounds(
-        action_norm=action_norm,
+        action_linf_component=action_norm,
+        cartesian_accel_capacity=action_norm,
         action_rate=0.5,
         comm_latency_ms=1.0,
         force_limit=20.0,
@@ -80,8 +81,8 @@ def test_three_agent_collinear_squeeze_aggregates_to_zero() -> None:
     np.testing.assert_allclose(override["uid_0"], [0.0, 0.0], atol=1e-12)
     # The outer two uids each have one repulsion vector ⇒ full
     # emergency-stop magnitude.
-    assert np.linalg.norm(override["uid_1"]) == pytest.approx(bounds.action_norm)
-    assert np.linalg.norm(override["uid_2"]) == pytest.approx(bounds.action_norm)
+    assert np.linalg.norm(override["uid_1"]) == pytest.approx(bounds.cartesian_accel_capacity)
+    assert np.linalg.norm(override["uid_2"]) == pytest.approx(bounds.cartesian_accel_capacity)
 
 
 @settings(max_examples=50, deadline=None, suppress_health_check=[HealthCheck.too_slow])
@@ -99,7 +100,7 @@ def test_uid0_override_is_normalised_sum_of_pair_unit_vectors(
     +x); uid_2 below along -y (n_hat_02 = +y). The two unit vectors
     are orthogonal — their sum has norm sqrt(2), which the
     :class:`CartesianAccelEmergencyController` then rescales to
-    ``bounds.action_norm`` along the net (1, 1)/sqrt(2) direction.
+    ``bounds.cartesian_accel_capacity`` along the net (1, 1)/sqrt(2) direction.
 
     A last-pair-wins regression would yield an override aligned with
     only one of the two axes (either +x or +y, depending on dict
@@ -128,7 +129,7 @@ def test_uid0_override_is_normalised_sum_of_pair_unit_vectors(
     n_hat_01 = dp01 / np.linalg.norm(dp01)
     n_hat_02 = dp02 / np.linalg.norm(dp02)
     aggregate = n_hat_01 + n_hat_02
-    expected = (aggregate / np.linalg.norm(aggregate)) * bounds.action_norm
+    expected = (aggregate / np.linalg.norm(aggregate)) * bounds.cartesian_accel_capacity
     np.testing.assert_allclose(override["uid_0"], expected, atol=1e-10)
 
     # Last-pair-wins regression check: the override must not be aligned
@@ -138,7 +139,7 @@ def test_uid0_override_is_normalised_sum_of_pair_unit_vectors(
     assert override["uid_0"][0] > 0.0
     assert override["uid_0"][1] > 0.0
     # Magnitude is at the emergency-stop cap.
-    assert np.linalg.norm(override["uid_0"]) == pytest.approx(bounds.action_norm)
+    assert np.linalg.norm(override["uid_0"]) == pytest.approx(bounds.cartesian_accel_capacity)
 
 
 def test_uid_with_zero_dangerous_pairs_keeps_proposed_action_unchanged() -> None:
@@ -184,8 +185,8 @@ def test_explicit_controllers_map_is_honoured() -> None:
     assert override is not None
     # Single-pair case ⇒ magnitudes match the saturation cap on both
     # uids; directions along the line between centres (±x).
-    assert np.linalg.norm(override["uid_a"]) == pytest.approx(_bounds().action_norm)
-    assert np.linalg.norm(override["uid_b"]) == pytest.approx(_bounds().action_norm)
+    assert np.linalg.norm(override["uid_a"]) == pytest.approx(_bounds().cartesian_accel_capacity)
+    assert np.linalg.norm(override["uid_b"]) == pytest.approx(_bounds().cartesian_accel_capacity)
 
 
 def test_jacobian_emergency_controller_raises_with_expected_message() -> None:

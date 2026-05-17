@@ -64,7 +64,13 @@ def _snap(x: float, y: float, vx: float, vy: float, *, radius: float = 0.2) -> A
 
 
 def _bounds() -> Bounds:
-    return Bounds(action_norm=5.0, action_rate=0.5, comm_latency_ms=1.0, force_limit=20.0)
+    return Bounds(
+        action_linf_component=5.0,
+        cartesian_accel_capacity=5.0,
+        action_rate=0.5,
+        comm_latency_ms=1.0,
+        force_limit=20.0,
+    )
 
 
 def _models(uids: tuple[str, ...]) -> dict[str, DoubleIntegratorControlModel]:

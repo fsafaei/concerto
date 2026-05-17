@@ -205,9 +205,10 @@ def maybe_brake(
             used as the no-override fallback for uids in zero dangerous
             pairs.
         snaps: Per-agent kinematic state at the current step.
-        bounds: Per-task :class:`Bounds`; the per-uid override magnitude
-            is capped at ``bounds.action_norm`` inside each
-            controller's saturation step.
+        bounds: Per-task :class:`Bounds`; the Cartesian controller caps
+            the override magnitude at ``bounds.cartesian_accel_capacity``,
+            and the Jacobian controller additionally clips post-Jacobian
+            per-joint torques at ``bounds.action_linf_component``.
         tau_brake: TTC threshold in seconds (default
             :data:`DEFAULT_TAU_BRAKE` = 100 ms; ADR-004 §Decision row
             "Braking fallback trigger").

@@ -56,7 +56,7 @@ quadratic program
 ```
 min   ||u - u_hat||^2
 s.t.  A_ij u <= b_ij  (per pair (i, j))
-      ||u_i||_inf <= bounds.action_norm  (per agent)
+      ||u_i||_inf <= bounds.action_linf_component  (per agent)
 ```
 
 where `A_ij` and `b_ij` are derived from a relative-degree-1 barrier
@@ -188,7 +188,8 @@ from concerto.safety.conformal import update_lambda_from_predictor
 
 dt = 0.05
 bounds = Bounds(
-    action_norm=5.0,
+    action_linf_component=5.0,
+    cartesian_accel_capacity=5.0,
     action_rate=0.5,
     comm_latency_ms=1.0,
     force_limit=20.0,
@@ -262,7 +263,7 @@ else:
         state,
         snaps_now=agents,
         snaps_prev=agents_prev,
-        alpha_pair=2.0 * bounds.action_norm,
+        alpha_pair=2.0 * bounds.cartesian_accel_capacity,
         gamma=2.0,
         dt=dt,
         in_warmup=False,

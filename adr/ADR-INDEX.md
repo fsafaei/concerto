@@ -52,6 +52,14 @@ error is deferred alongside the per-step bound (external-review P0-4,
 2026-05-16). See
 [ADR-004 §Open questions](ADR-004-safety-filter.md#open-questions-deferred-to-a-later-adr)
 and [ADR-006 §Open questions](ADR-006-partner-policy-assumptions.md#open-questions-deferred-to-a-later-adr).
+**Closed by P1.02 (2026-05-17):** the `Bounds.action_norm` semantic
+inconsistency named in the 2026-05-16 external-review (P1-3) is
+resolved by splitting `Bounds` into `action_linf_component` +
+`cartesian_accel_capacity`, and the `JacobianEmergencyController`
+`NotImplementedError` placeholder named in ADR-004 §Risks #1 is
+replaced with a real damped-pseudoinverse implementation. See
+[ADR-004 §Revision history 2026-05-17](ADR-004-safety-filter.md#revision-history)
+for both. Per-step bound and `lambda_safe` derivation remain open.
 
 <sup>b</sup> The staged Phase-0 spike protocol (Stage 1: AS + OM;
 Stage 2: CR + CM; Stage 3: PF + SA) is committed but the spikes have

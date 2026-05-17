@@ -20,8 +20,8 @@ control-space override action. Two implementations ship in Phase-0:
 
 - :class:`CartesianAccelEmergencyController` — the default. Aggregates
   the pairwise Cartesian repulsion vectors by summation, saturates the
-  resulting Cartesian acceleration to ``bounds.action_norm``, and
-  returns an action whose shape matches the agent's Cartesian
+  resulting Cartesian acceleration to ``bounds.cartesian_accel_capacity``,
+  and returns an action whose shape matches the agent's Cartesian
   ``position.shape``. Correct for the toy double-integrator agents
   used in §V of Wang-Ames-Egerstedt 2017 and the Phase-0 smoke tests;
   **not** correct for 7-DOF arms.
@@ -100,8 +100,12 @@ class EmergencyController(Protocol):
                 from the partner in that pair). The list has at least
                 one element — uids with zero dangerous pairs are not
                 routed through this hook.
-            bounds: Per-task :class:`Bounds`; ``bounds.action_norm`` caps
-                the override magnitude.
+            bounds: Per-task :class:`Bounds`; how each field caps the
+                override is up to the implementation. The Cartesian
+                controller uses ``bounds.cartesian_accel_capacity`` to
+                L2-cap the saturated direction; the Jacobian controller
+                additionally uses ``bounds.action_linf_component`` for
+                a post-transform per-joint clip.
 
         Returns:
             Override action in this uid's control space, ``float64``.
@@ -118,21 +122,22 @@ class CartesianAccelEmergencyController:
     §V). The aggregation rule is:
 
     1. Sum the per-pair Cartesian repulsion unit vectors.
-    2. Saturate the result to ``bounds.action_norm`` in the *net*
-       push-apart direction: when the sum has non-trivial magnitude,
-       rescale it to ``bounds.action_norm`` (max emergency push); when
-       it cancels out, return zero.
+    2. Saturate the result to ``bounds.cartesian_accel_capacity`` in
+       the *net* push-apart direction: when the sum has non-trivial
+       magnitude, rescale it to ``bounds.cartesian_accel_capacity``
+       (max emergency push); when it cancels out, return zero.
     3. Return the saturated vector — its shape matches
        ``agent_state.position.shape`` by construction.
 
     Single-pair case (one dangerous partner): the sum is a single unit
-    vector with norm 1; the output magnitude is ``bounds.action_norm``,
-    matching the original toy-crossing contract. Two opposing pairs
-    (uid squeezed in the middle): the sum cancels to ~zero and the
-    output is a zero action — there is no preferred direction to push
-    in, and a spurious push would be worse than a no-op. Two
-    non-opposing pairs: the sum points in the net escape direction and
-    the output is ``bounds.action_norm`` along that direction.
+    vector with norm 1; the output magnitude is
+    ``bounds.cartesian_accel_capacity``, matching the original
+    toy-crossing contract. Two opposing pairs (uid squeezed in the
+    middle): the sum cancels to ~zero and the output is a zero action
+    — there is no preferred direction to push in, and a spurious push
+    would be worse than a no-op. Two non-opposing pairs: the sum
+    points in the net escape direction and the output is
+    ``bounds.cartesian_accel_capacity`` along that direction.
 
     Not correct for 7-DOF manipulators: see
     :class:`JacobianEmergencyController` and the ADR-007 Stage-1 AS
@@ -152,21 +157,20 @@ class CartesianAccelEmergencyController:
                 is used (the override's output shape).
             pairwise_repulsion_vectors: At least one Cartesian unit
                 vector pointing away from each dangerous partner.
-            bounds: Per-task :class:`Bounds`; ``bounds.action_norm`` is
-                the saturated output magnitude. **Note: this is the L2
-                magnitude cap consumer of the field with the documented
-                L-infinity / L2 semantic inconsistency** (see
-                :class:`concerto.safety.api.Bounds` "Known semantic
-                inconsistency"; ADR-004 §Open questions; tracking
-                issue #146). Operators wanting the CBF-side and
-                emergency-side envelopes to agree should set
-                ``action_norm = capacity / sqrt(d)`` (where ``d`` is
-                the action dimension) until the field-split lands.
+            bounds: Per-task :class:`Bounds`; the saturation magnitude
+                is ``bounds.cartesian_accel_capacity`` (the L2 magnitude
+                cap on Cartesian acceleration). Post-P1.02 the field
+                split closes the prior L-infinity / L2 ambiguity that
+                lived on the unified ``action_norm`` field — the
+                per-component L-infinity envelope now lives on
+                ``bounds.action_linf_component`` and is consumed only
+                by the CBF-QP outer filter and (post-Jacobian) by
+                :class:`JacobianEmergencyController`.
 
         Returns:
             Saturated Cartesian acceleration along the net push-apart
-            direction with magnitude ``bounds.action_norm``; or zero
-            when the pairwise vectors cancel out. Shape matches
+            direction with magnitude ``bounds.cartesian_accel_capacity``;
+            or zero when the pairwise vectors cancel out. Shape matches
             ``agent_state.position.shape``, dtype ``float64``.
         """
         if not pairwise_repulsion_vectors:
@@ -179,7 +183,7 @@ class CartesianAccelEmergencyController:
         norm = float(np.linalg.norm(aggregate))
         if norm < _AGGREGATE_NORM_FLOOR:
             return np.zeros_like(agent_state.position, dtype=np.float64)
-        return ((aggregate / norm) * bounds.action_norm).astype(np.float64, copy=False)
+        return ((aggregate / norm) * bounds.cartesian_accel_capacity).astype(np.float64, copy=False)
 
 
 class JacobianEmergencyController:

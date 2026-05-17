@@ -38,7 +38,8 @@ def test_why_conformal_walkthrough_example() -> None:
 
     dt = 0.05
     bounds = Bounds(
-        action_norm=5.0,
+        action_linf_component=5.0,
+        cartesian_accel_capacity=5.0,
         action_rate=0.5,
         comm_latency_ms=1.0,
         force_limit=20.0,
@@ -111,7 +112,7 @@ def test_why_conformal_walkthrough_example() -> None:
             state,
             snaps_now=agents,
             snaps_prev=agents_prev,
-            alpha_pair=2.0 * bounds.action_norm,
+            alpha_pair=2.0 * bounds.cartesian_accel_capacity,
             gamma=2.0,
             dt=dt,
             in_warmup=False,

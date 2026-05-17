@@ -67,12 +67,13 @@ class _OverActuatedModel:
         return out
 
     def max_cartesian_accel(self, bounds: Bounds) -> float:
-        return float(bounds.action_norm)
+        return float(bounds.cartesian_accel_capacity)
 
 
 def _bounds(action_norm: float = 3.0) -> Bounds:
     return Bounds(
-        action_norm=action_norm,
+        action_linf_component=action_norm,
+        cartesian_accel_capacity=action_norm,
         action_rate=0.5,
         comm_latency_ms=1.0,
         force_limit=20.0,

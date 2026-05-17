@@ -144,7 +144,9 @@ def compute_prediction_gap_for_pairs(
         alpha_pair: Joint braking capacity used in the barrier
             ``h_ij = sqrt(2 * alpha_pair * max(|Dp| - D_s, 0)) +
             (Dp^T/|Dp|) Dv`` (Wang-Ames-Egerstedt 2017 §III). Typically
-            ``2 * bounds.action_norm`` for symmetric agents.
+            ``2 * bounds.cartesian_accel_capacity`` for symmetric
+            agents (the barrier formula's ``alpha`` is a Cartesian
+            acceleration capacity, P1.02 § ADR-004 amendment).
         gamma: Class-K function gain. Accepted for forward
             compatibility with drift-aware variants; the
             relative-degree-1 barrier value itself does not depend on
@@ -219,7 +221,8 @@ def update_lambda_from_predictor(
         snaps_prev: Per-agent snapshots at the previous step ``k``.
         alpha_pair: Joint braking capacity used in the barrier
             evaluation (same value the CBF backbone uses, typically
-            ``2 * bounds.action_norm`` for symmetric agents).
+            ``2 * bounds.cartesian_accel_capacity`` for symmetric
+            agents).
         gamma: Class-K function gain. Forwarded for forward compat
             with drift-aware loss forms.
         dt: Control-step duration in seconds. The predictor extrapolates
