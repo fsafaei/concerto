@@ -1563,7 +1563,7 @@ note 37). Each pair of agents contributes one linear constraint to a
 quadratic program</p>
 <div class="highlight"><pre><span></span><code>min   ||u - u_hat||^2
 s.t.  A_ij u &lt;= b_ij  (per pair (i, j))
-      ||u_i||_inf &lt;= bounds.action_norm  (per agent)
+      ||u_i||_inf &lt;= bounds.action_linf_component  (per agent)
 </code></pre></div>
 <p>where <code>A_ij</code> and <code>b_ij</code> are derived from a relative-degree-1 barrier</p>
 <div class="highlight"><pre><span></span><code>h_ij = sqrt(2 * alpha_pair * max(|Δp| - D_s, 0)) + (Δp / |Δp|)^T Δv
@@ -1663,7 +1663,8 @@ so the doc and the test cannot drift:</p>
 
 <span class="n">dt</span> <span class="o">=</span> <span class="mf">0.05</span>
 <span class="n">bounds</span> <span class="o">=</span> <span class="n">Bounds</span><span class="p">(</span>
-    <span class="n">action_norm</span><span class="o">=</span><span class="mf">5.0</span><span class="p">,</span>
+    <span class="n">action_linf_component</span><span class="o">=</span><span class="mf">5.0</span><span class="p">,</span>
+    <span class="n">cartesian_accel_capacity</span><span class="o">=</span><span class="mf">5.0</span><span class="p">,</span>
     <span class="n">action_rate</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
     <span class="n">comm_latency_ms</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
     <span class="n">force_limit</span><span class="o">=</span><span class="mf">20.0</span><span class="p">,</span>
@@ -1737,7 +1738,7 @@ so the doc and the test cannot drift:</p>
         <span class="n">state</span><span class="p">,</span>
         <span class="n">snaps_now</span><span class="o">=</span><span class="n">agents</span><span class="p">,</span>
         <span class="n">snaps_prev</span><span class="o">=</span><span class="n">agents_prev</span><span class="p">,</span>
-        <span class="n">alpha_pair</span><span class="o">=</span><span class="mf">2.0</span> <span class="o">*</span> <span class="n">bounds</span><span class="o">.</span><span class="n">action_norm</span><span class="p">,</span>
+        <span class="n">alpha_pair</span><span class="o">=</span><span class="mf">2.0</span> <span class="o">*</span> <span class="n">bounds</span><span class="o">.</span><span class="n">cartesian_accel_capacity</span><span class="p">,</span>
         <span class="n">gamma</span><span class="o">=</span><span class="mf">2.0</span><span class="p">,</span>
         <span class="n">dt</span><span class="o">=</span><span class="n">dt</span><span class="p">,</span>
         <span class="n">in_warmup</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
