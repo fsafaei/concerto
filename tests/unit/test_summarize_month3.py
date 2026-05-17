@@ -20,6 +20,8 @@ re-running the bootstrap.
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 import pytest
 
 from chamber.cli._spike_summarize_month3 import (
@@ -31,6 +33,9 @@ from chamber.cli._spike_summarize_month3 import (
     decide_recommendation,
     render_report,
 )
+
+if TYPE_CHECKING:
+    from chamber.evaluation.results import SubStage
 
 
 def _axis_result(
@@ -116,6 +121,24 @@ class TestDecideRecommendation:
 
     def test_stage1a_only_returns_defer(self) -> None:
         assert decide_recommendation(_stage1a_only_fixture()) == RECOMMENDATION_DEFER
+
+    def test_stage_1a_with_positive_gap_still_returns_defer(self) -> None:
+        """Belt-and-braces: a Stage-1a row with a spurious positive gap still routes to Defer.
+
+        Stage-1a is rig validation; the ≥20 pp gate is **not** measured
+        under it (ADR-007 §Stage 1a). If a future regression were to
+        wire Stage-1a episodes through a path that happens to produce
+        a non-zero gap (e.g. an env factory that diverges across
+        conditions), the recommendation must still be Defer — the gate
+        is not load-bearing for Stage-1a. This pin is independent of
+        the gap value and complements
+        :meth:`test_stage1a_only_returns_defer` (the zero-gap case).
+        """
+        results = [
+            _axis_result("AS", stage="1a", ci_low_pp=30.0, ci_high_pp=40.0, gap_iqm_pp=35.0),
+            _axis_result("OM", stage="1a", ci_low_pp=25.0, ci_high_pp=35.0, gap_iqm_pp=28.0),
+        ]
+        assert decide_recommendation(results) == RECOMMENDATION_DEFER
 
 
 class TestRenderReportAcceptValidated:
@@ -337,6 +360,10 @@ class TestSummarizeMonth3FileDiscovery:
             prereg_sha="0" * 40,
             git_tag="prereg-stage1-AS-test",
             axis="AS",
+            # ADR-016 §Decision: required field. Test exercises the
+            # file-discovery glob, not Stage-1a routing — defaulting
+            # to "1b" so the four-state logic runs.
+            sub_stage="1b",
             condition_pair=ConditionPair(
                 homogeneous_id="homo_id",
                 heterogeneous_id="hetero_id",
@@ -434,6 +461,169 @@ class TestSummarizeMonth3FileDiscovery:
 
         # Sanity: the planted spike_as.json round-trips as a SpikeRun.
         SpikeRun.model_validate_json((results_dir / "spike_as.json").read_text(encoding="utf-8"))
+
+
+class TestSummarizeMonth3SubStageRouting:
+    """End-to-end Stage-1a routing via the SpikeRun.sub_stage wire-format field.
+
+    PR 2 of the 2026-05-17 triage replaces the previous (broken)
+    ``EpisodeResult.metadata["stage"]`` affordance with a typed
+    ``SpikeRun.sub_stage`` field. The summarizer reads this field
+    directly via :func:`_stage_from_spike_run`. The end-to-end pins
+    below confirm that the summarizer routes correctly off the wire-
+    format field across the CLI surface.
+
+    Distinct from :class:`TestDecideRecommendation` which exercises
+    the decision rule at the :class:`_AxisResult` level (one struct-
+    construction step inside the summarizer pipeline): these tests
+    drive the full ``chamber-spike summarize-month3`` CLI path from
+    a planted SpikeRun JSON on disk.
+    """
+
+    def _plant_spike_run(
+        self,
+        *,
+        results_dir,
+        axis: str,
+        sub_stage: SubStage,
+        n_seeds: int = 1,
+        n_episodes_per_seed: int = 2,
+        homo_success: bool = True,
+        hetero_success: bool = False,
+    ):
+        """Plant a minimal SpikeRun JSON archive on disk for the summarizer to load.
+
+        ``homo_success`` and ``hetero_success`` parametrise the paired
+        gap so the test can synthesise both a zero-gap and a wide-gap
+        archive without re-running a real spike.
+        """
+        from chamber.evaluation.results import (
+            ConditionPair,
+            EpisodeResult,
+            SpikeRun,
+        )
+
+        homo_id = f"{axis}_homo"
+        hetero_id = f"{axis}_hetero"
+        episode_results = []
+        for seed in range(n_seeds):
+            for episode_idx in range(n_episodes_per_seed):
+                episode_results.append(
+                    EpisodeResult(
+                        seed=seed,
+                        episode_idx=episode_idx,
+                        initial_state_seed=seed * 1000 + episode_idx,
+                        success=homo_success,
+                        metadata={"condition": homo_id},
+                    )
+                )
+                episode_results.append(
+                    EpisodeResult(
+                        seed=seed,
+                        episode_idx=episode_idx,
+                        initial_state_seed=seed * 1000 + episode_idx,
+                        success=hetero_success,
+                        metadata={"condition": hetero_id},
+                    )
+                )
+        spike_run = SpikeRun(
+            spike_id=f"stage_{sub_stage}_{axis.lower()}_test",
+            prereg_sha="0" * 40,
+            git_tag=f"prereg-stage{sub_stage}-{axis}-test",
+            axis=axis,
+            sub_stage=sub_stage,
+            condition_pair=ConditionPair(homogeneous_id=homo_id, heterogeneous_id=hetero_id),
+            seeds=list(range(n_seeds)),
+            episode_results=episode_results,
+        )
+        archive_dir = results_dir / f"stage{sub_stage}-{axis}-test"
+        archive_dir.mkdir(parents=True)
+        (archive_dir / f"spike_{axis.lower()}.json").write_text(
+            spike_run.model_dump_json(), encoding="utf-8"
+        )
+
+    def test_stage_1a_archive_routes_to_defer_regardless_of_gap(
+        self,
+        tmp_path,
+        capsys: pytest.CaptureFixture[str],
+    ) -> None:
+        """Stage-1a archive on disk → ``Defer`` even when episode success rates diverge.
+
+        Plants an AS + OM SpikeRun pair with ``sub_stage="1a"`` and a
+        50 pp gap (homo passes; hetero fails). Under ADR-007 §Stage 1a
+        the ≥20 pp gate is not measured, so the summarizer MUST route
+        to ``Defer — Stage 1b not yet measured`` regardless of the
+        synthesised gap (ADR-016 §Decision; PR 2 of the 2026-05-17
+        triage). This is the load-bearing end-to-end pin that the
+        rendering text matches PR-3's regenerated archives.
+        """
+        from chamber.cli.spike import main
+
+        results_dir = tmp_path / "results"
+        results_dir.mkdir()
+        self._plant_spike_run(
+            results_dir=results_dir,
+            axis="AS",
+            sub_stage="1a",
+            homo_success=True,
+            hetero_success=False,
+        )
+        self._plant_spike_run(
+            results_dir=results_dir,
+            axis="OM",
+            sub_stage="1a",
+            homo_success=True,
+            hetero_success=False,
+        )
+        rc = main(["summarize-month3", "--results-dir", str(results_dir)])
+        assert rc == 0
+        captured = capsys.readouterr()
+        assert "**Recommendation: Defer" in captured.out, (
+            f"summarize-month3 did not route to Defer for Stage-1a archives. "
+            f"stdout:\n{captured.out}"
+        )
+        # The renderer marks Stage-1a rows as ``n/a`` for the gate column.
+        assert "n/a" in captured.out
+
+    def test_stage_1b_archive_with_zero_gap_routes_to_stop(
+        self,
+        tmp_path,
+        capsys: pytest.CaptureFixture[str],
+    ) -> None:
+        """Stage-1b archive with no separation → ``Stop`` (the four-state logic).
+
+        Plants an AS + OM SpikeRun pair with ``sub_stage="1b"`` and a
+        zero gap (both conditions identical-success). Under the four-
+        state logic the summarizer routes to ``Stop`` — confirms the
+        sub_stage="1b" path still flows through the existing decision
+        rule unchanged.
+        """
+        from chamber.cli.spike import main
+
+        results_dir = tmp_path / "results"
+        results_dir.mkdir()
+        # Zero gap: both conditions succeed every episode.
+        self._plant_spike_run(
+            results_dir=results_dir,
+            axis="AS",
+            sub_stage="1b",
+            homo_success=True,
+            hetero_success=True,
+        )
+        self._plant_spike_run(
+            results_dir=results_dir,
+            axis="OM",
+            sub_stage="1b",
+            homo_success=True,
+            hetero_success=True,
+        )
+        rc = main(["summarize-month3", "--results-dir", str(results_dir)])
+        assert rc == 0
+        captured = capsys.readouterr()
+        assert "**Recommendation: Stop" in captured.out, (
+            f"summarize-month3 did not route to Stop for zero-gap Stage-1b "
+            f"archives. stdout:\n{captured.out}"
+        )
 
 
 class TestSummarizeMonth3CLI:

@@ -83,3 +83,11 @@ class TestStage1OMPreregDiscipline:
             f"SHA {expected_sha!r} for the tagged YAML at "
             f"{spec.git_tag!r}. The audit chain does not close."
         )
+
+    def test_run_axis_records_sub_stage_1a(self, run: SpikeRun) -> None:
+        """Per ADR-016 §Decision: Stage-1a adapter stamps ``sub_stage="1a"``."""
+        assert run.sub_stage == "1a", (
+            f"Stage-1a adapter regression: produced SpikeRun.sub_stage "
+            f"is {run.sub_stage!r}, expected '1a'. The summarizer "
+            "will mis-route to Stop instead of Defer (ADR-007 §Stage 1a)."
+        )

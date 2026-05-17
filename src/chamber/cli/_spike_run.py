@@ -43,6 +43,8 @@ if TYPE_CHECKING:
     import argparse
     from collections.abc import Callable
 
+    from chamber.evaluation.results import SubStage
+
 #: Exit code emitted when ``chamber-spike run`` is invoked on a real
 #: (non-dry-run) axis whose adapter is not yet shipped. Distinct from
 #: argparse's 2, the train trip-wire's 3, the verify-prereg mismatch's
@@ -83,6 +85,22 @@ _ADAPTER_ENTRY_NAME: str = "run_axis"
 #: prereg YAML's seed list + episodes_per_seed budget exactly.
 _DRY_RUN_SEEDS: tuple[int, ...] = (0, 1, 2, 3, 4)
 _DRY_RUN_EPISODES_PER_SEED: int = 20
+
+#: ADR-007 §Implementation-staging canonical sub-stage by axis. The
+#: dry-run synthesises a SpikeRun for report-rendering demos and
+#: defaults each axis to its science-evaluation sub-stage so the
+#: synthesised gap exercises the four-state recommendation logic.
+#: Stage 1a (rig validation, no ≥20 pp measurement) is **not** the
+#: right default here — a dry-run for AS / OM should look like a
+#: real Stage-1b science run from the renderer's perspective.
+_DRY_RUN_SUB_STAGE_BY_AXIS: dict[str, SubStage] = {
+    "AS": "1b",
+    "OM": "1b",
+    "CR": "2",
+    "CM": "2",
+    "PF": "3",
+    "SA": "3",
+}
 
 
 def add_parser(sub: argparse._SubParsersAction) -> None:  # type: ignore[type-arg]
@@ -300,6 +318,11 @@ def _emit_dry_run_spike_run(
         prereg_sha="dry-run-no-prereg",
         git_tag="dry-run",
         axis=axis,
+        # ADR-016 §Decision: required field. Dry-runs default to the
+        # axis's science-evaluation sub-stage so the synthesised gap
+        # exercises the four-state recommendation logic (see
+        # ``_DRY_RUN_SUB_STAGE_BY_AXIS`` docstring).
+        sub_stage=_DRY_RUN_SUB_STAGE_BY_AXIS.get(axis, "1b"),
         condition_pair=condition_pair,
         seeds=list(_DRY_RUN_SEEDS),
         episode_results=episode_results,

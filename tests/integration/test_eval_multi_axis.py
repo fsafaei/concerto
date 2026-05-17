@@ -29,9 +29,26 @@ from chamber.evaluation import (
 if TYPE_CHECKING:
     import pytest
 
+    from chamber.evaluation.results import SubStage
+
 _GOLDEN_DIR = Path(__file__).parent / "golden"
 _GOLDEN_MULTI = _GOLDEN_DIR / "leaderboard_multi_axis.md"
 _GOLDEN_DUP = _GOLDEN_DIR / "leaderboard_dup_as.md"
+
+
+#: ADR-007 §Implementation-staging canonical sub-stage by axis. Used
+#: by the fake-archive builder to populate the ADR-016 §Decision
+#: required ``SpikeRun.sub_stage`` field. Defaults to ``"1b"`` (the
+#: science-evaluation stage) so the four-state recommendation logic
+#: stays exercised by the synthetic archives.
+_SUB_STAGE_BY_AXIS: dict[str, SubStage] = {
+    "AS": "1b",
+    "OM": "1b",
+    "CR": "2",
+    "CM": "2",
+    "PF": "3",
+    "SA": "3",
+}
 
 
 def _build_run(
@@ -78,6 +95,9 @@ def _build_run(
         prereg_sha="0" * 40,
         git_tag=f"prereg/{spike_id}",
         axis=axis,
+        # ADR-016 §Decision: required field; default to the axis's
+        # canonical science-evaluation sub-stage.
+        sub_stage=_SUB_STAGE_BY_AXIS.get(axis, "1b"),
         condition_pair=ConditionPair(homogeneous_id=homo_id, heterogeneous_id=hetero_id),
         seeds=seeds,
         episode_results=results,

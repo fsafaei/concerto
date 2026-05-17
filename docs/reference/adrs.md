@@ -21,5 +21,6 @@ directory of this repository.
 | ADR-013 | Real-robot platform | Pending |
 | ADR-014 | Safety reporting format | Accepted |
 | ADR-015 | Task tier scope | Pending |
+| ADR-016 | SpikeRun schema lifecycle (Stage 1a / 1b disambiguation) | Accepted |
 
 For full text see the `adr/` directory.

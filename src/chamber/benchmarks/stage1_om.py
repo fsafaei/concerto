@@ -427,6 +427,14 @@ def _run_axis_with_factories(
         prereg_sha=prereg_sha,
         git_tag=prereg.git_tag,
         axis=_AXIS,
+        # ADR-007 §Stage 1a + ADR-016 §Decision: the OM adapter ships
+        # against the Phase-0 MPE stand-in (no real ≥20 pp gate
+        # measurement). The Stage-1b adapter (Phase 1, real ManiSkill
+        # obs-modality factory) will stamp ``sub_stage="1b"`` at the
+        # same construction site once it lands. The summarizer routes
+        # off this field directly (no metadata-dict fallback per
+        # ADR-016).
+        sub_stage="1a",
         condition_pair=condition_pair,
         seeds=list(prereg.seeds),
         episode_results=episode_results,
