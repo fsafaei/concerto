@@ -99,7 +99,7 @@ from chamber.benchmarks.stage1_common import (
     _zero_ego_action_factory,
 )
 from chamber.envs.mpe_cooperative_push import MPECooperativePushEnv
-from chamber.evaluation.prereg import PreregistrationSpec, load_prereg
+from chamber.evaluation.prereg import PreregistrationSpec, load_prereg, verify_git_tag
 from chamber.evaluation.results import EpisodeResult, SpikeRun
 from chamber.partners.api import PartnerSpec
 from chamber.partners.heuristic import ScriptedHeuristicPartner
@@ -299,15 +299,32 @@ def run_axis(args: argparse.Namespace) -> SpikeRun:
     if args.axis != _AXIS:
         msg = f"stage1_om.run_axis: expected axis={_AXIS!r}, got {args.axis!r}"
         raise ValueError(msg)
+    spec, prereg_path = _load_canonical_prereg()
+    # ADR-007 §Discipline: the SpikeRun MUST carry the verified blob
+    # SHA of the locked pre-registration YAML, so the audit chain
+    # closes. ``verify_git_tag`` raises ``PreregistrationError`` on
+    # any tag-mismatch / file-outside-repo / missing-tag condition,
+    # which is exactly the loud-fail the discipline rule wants — do
+    # not catch it here. The ``TestStage1OMPreregDiscipline`` class
+    # in ``tests/integration/test_stage1_om_real.py`` is the
+    # regression pin.
+    prereg_sha = verify_git_tag(spec, prereg_path, repo_path=Path.cwd())
     return _run_axis_with_factories(
-        prereg=_load_canonical_prereg(),
+        prereg=spec,
+        prereg_sha=prereg_sha,
         env_factory=_default_env_factory,
         ego_action_factory=_zero_ego_action_factory,
     )
 
 
-def _load_canonical_prereg() -> PreregistrationSpec:
-    """Resolve and load ``spikes/preregistration/OM.yaml`` (plan/06 §6 #1)."""
+def _load_canonical_prereg() -> tuple[PreregistrationSpec, Path]:
+    """Resolve and load ``spikes/preregistration/OM.yaml`` (plan/06 §6 #1).
+
+    Returns the validated spec alongside the absolute ``prereg_path``
+    so the caller can verify the YAML's blob SHA against its tagged
+    blob via :func:`chamber.evaluation.prereg.verify_git_tag`
+    (ADR-007 §Discipline).
+    """
     here = Path.cwd()
     prereg_path = here / _PREREG_RELATIVE_PATH
     if not prereg_path.exists():
@@ -318,12 +335,13 @@ def _load_canonical_prereg() -> PreregistrationSpec:
             "repo root, or check out a commit that includes the file."
         )
         raise FileNotFoundError(msg)
-    return load_prereg(prereg_path)
+    return load_prereg(prereg_path), prereg_path
 
 
 def _run_axis_with_factories(
     *,
     prereg: PreregistrationSpec,
+    prereg_sha: str,
     env_factory: EnvFactory,
     ego_action_factory: EgoActionFactory,
 ) -> SpikeRun:
@@ -346,6 +364,12 @@ def _run_axis_with_factories(
 
     Args:
         prereg: The loaded :class:`PreregistrationSpec`.
+        prereg_sha: 40-char hex blob SHA of the pre-registration YAML
+            as stored at :attr:`PreregistrationSpec.git_tag`, returned
+            by :func:`chamber.evaluation.prereg.verify_git_tag`. Made
+            mandatory rather than defaulting to ``""`` so the empty-
+            sha foot-gun that produced the 2026-05-17 audit-trail
+            defect cannot reach production (ADR-007 §Discipline).
         env_factory: Callable returning the per-condition env;
             signature ``(condition_id, agent_uids, root_seed) -> gym.Env``.
         ego_action_factory: Stage-1 ego-action factory satisfying the
@@ -400,7 +424,7 @@ def _run_axis_with_factories(
 
     return SpikeRun(
         spike_id=f"stage1_om_{prereg.git_tag}",
-        prereg_sha="",  # filled in by the launch-time chamber-spike verify-prereg step
+        prereg_sha=prereg_sha,
         git_tag=prereg.git_tag,
         axis=_AXIS,
         condition_pair=condition_pair,
