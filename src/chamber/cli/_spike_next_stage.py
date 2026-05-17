@@ -27,6 +27,21 @@ the HRS scalar + vector). The paired-cluster bootstrap that produces
 ``ci_low_pp`` runs on the per-episode SpikeRun data; recomputing it
 here keeps the gate independent of any leaderboard caching.
 
+Stage metadata: the per-axis sub_stage label (``"1a"`` / ``"1b"`` /
+``"2"`` / ``"3"``) is read from the SpikeRun's
+:attr:`~chamber.evaluation.results.SpikeRun.sub_stage` field
+(ADR-016 §Decision). Stage-1a runs (rig validation only; the
+≥20 pp gate is not measured per ADR-007 §Stage 1a) are skipped with
+a stderr note; only Stage-1b (or Stage-2 / Stage-3) archives are
+gate-bearing. The skip is non-fatal when the input is a mix of 1a
+and 1b archives — the legitimate case right after Stage-1b lands
+and the maintainer invokes
+``--spike-runs spikes/results/stage1-*/spike_*.json``. When *every*
+prior-stage archive is Stage-1a, the gate exits with
+:data:`NEXT_STAGE_GATE_EXIT_CODE` and a specific "every Stage-N
+SpikeRun is Stage-1a" message — the closure for ADR-016 §Open
+questions named after the 2026-05-17 incident.
+
 Aggregator: the gate is enforced on the **IQM** of the resampled
 per-pair deltas (the bootstrap's ``ci_low``), matching ADR-008
 §Decision's rliable-style aggregate convention and
@@ -155,7 +170,37 @@ def run(args: argparse.Namespace) -> int:
             f"{ignored_axes}); these are out of scope for this gate.",
             file=sys.stderr,
         )
-    if not relevant:
+    # ADR-016 §Open questions + ADR-007 §Stage 1a: Stage-1a archives
+    # are rig validation only (the adapter ships with the always-zero
+    # ego by design); the >=20 pp gate is NOT measured under 1a.
+    # Including a 1a archive in the gate would bootstrap a synthetic
+    # gap against rig-validation data and could route Phase-1-launch
+    # decisions off it — the same class of mis-routing PR #152 closed
+    # for summarize-month3. Use the positive form so future sub-stages
+    # (e.g. a hypothetical "2a") stay opted-out by default.
+    gate_eligible = [r for r in relevant if r.sub_stage in {"1b", "2", "3"}]
+    skipped_1a = [r for r in relevant if r.sub_stage == "1a"]
+    if skipped_1a:
+        skipped_ids = sorted(r.spike_id for r in skipped_1a)
+        print(
+            f"chamber-spike next-stage: note -- skipping {len(skipped_1a)} "
+            f"Stage-1a SpikeRun(s) ({skipped_ids}); the >=20 pp gate is not "
+            "measured under Stage 1a (ADR-007 §Stage 1a; ADR-016 §Open "
+            "questions). Stage 1a is rig validation only; only Stage-1b "
+            "(sub_stage='1b') archives are gate-bearing.",
+            file=sys.stderr,
+        )
+    if not gate_eligible:
+        if skipped_1a and not [r for r in relevant if r.sub_stage != "1a"]:
+            print(
+                f"chamber-spike next-stage: FAIL -- every Stage-{args.prior_stage} "
+                "SpikeRun in --spike-runs is Stage-1a (rig validation; the >=20 pp "
+                "gate is not measured under Stage 1a per ADR-007 §Stage 1a). The "
+                "gate requires at least one sub_stage='1b' (or '2'/'3' for higher "
+                "stages) archive.",
+                file=sys.stderr,
+            )
+            return NEXT_STAGE_GATE_EXIT_CODE
         print(
             f"chamber-spike next-stage: FAIL -- no SpikeRun on the prior stage "
             f"({sorted(expected_axes)}) found among the {len(runs)} archive(s) "
@@ -167,7 +212,7 @@ def run(args: argparse.Namespace) -> int:
 
     rng = derive_substream("chamber.cli.next_stage.bootstrap", root_seed=args.seed).default_rng()
     results: list[tuple[str, float, float]] = []
-    for run_ in relevant:
+    for run_ in gate_eligible:
         pairs = build_paired_episodes(run_)
         if not pairs:
             print(
