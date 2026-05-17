@@ -113,9 +113,41 @@ class Bounds:
     Question #5) — a strategy-interfaced per-vendor handler slots in once
     Stage-3 SA resolves the open question.
 
+    **Known semantic inconsistency (2026-05-16; external-review P1-3):**
+    ``action_norm`` is consumed by two safety layers with mismatched
+    semantics. The exponential CBF-QP outer filter
+    (:class:`concerto.safety.cbf_qp.ExpCBFQP`) enforces it as a
+    per-component **L-infinity** bound (``|u_i[k]| <= action_norm`` for
+    every component ``k``). The Cartesian emergency controller
+    (:mod:`concerto.safety.emergency`, around line 174) reads it as an
+    **L2** magnitude cap on the emergency acceleration. For a ``d``-
+    dimensional action these are inconsistent: an action with
+    ``||u||_inf <= action_norm`` can have
+    ``||u||_2 ~ sqrt(d) * action_norm``. The CBF derivation may
+    therefore authorise an action the emergency fallback cannot deliver.
+    This is tracked as Phase-1 safety-critical work in ADR-004 §Open
+    questions (issue #146); the correct fix is to split ``Bounds`` into
+    two fields with explicit semantics (``action_linf_component`` +
+    ``cartesian_accel_capacity``). **Until the split lands, callers
+    should treat ``action_norm`` as the stricter L2 cap (i.e. set
+    ``action_norm = capacity / sqrt(d)``) so the emergency-fallback
+    constraint is preserved.**
+
+    The inconsistency is pinned by
+    ``tests/property/test_bounds_action_norm_inconsistency_documented.py``
+    with ``@pytest.mark.xfail(strict=True)`` so that when the field
+    split lands, the test flips from ``xfail`` to ``xpass`` and forces
+    a follow-up PR to remove the marker — a built-in regression flag
+    for the safety fix.
+
     Attributes:
-        action_norm: Maximum :math:`\lVert u \rVert_2` per agent, per task
-            (Wang-Ames-Egerstedt 2017 §IV per-pair budget input).
+        action_norm: **Deprecated semantics — see "Known semantic
+            inconsistency" above.** The current consumers split as:
+            ``ExpCBFQP`` reads this as per-component L-infinity; the
+            emergency controller reads it as an L2 magnitude cap. The
+            safe operator pattern is ``action_norm = capacity / sqrt(d)``
+            for ``d``-dim actions so both layers agree on the stricter
+            envelope. Removal/split target: tracked in issue #146.
         action_rate: Maximum :math:`\lVert u_k - u_{k-1} \rVert_2` per
             agent, per task. Bounds the actuator-rate slack the conformal
             CBF must remain feasible under (ADR-006 §Decision).

@@ -153,7 +153,15 @@ class CartesianAccelEmergencyController:
             pairwise_repulsion_vectors: At least one Cartesian unit
                 vector pointing away from each dangerous partner.
             bounds: Per-task :class:`Bounds`; ``bounds.action_norm`` is
-                the saturated output magnitude.
+                the saturated output magnitude. **Note: this is the L2
+                magnitude cap consumer of the field with the documented
+                L-infinity / L2 semantic inconsistency** (see
+                :class:`concerto.safety.api.Bounds` "Known semantic
+                inconsistency"; ADR-004 §Open questions; tracking
+                issue #146). Operators wanting the CBF-side and
+                emergency-side envelopes to agree should set
+                ``action_norm = capacity / sqrt(d)`` (where ``d`` is
+                the action dimension) until the field-split lands.
 
         Returns:
             Saturated Cartesian acceleration along the net push-apart
