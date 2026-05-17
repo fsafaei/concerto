@@ -28,7 +28,19 @@ build/
 dist/
 .DS_Store
 *.log
-spikes/results/
+# Local/scratch spike runs are gitignored — they're operator-side
+# experimentation, not part of the canonical experimental record.
+# Note: we ignore entries *inside* spikes/results/ rather than the
+# directory itself, because git will not descend into a fully-
+# excluded parent and the carve-out below would have no effect.
+spikes/results/*
+# Carve-out: canonical stage runs (Stage 1 / 2 / 3) are the
+# audit trail required by ADR-007 §Discipline. The result archives
+# under spikes/results/stageN-<AXIS>-<DATE>/ MUST be committed so
+# the per-axis SpikeRun JSONs are replayable from git. Renamed or
+# scratch-prefixed runs (e.g. spikes/results/debug-foo/) remain
+# ignored.
+!spikes/results/stage[1-3]-*/
 .local/
 sbom.spdx.json
 licences.json
