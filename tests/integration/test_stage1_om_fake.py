@@ -37,6 +37,13 @@ if TYPE_CHECKING:
 _REPO_ROOT = Path(__file__).resolve().parents[2]
 _OM_PREREG = _REPO_ROOT / "spikes" / "preregistration" / "OM.yaml"
 
+#: Placeholder prereg blob SHA for fake-env tests that don't exercise
+#: the ADR-007 §Discipline check. The real audit-chain pin lives in
+#: :class:`tests.integration.test_stage1_om_real.TestStage1OMPreregDiscipline`.
+#: Forty zeros mirrors the existing test convention in
+#: :mod:`tests.integration.test_evaluation_spine`.
+_STUB_PREREG_SHA: str = "0" * 40
+
 
 def _make_args(axis: str) -> argparse.Namespace:
     """Build a minimal argparse Namespace for run_axis."""
@@ -84,6 +91,7 @@ class TestStage1OMShapesMatchPrereg:
             prereg=prereg,
             env_factory=_fake_env_factory,
             ego_action_factory=_scripted_ego_action_factory,
+            prereg_sha=_STUB_PREREG_SHA,
         )
         assert run.axis == "OM"
 
@@ -92,6 +100,7 @@ class TestStage1OMShapesMatchPrereg:
             prereg=prereg,
             env_factory=_fake_env_factory,
             ego_action_factory=_scripted_ego_action_factory,
+            prereg_sha=_STUB_PREREG_SHA,
         )
         assert run.condition_pair.homogeneous_id == prereg.condition_pair.homogeneous_id
         assert run.condition_pair.heterogeneous_id == prereg.condition_pair.heterogeneous_id
@@ -101,6 +110,7 @@ class TestStage1OMShapesMatchPrereg:
             prereg=prereg,
             env_factory=_fake_env_factory,
             ego_action_factory=_scripted_ego_action_factory,
+            prereg_sha=_STUB_PREREG_SHA,
         )
         assert run.seeds == list(prereg.seeds)
 
@@ -110,6 +120,7 @@ class TestStage1OMShapesMatchPrereg:
             prereg=prereg,
             env_factory=_fake_env_factory,
             ego_action_factory=_scripted_ego_action_factory,
+            prereg_sha=_STUB_PREREG_SHA,
         )
         expected = len(prereg.seeds) * prereg.episodes_per_seed * 2
         assert len(run.episode_results) == expected
@@ -119,6 +130,7 @@ class TestStage1OMShapesMatchPrereg:
             prereg=prereg,
             env_factory=_fake_env_factory,
             ego_action_factory=_scripted_ego_action_factory,
+            prereg_sha=_STUB_PREREG_SHA,
         )
         assert run.git_tag == prereg.git_tag
         assert prereg.git_tag in run.spike_id
@@ -134,6 +146,7 @@ class TestStage1OMEpisodeMetadata:
             prereg=prereg,
             env_factory=_fake_env_factory,
             ego_action_factory=_scripted_ego_action_factory,
+            prereg_sha=_STUB_PREREG_SHA,
         )
         homo = prereg.condition_pair.homogeneous_id
         hetero = prereg.condition_pair.heterogeneous_id
@@ -145,6 +158,7 @@ class TestStage1OMEpisodeMetadata:
             prereg=prereg,
             env_factory=_fake_env_factory,
             ego_action_factory=_scripted_ego_action_factory,
+            prereg_sha=_STUB_PREREG_SHA,
         )
         homo = prereg.condition_pair.homogeneous_id
         hetero = prereg.condition_pair.heterogeneous_id
@@ -157,6 +171,7 @@ class TestStage1OMEpisodeMetadata:
             prereg=prereg,
             env_factory=_fake_env_factory,
             ego_action_factory=_scripted_ego_action_factory,
+            prereg_sha=_STUB_PREREG_SHA,
         )
         for ep in run.episode_results:
             assert "mean_reward" in ep.metadata
@@ -170,6 +185,7 @@ class TestStage1OMEpisodeMetadata:
             prereg=prereg,
             env_factory=_fake_env_factory,
             ego_action_factory=_scripted_ego_action_factory,
+            prereg_sha=_STUB_PREREG_SHA,
         )
         homo_id = prereg.condition_pair.homogeneous_id
         for s in prereg.seeds:
@@ -189,11 +205,13 @@ class TestStage1OMDeterminism:
             prereg=prereg,
             env_factory=_fake_env_factory,
             ego_action_factory=_scripted_ego_action_factory,
+            prereg_sha=_STUB_PREREG_SHA,
         )
         run_b = _run_axis_with_factories(
             prereg=prereg,
             env_factory=_fake_env_factory,
             ego_action_factory=_scripted_ego_action_factory,
+            prereg_sha=_STUB_PREREG_SHA,
         )
         assert run_a.model_dump_json() == run_b.model_dump_json()
 
@@ -236,6 +254,7 @@ class TestStage1OMConditionMapping:
                 prereg=bogus,
                 env_factory=_fake_env_factory,
                 ego_action_factory=_scripted_ego_action_factory,
+                prereg_sha=_STUB_PREREG_SHA,
             )
 
 
@@ -286,6 +305,7 @@ class TestStage1OMConditionDivergence:
             prereg=prereg,
             env_factory=_default_env_factory,
             ego_action_factory=_zero_ego_action_factory,
+            prereg_sha=_STUB_PREREG_SHA,
         )
         homo_id = prereg.condition_pair.homogeneous_id
         hetero_id = prereg.condition_pair.heterogeneous_id
@@ -344,6 +364,7 @@ class TestStage1OMEgoActionFactoryContract:
             prereg=prereg,
             env_factory=_fake_env_factory,
             ego_action_factory=_counting_factory,
+            prereg_sha=_STUB_PREREG_SHA,
         )
         expected = len(prereg.seeds) * 2
         assert len(call_log) == expected, (

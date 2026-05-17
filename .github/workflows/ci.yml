@@ -95,6 +95,17 @@ jobs:
         python-version: ["3.11", "3.12"]
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
+        with:
+          # ADR-007 §Discipline: Stage-1 adapters (and the real-env
+          # tests at tests/integration/test_stage1_{as,om}_real.py)
+          # call chamber.evaluation.prereg.verify_git_tag, which
+          # `git rev-parse`s pre-registration tags (e.g.
+          # prereg-stage1-AS-2026-05-15). Default checkout ships
+          # without tags, so without this the audit-chain pin would
+          # red-x CI as a tag-missing PreregistrationError. Fetching
+          # tags is cheap and matches the existing pattern below for
+          # verify-changelog-completeness.
+          fetch-tags: true
       - uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b  # v5.4.1
         with:
           python-version: ${{ matrix.python-version }}
@@ -107,6 +118,12 @@ jobs:
     needs: [test-unit, test-property, test-integration]
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
+        with:
+          # ADR-007 §Discipline: same rationale as test-integration —
+          # the unfiltered pytest collects tests/integration/test_stage1_*_real.py
+          # which call verify_git_tag, so the prereg tags MUST be
+          # present on the runner.
+          fetch-tags: true
       - uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b  # v5.4.1
         with:
           python-version: "3.11"

@@ -290,6 +290,152 @@ class TestBundleCompositionPhrase:
         assert "hold" in phrase.lower()
 
 
+class TestSummarizeMonth3FileDiscovery:
+    """File-discovery contract: read SpikeRun archives only; ignore sibling artefacts.
+
+    Per the module docstring of ``chamber.cli._spike_summarize_month3``:
+    the summarizer reads SpikeRun JSONs and not ``leaderboard.json``
+    because :class:`LeaderboardEntry` does not carry CI bounds. The
+    2026-05-17 maintainer triage caught a regression where the
+    discovery glob was the lenient ``*.json``, which made every
+    ``leaderboard.json`` produced by ``chamber-eval`` trip a noisy
+    13-field :class:`pydantic.ValidationError` against the
+    :class:`SpikeRun` schema. The fix constrains the glob to
+    ``spike_*.json`` so sibling artefacts are silently skipped.
+    """
+
+    def test_summarizer_ignores_leaderboard_json_in_results_dir(
+        self,
+        tmp_path,
+        capsys: pytest.CaptureFixture[str],
+    ) -> None:
+        """A ``leaderboard.json`` in the results dir is silently skipped.
+
+        Per Gap E design: ``summarize-month3`` reads SpikeRun archives
+        only. ``leaderboard.json`` belongs to ``chamber-eval``'s
+        PARTIAL-row consumer; feeding it to the summarizer triggered
+        SpikeRun ValidationError noise (2026-05-17 maintainer triage).
+        """
+        from chamber.cli.spike import main
+        from chamber.evaluation.results import (
+            ConditionPair,
+            EpisodeResult,
+            HRSVector,
+            HRSVectorEntry,
+            LeaderboardEntry,
+            SpikeRun,
+        )
+
+        results_dir = tmp_path / "results" / "stage1-AS-test"
+        results_dir.mkdir(parents=True)
+
+        # A minimal-but-valid SpikeRun archive. 1 seed, 2 paired
+        # episodes (one homo, one hetero) — enough for the pacluster
+        # bootstrap to construct pairs and emit a row.
+        spike_run = SpikeRun(
+            spike_id="stage1_as_test",
+            prereg_sha="0" * 40,
+            git_tag="prereg-stage1-AS-test",
+            axis="AS",
+            condition_pair=ConditionPair(
+                homogeneous_id="homo_id",
+                heterogeneous_id="hetero_id",
+            ),
+            seeds=[0],
+            episode_results=[
+                EpisodeResult(
+                    seed=0,
+                    episode_idx=0,
+                    initial_state_seed=0,
+                    success=True,
+                    metadata={"condition": "homo_id"},
+                ),
+                EpisodeResult(
+                    seed=0,
+                    episode_idx=0,
+                    initial_state_seed=0,
+                    success=False,
+                    metadata={"condition": "hetero_id"},
+                ),
+            ],
+        )
+        (results_dir / "spike_as.json").write_text(spike_run.model_dump_json(), encoding="utf-8")
+
+        # A leaderboard.json shaped per LeaderboardEntry — extra
+        # fields (method_id, spike_runs, hrs_vector, hrs_scalar,
+        # violation_rate, fallback_rate) and missing every SpikeRun
+        # required key. This is the exact shape ``chamber-eval``
+        # produces as a sibling artefact alongside SpikeRun archives.
+        leaderboard = LeaderboardEntry(
+            method_id="test-method",
+            spike_runs=["stage1_as_test"],
+            hrs_vector=HRSVector(
+                entries=[HRSVectorEntry(axis="AS", score=0.5, gap_pp=0.0, weight=1.0)]
+            ),
+            hrs_scalar=0.5,
+            violation_rate=0.0,
+            fallback_rate=0.0,
+        )
+        (results_dir / "leaderboard.json").write_text(
+            leaderboard.model_dump_json(), encoding="utf-8"
+        )
+
+        rc = main(
+            [
+                "summarize-month3",
+                "--results-dir",
+                str(tmp_path / "results"),
+            ]
+        )
+        assert rc == 0
+        captured = capsys.readouterr()
+
+        # The summarizer rendered a report and the planted spike_as.json
+        # was loaded (not the Missing-row fallback the renderer emits
+        # for an axis with no archive). The "Stage 1b (measured)"
+        # status cell is the load-bearing discriminator: it only
+        # renders for a loaded SpikeRun whose stage resolves to "1b"
+        # (the default for AS via ``_DEFAULT_STAGE_BY_AXIS``). A weaker
+        # ``"| AS |"`` assertion would silently pass even if the glob
+        # picked zero files, because the renderer emits a Missing row
+        # per axis in ``_AXIS_ORDER``.
+        assert "Stage 1b (measured)" in captured.out, (
+            "summarize-month3 did not render the AS row from the planted "
+            f"spike_as.json archive (Stage 1b status cell absent). stdout was: {captured.out!r}"
+        )
+
+        # The summarizer did NOT emit a parser-error stderr note for
+        # the leaderboard.json. The file is a sibling artefact, not a
+        # malformed SpikeRun, so the noisy "skipping … not a valid
+        # SpikeRun" stderr line is itself the regression we want to
+        # avoid (it would re-appear if the file-discovery glob fell
+        # back to ``*.json``).
+        assert "leaderboard.json" not in captured.err, (
+            "summarize-month3 surfaced leaderboard.json as a parser "
+            "error; the file-discovery glob should silently skip "
+            "non-SpikeRun sibling artefacts. stderr was: "
+            f"{captured.err!r}"
+        )
+
+        # Pin the underlying invariant directly: confirm a
+        # leaderboard.json is parseable as a LeaderboardEntry but
+        # NOT as a SpikeRun (i.e. the file-discovery glob is the
+        # only thing standing between us and a 13-field
+        # ValidationError). If this assertion fails, the
+        # LeaderboardEntry / SpikeRun schemas have converged and the
+        # glob constraint may be redundant — re-check.
+        with pytest.raises(ValueError, match="SpikeRun"):
+            SpikeRun.model_validate_json(
+                (results_dir / "leaderboard.json").read_text(encoding="utf-8")
+            )
+        LeaderboardEntry.model_validate_json(
+            (results_dir / "leaderboard.json").read_text(encoding="utf-8")
+        )
+
+        # Sanity: the planted spike_as.json round-trips as a SpikeRun.
+        SpikeRun.model_validate_json((results_dir / "spike_as.json").read_text(encoding="utf-8"))
+
+
 class TestSummarizeMonth3CLI:
     """``chamber-spike summarize-month3`` end-to-end (CLI dispatch + empty-dir path)."""
 

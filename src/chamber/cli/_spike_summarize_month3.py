@@ -102,6 +102,24 @@ _AXIS_ORDER: tuple[str, ...] = ("AS", "OM", "CR", "CM", "PF", "SA")
 #: gate-eligible stage.
 _GATELESS_STAGES: frozenset[str] = frozenset({"1a"})
 
+#: File-discovery glob for SpikeRun archives under ``--results-dir``.
+#:
+#: Constrained to ``spike_*.json`` rather than ``*.json`` so sibling
+#: artefacts produced alongside SpikeRuns by other tools (notably
+#: ``chamber-eval``'s ``leaderboard.json`` per ADR-008 §Decision) are
+#: silently skipped rather than being load-attempted as SpikeRuns and
+#: triggering a noisy 13-field :class:`pydantic.ValidationError`. The
+#: ``LeaderboardEntry`` schema in :mod:`chamber.evaluation.results`
+#: deliberately diverges from :class:`~chamber.evaluation.results.SpikeRun`
+#: (LeaderboardEntry carries the HRS bundle and aggregate rates;
+#: SpikeRun carries per-episode results and ADR-007 §Discipline
+#: provenance) — they are *not* interchangeable archives and the
+#: summarizer should consume only the latter. See the module docstring
+#: paragraph 1 ("we read SpikeRun JSONs and not ``leaderboard.json``")
+#: and the 2026-05-17 maintainer triage that closed the regression
+#: where the discovery glob had fallen back to ``*.json``.
+_SPIKE_RUN_GLOB: str = "spike_*.json"
+
 #: ADR-008 §Decision default headline HRS bundle. The fallbacks
 #: (Option A / Option B) are named in the same §Decision and surfaced
 #: by :func:`_adr_008_action` when the default is not composable.
@@ -570,8 +588,10 @@ def add_parser(sub: argparse._SubParsersAction) -> None:  # type: ignore[type-ar
         default=Path("spikes/results"),
         help=(
             "Root of the per-axis SpikeRun archive tree. The subcommand "
-            "recursively globs ``*.json`` and loads each as a SpikeRun "
-            "(invalid files are skipped with a stderr note)."
+            f"recursively globs ``{_SPIKE_RUN_GLOB}`` and loads each as "
+            "a SpikeRun; sibling artefacts (notably ``leaderboard.json``) "
+            "are silently skipped. Malformed SpikeRuns are reported on "
+            "stderr and skipped."
         ),
     )
     parser.add_argument(
@@ -609,7 +629,7 @@ def run(args: argparse.Namespace) -> int:
             file=sys.stderr,
         )
         return 2
-    spike_run_paths = sorted(results_dir.rglob("*.json"))
+    spike_run_paths = sorted(results_dir.rglob(_SPIKE_RUN_GLOB))
     results: list[_AxisResult] = []
     rng = derive_substream(
         "chamber.cli.summarize_month3.bootstrap", root_seed=args.seed
