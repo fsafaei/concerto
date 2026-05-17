@@ -13,23 +13,22 @@ Covers ADR-004 risk-mitigation #1 corrections:
    value.
 
 2. Embodiment dispatch via
-   :class:`concerto.safety.emergency.EmergencyController`. Unit test
-   wires the :class:`JacobianEmergencyController` placeholder and
-   asserts ``maybe_brake`` raises :class:`NotImplementedError` rather
-   than silently writing a Cartesian-shaped vector into a 7-vector
-   action slot.
+   :class:`concerto.safety.emergency.EmergencyController`. Integration
+   test wires the real :class:`JacobianEmergencyController`
+   (P1.02 Commit b) against a synthetic 7-DOF Jacobian fixture and
+   asserts ``maybe_brake`` returns a 7-vector override whose
+   Jacobian image is the saturated Cartesian target (up to the
+   damped-pseudoinverse residual).
 """
 
 from __future__ import annotations
-
-import re
 
 import numpy as np
 import pytest
 from hypothesis import HealthCheck, given, settings
 from hypothesis import strategies as st
 
-from concerto.safety.api import Bounds
+from concerto.safety.api import Bounds, JacobianControlModel
 from concerto.safety.braking import maybe_brake
 from concerto.safety.cbf_qp import AgentSnapshot
 from concerto.safety.emergency import (
@@ -189,38 +188,96 @@ def test_explicit_controllers_map_is_honoured() -> None:
     assert np.linalg.norm(override["uid_b"]) == pytest.approx(_bounds().cartesian_accel_capacity)
 
 
-def test_jacobian_emergency_controller_raises_with_expected_message() -> None:
-    """Placeholder fails loudly so 7-DOF uids do not silently corrupt actions.
+def test_jacobian_emergency_controller_routes_through_jacobian_control_model() -> None:
+    """7-DOF arm uid + Jacobian controller -> 7-vector override with bounded torques.
 
-    ADR-004 risk-mitigation #1 follow-up: until the Stage-1 AS spike
-    delivers the Jacobian-aware controller, a 7-DOF uid routed through
-    the braking fallback MUST raise rather than write a Cartesian-
-    shaped vector into a 7-vector action slot. This test wires the
-    placeholder and asserts the raise + message.
+    ADR-004 risk-mitigation #1 (P1.02): the real
+    :class:`JacobianEmergencyController` delegates the Cartesian-to-joint
+    map to a :class:`JacobianControlModel` collaborator, applies a
+    pre-transform Cartesian L2 cap at ``bounds.cartesian_accel_capacity``,
+    and a post-transform per-joint L-infinity clip at
+    ``bounds.action_linf_component``. This integration test wires a
+    synthetic constant Jacobian, routes the 7-DOF ``"arm"`` uid through
+    :func:`maybe_brake`, and asserts:
+
+    1. ``fired=True`` (the controller is dispatched, not skipped).
+    2. The arm override has shape ``(7,)`` (joint-torque control space,
+       not the 2-D Cartesian).
+    3. Every torque component is within
+       ``[-bounds.action_linf_component, +bounds.action_linf_component]``.
+    4. The Jacobian image of the override is parallel to the (single)
+       push-apart unit vector -- the kinematic right-inverse round-trip
+       holds up to the damped-pseudoinverse residual.
     """
+    # Synthetic 3-Cartesian-x-7-joint Jacobian: first three joints
+    # contribute to (x, y, z) linear motion, last four are identity-padded
+    # so the gram matrix is well-conditioned (no damping-driven residual).
+    jac = np.zeros((3, 7), dtype=np.float64)
+    jac[0, 0] = 1.0
+    jac[1, 1] = 1.0
+    jac[2, 2] = 1.0
+
+    arm_model = JacobianControlModel(
+        uid="arm",
+        action_dim=7,
+        position_dim=3,
+        jacobian_fn=lambda _state: jac,
+        damping=1e-3,
+        max_cartesian_accel_value=5.0,
+    )
+
+    # 3-D snapshots; the arm uses a position with a non-trivial z so the
+    # Jacobian image populates all three Cartesian axes.
     snaps = {
-        "arm": _snap(-0.05, 0.0, 1.0, 0.0),
-        "base": _snap(0.5, 0.0, -1.0, 0.0),
+        "arm": AgentSnapshot(
+            position=np.array([-0.05, 0.0, 0.1], dtype=np.float64),
+            velocity=np.array([1.0, 0.0, 0.0], dtype=np.float64),
+            radius=0.2,
+        ),
+        "base": AgentSnapshot(
+            position=np.array([0.5, 0.0, 0.1], dtype=np.float64),
+            velocity=np.array([-1.0, 0.0, 0.0], dtype=np.float64),
+            radius=0.2,
+        ),
     }
     proposed = {
-        # 7-DOF joint-torque action for the arm; 2-DOF base velocity.
         "arm": np.zeros(7, dtype=np.float64),
-        "base": np.zeros(2, dtype=np.float64),
+        "base": np.zeros(3, dtype=np.float64),
     }
     controllers = {
-        "arm": JacobianEmergencyController(),
+        "arm": JacobianEmergencyController(control_model=arm_model),
         "base": CartesianAccelEmergencyController(),
     }
-    with pytest.raises(
-        NotImplementedError,
-        match=re.escape(
-            "Jacobian-aware emergency override is a Stage-1 deliverable; "
-            "see ADR-004 risk-mitigation #1 follow-up."
-        ),
-    ):
-        maybe_brake(
-            proposed,
-            snaps,
-            bounds=_bounds(),
-            emergency_controllers=controllers,
-        )
+    bounds = _bounds(action_norm=5.0)
+    override, fired = maybe_brake(
+        proposed,
+        snaps,
+        bounds=bounds,
+        emergency_controllers=controllers,
+    )
+    assert fired is True
+    assert override is not None
+    arm_override = override["arm"]
+    # Assertion 2: 7-vector joint-torque shape.
+    assert arm_override.shape == (7,)
+    # Assertion 3: per-joint L-infinity clip honoured.
+    assert np.all(np.abs(arm_override) <= bounds.action_linf_component + 1e-9), (
+        f"per-joint clip violated: max |tau| = "
+        f"{np.max(np.abs(arm_override))}, cap = {bounds.action_linf_component}"
+    )
+    # Assertion 4: Jacobian image equals the saturated Cartesian target
+    # (damping is small + the Jacobian is well-conditioned, so the
+    # round-trip is exact to numerical precision). The single push-apart
+    # pair contributes ``+n_hat`` to the arm, scaled to magnitude
+    # ``cartesian_accel_capacity``; the realised Cartesian acceleration
+    # is ``J @ arm_override`` and should be parallel to ``+n_hat``.
+    realised_cart = jac @ arm_override
+    # Push-apart direction from arm (-0.05, 0, 0.1) -> away from base (0.5, 0, 0.1)
+    # is along -x (the arm is to the left of the base, push-apart unit
+    # vector points -x for the arm).
+    delta = snaps["arm"].position - snaps["base"].position
+    n_hat = delta / np.linalg.norm(delta)
+    expected_cart = n_hat * bounds.cartesian_accel_capacity
+    # Damped-pseudoinverse residual is O(damping^2 * cap / sigma_min^2)
+    # ~ O(1e-5) for this well-conditioned synthetic Jacobian.
+    np.testing.assert_allclose(realised_cart, expected_cart, atol=1e-4)

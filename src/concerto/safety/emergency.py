@@ -26,13 +26,21 @@ control-space override action. Two implementations ship in Phase-0:
   used in §V of Wang-Ames-Egerstedt 2017 and the Phase-0 smoke tests;
   **not** correct for 7-DOF arms.
 
-- :class:`JacobianEmergencyController` — a placeholder that raises
-  :class:`NotImplementedError`. The Jacobian-aware override for
-  manipulator embodiments is a Stage-1 deliverable flagged in ADR-007
-  §"Stage 1 — Foundation axes" AS spike scope (7-DOF arm vs 2-DOF
-  diff-drive base). The placeholder is wired in so 7-DOF uids fail
-  *loudly* at the fallback boundary rather than silently corrupting
-  actions; the gap is documented but not faked.
+- :class:`JacobianEmergencyController` — the manipulator-aware override.
+  Takes a :class:`~concerto.safety.api.JacobianControlModel` collaborator
+  at construction and delegates the Cartesian-to-joint transform to its
+  damped-pseudoinverse math (Nakamura & Hanafusa 1986 singularity-robust
+  right-inverse), giving single-source-of-truth with the outer CBF row
+  projection (``cbf_qp._agent_jacobian``). Saturation order: Cartesian
+  L2 cap ``bounds.cartesian_accel_capacity`` applies **before** the
+  Jacobian transform (operator-facing contract; matches the
+  ``AgentControlModel`` right-inverse Protocol promise); per-joint
+  L-infinity clip ``bounds.action_linf_component`` applies **after**
+  the transform (hardware-faithful; the damped J^+ minimises joint L2
+  norm, not L-infinity). The chamber-side wiring of a real Jacobian
+  (panda URDF or SAPIEN-side derivative) lands in P1.03
+  (``chamber.envs.stage1_pickplace``); P1.02 ships controller +
+  synthetic-Jacobian-fixture tests.
 
 The pairwise repulsion aggregation step is critical: prior to this
 module, :func:`maybe_brake` wrote one override per dangerous pair, and
@@ -51,7 +59,7 @@ from typing import TYPE_CHECKING, Protocol, runtime_checkable
 import numpy as np
 
 if TYPE_CHECKING:
-    from concerto.safety.api import Bounds, FloatArray
+    from concerto.safety.api import Bounds, FloatArray, JacobianControlModel
     from concerto.safety.cbf_qp import AgentSnapshot
 
 #: Numerical floor on the aggregate Cartesian repulsion norm. Below this
@@ -187,22 +195,81 @@ class CartesianAccelEmergencyController:
 
 
 class JacobianEmergencyController:
-    """Jacobian-aware emergency override placeholder (ADR-004 risk-mitigation #1).
+    """Jacobian-aware emergency override for manipulator embodiments (ADR-004 risk-mitigation #1).
 
-    7-DOF manipulator embodiments need a Cartesian-to-joint mapping
-    (typically ``J^T(q)`` or ``J^+(q)``, where ``J`` is the end-effector
-    Jacobian) to translate the aggregate repulsion into joint-space
-    torques or velocity setpoints. That mapping requires the same
-    full-dynamics model the OSCBF inner filter consumes (Morton & Pavone
-    2025), so its arrival is sequenced with the Stage-1 AS spike scope
-    in ADR-007 (7-DOF arm vs 2-DOF diff-drive base).
+    7-DOF manipulator embodiments need a Cartesian-to-joint mapping to
+    translate the aggregate Cartesian repulsion into joint-space
+    torques. This controller delegates the kinematic transform to a
+    :class:`~concerto.safety.api.JacobianControlModel` collaborator
+    supplied at construction, giving single-source-of-truth with the
+    outer CBF row projection (``cbf_qp._agent_jacobian`` routes the
+    constraint coefficient through the same model). The math is
+    Nakamura & Hanafusa 1986's damped-least-squares pseudo-inverse
+    ``J^+ = J^T (J J^T + damping^2 I)^{-1}``, singularity-robust for
+    near-singular configurations.
 
-    The placeholder exists so the embodiment dispatch is wired in M3 and
-    7-DOF uids fail *loudly* at the fallback boundary rather than
-    silently corrupting joint commands with a Cartesian-shaped write.
-    Stage-1 lands the real Jacobian-aware controller; the public API of
-    this class is the contract that controller must satisfy.
+    Saturation order (Plan-subagent design pass; P1.02):
+
+    1. **Aggregate** the per-pair Cartesian repulsion unit vectors
+       (same as :class:`CartesianAccelEmergencyController`); below
+       :data:`_AGGREGATE_NORM_FLOOR` the direction is ill-defined and
+       the controller returns a zero joint vector.
+    2. **Cartesian L2 cap before transform** -- scale the aggregate
+       to magnitude ``bounds.cartesian_accel_capacity``. The
+       operator-facing L2 contract (matches the
+       ``AgentControlModel.cartesian_accel_to_action`` right-inverse
+       Protocol promise) is honoured at the input boundary so the
+       Cartesian magnitude the CBF derivation reasoned about and the
+       magnitude the emergency stage actually delivers agree.
+    3. **Jacobian transform** -- delegate to
+       ``control_model.cartesian_accel_to_action(state, cartesian)``.
+       The damped-pseudoinverse math is reused, not duplicated.
+    4. **Per-joint L-infinity clip after transform** -- element-wise
+       clip the resulting joint torques to
+       ``[-bounds.action_linf_component, +bounds.action_linf_component]``.
+       Hardware-faithful (panda joint torque envelopes are per-joint;
+       the damped J^+ minimises joint L2 norm, not L-infinity, so a
+       Cartesian-feasible target near certain poses can still demand
+       torques that exceed a joint's limit). The scalar
+       ``action_linf_component`` is the **homogeneous per-joint
+       envelope** for the embodiment; per-joint heterogeneous
+       envelopes (e.g. the panda's (87, 87, 87, 87, 12, 12, 12) Nm
+       URDF row) are a Phase-1 follow-up (extend ``Bounds`` with an
+       optional per-joint vector; out of scope for P1.02).
+
+    The chamber-side wiring (constructing a
+    :class:`~concerto.safety.api.JacobianControlModel` with a real
+    panda Jacobian from the SAPIEN ManiSkill v3 env) lives in P1.03
+    (``chamber.envs.stage1_pickplace``); P1.02 tests against a
+    synthetic Jacobian fixture (see
+    ``tests/unit/test_jacobian_emergency_controller.py``).
+
+    Attributes:
+        control_model: The :class:`JacobianControlModel` collaborator
+            carrying the per-uid ``jacobian_fn``, ``action_dim``,
+            ``position_dim``, and damping factor. Same instance the
+            outer CBF row projection uses, so the Jacobian definition
+            (frame, sign convention, units) is configured once at
+            chamber-side wiring time.
     """
+
+    def __init__(self, *, control_model: JacobianControlModel) -> None:
+        """Build the Jacobian-aware controller (ADR-004 risk-mitigation #1; P1.02).
+
+        Args:
+            control_model: A configured
+                :class:`~concerto.safety.api.JacobianControlModel`
+                with a non-``None`` ``jacobian_fn``. The fallback
+                math (``cartesian_accel_to_action``) is delegated to
+                this instance, so the same kinematic convention the
+                outer CBF uses is what the emergency stage applies.
+                The pyright-strict type annotation is the loud-fail
+                contract; dynamic callers that pass ``None`` will
+                raise ``AttributeError`` on the first
+                ``self._control_model.action_dim`` access in
+                :meth:`compute_override`.
+        """
+        self._control_model = control_model
 
     def compute_override(
         self,
@@ -210,24 +277,49 @@ class JacobianEmergencyController:
         pairwise_repulsion_vectors: list[FloatArray],
         bounds: Bounds,
     ) -> FloatArray:
-        """Raise :class:`NotImplementedError` (ADR-004 risk-mitigation #1).
+        """Aggregate -> Cartesian-cap -> damped J^+ -> per-joint clip (ADR-004 risk-mitigation #1).
+
+        See the class docstring for the saturation order rationale.
 
         Args:
-            agent_state: Ignored; the placeholder never inspects state.
-            pairwise_repulsion_vectors: Ignored.
-            bounds: Ignored.
+            agent_state: This uid's :class:`AgentSnapshot`. Passed
+                verbatim to ``control_model.cartesian_accel_to_action``;
+                the Jacobian callable consumes whatever the chamber-side
+                wiring populates (joint positions for a panda, etc.).
+            pairwise_repulsion_vectors: Cartesian unit vectors pointing
+                away from each dangerous partner.
+            bounds: Per-task :class:`Bounds`;
+                ``bounds.cartesian_accel_capacity`` caps the pre-transform
+                Cartesian magnitude; ``bounds.action_linf_component`` caps
+                the post-transform per-joint torque magnitude.
 
-        Raises:
-            NotImplementedError: Always. The Stage-1 AS spike delivers
-                the real Jacobian-aware controller; until then 7-DOF
-                uids must not be routed through the braking fallback.
+        Returns:
+            Joint-space override of shape ``(control_model.action_dim,)``,
+            dtype ``float64``. Zero vector when the aggregate cancels.
         """
-        del agent_state, pairwise_repulsion_vectors, bounds
-        msg = (
-            "Jacobian-aware emergency override is a Stage-1 deliverable; "
-            "see ADR-004 risk-mitigation #1 follow-up."
+        if not pairwise_repulsion_vectors:
+            return np.zeros(self._control_model.action_dim, dtype=np.float64)
+
+        aggregate = np.sum(
+            np.stack(pairwise_repulsion_vectors, axis=0).astype(np.float64, copy=False),
+            axis=0,
         )
-        raise NotImplementedError(msg)
+        norm = float(np.linalg.norm(aggregate))
+        if norm < _AGGREGATE_NORM_FLOOR:
+            return np.zeros(self._control_model.action_dim, dtype=np.float64)
+
+        # Step 2: Cartesian L2 cap before the Jacobian transform.
+        cartesian_target = (aggregate / norm) * bounds.cartesian_accel_capacity
+
+        # Step 3: damped-pseudoinverse via the shared JacobianControlModel.
+        joint_torques = self._control_model.cartesian_accel_to_action(agent_state, cartesian_target)
+
+        # Step 4: per-joint L-infinity clip after the transform.
+        return np.clip(
+            joint_torques,
+            -bounds.action_linf_component,
+            +bounds.action_linf_component,
+        ).astype(np.float64, copy=False)
 
 
 __all__ = [
