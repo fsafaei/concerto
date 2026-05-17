@@ -191,6 +191,12 @@ def run(args: argparse.Namespace) -> int:
             file=sys.stderr,
         )
     if not gate_eligible:
+        # The inner non-"1a" check is structurally redundant today
+        # (SubStage is Literal-closed over {"1a","1b","2","3"} and the
+        # outer guard already excludes 1b/2/3) but kept explicit so a
+        # future sub-stage like "2a" falls through to the generic "no
+        # SpikeRun on the prior stage" message below instead of the
+        # 1a-specific one.
         if skipped_1a and not [r for r in relevant if r.sub_stage != "1a"]:
             print(
                 f"chamber-spike next-stage: FAIL -- every Stage-{args.prior_stage} "
