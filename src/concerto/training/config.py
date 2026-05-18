@@ -64,16 +64,29 @@ class EnvConfig(_FrozenModel):
         task: Registered task name. Phase-0 supports ``"mpe_cooperative_push"``
             (T4b.13's empirical-guarantee env) and ``"stage0_smoke"``
             (T4b.14's zoo-seed env, deferred to user-side GPU run).
+            P1.04 adds ``"stage1_pickplace"`` (ADR-007 §Stage 1b real-env
+            science-evaluation target).
         episode_length: Truncation horizon in env ticks. The empirical-
             guarantee experiment defaults to 50 (matches PettingZoo
             simple_spread).
         agent_uids: 2-element list of uids the env exposes; the first is
             the ego, the second is the frozen partner.
+        condition_id: Stage-1b pre-registered condition_id string
+            (P1.04 / ADR-007 §Stage 1b). Required when
+            ``task == "stage1_pickplace"`` because OM-homo and
+            OM-hetero share the ``("panda_wristcam", "fetch")``
+            agent_uids tuple — the condition_id is the explicit
+            disambiguator. The yaml carries a sensible default;
+            :class:`chamber.benchmarks.stage1_common.TrainedPolicyFactory`
+            overrides per ``(seed, condition)`` cell via
+            ``model_copy``. ``None`` for non-Stage-1b tasks (MPE,
+            Stage-0) — pre-P1.04 cfgs work unchanged.
     """
 
     task: str
     episode_length: int = Field(default=50, gt=0)
     agent_uids: tuple[str, str] = ("ego", "partner")
+    condition_id: str | None = None
 
     @field_validator("agent_uids", mode="before")
     @classmethod

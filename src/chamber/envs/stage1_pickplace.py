@@ -849,6 +849,37 @@ def make_stage1_pickplace_env(
             """The resolved :class:`ConditionConfig` for read-only consumers (ADR-007 §Stage 1b)."""
             return self._condition_config
 
+        @property
+        def ego_uid(self) -> str:
+            """ADR-007 §Stage 1b: the ego uid for the active condition.
+
+            First element of :attr:`ConditionConfig.agent_uids` by the
+            Phase-0 ``_CONDITION_UIDS`` convention. Consumed by the
+            Phase-1 :class:`chamber.benchmarks.stage1_common.TrainedPolicyFactory`
+            (P1.04) so the factory can read the ego uid from the env
+            rather than from a side-table — single source of truth at
+            the env layer.
+            """
+            return self._condition_config.agent_uids[0]
+
+        @property
+        def partner_uid(self) -> str:
+            """ADR-007 §Stage 1b: the partner uid for the active condition.
+
+            Second element of :attr:`ConditionConfig.agent_uids` (the
+            ego is the first; the partner is the second by the Phase-0
+            ``_CONDITION_UIDS`` convention from
+            :mod:`chamber.benchmarks.stage1_as` /
+            :mod:`chamber.benchmarks.stage1_om`). Consumed by the
+            Phase-1 :class:`chamber.benchmarks.stage1_common.TrainedPolicyFactory`
+            (P1.04) to route the per-condition partner-stack dispatch
+            (``panda_partner`` for AS-homo; ``fetch`` for AS-hetero /
+            OM-*). Single source of truth at the env layer — future
+            Stage-2/3 envs (P1.06+) follow the same property contract
+            without needing a factory-side dispatch table.
+            """
+            return self._condition_config.agent_uids[1]
+
         def build_control_models(self) -> Mapping[str, AgentControlModel]:
             """Return per-uid :class:`AgentControlModel` map (ADR-004 §Decision).
 

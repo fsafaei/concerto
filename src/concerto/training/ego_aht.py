@@ -35,7 +35,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Protocol, runtime_checkable
+from typing import TYPE_CHECKING, Any, NamedTuple, Protocol, runtime_checkable
 
 import numpy as np
 
@@ -239,6 +239,41 @@ class RewardCurve:
     checkpoint_paths: list[Path] = field(default_factory=list)
 
 
+class TrainingResult(NamedTuple):
+    """Return value of :func:`train` and :func:`chamber.benchmarks.training_runner.run_training`.
+
+    Pairs the diagnostic reward stream (:class:`RewardCurve`) with the
+    trained ego policy (:class:`EgoTrainer`) so Phase-1 callers like
+    :class:`chamber.benchmarks.stage1_common.TrainedPolicyFactory`
+    (P1.04 / ADR-007 §Stage 1b) can wrap ``result.trainer.act`` in a
+    per-step closure without paying a checkpoint round-trip cost. The
+    trainer's internal state (HARL HAPPO actor + critic + optimisers)
+    survives :func:`train`'s scope through this return value rather
+    than being reloaded from disk.
+
+    NamedTuple (not a bare ``tuple[RewardCurve, EgoTrainer]``) so call
+    sites use the field names — ``result.curve`` /
+    ``result.trainer`` — instead of positional indexing. Tuple-unpack
+    still works (``curve, trainer = run_training(cfg)``) for callers
+    that prefer it.
+
+    Attributes:
+        curve: The diagnostic per-step + per-episode reward stream
+            T4b.13's empirical-guarantee assertion runs over. Same
+            shape as before P1.04 — this NamedTuple is a wrapper, not
+            a replacement.
+        trainer: The trained :class:`EgoTrainer` instance, with the
+            HARL HAPPO actor weights at their post-training state. Use
+            ``trainer.act(obs, deterministic=True)`` for evaluation
+            rollouts. When :func:`train` is called without a
+            ``trainer_factory`` (Phase-0 reference path), this is the
+            :class:`RandomEgoTrainer` fallback (parameter-free).
+    """
+
+    curve: RewardCurve
+    trainer: EgoTrainer
+
+
 class RandomEgoTrainer:
     """Reference :class:`EgoTrainer` that samples uniformly from the action space.
 
@@ -306,13 +341,22 @@ def train(
     partner: PartnerLike,
     trainer_factory: TrainerFactory | None = None,
     repo_root: Path | None = None,
-) -> RewardCurve:
+) -> TrainingResult:
     """Run one ego-AHT training loop (T4b.11; ADR-002 §Decisions; plan/05 §3.5).
 
     Wires up logging, seeding, per-step rollout, checkpoint emission, and
-    the trainer-factory seam. Returns a :class:`RewardCurve` for the
-    empirical-guarantee test (T4b.13) and for the user-side T4b.14
-    zoo-seed run.
+    the trainer-factory seam. Returns a :class:`TrainingResult` (P1.04 /
+    ADR-007 §Stage 1b) carrying both the diagnostic
+    :class:`RewardCurve` and the trained :class:`EgoTrainer` instance,
+    so Phase-1 callers (notably
+    :class:`chamber.benchmarks.stage1_common.TrainedPolicyFactory`) can
+    wrap ``result.trainer.act`` in a per-cell closure without paying
+    a checkpoint round-trip.
+
+    The pre-P1.04 return type was the bare :class:`RewardCurve`; the
+    NamedTuple wrapper is backward-compatible at the tuple-unpack level
+    (``curve, trainer = train(...)``) but reads more cleanly at named
+    call sites (``result.curve`` / ``result.trainer``).
 
     Args:
         cfg: Validated :class:`~concerto.training.config.EgoAHTConfig`.
@@ -334,8 +378,11 @@ def train(
             (defaults to :func:`pathlib.Path.cwd`).
 
     Returns:
-        :class:`RewardCurve` carrying per-step + per-episode ego rewards
-        and the list of saved checkpoint paths.
+        :class:`TrainingResult` NamedTuple carrying ``curve`` (the
+        :class:`RewardCurve` with per-step + per-episode ego rewards
+        and saved checkpoint paths) and ``trainer`` (the trained
+        :class:`EgoTrainer` instance whose ``act`` method evaluation
+        rollouts wrap).
     """
     repo_root = repo_root or Path.cwd()
     ctx = compute_run_metadata(
@@ -448,7 +495,7 @@ def train(
         n_episodes=len(curve.per_episode_ego_rewards),
         n_checkpoints=len(curve.checkpoint_paths),
     )
-    return curve
+    return TrainingResult(curve=curve, trainer=trainer)
 
 
 def _save_run_checkpoint(
@@ -486,5 +533,6 @@ __all__ = [
     "RandomEgoTrainer",
     "RewardCurve",
     "TrainerFactory",
+    "TrainingResult",
     "train",
 ]

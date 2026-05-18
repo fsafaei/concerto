@@ -137,14 +137,16 @@ class TestRunTrainingEndToEnd:
     def test_run_training_produces_reward_curve(self, tmp_path: Path) -> None:
         """T4b.11: end-to-end run wires env + partner + train()."""
         cfg = _tiny_cfg(tmp_path, total_frames=50)
-        curve = run_training(cfg, repo_root=tmp_path)
-        assert isinstance(curve, RewardCurve)
-        assert len(curve.per_step_ego_rewards) == 50
+        result = run_training(cfg, repo_root=tmp_path)
+        # P1.04 / ADR-007 §Stage 1b: run_training returns TrainingResult
+        # NamedTuple — curve + trained EgoTrainer.
+        assert isinstance(result.curve, RewardCurve)
+        assert len(result.curve.per_step_ego_rewards) == 50
 
     def test_run_training_emits_checkpoint(self, tmp_path: Path) -> None:
         """T4b.12: the chamber-side runner produces .pt + sidecar artefacts."""
         cfg = _tiny_cfg(tmp_path, total_frames=50)
-        curve = run_training(cfg, repo_root=tmp_path)
+        curve = run_training(cfg, repo_root=tmp_path).curve
         assert len(curve.checkpoint_paths) == 1
         ckpt = curve.checkpoint_paths[0]
         assert ckpt.exists()
@@ -159,8 +161,8 @@ class TestRunTrainingEndToEnd:
         """
         cfg_a = _tiny_cfg(tmp_path / "a", total_frames=40)
         cfg_b = _tiny_cfg(tmp_path / "b", total_frames=40)
-        curve_a = run_training(cfg_a, repo_root=tmp_path)
-        curve_b = run_training(cfg_b, repo_root=tmp_path)
+        curve_a = run_training(cfg_a, repo_root=tmp_path).curve
+        curve_b = run_training(cfg_b, repo_root=tmp_path).curve
         assert curve_a.per_step_ego_rewards == curve_b.per_step_ego_rewards
 
 

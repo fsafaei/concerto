@@ -116,7 +116,10 @@ def _train_command(
 ) -> int:
     """Run training + optional guarantee check (M4b-9b; ADR-002 §Decisions)."""
     cfg = load_config(config_path=config_path, overrides=overrides)
-    curve = run_training(cfg)
+    # P1.04 / ADR-007 §Stage 1b: run_training returns TrainingResult
+    # (NamedTuple of curve + trained EgoTrainer); CLI only consumes the
+    # curve here.
+    curve = run_training(cfg).curve
     rewards = list(curve.per_episode_ego_rewards)
     tail = rewards[-_SUMMARY_WINDOW:] if rewards else []
     mean_tail = sum(tail) / len(tail) if tail else 0.0

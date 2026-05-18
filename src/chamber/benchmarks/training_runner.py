@@ -21,7 +21,8 @@ Public surface:
   via :func:`chamber.partners.registry.load_partner` (ADR-009 §Decision).
 - :func:`run_training` — the end-to-end entry point: builds env, builds
   partner, calls :func:`concerto.training.ego_aht.train`, returns the
-  :class:`~concerto.training.ego_aht.RewardCurve`.
+  :class:`~concerto.training.ego_aht.TrainingResult` (P1.04 NamedTuple
+  wrapping the :class:`RewardCurve` + trained :class:`EgoTrainer`).
 
 ADR-002 §Decisions / plan/05 §3.5: this module is the natural home for
 the env-task → env-class dispatch table; concrete env classes live
@@ -41,7 +42,7 @@ from chamber.envs.mpe_cooperative_push import MPECooperativePushEnv
 from chamber.partners.api import PartnerSpec
 from chamber.partners.registry import load_partner
 from concerto.safety.api import AgentControlModel, DoubleIntegratorControlModel
-from concerto.training.ego_aht import EnvLike, PartnerLike, RewardCurve, train
+from concerto.training.ego_aht import EnvLike, PartnerLike, TrainingResult, train
 
 if TYPE_CHECKING:  # pragma: no cover
     from collections.abc import Mapping
@@ -54,17 +55,24 @@ if TYPE_CHECKING:  # pragma: no cover
 def build_env(env_cfg: EnvConfig, *, root_seed: int) -> EnvLike:
     """Construct the env from :class:`EnvConfig` (T4b.11; ADR-002 §Decisions; plan/05 §3.5).
 
-    Phase-0 dispatch table:
+    Dispatch table:
 
     - ``"mpe_cooperative_push"`` → :class:`MPECooperativePushEnv` (T4b.13's
-      empirical-guarantee env).
+      empirical-guarantee env; Phase-0 stand-in).
     - ``"stage0_smoke"`` → :func:`chamber.benchmarks.stage0_smoke_adapter.make_stage0_training_env`
       (T4b.3 / plan/05 §3.4). Constructs the rig-validated ADR-001
       3-robot env and adapts it to the
       :class:`~concerto.training.ego_aht.EnvLike` shape. Requires a
-      Vulkan-capable GPU; raises
-      :class:`chamber.envs.errors.ChamberEnvCompatibilityError` on
-      CPU-only hosts.
+      Vulkan-capable GPU.
+    - ``"stage1_pickplace"`` → :func:`chamber.envs.stage1_pickplace.make_stage1_pickplace_env`
+      (P1.04 / ADR-007 §Stage 1b). The Stage-1b science-evaluation env;
+      panda + fetch / panda + panda_partner tuple. ``EnvConfig.agent_uids``
+      drives the per-condition selection
+      (:func:`chamber.envs.stage1_pickplace.resolve_condition` resolves
+      via the prereg-driven ``condition_id`` table).
+      :class:`TrainedPolicyFactory` invokes this dispatch from its
+      ``__call__`` body through the chamber-side
+      :func:`run_training` wrapper. Requires SAPIEN + Vulkan.
 
     Args:
         env_cfg: The validated :class:`~concerto.training.config.EnvConfig`.
@@ -78,8 +86,9 @@ def build_env(env_cfg: EnvConfig, *, root_seed: int) -> EnvLike:
 
     Raises:
         ValueError: If ``env_cfg.task`` is not in the dispatch table.
-        ChamberEnvCompatibilityError: If ``env_cfg.task == "stage0_smoke"``
-            and SAPIEN / Vulkan is unavailable (see ADR-001 §Risks).
+        ChamberEnvCompatibilityError: If a SAPIEN-backed env
+            (``stage0_smoke`` / ``stage1_pickplace``) is requested and
+            SAPIEN / Vulkan is unavailable (see ADR-001 §Risks).
     """
     if env_cfg.task == "mpe_cooperative_push":
         return MPECooperativePushEnv(
@@ -93,8 +102,46 @@ def build_env(env_cfg: EnvConfig, *, root_seed: int) -> EnvLike:
             episode_length=env_cfg.episode_length,
             root_seed=root_seed,
         )
+    if env_cfg.task == "stage1_pickplace":
+        # Lazy import to keep build_env Tier-1-safe — the Stage-1b env
+        # defers ManiSkill / SAPIEN imports to its own factory body
+        # (ADR-007 §Stage 1b; Tier-1 import-safety on Vulkan-less hosts).
+        from chamber.envs.stage1_pickplace import (
+            make_stage1_pickplace_env,
+        )
+
+        # The condition_id is required for Stage-1b; the OM-homo vs
+        # OM-hetero conditions share the same agent_uids tuple
+        # ("panda_wristcam", "fetch"), so the tuple alone is insufficient
+        # to disambiguate. EnvConfig.condition_id (P1.04) is the explicit
+        # disambiguator: the cfg yaml sets a default; the
+        # TrainedPolicyFactory overrides per call from env.condition_id.
+        if env_cfg.condition_id is None:
+            msg = (
+                "build_env: task='stage1_pickplace' requires "
+                "EnvConfig.condition_id to be set (one of the four "
+                "Stage-1 prereg condition_id strings; see "
+                "chamber.envs.stage1_pickplace.resolve_condition). The "
+                "cfg yaml's env.condition_id field carries a default; "
+                "TrainedPolicyFactory overrides per cell."
+            )
+            raise ValueError(msg)
+        # make_stage1_pickplace_env returns gym.Env[Any, Any]; pyright
+        # can't verify the structural EnvLike Protocol from that opaque
+        # type. The Stage1PickPlaceEnv class (defined inside the factory
+        # body) satisfies EnvLike at runtime (the class has the right
+        # reset / step signatures); pin via cast so the dispatch typechecks.
+        return cast(
+            "EnvLike",
+            make_stage1_pickplace_env(
+                condition_id=env_cfg.condition_id,
+                episode_length=env_cfg.episode_length,
+                root_seed=root_seed,
+            ),
+        )
     raise ValueError(
-        f"Unknown env task {env_cfg.task!r}; supported: 'mpe_cooperative_push', 'stage0_smoke'."
+        f"Unknown env task {env_cfg.task!r}; supported: "
+        "'mpe_cooperative_push', 'stage0_smoke', 'stage1_pickplace'."
     )
 
 
@@ -133,7 +180,7 @@ def run_training(
     *,
     trainer_factory: TrainerFactory | None = None,
     repo_root: Path | None = None,
-) -> RewardCurve:
+) -> TrainingResult:
     """Build env + partner and run the ego-AHT training loop (T4b.11; ADR-002 §Decisions).
 
     Drives :func:`concerto.training.ego_aht.train` with the chamber-side
@@ -146,6 +193,17 @@ def run_training(
     :class:`~concerto.training.ego_aht.RandomEgoTrainer` (test fixtures,
     smoke runs) must construct it and pass it in.
 
+    Returns a :class:`~concerto.training.ego_aht.TrainingResult` NamedTuple
+    (P1.04 / ADR-007 §Stage 1b) carrying both the diagnostic
+    :class:`~concerto.training.ego_aht.RewardCurve` and the trained
+    :class:`~concerto.training.ego_aht.EgoTrainer` instance. The trainer
+    is exposed alongside the curve so Phase-1 callers
+    (:class:`chamber.benchmarks.stage1_common.TrainedPolicyFactory`) can
+    wrap ``result.trainer.act`` in a per-cell closure without paying a
+    checkpoint round-trip cost. Pre-P1.04 the return type was the bare
+    :class:`RewardCurve`; the NamedTuple wrapper is backward-compatible
+    at the tuple-unpack level (``curve, trainer = run_training(cfg)``).
+
     Args:
         cfg: Validated :class:`~concerto.training.config.EgoAHTConfig`.
         trainer_factory: Optional :class:`~concerto.training.ego_aht.TrainerFactory`.
@@ -155,7 +213,9 @@ def run_training(
         repo_root: Working-tree root for run-metadata provenance.
 
     Returns:
-        :class:`~concerto.training.ego_aht.RewardCurve`.
+        :class:`~concerto.training.ego_aht.TrainingResult` —
+        ``result.curve`` is the :class:`RewardCurve`; ``result.trainer``
+        is the trained :class:`EgoTrainer` instance.
 
     Raises:
         ValueError: If the env task is unknown.
