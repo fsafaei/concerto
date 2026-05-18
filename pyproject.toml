@@ -75,7 +75,7 @@ viz = ["matplotlib>=3.9", "seaborn>=0.13.2"]
 # under pandas 3.0 (deprecate_kwarg signature change).
 eval = [
   "rliable>=1.0,<2.0",
-  "pandas>=1.4,<3.0",
+  "pandas>=1.4,<4.0",
 ]
 
 [project.scripts]
