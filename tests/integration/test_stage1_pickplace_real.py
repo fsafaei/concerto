@@ -134,13 +134,18 @@ class TestActionSpacePerUidShape:
         finally:
             env.close()
 
-    def test_as_hetero_panda_eight_fetch_twelve(self) -> None:
+    def test_as_hetero_panda_eight_fetch_thirteen(self) -> None:
         env = make_stage1_pickplace_env(condition_id=_AS_HETERO, episode_length=10)
         try:
             assert env.action_space.spaces["panda_wristcam"].shape == (8,)
-            # Fetch pd_joint_delta_pos: 7 arm + 1 gripper-mimic +
-            # 2 body + 2 base = 12-D action (mani_skill fetch.py).
-            assert env.action_space.spaces["fetch"].shape == (12,)
+            # Fetch pd_joint_delta_pos:
+            #   7 (arm) + 1 (gripper, mimic-joint config collapses 2 → 1) +
+            #   3 (body: head_pan, head_tilt, torso_lift) +
+            #   2 (base: PDBaseForwardVelControllerConfig compacts the 3
+            #      root joints to forward + angular)
+            # = 13-D action (mani_skill 3.0.1 fetch.py:101-105 body_joint_names;
+            # confirmed 2026-05-18 by Tier-2 SAPIEN smoke on the RTX 2080 box).
+            assert env.action_space.spaces["fetch"].shape == (13,)
         finally:
             env.close()
 
