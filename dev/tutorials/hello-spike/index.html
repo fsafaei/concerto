@@ -1494,7 +1494,8 @@ laptop CPU budget; the production defaults from
         <span class="s2">&quot;log_dir=./hello_spike_logs&quot;</span><span class="p">,</span>
     <span class="p">],</span>
 <span class="p">)</span>
-<span class="n">curve</span> <span class="o">=</span> <span class="n">run_training</span><span class="p">(</span><span class="n">cfg</span><span class="p">,</span> <span class="n">repo_root</span><span class="o">=</span><span class="n">repo_root</span><span class="p">)</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">run_training</span><span class="p">(</span><span class="n">cfg</span><span class="p">,</span> <span class="n">repo_root</span><span class="o">=</span><span class="n">repo_root</span><span class="p">)</span>
+<span class="n">curve</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">curve</span>  <span class="c1"># result is a TrainingResult NamedTuple (curve + trainer)</span>
 
 <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;run_id=</span><span class="si">{</span><span class="n">curve</span><span class="o">.</span><span class="n">run_id</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;steps=</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">curve</span><span class="o">.</span><span class="n">per_step_ego_rewards</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
