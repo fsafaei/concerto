@@ -192,7 +192,7 @@ class TestTrainEndToEnd:
     def test_train_produces_reward_curve_with_random_trainer(self, tmp_path: Path) -> None:
         """T4b.11: the canonical loop runs end-to-end with the reference trainer."""
         cfg = _tiny_cfg(tmp_path, total_frames=100)
-        curve = train(cfg, env=_FakeEnv(), partner=_FakePartner(), repo_root=tmp_path)
+        curve = train(cfg, env=_FakeEnv(), partner=_FakePartner(), repo_root=tmp_path).curve
         assert isinstance(curve, RewardCurve)
         assert len(curve.per_step_ego_rewards) == 100
         assert len(curve.per_episode_ego_rewards) >= 1
@@ -201,7 +201,7 @@ class TestTrainEndToEnd:
         """T4b.11: checkpoint_every fires the save_checkpoint path."""
         cfg = _tiny_cfg(tmp_path, total_frames=100)
         # checkpoint_every=50 → expect 2 checkpoints over 100 frames.
-        curve = train(cfg, env=_FakeEnv(), partner=_FakePartner(), repo_root=tmp_path)
+        curve = train(cfg, env=_FakeEnv(), partner=_FakePartner(), repo_root=tmp_path).curve
         assert len(curve.checkpoint_paths) == 2
         for path in curve.checkpoint_paths:
             assert path.exists()
@@ -210,7 +210,7 @@ class TestTrainEndToEnd:
     def test_train_writes_jsonl_log(self, tmp_path: Path) -> None:
         """T4b.10: every step / rollout / checkpoint emits a JSONL line."""
         cfg = _tiny_cfg(tmp_path, total_frames=50)
-        curve = train(cfg, env=_FakeEnv(), partner=_FakePartner(), repo_root=tmp_path)
+        curve = train(cfg, env=_FakeEnv(), partner=_FakePartner(), repo_root=tmp_path).curve
         jsonl_path = cfg.log_dir / f"{curve.run_id}.jsonl"
         assert jsonl_path.exists()
         lines = jsonl_path.read_text(encoding="utf-8").splitlines()
@@ -220,7 +220,7 @@ class TestTrainEndToEnd:
     def test_train_checkpoint_round_trips_via_load_checkpoint(self, tmp_path: Path) -> None:
         """T4b.12 contract: checkpoints saved by train() load back cleanly."""
         cfg = _tiny_cfg(tmp_path, total_frames=50)
-        curve = train(cfg, env=_FakeEnv(), partner=_FakePartner(), repo_root=tmp_path)
+        curve = train(cfg, env=_FakeEnv(), partner=_FakePartner(), repo_root=tmp_path).curve
         assert len(curve.checkpoint_paths) >= 1
         ckpt_path = curve.checkpoint_paths[0]
         relative = ckpt_path.relative_to(cfg.artifacts_root)
@@ -248,8 +248,8 @@ class TestTrainEndToEnd:
         """
         cfg_a = _tiny_cfg(tmp_path / "a", total_frames=50)
         cfg_b = _tiny_cfg(tmp_path / "b", total_frames=50)
-        curve_a = train(cfg_a, env=_FakeEnv(), partner=_FakePartner(), repo_root=tmp_path)
-        curve_b = train(cfg_b, env=_FakeEnv(), partner=_FakePartner(), repo_root=tmp_path)
+        curve_a = train(cfg_a, env=_FakeEnv(), partner=_FakePartner(), repo_root=tmp_path).curve
+        curve_b = train(cfg_b, env=_FakeEnv(), partner=_FakePartner(), repo_root=tmp_path).curve
         assert curve_a.per_step_ego_rewards == curve_b.per_step_ego_rewards
 
 
