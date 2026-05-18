@@ -42,6 +42,10 @@ from chamber.envs import (
     PerAgentActionRepeatWrapper,
     TextureFilterObsWrapper,
 )
+from chamber.envs._sapien_compat import (
+    load_agent_with_bare_uids,
+    patch_sapien_urdf_no_visual_material,
+)
 from chamber.envs.errors import ChamberEnvCompatibilityError
 
 # Per-agent action-repeat counts for the ADR-001 smoke scenario.
@@ -64,48 +68,12 @@ _SMOKE_ROBOT_UIDS: tuple[str, ...] = (
     "allegro_hand_right",
 )
 
-#: Idempotency guard for :func:`_patch_sapien_urdf_no_visual_material`.
-_sapien_urdf_patched: bool = False
-
-
-def _patch_sapien_urdf_no_visual_material() -> None:
-    """Strip visual materials from SAPIEN's URDF loader (ADR-001 §Risks).
-
-    SAPIEN's C++ ``RenderMaterial()`` binding calls into the global Vulkan
-    render context. On headless hosts (``CHAMBER_RENDER_BACKEND=none``) no
-    render context is initialised, but the URDF loader still instantiates
-    a ``RenderMaterial()`` for every visual link before any observation
-    rendering occurs — raising ``RuntimeError: failed to find a rendering
-    device``. Setting ``render_backend="none"`` on the env constructor
-    skips ``RenderSystem`` initialisation but does not suppress
-    ``RenderMaterial()``.
-
-    Since the Stage-0 smoke env uses ``obs_mode="state_dict"`` (no rendered
-    frames), visual materials are purely cosmetic and safe to drop. The
-    patch zero-es every visual's material on ``_build_link``, leaving
-    physics and state observations untouched.
-
-    Idempotent: a second call is a no-op.
-    """
-    global _sapien_urdf_patched  # noqa: PLW0603
-    if _sapien_urdf_patched:
-        return
-    try:
-        import sapien.wrapper.urdf_loader as _ul
-
-        _orig = _ul.URDFLoader._build_link
-
-        def _build_link_no_material(self: object, link: object, link_builder: object) -> object:
-            for v in getattr(link, "visuals", []):
-                v.material = None
-            return _orig(self, link, link_builder)  # type: ignore[arg-type]
-
-        _ul.URDFLoader._build_link = _build_link_no_material  # type: ignore[method-assign]
-        _sapien_urdf_patched = True
-    except ImportError:
-        # sapien not installed — make_stage0_env will surface this via the
-        # mani_skill import guard with a ChamberEnvCompatibilityError.
-        return
+#: The headless-render SAPIEN URDF-loader patch was extracted to
+#: :func:`chamber.envs._sapien_compat.patch_sapien_urdf_no_visual_material`
+#: in P1.03 so :mod:`chamber.envs.stage1_pickplace` could reuse it
+#: without duplication. The pre-P1.03 inline implementation lived here
+#: under the same idempotency contract.
+_patch_sapien_urdf_no_visual_material = patch_sapien_urdf_no_visual_material
 
 
 def make_stage0_env(*, render_mode: str | None = None) -> gym.Env:  # type: ignore[return]
@@ -163,53 +131,19 @@ def make_stage0_env(*, render_mode: str | None = None) -> gym.Env:  # type: igno
         ) -> None:
             """Multi-robot ``_load_agent`` override (ADR-001 §Validation criteria).
 
-            Patches two pre-existing ManiSkill issues that block the 3-robot rig:
-
-            1. ``BaseEnv._load_agent`` coerces a scalar ``initial_agent_poses=None``
-               into ``[None]`` (length 1), then indexes into it with ``i`` for each
-               robot. With 3 robots, ``[None][1]`` raises ``IndexError``. Passing
-               an explicit per-agent list keeps the index inside bounds.
-            2. ``MultiAgent.__init__`` unconditionally keys every agent as
-               ``f"{uid}-{i}"`` once there is more than one robot, propagating
-               the suffix into ``action_space`` and ``observation_space``. The
-               training stack (config, adapter, trainer) all use bare uids. We
-               rebuild ``agents_dict`` with stripped keys and re-bind
-               ``get_proprioception`` to iterate the bare-uid dict, before the
-               first ``_get_obs()`` runs at the end of ``reset()`` (since
-               ``_load_agent`` is invoked inside ``_reconfigure()``).
+            Delegates to
+            :func:`chamber.envs._sapien_compat.load_agent_with_bare_uids`,
+            which patches the two ManiSkill issues that block the
+            multi-robot rig (per-agent pose-list expansion;
+            ``f"{uid}-{i}"`` suffix strip). The helper was extracted in
+            P1.03 so :mod:`chamber.envs.stage1_pickplace` can reuse it.
             """
-            import types
-
-            if initial_agent_poses is None:
-                # ``self.robot_uids`` is the constructor-passed tuple in the
-                # multi-robot path; len(...) gives the agent count.
-                initial_agent_poses = [None] * len(self.robot_uids)  # type: ignore[arg-type]
-            super()._load_agent(
+            load_agent_with_bare_uids(
+                self,
                 options,
-                initial_agent_poses=initial_agent_poses,  # type: ignore[arg-type]
+                initial_agent_poses=initial_agent_poses,
                 build_separate=build_separate,
             )
-            multi = self.agent
-            if not hasattr(multi, "agents_dict"):
-                # Single-agent path: ManiSkill never appends a "-i" suffix here.
-                return
-
-            def _strip_suffix(uid: str) -> str:
-                head, _, tail = uid.rpartition("-")
-                return head if head and tail.isdigit() else uid
-
-            multi.agents_dict = {  # type: ignore[attr-defined]
-                _strip_suffix(uid): agent
-                for uid, agent in multi.agents_dict.items()  # type: ignore[attr-defined]
-            }
-
-            def _bare_proprioception(self: object) -> dict[str, object]:
-                return {
-                    uid: agent.get_proprioception()
-                    for uid, agent in self.agents_dict.items()  # type: ignore[attr-defined]
-                }
-
-            multi.get_proprioception = types.MethodType(_bare_proprioception, multi)
 
         def compute_normalized_dense_reward(
             self,

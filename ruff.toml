@@ -26,6 +26,8 @@ ignore = [
 "src/chamber/benchmarks/**/*.py" = ["PLC0415"]  # lazy ManiSkill imports (GPU availability gating) + lazy HARL imports (ADR-002 §Revision-history 2026-05-16 train-group scoping; #131)
 "src/chamber/partners/**/*.py" = ["PLC0415"]   # lazy HARL imports (ADR-002 §Revision-history 2026-05-16 train-group scoping; #131)
 "src/chamber/utils/**/*.py" = ["PLC0415"]      # lazy ManiSkill/torch imports required (availability probing)
+"src/chamber/agents/**/*.py" = ["PLC0415"]     # lazy ManiSkill/SAPIEN/pytorch_kinematics imports (Tier-1 import-safe on Vulkan-less hosts; ADR-007 §Stage 1b)
+"src/chamber/envs/stage1_pickplace.py" = ["PLC0415"]  # lazy ManiSkill/SAPIEN imports inside make_stage1_pickplace_env (Tier-1 import-safe; ADR-007 §Stage 1b)
 "src/chamber/cli/**/*.py" = ["T20"]       # print-allowed in CLI
 "src/concerto/safety/**/*.py" = ["N803", "N806"]  # QP / linear-algebra math notation (P, A, M, J, K capitals) per plan/03 §3.7 + ADR-004 §Decision; matches numpy/scipy/cvxpy/qpsolvers convention
 

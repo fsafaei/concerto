@@ -31,7 +31,7 @@ here. M4b-7 will extend the dispatch with the HARL fork's
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 
 import gymnasium as gym
 
@@ -179,41 +179,55 @@ def run_training(
 def build_control_models(env: gym.Env[Any, Any]) -> Mapping[str, AgentControlModel]:
     """Build a per-uid :class:`AgentControlModel` map from an env (ADR-004 §Decision; spike_004A).
 
-    Reads each uid's ``action_space[uid]`` Box shape and returns a
-    :class:`concerto.safety.api.DoubleIntegratorControlModel` per uid
-    sized to ``shape[0]``. Phase-0 envs in CHAMBER expose their
-    actions as Cartesian velocities or accelerations (the safety
-    filter's CBF assumes Cartesian acceleration), so the
-    double-integrator identity model is the correct default for every
-    env currently in the dispatch table.
+    Two-tier dispatch (P1.03 / Task B):
 
-    Stage-1 AS spike will introduce embodiments whose action space
-    is not Cartesian (e.g. a 7-DOF arm whose actions are joint
-    torques); those callers construct a :class:`JacobianControlModel`
-    directly rather than going through this helper. The helper's
-    contract is "every uid I produce uses :class:`DoubleIntegratorControlModel`";
-    if that no longer fits the env, the caller MUST supply
-    ``control_models`` itself rather than silently relying on the
-    helper to do the wrong thing.
+    1. **Env-provided.** If the env exposes a callable
+       ``build_control_models`` instance method (the contract
+       :class:`chamber.envs.stage1_pickplace.Stage1PickPlaceEnv` adds
+       in P1.03), delegate to it. The Stage-1b env's method returns a
+       :class:`JacobianControlModel` for the 7-DOF panda uid with a
+       working Jacobian callable, plus
+       :class:`DoubleIntegratorControlModel` for the fetch uid — the
+       per-embodiment dispatch lives there because the env knows its
+       own URDF and articulation best (ADR-004 §Decision; ADR-007
+       §Stage 1b).
+    2. **Default fallback.** Read each uid's ``action_space[uid]`` Box
+       shape and return a :class:`DoubleIntegratorControlModel` per uid
+       sized to ``shape[0]``. Phase-0 envs in CHAMBER expose their
+       actions as Cartesian velocities or accelerations (the safety
+       filter's CBF assumes Cartesian acceleration), so the
+       double-integrator identity model is the correct default for the
+       MPE / Stage-0 envs.
 
     Args:
-        env: A multi-agent Gymnasium-conformant env exposing
-            ``action_space`` as a :class:`gym.spaces.Dict` of
-            :class:`gym.spaces.Box` per uid (the contract every
-            Phase-0 CHAMBER env satisfies).
+        env: A multi-agent Gymnasium-conformant env. If the env
+            exposes ``build_control_models``, the helper delegates;
+            otherwise it falls back to the default-DI dispatch over
+            ``env.action_space.spaces``.
 
     Returns:
-        ``{uid: DoubleIntegratorControlModel(uid, action_dim=shape[0])}``
-        for every uid in ``env.action_space.spaces``.
+        ``{uid: AgentControlModel}`` per uid in
+        ``env.action_space.spaces`` (or per the env's own
+        ``build_control_models()`` if delegated).
 
     Raises:
-        TypeError: If ``env.action_space`` is not a
-            :class:`gymnasium.spaces.Dict` or any ``action_space[uid]``
-            is not a :class:`gymnasium.spaces.Box`.
-        ValueError: If any uid's action Box is not 1-D (multi-D action
-            shapes would need a custom control model rather than the
-            double-integrator identity).
+        TypeError: If the fallback path is taken and
+            ``env.action_space`` is not a :class:`gymnasium.spaces.Dict`
+            or any ``action_space[uid]`` is not a :class:`gymnasium.spaces.Box`.
+        ValueError: If the fallback path is taken and any uid's
+            action Box is not 1-D (multi-D action shapes would need a
+            custom control model rather than the double-integrator
+            identity).
     """
+    env_builder = getattr(env, "build_control_models", None)
+    if callable(env_builder):
+        # Env-side dispatch — Stage-1b path. The env's method is
+        # responsible for sizing each uid's model correctly (panda gets
+        # JacobianControlModel with a working jacobian_fn; fetch gets
+        # DoubleIntegratorControlModel sized to the action space).
+        # pyright sees getattr's return as ``object``; the cast pins
+        # the contract Stage1PickPlaceEnv.build_control_models honours.
+        return cast("Mapping[str, AgentControlModel]", env_builder())
     action_space = env.action_space
     if not isinstance(action_space, gym.spaces.Dict):
         msg = (
