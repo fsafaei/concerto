@@ -933,7 +933,7 @@ def make_stage1_pickplace_env(
                 fetch_action_dim=fetch_uid_dim,
             )
 
-    return Stage1PickPlaceEnv(
+    inner = Stage1PickPlaceEnv(
         condition_id=condition_id,
         episode_length=episode_length,
         root_seed=root_seed,
@@ -942,6 +942,14 @@ def make_stage1_pickplace_env(
         render_backend=render_backend,
         force_torque_noise_sigma=force_torque_noise_sigma,
     )
+    # AS conditions: ManiSkill v3 obs_mode="state_dict" emits per-agent
+    # Dict(qpos, qvel) but EgoPPOTrainer.from_config reads
+    # obs["agent"][ego_uid]["state"]. The wrapper synthesises that key
+    # from concat(qpos, qvel); pass-through for OM conditions (which
+    # have their own channel filter for the modality dispatch).
+    from chamber.envs.stage1_obs_filter import Stage1ASStateSynthesizer
+
+    return Stage1ASStateSynthesizer(inner)
 
 
 __all__ = [

@@ -1,11 +1,27 @@
 # SPDX-License-Identifier: Apache-2.0
-"""Stage-1 OM-axis observation-channel filter (ADR-007 §Stage 1b).
+# pyright: reportPrivateImportUsage=false
+#
+# Same rationale as :mod:`chamber.benchmarks.stage0_smoke`:
+# ``torch.as_tensor`` is exported but not advertised in torch's stub
+# ``__all__``. Suppressed file-locally so the synthesised-state helper
+# stays free of per-line ``type: ignore`` noise.
+"""Stage-1 observation wrappers (ADR-007 §Stage 1b).
 
-Thin wrapper that reads the inner env's :attr:`condition_id` and applies
-the per-condition channel keep-set to the observation dict. The Stage-1
-AS conditions don't filter at all (they use ``obs_mode="state_dict"``
-which already excludes the camera data the OM axis differentiates on);
-the wrapper passes those conditions through untouched.
+Two wrappers, applied in fixed order by
+:func:`chamber.envs.stage1_pickplace.make_stage1_pickplace_env`:
+
+1. :class:`Stage1ASStateSynthesizer` — synthesises
+   ``obs["agent"][uid]["state"]`` as ``concat(qpos, qvel)`` for AS
+   conditions, bridging ManiSkill v3 ``obs_mode="state_dict"`` (which
+   emits per-agent ``Dict(qpos, qvel, ...)``) to
+   :class:`chamber.benchmarks.ego_ppo_trainer.EgoPPOTrainer`'s
+   ``obs["agent"][ego_uid]["state"]`` contract. Pass-through for OM
+   conditions and for envs without a recognised ``condition_id``.
+2. :class:`Stage1OMChannelFilter` — per-condition channel keep-set for
+   the OM axis. The Stage-1 AS conditions don't filter at all (they
+   use ``obs_mode="state_dict"`` which already excludes the camera
+   data the OM axis differentiates on); the wrapper passes those
+   conditions through untouched.
 
 For the two OM conditions:
 
@@ -65,6 +81,167 @@ _OM_VISION_ONLY_EXTRA_KEEP: frozenset[str] = frozenset({"tcp_pose", "goal_pos"})
 #: Condition_ids the wrapper actually mutates obs for. Conditions
 #: outside this set pass through untouched.
 _FILTERED_CONDITIONS: frozenset[str] = frozenset({"stage1_pickplace_vision_only"})
+
+
+class Stage1ASStateSynthesizer(gym.ObservationWrapper):  # type: ignore[type-arg]
+    """Synthesise ``obs["agent"][uid]["state"]`` for AS conditions (ADR-007 §Stage 1b).
+
+    ManiSkill v3.0.1 ``obs_mode="state_dict"`` (used by the Stage-1 AS
+    conditions) emits per-agent ``Dict(qpos: Box, qvel: Box, ...)`` with
+    no top-level ``"state"`` key. But
+    :meth:`chamber.benchmarks.ego_ppo_trainer.EgoPPOTrainer.from_config`
+    reads ``env.observation_space["agent"][ego_uid]["state"]`` as a 1-D
+    Box and derives ``obs_dim = ego_state_space.shape[0]``. ManiSkill v3
+    ``obs_mode="state"`` flattens ``concat(qpos, qvel)`` into a single
+    ``"state"`` key with that shape; this wrapper replicates that concat
+    in obs-space so callers can keep ``obs_mode="state_dict"`` for the
+    synthesised-channel injection (``force_torque``, ``tcp_pose``, ...)
+    the OM-hetero condition needs while still satisfying the trainer's
+    1-D ``state`` contract.
+
+    Pass-through for OM conditions (``is_om_condition=True`` — those go
+    through :class:`Stage1OMChannelFilter` instead) and for envs whose
+    ``condition_id`` is missing or unrecognised (Tier-1 safety: keeps
+    the wrapper a no-op for envs that don't satisfy the Stage-1b
+    ``condition_id`` contract).
+
+    Args:
+        env: Inner env exposing a ``condition_id`` attribute.
+
+    Raises:
+        TypeError: If ``env.observation_space`` is not a
+            :class:`gym.spaces.Dict`.
+    """
+
+    def __init__(self, env: gym.Env[Any, Any]) -> None:
+        """Detect AS-condition envs at construction (ADR-007 §Stage 1b)."""
+        super().__init__(env)
+        if not isinstance(env.observation_space, gym.spaces.Dict):
+            msg = (
+                "Stage1ASStateSynthesizer requires a gym.spaces.Dict observation "
+                f"space; got {type(env.observation_space).__name__}."
+            )
+            raise TypeError(msg)
+        condition_id = getattr(env, "condition_id", None)
+        if condition_id is None and hasattr(env, "get_wrapper_attr"):
+            try:
+                condition_id = env.get_wrapper_attr("condition_id")
+            except AttributeError:
+                condition_id = None
+        # Local import to avoid the chamber.envs.stage1_pickplace ↔
+        # chamber.envs.stage1_obs_filter circular import that arises now
+        # that make_stage1_pickplace_env applies this wrapper.
+        from chamber.envs.stage1_pickplace import resolve_condition
+
+        config = None
+        if isinstance(condition_id, str):
+            try:
+                config = resolve_condition(condition_id)
+            except ValueError:
+                config = None
+        self._active: bool = config is not None and not config.is_om_condition
+        if self._active:
+            self.observation_space = self._build_observation_space(env.observation_space)
+
+    @staticmethod
+    def _build_observation_space(inner: gym.spaces.Dict) -> gym.spaces.Dict:
+        """Inject a 1-D ``state`` Box per agent under ``obs["agent"][uid]``.
+
+        The injected Box's shape is ``(qpos_dim + qvel_dim,)`` —
+        flattened to 1-D so :attr:`gym.spaces.Box.shape[0]` matches the
+        ``obs_dim`` HARL's MLPBase reads at construction.
+        """
+        agent = inner.spaces.get("agent")
+        if not isinstance(agent, gym.spaces.Dict):
+            return inner
+        new_agent_spaces: dict[str, gym.spaces.Space[Any]] = {}
+        for uid, sub in agent.spaces.items():
+            if isinstance(sub, gym.spaces.Dict):
+                qpos = sub.spaces.get("qpos")
+                qvel = sub.spaces.get("qvel")
+                if isinstance(qpos, gym.spaces.Box) and isinstance(qvel, gym.spaces.Box):
+                    state_dim = int(np.prod(qpos.shape)) + int(np.prod(qvel.shape))
+                    state_box = gym.spaces.Box(
+                        low=-np.inf,
+                        high=np.inf,
+                        shape=(state_dim,),
+                        dtype=np.float32,
+                    )
+                    augmented = dict(sub.spaces)
+                    augmented["state"] = state_box
+                    new_agent_spaces[uid] = gym.spaces.Dict(augmented)
+                    continue
+            new_agent_spaces[uid] = sub
+        new_spaces = dict(inner.spaces)
+        new_spaces["agent"] = gym.spaces.Dict(new_agent_spaces)
+        return gym.spaces.Dict(new_spaces)
+
+    def observation(self, observation: dict[str, Any]) -> dict[str, Any]:  # type: ignore[override]
+        """Inject synthesised ``state`` per agent (ADR-007 §Stage 1b)."""
+        if not self._active:
+            return observation
+        agent = observation.get("agent")
+        if not isinstance(agent, dict):
+            return observation
+        new_agent: dict[str, Any] = {}
+        for uid, sub in agent.items():
+            if isinstance(sub, dict) and "qpos" in sub and "qvel" in sub:
+                augmented = dict(sub)
+                augmented["state"] = _flat_state_concat(sub["qpos"], sub["qvel"])
+                new_agent[uid] = augmented
+            else:
+                new_agent[uid] = sub
+        out = dict(observation)
+        out["agent"] = new_agent
+        return out
+
+    def __getattr__(self, name: str) -> Any:  # noqa: ANN401 - mirrors gym.Wrapper's inherited __getattr__ signature
+        """Forward attribute access to the inner env (Tier-2 caller contract).
+
+        Gymnasium 1.3 removed :class:`gym.Wrapper`'s implicit
+        ``__getattr__``; existing P1.03 callers of
+        :func:`make_stage1_pickplace_env` read SAPIEN-env attributes
+        directly (``env.agent``, ``env._jacobian_provider``,
+        ``env.condition_config``...). Forwarding here keeps that
+        contract without forcing every caller to switch to
+        :meth:`gym.Wrapper.get_wrapper_attr`.
+
+        ``__getattr__`` only fires when normal attribute lookup misses;
+        ``self.env`` is set by :meth:`gym.Wrapper.__init__` before any
+        downstream access, so the delegation is safe. The ``env``-name
+        guard is a defensive backstop against recursive lookup on the
+        env attr itself (only reachable in pathological half-init
+        paths).
+        """
+        if name == "env":
+            raise AttributeError(name)
+        return getattr(self.env, name)
+
+
+def _flat_state_concat(qpos: Any, qvel: Any) -> np.ndarray:  # type: ignore[type-arg]  # noqa: ANN401 - inputs are torch.Tensor or np.ndarray depending on env source; Tier-1 fakes pass np.ndarray, real SAPIEN env passes torch.Tensor
+    """Concat ``qpos`` + ``qvel`` into a 1-D float32 ndarray.
+
+    ManiSkill v3 ``obs_mode="state"`` flattens with the order
+    ``concat(qpos, qvel)``; mirrored here so anyone running the
+    underlying env with the flat ``obs_mode`` would see the same shape.
+
+    Handles both torch tensors (real SAPIEN env) and numpy arrays
+    (Tier-1 fakes). Squeezes the ``num_envs`` batch dim implicitly via
+    ``ravel`` — Stage-1b runs single-env per cell (plan/07 §3).
+    """
+    try:
+        import torch
+
+        if isinstance(qpos, torch.Tensor) or isinstance(qvel, torch.Tensor):
+            qpos_t = torch.as_tensor(qpos).detach().cpu().numpy()
+            qvel_t = torch.as_tensor(qvel).detach().cpu().numpy()
+            return np.concatenate([qpos_t.ravel(), qvel_t.ravel()]).astype(np.float32)
+    except ImportError:
+        # Torch is a hard dep of the project (chamber.benchmarks.*),
+        # but the local import keeps this module Tier-1 importable on
+        # the rare host that ships without it.
+        pass
+    return np.concatenate([np.asarray(qpos).ravel(), np.asarray(qvel).ravel()]).astype(np.float32)
 
 
 class Stage1OMChannelFilter(gym.ObservationWrapper):  # type: ignore[type-arg]
@@ -156,4 +333,4 @@ class Stage1OMChannelFilter(gym.ObservationWrapper):  # type: ignore[type-arg]
         return out
 
 
-__all__ = ["Stage1OMChannelFilter"]
+__all__ = ["Stage1ASStateSynthesizer", "Stage1OMChannelFilter"]

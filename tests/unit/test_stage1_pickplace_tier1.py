@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: Apache-2.0
-# pyright: reportPrivateImportUsage=false, reportAttributeAccessIssue=false
+# pyright: reportPrivateImportUsage=false, reportAttributeAccessIssue=false, reportIndexIssue=false
 #
 # Same rationale as :mod:`tests.integration.test_stage0_adapter_real`:
 # torch and pytorch_kinematics stubs do not advertise every public symbol;
@@ -47,7 +47,7 @@ from chamber.agents.panda_jacobian import (
     PANDA_ARM_DOF,
     PandaJacobianProvider,
 )
-from chamber.envs.stage1_obs_filter import Stage1OMChannelFilter
+from chamber.envs.stage1_obs_filter import Stage1ASStateSynthesizer, Stage1OMChannelFilter
 from chamber.envs.stage1_pickplace import (
     DEFAULT_EPISODE_LENGTH,
     FETCH_CARTESIAN_ACCEL_CAPACITY_MS2,
@@ -239,6 +239,118 @@ class TestPandaJacobianProvider:
         # catch real Jacobian regressions while staying robust to noise.
         max_err = float(np.max(np.abs(jac_analytical - jac_fd)))
         assert max_err < 5e-3, f"Jacobian/FD disagreement: max={max_err:.2e}"
+
+
+# ----- Stage1ASStateSynthesizer (qpos+qvel -> state; ADR-007 §Stage 1b AS axis) -----
+
+
+class _FakeStateDictEnv(gym.Env):  # type: ignore[type-arg]
+    """Mirrors ManiSkill v3 ``obs_mode="state_dict"`` shape for the AS axis.
+
+    The real Stage1PickPlaceEnv under AS conditions emits per-agent
+    ``Dict(qpos, qvel, ...)``; this fake matches that contract so the
+    Tier-1 wrapper test exercises the same code path the Tier-2 SAPIEN
+    test exercises end-to-end (regression-pin against further drift).
+    """
+
+    metadata: ClassVar[dict[str, object]] = {"render_modes": []}  # type: ignore[misc]
+
+    def __init__(self, condition_id: str | None) -> None:
+        super().__init__()
+        self.observation_space = gym.spaces.Dict(
+            {
+                "agent": gym.spaces.Dict(
+                    {
+                        "panda_wristcam": gym.spaces.Dict(
+                            {
+                                "qpos": gym.spaces.Box(-np.inf, np.inf, (1, 9), np.float32),
+                                "qvel": gym.spaces.Box(-np.inf, np.inf, (1, 9), np.float32),
+                            }
+                        ),
+                        "fetch": gym.spaces.Dict(
+                            {
+                                "qpos": gym.spaces.Box(-np.inf, np.inf, (1, 15), np.float32),
+                                "qvel": gym.spaces.Box(-np.inf, np.inf, (1, 15), np.float32),
+                            }
+                        ),
+                    }
+                ),
+            }
+        )
+        self.action_space = gym.spaces.Dict({})
+        if condition_id is not None:
+            self.condition_id = condition_id
+
+    @staticmethod
+    def _sample_obs() -> dict:
+        return {
+            "agent": {
+                "panda_wristcam": {
+                    "qpos": np.arange(9, dtype=np.float32).reshape(1, 9),
+                    "qvel": np.arange(9, 18, dtype=np.float32).reshape(1, 9),
+                },
+                "fetch": {
+                    "qpos": np.zeros((1, 15), dtype=np.float32),
+                    "qvel": np.ones((1, 15), dtype=np.float32),
+                },
+            },
+        }
+
+
+class TestStage1ASStateSynthesizer:
+    """Synthesised ``state`` key for AS conditions (ADR-007 §Stage 1b AS axis)."""
+
+    def test_as_hetero_injects_state_box_with_qpos_plus_qvel_dim(self) -> None:
+        """The ego-state Box's ``shape[0]`` must equal qpos_dim + qvel_dim.
+
+        EgoPPOTrainer.from_config derives ``obs_dim = ego_state_space.shape[0]``
+        (chamber.benchmarks.ego_ppo_trainer:608) — pinning the shape here
+        is the regression guard against the P1.04 SAPIEN-gated failure
+        rediscovering itself.
+        """
+        inner = _FakeStateDictEnv(
+            condition_id="stage1_pickplace_panda_plus_fetch_ego_aht_happo_per_agent"
+        )
+        wrap = Stage1ASStateSynthesizer(inner)  # type: ignore[arg-type]
+        ego_space = wrap.observation_space["agent"]["panda_wristcam"]["state"]
+        assert isinstance(ego_space, gym.spaces.Box)
+        assert ego_space.shape == (18,)  # 9 qpos + 9 qvel
+        assert ego_space.dtype == np.float32
+        partner_space = wrap.observation_space["agent"]["fetch"]["state"]
+        assert partner_space.shape == (30,)  # 15 qpos + 15 qvel
+
+    def test_observation_concat_order_qpos_then_qvel(self) -> None:
+        """ManiSkill v3 obs_mode="state" concat orders qpos then qvel."""
+        inner = _FakeStateDictEnv(
+            condition_id="stage1_pickplace_panda_plus_fetch_ego_aht_happo_per_agent"
+        )
+        wrap = Stage1ASStateSynthesizer(inner)  # type: ignore[arg-type]
+        obs = wrap.observation(_FakeStateDictEnv._sample_obs())
+        state = obs["agent"]["panda_wristcam"]["state"]
+        assert state.shape == (18,)
+        assert state.dtype == np.float32
+        # qpos = arange(9), qvel = arange(9, 18); concat preserves that.
+        np.testing.assert_array_equal(state, np.arange(18, dtype=np.float32))
+
+    def test_pass_through_when_inner_env_has_no_condition_id(self) -> None:
+        inner = _FakeStateDictEnv(condition_id=None)
+        wrap = Stage1ASStateSynthesizer(inner)  # type: ignore[arg-type]
+        obs = wrap.observation(_FakeStateDictEnv._sample_obs())
+        # No "state" injected — wrapper is inert without a recognised condition_id.
+        assert "state" not in obs["agent"]["panda_wristcam"]
+
+    def test_passthrough_under_om_condition(self) -> None:
+        inner = _FakeStateDictEnv(condition_id="stage1_pickplace_vision_only")
+        wrap = Stage1ASStateSynthesizer(inner)  # type: ignore[arg-type]
+        obs = wrap.observation(_FakeStateDictEnv._sample_obs())
+        # OM conditions are handled by Stage1OMChannelFilter, not this wrapper.
+        assert "state" not in obs["agent"]["panda_wristcam"]
+
+    def test_as_homo_also_synthesizes_state(self) -> None:
+        inner = _FakeStateDictEnv(condition_id="stage1_pickplace_panda_only_mappo_shared_param")
+        wrap = Stage1ASStateSynthesizer(inner)  # type: ignore[arg-type]
+        obs = wrap.observation(_FakeStateDictEnv._sample_obs())
+        assert obs["agent"]["panda_wristcam"]["state"].shape == (18,)
 
 
 # ----- Stage1OMChannelFilter (per-condition obs masking; ADR-007 §Stage 1b OM axis) -----

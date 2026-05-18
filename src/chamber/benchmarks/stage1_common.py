@@ -151,12 +151,24 @@ def _zero_ego_action_factory(
             f"gym.spaces.Dict; got {type(action_space).__name__}."
         )
         raise TypeError(msg)
-    # Stage-1a stand-in: every uid shares the same Box action shape
-    # (MPE Cooperative-Push), so picking any uid's Box is well-defined.
-    # Stage-1b's real ManiSkill v3 env will need explicit ego_uid
-    # plumbing — that change goes with the trained-policy factory, not
-    # here.
-    sample_uid = next(iter(action_space.spaces.keys()))
+    # Stage-1b real env exposes ``ego_uid`` (and the AS-hetero
+    # condition's action_space.spaces dict orders insertion as
+    # ``("fetch", "panda_wristcam")`` — picking the first key would
+    # land on fetch's 13-D shape, then the spike adapter would plug
+    # that into the panda_wristcam action slot and SAPIEN would reject
+    # the per-uid action-shape mismatch). Prefer the env-declared
+    # ``ego_uid`` when present; fall back to the first uid for
+    # Stage-1a's MPE stand-in (which has no ``ego_uid`` property).
+    sample_uid: str | None = None
+    if hasattr(env, "get_wrapper_attr"):
+        try:
+            sample_uid = env.get_wrapper_attr("ego_uid")
+        except AttributeError:
+            sample_uid = None
+    if sample_uid is None:
+        sample_uid = getattr(env, "ego_uid", None)
+    if sample_uid is None:
+        sample_uid = next(iter(action_space.spaces.keys()))
     ego_box = action_space.spaces[sample_uid]
     if not isinstance(ego_box, gym.spaces.Box):
         msg = (
