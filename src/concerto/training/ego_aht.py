@@ -532,7 +532,7 @@ def train(  # noqa: PLR0912, PLR0915 - P1.04.5 added safety-stack integration to
     if _safety_active:
         _filter.reset(seed=cfg.seed)
         aggregator = SafetyAggregator(
-            n_pairs=int(_state.lambda_.shape[0]),
+            n_pairs=len(_state.lambda_),
             cartesian_accel_capacity=_bounds.cartesian_accel_capacity,
             saturation_threshold=cfg.safety.saturation_threshold,
         )

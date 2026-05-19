@@ -31,6 +31,7 @@ from concerto.safety.api import (
     DoubleIntegratorControlModel,
     FloatArray,
     SafetyState,
+    make_lambda_dict,
 )
 from concerto.safety.cbf_qp import AgentSnapshot, ExpCBFQP
 
@@ -125,7 +126,7 @@ def test_centralized_heterogeneous_qp_builds_and_solves(seed: int) -> None:
     raw_safe, info = cbf.filter(
         proposed_action=proposed,
         obs={"agent_states": snaps, "meta": {"partner_id": None}},
-        state=SafetyState(lambda_=np.zeros(3, dtype=np.float64)),
+        state=SafetyState(lambda_=make_lambda_dict(models.keys())),
         bounds=_bounds(),
     )
     safe = cast("dict[str, FloatArray]", raw_safe)
@@ -137,7 +138,7 @@ def test_centralized_heterogeneous_qp_builds_and_solves(seed: int) -> None:
         assert np.all(np.isfinite(safe[uid]))
     # Three pairs (3 choose 2) of CBF rows.
     assert info["constraint_violation"].shape == (3,)
-    assert info["lambda"].shape == (3,)
+    assert len(info["lambda"]) == 3
 
 
 def test_centralized_heterogeneous_passes_through_when_well_separated() -> None:
@@ -160,7 +161,7 @@ def test_centralized_heterogeneous_passes_through_when_well_separated() -> None:
     raw_safe, _ = cbf.filter(
         proposed_action=proposed,
         obs={"agent_states": snaps, "meta": {"partner_id": None}},
-        state=SafetyState(lambda_=np.zeros(3, dtype=np.float64)),
+        state=SafetyState(lambda_=make_lambda_dict(models.keys())),
         bounds=_bounds(),
     )
     safe = cast("dict[str, FloatArray]", raw_safe)
@@ -183,7 +184,7 @@ def test_centralized_rejects_proposed_action_shape_mismatch() -> None:
         cbf.filter(
             proposed_action=proposed,
             obs={"agent_states": snaps, "meta": {"partner_id": None}},
-            state=SafetyState(lambda_=np.zeros(3, dtype=np.float64)),
+            state=SafetyState(lambda_=make_lambda_dict(models.keys())),
             bounds=_bounds(),
         )
 
@@ -203,6 +204,6 @@ def test_centralized_rejects_uid_not_in_control_models() -> None:
         cbf.filter(
             proposed_action=proposed,
             obs={"agent_states": snaps, "meta": {"partner_id": None}},
-            state=SafetyState(lambda_=np.zeros(1, dtype=np.float64)),
+            state=SafetyState(lambda_=make_lambda_dict(proposed.keys())),
             bounds=_bounds(),
         )

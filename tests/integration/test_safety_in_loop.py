@@ -119,7 +119,7 @@ def test_full_safety_stack_runs_100_steps_without_crash() -> None:  # noqa: PLR0
     )
     bounds = _bounds(action_norm=5.0)
     state = SafetyState(
-        lambda_=np.zeros(1, dtype=np.float64),
+        lambda_={("a", "b"): 0.0},
         epsilon=-0.05,
         eta=0.01,
     )
@@ -261,8 +261,8 @@ def test_full_safety_stack_runs_100_steps_without_crash() -> None:  # noqa: PLR0
         table_3=(
             GapRow(
                 condition="gt/Learn",
-                lambda_mean=float(np.mean(state.lambda_)),
-                lambda_var=float(np.var(state.lambda_)),
+                lambda_mean=float(np.mean(list(state.lambda_.values()))),
+                lambda_var=float(np.var(list(state.lambda_.values()))),
                 oracle_lambda_mean=0.0,
             ),
         ),

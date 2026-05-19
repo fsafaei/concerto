@@ -532,7 +532,7 @@ class TrainedPolicyFactory:
             build_safety_filter,
             build_safety_snapshot_builder,
         )
-        from concerto.safety.api import SafetyState
+        from concerto.safety.api import SafetyState, make_lambda_dict
         from concerto.safety.conformal import reset_on_partner_swap
 
         # Construct the filter + bounds from the env.
@@ -549,13 +549,14 @@ class TrainedPolicyFactory:
                 "for the safety stack."
             )
             raise ValueError(msg)
-        # SafetyState construction + warm-start.
-        n_agents = len(cfg.env.agent_uids)
-        n_pairs = n_agents * (n_agents - 1) // 2
-        state = SafetyState(lambda_=np.zeros(n_pairs, dtype=np.float64))
+        # SafetyState construction + warm-start. Issue #144 promoted
+        # ``lambda_`` to a :data:`concerto.safety.api.LambdaDict` keyed
+        # by canonical UID-pair tuples over the cell's partner set.
+        agent_uids = cfg.env.agent_uids
+        state = SafetyState(lambda_=make_lambda_dict(agent_uids))
         reset_on_partner_swap(
             state,
-            n_pairs=n_pairs,
+            uids=agent_uids,
             lambda_safe=cfg.safety.lambda_safe,
             n_warmup_steps=cfg.safety.n_warmup_steps,
         )

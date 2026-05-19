@@ -68,9 +68,10 @@ def test_huriot_sibai_2025_table_i_gt_learn_average_loss_within_5_percent() -> N
     the empirical average loss is within 5% of ε.
     """
     rng = np.random.default_rng(0)
+    pair_key = ("a", "b")
 
     state = SafetyState(
-        lambda_=np.zeros(1, dtype=np.float64),
+        lambda_={pair_key: 0.0},
         epsilon=_EPSILON,
         eta=_ETA,
     )
@@ -82,12 +83,12 @@ def test_huriot_sibai_2025_table_i_gt_learn_average_loss_within_5_percent() -> N
         # the residual, the conformal CBF overestimates the safe set
         # and ``l_k > 0`` (the loss the rule is designed to control).
         e_k = float(rng.normal(loc=0.0, scale=_GAP_STD))
-        l_k_val = max(0.0, float(state.lambda_[0]) - e_k)
+        l_k_val = max(0.0, state.lambda_[pair_key] - e_k)
         cumulative_loss += l_k_val
 
         from concerto.safety.conformal import update_lambda
 
-        update_lambda(state, np.array([l_k_val], dtype=np.float64), in_warmup=False)
+        update_lambda(state, {pair_key: l_k_val}, in_warmup=False)
 
     avg_loss = cumulative_loss / _K_STEPS
     rel_err = abs(avg_loss - _EPSILON) / _EPSILON

@@ -31,6 +31,7 @@ def test_why_conformal_walkthrough_example() -> None:
         DoubleIntegratorControlModel,
         FloatArray,
         SafetyState,
+        make_lambda_dict,
     )
     from concerto.safety.braking import maybe_brake
     from concerto.safety.cbf_qp import AgentSnapshot, ExpCBFQP
@@ -45,7 +46,7 @@ def test_why_conformal_walkthrough_example() -> None:
         force_limit=20.0,
     )
     state = SafetyState(
-        lambda_=np.zeros(1, dtype=np.float64),
+        lambda_=make_lambda_dict(("a", "b")),
         epsilon=-0.05,
         eta=0.01,
     )
@@ -118,10 +119,13 @@ def test_why_conformal_walkthrough_example() -> None:
             in_warmup=False,
         )
         # --- END: code block from docs/explanation/why-conformal.md ---
-        # The two telemetry handles must be live arrays of the right
-        # shape so the doc's claim about them is checked here.
+        # The two telemetry handles must be live so the doc's claim
+        # about them is checked here. ``per_step_violation`` stays as
+        # an ndarray indexed by canonical pair-iteration order;
+        # ``prediction_gap`` is a LambdaDict keyed by canonical
+        # UID-pair tuples (issue #144).
         assert per_step_violation.shape == (1,)
-        assert prediction_gap.shape == (1,)
+        assert prediction_gap == {("a", "b"): prediction_gap[("a", "b")]}
 
     # The example runs without exception; verify the safe action is
     # well-shaped and finite so a reader can trust the doc's claim

@@ -16,6 +16,7 @@ from concerto.safety.api import (
     DEFAULT_ETA,
     DEFAULT_WARMUP_STEPS,
     SafetyState,
+    make_lambda_dict,
 )
 from concerto.safety.cbf_qp import AgentSnapshot
 from concerto.safety.conformal import (
@@ -25,70 +26,73 @@ from concerto.safety.conformal import (
     update_lambda,
 )
 
+_PAIR_AB: tuple[str, str] = ("a", "b")
+_PAIR_AC: tuple[str, str] = ("a", "c")
+
 
 def test_update_lambda_decreases_when_loss_exceeds_epsilon() -> None:
-    state = SafetyState(lambda_=np.array([0.1], dtype=np.float64), epsilon=0.05, eta=0.1)
-    update_lambda(state, np.array([0.5], dtype=np.float64), in_warmup=False)
+    state = SafetyState(lambda_={_PAIR_AB: 0.1}, epsilon=0.05, eta=0.1)
+    update_lambda(state, {_PAIR_AB: 0.5}, in_warmup=False)
     # eps - l_k = 0.05 - 0.5 = -0.45; lambda += 0.1 * -0.45 = -0.045.
-    assert state.lambda_[0] == pytest.approx(0.1 + 0.1 * (0.05 - 0.5))
-    assert state.lambda_[0] < 0.1
+    assert state.lambda_[_PAIR_AB] == pytest.approx(0.1 + 0.1 * (0.05 - 0.5))
+    assert state.lambda_[_PAIR_AB] < 0.1
 
 
 def test_update_lambda_increases_when_loss_below_epsilon() -> None:
-    state = SafetyState(lambda_=np.array([0.0], dtype=np.float64), epsilon=0.05, eta=0.1)
-    update_lambda(state, np.array([0.0], dtype=np.float64), in_warmup=False)
-    assert state.lambda_[0] == pytest.approx(0.1 * 0.05)
-    assert state.lambda_[0] > 0.0
+    state = SafetyState(lambda_={_PAIR_AB: 0.0}, epsilon=0.05, eta=0.1)
+    update_lambda(state, {_PAIR_AB: 0.0}, in_warmup=False)
+    assert state.lambda_[_PAIR_AB] == pytest.approx(0.1 * 0.05)
+    assert state.lambda_[_PAIR_AB] > 0.0
 
 
 def test_update_lambda_warmup_widens_step_size() -> None:
     """Warmup epsilon (eps * 1.5) yields larger |delta_lambda| at fixed loss."""
     state_normal = SafetyState(
-        lambda_=np.array([0.0], dtype=np.float64),
+        lambda_={_PAIR_AB: 0.0},
         epsilon=0.05,
         eta=0.1,
         warmup_steps_remaining=50,
     )
     state_warmup = SafetyState(
-        lambda_=np.array([0.0], dtype=np.float64),
+        lambda_={_PAIR_AB: 0.0},
         epsilon=0.05,
         eta=0.1,
         warmup_steps_remaining=50,
     )
-    loss_zero = np.array([0.0], dtype=np.float64)
+    loss_zero: dict[tuple[str, str], float] = {_PAIR_AB: 0.0}
     update_lambda(state_normal, loss_zero, in_warmup=False)
     update_lambda(state_warmup, loss_zero, in_warmup=True)
-    assert state_warmup.lambda_[0] > state_normal.lambda_[0]
+    assert state_warmup.lambda_[_PAIR_AB] > state_normal.lambda_[_PAIR_AB]
     assert state_warmup.warmup_steps_remaining == 49
     assert state_normal.warmup_steps_remaining == 50  # untouched when not in warmup
 
 
 def test_update_lambda_warmup_decrement_clamps_at_zero() -> None:
     state = SafetyState(
-        lambda_=np.array([0.0], dtype=np.float64),
+        lambda_={_PAIR_AB: 0.0},
         epsilon=0.05,
         eta=0.1,
         warmup_steps_remaining=0,
     )
-    update_lambda(state, np.array([0.0], dtype=np.float64), in_warmup=True)
+    update_lambda(state, {_PAIR_AB: 0.0}, in_warmup=True)
     assert state.warmup_steps_remaining == 0
 
 
-def test_update_lambda_rejects_shape_mismatch() -> None:
-    state = SafetyState(lambda_=np.zeros(2, dtype=np.float64), epsilon=0.05, eta=0.1)
-    with pytest.raises(ValueError, match="shape"):
-        update_lambda(state, np.zeros(3, dtype=np.float64), in_warmup=False)
+def test_update_lambda_rejects_key_set_mismatch() -> None:
+    state = SafetyState(lambda_={_PAIR_AB: 0.0, _PAIR_AC: 0.0}, epsilon=0.05, eta=0.1)
+    with pytest.raises(ValueError, match="key set"):
+        update_lambda(state, {_PAIR_AB: 0.0}, in_warmup=False)
 
 
 def test_update_lambda_default_state_uses_adr004_constants() -> None:
     """Default SafetyState picks up ADR-004 §Decision values."""
-    state = SafetyState(lambda_=np.zeros(1, dtype=np.float64))
+    state = SafetyState(lambda_=make_lambda_dict(("a", "b")))
     assert state.epsilon == DEFAULT_EPSILON == -0.05
     assert state.eta == DEFAULT_ETA == 0.01
-    update_lambda(state, np.array([0.0], dtype=np.float64), in_warmup=False)
+    update_lambda(state, {_PAIR_AB: 0.0}, in_warmup=False)
     # eps = -0.05, eta = 0.01, l_k = 0 ⇒ lambda becomes -5e-4.
-    assert state.lambda_[0] == pytest.approx(0.01 * (-0.05))
-    assert state.lambda_[0] < 0.0  # negative epsilon biases toward tighter constraint
+    assert state.lambda_[_PAIR_AB] == pytest.approx(0.01 * (-0.05))
+    assert state.lambda_[_PAIR_AB] < 0.0  # negative epsilon biases toward tighter constraint
 
 
 def test_compute_per_pair_loss_positive_on_overestimate() -> None:
@@ -127,33 +131,32 @@ def test_constant_velocity_predict_zero_dt_is_noop() -> None:
 
 
 def test_reset_on_partner_swap_resets_lambda_and_primes_warmup() -> None:
-    state = SafetyState(lambda_=np.array([0.5, -0.3], dtype=np.float64), epsilon=0.05, eta=0.1)
-    reset_on_partner_swap(state, n_pairs=2, lambda_safe=0.0, n_warmup_steps=30)
-    np.testing.assert_array_equal(state.lambda_, [0.0, 0.0])
+    state = SafetyState(lambda_={_PAIR_AB: 0.5, _PAIR_AC: -0.3}, epsilon=0.05, eta=0.1)
+    reset_on_partner_swap(state, uids=("a", "b", "c"), lambda_safe=0.0, n_warmup_steps=30)
+    assert state.lambda_ == {_PAIR_AB: 0.0, _PAIR_AC: 0.0, ("b", "c"): 0.0}
     assert state.warmup_steps_remaining == 30
 
 
-def test_reset_on_partner_swap_changes_pair_count() -> None:
-    """Partner swap may add/remove agents — lambda_ length must change."""
+def test_reset_on_partner_swap_changes_pair_set() -> None:
+    """Partner swap may add/remove agents — lambda_ key set must change."""
     state = SafetyState(
-        lambda_=np.array([0.5, -0.3, 0.1], dtype=np.float64),
+        lambda_={_PAIR_AB: 0.5, _PAIR_AC: -0.3, ("b", "c"): 0.1},
         epsilon=0.05,
         eta=0.1,
     )
-    reset_on_partner_swap(state, n_pairs=1, lambda_safe=0.2)
-    assert state.lambda_.shape == (1,)
-    assert state.lambda_[0] == 0.2
+    reset_on_partner_swap(state, uids=("a", "b"), lambda_safe=0.2)
+    assert state.lambda_ == {_PAIR_AB: 0.2}
     assert state.warmup_steps_remaining == DEFAULT_WARMUP_STEPS
 
 
 def test_full_warmup_decay_to_steady_state() -> None:
     """Running update_lambda for the full warmup window decrements to zero."""
     state = SafetyState(
-        lambda_=np.zeros(1, dtype=np.float64),
+        lambda_={_PAIR_AB: 0.0},
         epsilon=0.05,
         eta=0.05,
         warmup_steps_remaining=10,
     )
     for _ in range(10):
-        update_lambda(state, np.zeros(1, dtype=np.float64), in_warmup=True)
+        update_lambda(state, {_PAIR_AB: 0.0}, in_warmup=True)
     assert state.warmup_steps_remaining == 0
