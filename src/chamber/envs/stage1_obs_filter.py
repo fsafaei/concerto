@@ -332,5 +332,19 @@ class Stage1OMChannelFilter(gym.ObservationWrapper):  # type: ignore[type-arg]
             out["extra"] = filtered_extra
         return out
 
+    def __getattr__(self, name: str) -> Any:  # noqa: ANN401 - mirrors Stage1ASStateSynthesizer's forwarding contract
+        """Forward attribute access to the inner env (Tier-2 caller contract).
+
+        Mirrors :meth:`Stage1ASStateSynthesizer.__getattr__`: Gymnasium 1.3
+        removed :class:`gym.Wrapper`'s implicit forwarding, so callers of
+        :func:`chamber.envs.stage1_pickplace.make_stage1_pickplace_env`
+        — which now applies this wrapper on top of the AS synthesizer —
+        would otherwise lose access to SAPIEN-env attributes such as
+        ``env.agent``, ``env.obs_mode``, ``env.condition_config``.
+        """
+        if name == "env":
+            raise AttributeError(name)
+        return getattr(self.env, name)
+
 
 __all__ = ["Stage1ASStateSynthesizer", "Stage1OMChannelFilter"]
