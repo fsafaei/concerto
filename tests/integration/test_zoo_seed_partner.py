@@ -76,11 +76,19 @@ def test_frozen_harl_partner_acts_on_published_zoo_seed() -> None:
     """
     spec = _harl_spec()
     payload = _payload_path(spec)
-    if not payload.exists():
+    # Deploy order is "payload first, sidecar second" (see
+    # :mod:`concerto.training.checkpoints` module docstring): when the
+    # payload exists but the sidecar is missing, the artefact is mid-
+    # deploy / mid-pull and ``load_checkpoint`` would raise
+    # :class:`CheckpointError`. Treat that as a skip — same intent as
+    # the "artefact absent" branch — so a partial pull on a GPU host
+    # does not surface as an unrelated test failure (issue #164).
+    sidecar = payload.with_suffix(payload.suffix + ".json")
+    if not payload.exists() or not sidecar.exists():
         pytest.skip(
-            f"Zoo-seed artefact not present at {payload}. Run `make zoo-seed-pull` to "
-            f"fetch it (or set CONCERTO_ARTIFACTS_ROOT to a directory that contains "
-            f"the staged artefact)."
+            f"Zoo-seed artefact not fully staged at {payload} (sidecar={sidecar.exists()}). "
+            f"Run `make zoo-seed-pull` to fetch it (or set CONCERTO_ARTIFACTS_ROOT to a "
+            f"directory that contains both the .pt payload and the .pt.json sidecar)."
         )
 
     partner = FrozenHARLPartner(spec)

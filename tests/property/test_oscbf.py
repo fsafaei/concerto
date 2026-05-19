@@ -10,6 +10,7 @@ limits.
 
 from __future__ import annotations
 
+import os
 import sys
 
 import numpy as np
@@ -308,8 +309,39 @@ def _build_seven_dof_problem(
     return q_dot_nom, nu_nom, j, _stack(rows, rhs)
 
 
+def _coverage_instrumentation_active() -> bool:
+    """Detect coverage instrumentation across tracer and sysmon modes.
+
+    ``sys.gettrace() is not None`` only catches coverage when it uses
+    the legacy ``settrace`` mechanism. Coverage.py 7.4+ on Python 3.12+
+    defaults to PEP-669 ``sys.monitoring`` — which does NOT set the
+    trace function, so the legacy check misses it and the timing
+    assertion runs against inflated timings on a CI host that ran
+    ``make verify``/``make test`` with ``--cov`` enabled (issue #164).
+    """
+    if sys.gettrace() is not None:
+        return True
+    monitoring = getattr(sys, "monitoring", None)
+    if monitoring is not None:
+        # Coverage.py registers under DEBUGGER_ID by default (tool id 0)
+        # or the COVERAGE_ID slot when explicitly chosen. Scan the 6
+        # reserved tool IDs (0..5) — any registered tool on this
+        # interpreter implies live monitoring callbacks that will
+        # inflate per-call timings.
+        for tool_id in range(6):
+            try:
+                if monitoring.get_tool(tool_id) is not None:
+                    return True
+            except (ValueError, RuntimeError):
+                continue
+    # pytest-cov sets COV_CORE_SOURCE; coverage.py CLI sets COVERAGE_RUN.
+    # Either env var indicates the test runner has coverage active even
+    # if the tracer/monitoring hooks happen to be quiescent right now.
+    return "COV_CORE_SOURCE" in os.environ or "COVERAGE_RUN" in os.environ
+
+
 @pytest.mark.skipif(
-    sys.gettrace() is not None,
+    _coverage_instrumentation_active(),
     reason=(
         "Coverage instrumentation inflates timings 2-3x; the 1 kHz target "
         "is asserted in uncovered runs. The OSCBF correctness paths are "

@@ -98,11 +98,20 @@ def test_artefact_matches_committed_sha256() -> None:
     :func:`concerto.training.checkpoints.load_checkpoint`, NOT a skip.
     """
     payload = _payload_path()
-    if not payload.exists():
+    # Deploy order is "payload first, sidecar second" (see
+    # :mod:`concerto.training.checkpoints` module docstring): when the
+    # payload exists but the sidecar is missing, the artefact is mid-
+    # pull and ``load_checkpoint`` would raise ``CheckpointError``.
+    # Treat that as a skip — same intent as the absent-artefact branch
+    # — so a partial pull on a GPU host does not surface as an
+    # unrelated test failure (issue #164). A fully-staged but tampered
+    # payload still fails loudly via the SHA-256 mismatch below.
+    sidecar = payload.with_suffix(payload.suffix + ".json")
+    if not payload.exists() or not sidecar.exists():
         pytest.skip(
-            f"Zoo-seed artefact not present at {payload}. Run `make zoo-seed-pull` to "
-            f"fetch it (or set CONCERTO_ARTIFACTS_ROOT to a directory that contains "
-            f"the staged artefact)."
+            f"Zoo-seed artefact not fully staged at {payload} (sidecar={sidecar.exists()}). "
+            f"Run `make zoo-seed-pull` to fetch it (or set CONCERTO_ARTIFACTS_ROOT to a "
+            f"directory that contains both the .pt payload and the .pt.json sidecar)."
         )
     expected = _expected_sha256()
     try:
