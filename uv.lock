@@ -370,6 +370,7 @@ source = { editable = "." }
 dependencies = [
     { name = "cvxpy" },
     { name = "gymnasium" },
+    { name = "harl-aht" },
     { name = "hydra-core" },
     { name = "mani-skill" },
     { name = "numpy" },
@@ -431,9 +432,6 @@ dev = [
     { name = "pytest-xdist" },
     { name = "ruff" },
 ]
-train = [
-    { name = "harl" },
-]
 
 [package.metadata]
 requires-dist = [
@@ -441,6 +439,7 @@ requires-dist = [
     { name = "cvxpy", specifier = ">=1.8.2,<2.0" },
     { name = "cyclonedx-bom", marker = "extra == 'dev'", specifier = ">=4.0" },
     { name = "gymnasium", specifier = ">=1.3.0,<2.0" },
+    { name = "harl-aht", specifier = ">=0.1.0,<0.2.0", index = "https://test.pypi.org/simple/" },
     { name = "hydra-core", specifier = ">=1.3.2,<2.0" },
     { name = "hypothesis", marker = "extra == 'dev'", specifier = ">=6.108" },
     { name = "ipykernel", marker = "extra == 'dev'" },
@@ -491,7 +490,6 @@ dev = [
     { name = "pytest-xdist", specifier = ">=3.6" },
     { name = "ruff", specifier = ">=0.6" },
 ]
-train = [{ name = "harl", git = "https://github.com/fsafaei/harl-fork.git?rev=56436e4da9453cf124b2b814e0d270db58859dd9" }]
 
 [[package]]
 name = "contourpy"
@@ -939,15 +937,20 @@ wheels = [
 ]
 
 [[package]]
-name = "harl"
-version = "1.0.0"
-source = { git = "https://github.com/fsafaei/harl-fork.git?rev=56436e4da9453cf124b2b814e0d270db58859dd9#56436e4da9453cf124b2b814e0d270db58859dd9" }
+name = "harl-aht"
+version = "0.1.0"
+source = { registry = "https://test.pypi.org/simple/" }
 dependencies = [
+    { name = "hydra-core" },
     { name = "pyyaml" },
     { name = "setproctitle" },
     { name = "tensorboard" },
     { name = "tensorboardx" },
     { name = "torch" },
+]
+sdist = { url = "https://test-files.pythonhosted.org/packages/c4/be/832bfa7587418a1c736f767a889f4c8fd8ce08c9a0ed353b4a07ac656d51/harl_aht-0.1.0.tar.gz", hash = "sha256:6c23f0044e616c2ec5ce83df0f3ed4d997dc7ae9adda8f07158b34d6989e9311", size = 494066, upload-time = "2026-05-19T17:02:37.137Z" }
+wheels = [
+    { url = "https://test-files.pythonhosted.org/packages/12/57/0098e4a7769d59e8c4914f760214aa64cc087a35630974f63de28f0e3f47/harl_aht-0.1.0-py3-none-any.whl", hash = "sha256:08be7efe4fed36f246e8a7dd1ed85a1419b507cc068f40549f42b9cb14bbc863", size = 629150, upload-time = "2026-05-19T17:02:38.654Z" },
 ]
 
 [[package]]
