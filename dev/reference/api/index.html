@@ -4772,6 +4772,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#chamber.evaluation.SlackAggregate" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SlackAggregate
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#chamber.evaluation.SpikeRun" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -4787,6 +4798,17 @@
     <span class="md-ellipsis">
       
         aggregate_metrics
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#chamber.evaluation.aggregate_oscbf_slack" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        aggregate_oscbf_slack
       
     </span>
   </a>
@@ -4831,6 +4853,17 @@
     <span class="md-ellipsis">
       
         load_prereg
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#chamber.evaluation.make_condition_row" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        make_condition_row
       
     </span>
   </a>
@@ -9538,6 +9571,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#chamber.evaluation.SlackAggregate" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SlackAggregate
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#chamber.evaluation.SpikeRun" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -9553,6 +9597,17 @@
     <span class="md-ellipsis">
       
         aggregate_metrics
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#chamber.evaluation.aggregate_oscbf_slack" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        aggregate_oscbf_slack
       
     </span>
   </a>
@@ -9597,6 +9652,17 @@
     <span class="md-ellipsis">
       
         load_prereg
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#chamber.evaluation.make_condition_row" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        make_condition_row
       
     </span>
   </a>
@@ -51138,6 +51204,134 @@ local debug runs can still use a pooled iid baseline.</p>
 
 
 
+<h2 id="chamber.evaluation.SlackAggregate" class="doc doc-heading">
+            <span class="doc doc-object-name doc-class-name">SlackAggregate</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-dataclass"><code>dataclass</code></small>
+  </span>
+
+</h2>
+
+
+    <div class="doc doc-contents ">
+
+
+
+        <p>Per-condition OSCBF slack aggregate (ADR-014 §Revision history 2026-05-16).</p>
+<p>Carries the two scalar columns ADR-014 Table 2 v2 adds to
+:class:<code>concerto.safety.reporting.ConditionRow</code>. The values are
+aggregated by :func:<code>aggregate_oscbf_slack</code> over the per-step
+:class:<code>concerto.safety.oscbf.OSCBFResult</code> stream within a single
+ADR-014 Table 2 condition.</p>
+
+
+<p><span class="doc-section-title">Attributes:</span></p>
+    <ul>
+        <li class="doc-section-item field-body">
+          <b><code><span title="chamber.evaluation.SlackAggregate.max_slack">max_slack</span></code></b>
+              (<code><span title="float">float</span></code>)
+          –
+          <div class="doc-md-description">
+            <p>Maximum over steps <code>k</code> in the condition of
+<code>OSCBFResult.max_slack</code> — the worst single-step OSCBF
+relaxation observed across the condition. Non-negative by
+construction (the source signal is non-negative).</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+          <b><code><span title="chamber.evaluation.SlackAggregate.slack_l2">slack_l2</span></code></b>
+              (<code><span title="float">float</span></code>)
+          –
+          <div class="doc-md-description">
+            <p>Mean over steps <code>k</code> of <code>OSCBFResult.slack_l2</code> —
+the mean L2-norm of the per-step slack vector across the
+condition. Non-negative by construction.</p>
+          </div>
+        </li>
+    </ul>
+
+
+
+
+
+
+
+
+              <details class="mkdocstrings-source">
+                <summary>Source code in <code>src/chamber/evaluation/oscbf_aggregate.py</code></summary>
+                <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">51</span>
+<span class="normal">52</span>
+<span class="normal">53</span>
+<span class="normal">54</span>
+<span class="normal">55</span>
+<span class="normal">56</span>
+<span class="normal">57</span>
+<span class="normal">58</span>
+<span class="normal">59</span>
+<span class="normal">60</span>
+<span class="normal">61</span>
+<span class="normal">62</span>
+<span class="normal">63</span>
+<span class="normal">64</span>
+<span class="normal">65</span>
+<span class="normal">66</span>
+<span class="normal">67</span>
+<span class="normal">68</span>
+<span class="normal">69</span>
+<span class="normal">70</span>
+<span class="normal">71</span>
+<span class="normal">72</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">SlackAggregate</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Per-condition OSCBF slack aggregate (ADR-014 §Revision history 2026-05-16).</span>
+
+<span class="sd">    Carries the two scalar columns ADR-014 Table 2 v2 adds to</span>
+<span class="sd">    :class:`concerto.safety.reporting.ConditionRow`. The values are</span>
+<span class="sd">    aggregated by :func:`aggregate_oscbf_slack` over the per-step</span>
+<span class="sd">    :class:`concerto.safety.oscbf.OSCBFResult` stream within a single</span>
+<span class="sd">    ADR-014 Table 2 condition.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        max_slack: Maximum over steps ``k`` in the condition of</span>
+<span class="sd">            ``OSCBFResult.max_slack`` — the worst single-step OSCBF</span>
+<span class="sd">            relaxation observed across the condition. Non-negative by</span>
+<span class="sd">            construction (the source signal is non-negative).</span>
+<span class="sd">        slack_l2: Mean over steps ``k`` of ``OSCBFResult.slack_l2`` —</span>
+<span class="sd">            the mean L2-norm of the per-step slack vector across the</span>
+<span class="sd">            condition. Non-negative by construction.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">max_slack</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">slack_l2</span><span class="p">:</span> <span class="nb">float</span>
+</code></pre></div></td></tr></table></div>
+              </details>
+
+
+
+<div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+
+
+  </div>
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-class">
+
+
+
 <h2 id="chamber.evaluation.SpikeRun" class="doc doc-heading">
             <span class="doc doc-object-name doc-class-name">SpikeRun</span>
 
@@ -51580,6 +51774,158 @@ and the Phase-0 golden-file integration test.</p>
             <span class="p">)</span>
             <span class="n">out</span><span class="p">[</span><span class="s2">&quot;performance_profile&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="k">return</span> <span class="n">out</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h2 id="chamber.evaluation.aggregate_oscbf_slack" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">aggregate_oscbf_slack</span>
+
+
+</h2>
+<div class="doc-signature highlight"><pre><span></span><code><span class="nf">aggregate_oscbf_slack</span><span class="p">(</span>
+    <span class="n">results</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">OSCBFResult</span><span class="p">],</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SlackAggregate</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Aggregate per-step :class:<code>OSCBFResult</code> values into the ADR-014 contract.</p>
+<p>Implements the locked aggregation contract from ADR-014 §Revision
+history 2026-05-16:</p>
+<ul>
+<li><code>max_slack</code> is the max over steps of <code>OSCBFResult.max_slack</code>.</li>
+<li><code>slack_l2</code> is the mean over steps of <code>OSCBFResult.slack_l2</code>.</li>
+</ul>
+<p>A consumed empty iterable produces <code>SlackAggregate(0.0, 0.0)</code> so
+the result composes with the
+:class:<code>concerto.safety.reporting.ConditionRow</code> defaults (the
+Stage-1a EGO_ONLY path that does not exercise the OSCBF inner
+filter; issue #142).</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <ul>
+        <li class="doc-section-item field-body">
+            <b><code>results</code></b>
+              (<code><span title="collections.abc.Iterable">Iterable</span>[<span title="concerto.safety.oscbf.OSCBFResult">OSCBFResult</span>]</code>)
+          –
+          <div class="doc-md-description">
+            <p>Iterable of per-step
+:class:<code>concerto.safety.oscbf.OSCBFResult</code> values from the
+steps within a single ADR-014 Table 2 condition. Order is
+irrelevant; the aggregator consumes the iterable exactly
+once.</p>
+          </div>
+        </li>
+    </ul>
+
+
+<p><span class="doc-section-title">Returns:</span></p>
+    <ul>
+        <li class="doc-section-item field-body">
+<b><code>The</code></b> (              <code><a class="autorefs autorefs-internal" title="SlackAggregate
+
+
+  
+      dataclass
+   (chamber.evaluation.oscbf_aggregate.SlackAggregate)" href="#chamber.evaluation.SlackAggregate">SlackAggregate</a></code>
+)          –
+          <div class="doc-md-description">
+            <p>class:<code>SlackAggregate</code> carrying the two ADR-014 v2</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+              <code><a class="autorefs autorefs-internal" title="SlackAggregate
+
+
+  
+      dataclass
+   (chamber.evaluation.oscbf_aggregate.SlackAggregate)" href="#chamber.evaluation.SlackAggregate">SlackAggregate</a></code>
+          –
+          <div class="doc-md-description">
+            <p>ConditionRow columns.</p>
+          </div>
+        </li>
+    </ul>
+
+
+            <details class="mkdocstrings-source">
+              <summary>Source code in <code>src/chamber/evaluation/oscbf_aggregate.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 75</span>
+<span class="normal"> 76</span>
+<span class="normal"> 77</span>
+<span class="normal"> 78</span>
+<span class="normal"> 79</span>
+<span class="normal"> 80</span>
+<span class="normal"> 81</span>
+<span class="normal"> 82</span>
+<span class="normal"> 83</span>
+<span class="normal"> 84</span>
+<span class="normal"> 85</span>
+<span class="normal"> 86</span>
+<span class="normal"> 87</span>
+<span class="normal"> 88</span>
+<span class="normal"> 89</span>
+<span class="normal"> 90</span>
+<span class="normal"> 91</span>
+<span class="normal"> 92</span>
+<span class="normal"> 93</span>
+<span class="normal"> 94</span>
+<span class="normal"> 95</span>
+<span class="normal"> 96</span>
+<span class="normal"> 97</span>
+<span class="normal"> 98</span>
+<span class="normal"> 99</span>
+<span class="normal">100</span>
+<span class="normal">101</span>
+<span class="normal">102</span>
+<span class="normal">103</span>
+<span class="normal">104</span>
+<span class="normal">105</span>
+<span class="normal">106</span>
+<span class="normal">107</span>
+<span class="normal">108</span>
+<span class="normal">109</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">aggregate_oscbf_slack</span><span class="p">(</span><span class="n">results</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">OSCBFResult</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">SlackAggregate</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Aggregate per-step :class:`OSCBFResult` values into the ADR-014 contract.</span>
+
+<span class="sd">    Implements the locked aggregation contract from ADR-014 §Revision</span>
+<span class="sd">    history 2026-05-16:</span>
+
+<span class="sd">    - ``max_slack`` is the max over steps of ``OSCBFResult.max_slack``.</span>
+<span class="sd">    - ``slack_l2`` is the mean over steps of ``OSCBFResult.slack_l2``.</span>
+
+<span class="sd">    A consumed empty iterable produces ``SlackAggregate(0.0, 0.0)`` so</span>
+<span class="sd">    the result composes with the</span>
+<span class="sd">    :class:`concerto.safety.reporting.ConditionRow` defaults (the</span>
+<span class="sd">    Stage-1a EGO_ONLY path that does not exercise the OSCBF inner</span>
+<span class="sd">    filter; issue #142).</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        results: Iterable of per-step</span>
+<span class="sd">            :class:`concerto.safety.oscbf.OSCBFResult` values from the</span>
+<span class="sd">            steps within a single ADR-014 Table 2 condition. Order is</span>
+<span class="sd">            irrelevant; the aggregator consumes the iterable exactly</span>
+<span class="sd">            once.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        The :class:`SlackAggregate` carrying the two ADR-014 v2</span>
+<span class="sd">        ConditionRow columns.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">max_slack</span> <span class="o">=</span> <span class="mf">0.0</span>
+    <span class="n">slack_l2_sum</span> <span class="o">=</span> <span class="mf">0.0</span>
+    <span class="n">n_steps</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">result</span> <span class="ow">in</span> <span class="n">results</span><span class="p">:</span>
+        <span class="n">max_slack</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">max_slack</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">max_slack</span><span class="p">)</span>
+        <span class="n">slack_l2_sum</span> <span class="o">+=</span> <span class="n">result</span><span class="o">.</span><span class="n">slack_l2</span>
+        <span class="n">n_steps</span> <span class="o">+=</span> <span class="mi">1</span>
+    <span class="n">slack_l2_mean</span> <span class="o">=</span> <span class="n">slack_l2_sum</span> <span class="o">/</span> <span class="n">n_steps</span> <span class="k">if</span> <span class="n">n_steps</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="mf">0.0</span>
+    <span class="k">return</span> <span class="n">SlackAggregate</span><span class="p">(</span><span class="n">max_slack</span><span class="o">=</span><span class="n">max_slack</span><span class="p">,</span> <span class="n">slack_l2</span><span class="o">=</span><span class="n">slack_l2_mean</span><span class="p">)</span>
 </code></pre></div></td></tr></table></div>
             </details>
     </div>
@@ -52185,6 +52531,233 @@ the ADR-007 §3.4 shortlist.</p>
     <span class="n">spec</span> <span class="o">=</span> <span class="n">PreregistrationSpec</span><span class="o">.</span><span class="n">model_validate</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
     <span class="n">spec</span><span class="o">.</span><span class="n">normalised_axis</span><span class="p">()</span>
     <span class="k">return</span> <span class="n">spec</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h2 id="chamber.evaluation.make_condition_row" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">make_condition_row</span>
+
+
+</h2>
+<div class="doc-signature highlight"><pre><span></span><code><span class="nf">make_condition_row</span><span class="p">(</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">predictor</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">conformal_mode</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">vendor_compliance</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">n_episodes</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">violations</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">fallback_fires</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">oscbf_results</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">OSCBFResult</span><span class="p">]</span> <span class="o">=</span> <span class="p">(),</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ConditionRow</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Construct a :class:<code>ConditionRow</code> with slack aggregates wired in (issue #142).</p>
+<p>The natural call-site at <code>three_tables.json</code> emission time. Routes
+the per-step :class:<code>concerto.safety.oscbf.OSCBFResult</code> stream through
+:func:<code>aggregate_oscbf_slack</code> so the v2 slack columns are populated
+per the locked ADR-014 §Revision history 2026-05-16 contract. Callers
+on the EGO_ONLY outer-filter path (the Stage-1a default) pass the
+default empty tuple and get the schema-v2 <code>0.0</code> defaults — exactly
+the behaviour documented on
+:class:<code>concerto.safety.reporting.ConditionRow</code>.</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <ul>
+        <li class="doc-section-item field-body">
+            <b><code>predictor</code></b>
+              (<code><span title="str">str</span></code>)
+          –
+          <div class="doc-md-description">
+            <p><code>"gt"</code> or <code>"pred"</code> (Huriot &amp; Sibai 2025 Table I
+labels).</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+            <b><code>conformal_mode</code></b>
+              (<code><span title="str">str</span></code>)
+          –
+          <div class="doc-md-description">
+            <p><code>"noLearn"</code> or <code>"Learn"</code>.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+            <b><code>vendor_compliance</code></b>
+              (<code><span title="str">str</span> | None</code>)
+          –
+          <div class="doc-md-description">
+            <p>ADR-007 rev 3 placeholder; <code>None</code> in
+Phase-0.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+            <b><code>n_episodes</code></b>
+              (<code><span title="int">int</span></code>)
+          –
+          <div class="doc-md-description">
+            <p>Number of episodes in this condition.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+            <b><code>violations</code></b>
+              (<code><span title="int">int</span></code>)
+          –
+          <div class="doc-md-description">
+            <p>Count of CBF-constraint violations.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+            <b><code>fallback_fires</code></b>
+              (<code><span title="int">int</span></code>)
+          –
+          <div class="doc-md-description">
+            <p>Count of braking-fallback fires.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+            <b><code>oscbf_results</code></b>
+              (<code><span title="collections.abc.Iterable">Iterable</span>[<span title="concerto.safety.oscbf.OSCBFResult">OSCBFResult</span>]</code>, default:
+                  <code>()</code>
+)
+          –
+          <div class="doc-md-description">
+            <p>Per-step :class:<code>OSCBFResult</code> stream for the
+condition. Defaults to an empty tuple — the Stage-1a
+EGO_ONLY path that does not exercise the OSCBF inner
+filter (issue #142).</p>
+          </div>
+        </li>
+    </ul>
+
+
+<p><span class="doc-section-title">Returns:</span></p>
+    <ul>
+        <li class="doc-section-item field-body">
+<b><code>A</code></b> (              <code><span title="concerto.safety.reporting.ConditionRow">ConditionRow</span></code>
+)          –
+          <div class="doc-md-description">
+            <p>class:<code>ConditionRow</code> carrying both the Phase-0 columns and</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+              <code><span title="concerto.safety.reporting.ConditionRow">ConditionRow</span></code>
+          –
+          <div class="doc-md-description">
+            <p>the ADR-014 v2 slack aggregates.</p>
+          </div>
+        </li>
+    </ul>
+
+
+            <details class="mkdocstrings-source">
+              <summary>Source code in <code>src/chamber/evaluation/oscbf_aggregate.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">112</span>
+<span class="normal">113</span>
+<span class="normal">114</span>
+<span class="normal">115</span>
+<span class="normal">116</span>
+<span class="normal">117</span>
+<span class="normal">118</span>
+<span class="normal">119</span>
+<span class="normal">120</span>
+<span class="normal">121</span>
+<span class="normal">122</span>
+<span class="normal">123</span>
+<span class="normal">124</span>
+<span class="normal">125</span>
+<span class="normal">126</span>
+<span class="normal">127</span>
+<span class="normal">128</span>
+<span class="normal">129</span>
+<span class="normal">130</span>
+<span class="normal">131</span>
+<span class="normal">132</span>
+<span class="normal">133</span>
+<span class="normal">134</span>
+<span class="normal">135</span>
+<span class="normal">136</span>
+<span class="normal">137</span>
+<span class="normal">138</span>
+<span class="normal">139</span>
+<span class="normal">140</span>
+<span class="normal">141</span>
+<span class="normal">142</span>
+<span class="normal">143</span>
+<span class="normal">144</span>
+<span class="normal">145</span>
+<span class="normal">146</span>
+<span class="normal">147</span>
+<span class="normal">148</span>
+<span class="normal">149</span>
+<span class="normal">150</span>
+<span class="normal">151</span>
+<span class="normal">152</span>
+<span class="normal">153</span>
+<span class="normal">154</span>
+<span class="normal">155</span>
+<span class="normal">156</span>
+<span class="normal">157</span>
+<span class="normal">158</span>
+<span class="normal">159</span>
+<span class="normal">160</span>
+<span class="normal">161</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">make_condition_row</span><span class="p">(</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">predictor</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">conformal_mode</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">vendor_compliance</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">n_episodes</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">violations</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">fallback_fires</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">oscbf_results</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">OSCBFResult</span><span class="p">]</span> <span class="o">=</span> <span class="p">(),</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ConditionRow</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Construct a :class:`ConditionRow` with slack aggregates wired in (issue #142).</span>
+
+<span class="sd">    The natural call-site at ``three_tables.json`` emission time. Routes</span>
+<span class="sd">    the per-step :class:`concerto.safety.oscbf.OSCBFResult` stream through</span>
+<span class="sd">    :func:`aggregate_oscbf_slack` so the v2 slack columns are populated</span>
+<span class="sd">    per the locked ADR-014 §Revision history 2026-05-16 contract. Callers</span>
+<span class="sd">    on the EGO_ONLY outer-filter path (the Stage-1a default) pass the</span>
+<span class="sd">    default empty tuple and get the schema-v2 ``0.0`` defaults — exactly</span>
+<span class="sd">    the behaviour documented on</span>
+<span class="sd">    :class:`concerto.safety.reporting.ConditionRow`.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        predictor: ``&quot;gt&quot;`` or ``&quot;pred&quot;`` (Huriot &amp; Sibai 2025 Table I</span>
+<span class="sd">            labels).</span>
+<span class="sd">        conformal_mode: ``&quot;noLearn&quot;`` or ``&quot;Learn&quot;``.</span>
+<span class="sd">        vendor_compliance: ADR-007 rev 3 placeholder; ``None`` in</span>
+<span class="sd">            Phase-0.</span>
+<span class="sd">        n_episodes: Number of episodes in this condition.</span>
+<span class="sd">        violations: Count of CBF-constraint violations.</span>
+<span class="sd">        fallback_fires: Count of braking-fallback fires.</span>
+<span class="sd">        oscbf_results: Per-step :class:`OSCBFResult` stream for the</span>
+<span class="sd">            condition. Defaults to an empty tuple — the Stage-1a</span>
+<span class="sd">            EGO_ONLY path that does not exercise the OSCBF inner</span>
+<span class="sd">            filter (issue #142).</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        A :class:`ConditionRow` carrying both the Phase-0 columns and</span>
+<span class="sd">        the ADR-014 v2 slack aggregates.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">aggregate</span> <span class="o">=</span> <span class="n">aggregate_oscbf_slack</span><span class="p">(</span><span class="n">oscbf_results</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">ConditionRow</span><span class="p">(</span>
+        <span class="n">predictor</span><span class="o">=</span><span class="n">predictor</span><span class="p">,</span>
+        <span class="n">conformal_mode</span><span class="o">=</span><span class="n">conformal_mode</span><span class="p">,</span>
+        <span class="n">vendor_compliance</span><span class="o">=</span><span class="n">vendor_compliance</span><span class="p">,</span>
+        <span class="n">n_episodes</span><span class="o">=</span><span class="n">n_episodes</span><span class="p">,</span>
+        <span class="n">violations</span><span class="o">=</span><span class="n">violations</span><span class="p">,</span>
+        <span class="n">fallback_fires</span><span class="o">=</span><span class="n">fallback_fires</span><span class="p">,</span>
+        <span class="n">max_slack</span><span class="o">=</span><span class="n">aggregate</span><span class="o">.</span><span class="n">max_slack</span><span class="p">,</span>
+        <span class="n">slack_l2</span><span class="o">=</span><span class="n">aggregate</span><span class="o">.</span><span class="n">slack_l2</span><span class="p">,</span>
+    <span class="p">)</span>
 </code></pre></div></td></tr></table></div>
             </details>
     </div>
