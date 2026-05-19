@@ -4976,6 +4976,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#chamber.benchmarks.training_runner.build_emergency_controllers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        build_emergency_controllers
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#chamber.benchmarks.training_runner.build_env" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -9768,6 +9779,17 @@
     <span class="md-ellipsis">
       
         build_control_models
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#chamber.benchmarks.training_runner.build_emergency_controllers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        build_emergency_controllers
       
     </span>
   </a>
@@ -20132,17 +20154,7 @@ production <code>mpe_cooperative_push.yaml</code> pins
 
               <details class="mkdocstrings-source">
                 <summary>Source code in <code>src/concerto/training/config.py</code></summary>
-                <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">265</span>
-<span class="normal">266</span>
-<span class="normal">267</span>
-<span class="normal">268</span>
-<span class="normal">269</span>
-<span class="normal">270</span>
-<span class="normal">271</span>
-<span class="normal">272</span>
-<span class="normal">273</span>
-<span class="normal">274</span>
-<span class="normal">275</span>
+                <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">275</span>
 <span class="normal">276</span>
 <span class="normal">277</span>
 <span class="normal">278</span>
@@ -20174,7 +20186,17 @@ production <code>mpe_cooperative_push.yaml</code> pins
 <span class="normal">304</span>
 <span class="normal">305</span>
 <span class="normal">306</span>
-<span class="normal">307</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">EgoAHTConfig</span><span class="p">(</span><span class="n">_FrozenModel</span><span class="p">):</span>
+<span class="normal">307</span>
+<span class="normal">308</span>
+<span class="normal">309</span>
+<span class="normal">310</span>
+<span class="normal">311</span>
+<span class="normal">312</span>
+<span class="normal">313</span>
+<span class="normal">314</span>
+<span class="normal">315</span>
+<span class="normal">316</span>
+<span class="normal">317</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">EgoAHTConfig</span><span class="p">(</span><span class="n">_FrozenModel</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Root config for an ego-AHT training run (T4b.11; ADR-002 §Decisions).</span>
 
 <span class="sd">    Validates the composed Hydra config and exposes a frozen</span>
@@ -20538,17 +20560,7 @@ the empirical-guarantee experiment within its 30-minute CPU budget
 
               <details class="mkdocstrings-source">
                 <summary>Source code in <code>src/concerto/training/config.py</code></summary>
-                <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">236</span>
-<span class="normal">237</span>
-<span class="normal">238</span>
-<span class="normal">239</span>
-<span class="normal">240</span>
-<span class="normal">241</span>
-<span class="normal">242</span>
-<span class="normal">243</span>
-<span class="normal">244</span>
-<span class="normal">245</span>
-<span class="normal">246</span>
+                <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">246</span>
 <span class="normal">247</span>
 <span class="normal">248</span>
 <span class="normal">249</span>
@@ -20564,7 +20576,17 @@ the empirical-guarantee experiment within its 30-minute CPU budget
 <span class="normal">259</span>
 <span class="normal">260</span>
 <span class="normal">261</span>
-<span class="normal">262</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">HAPPOHyperparams</span><span class="p">(</span><span class="n">_FrozenModel</span><span class="p">):</span>
+<span class="normal">262</span>
+<span class="normal">263</span>
+<span class="normal">264</span>
+<span class="normal">265</span>
+<span class="normal">266</span>
+<span class="normal">267</span>
+<span class="normal">268</span>
+<span class="normal">269</span>
+<span class="normal">270</span>
+<span class="normal">271</span>
+<span class="normal">272</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">HAPPOHyperparams</span><span class="p">(</span><span class="n">_FrozenModel</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;On-policy ego-AHT HAPPO hyperparameters (ADR-002 §Decisions; plan/05 §3.2).</span>
 
 <span class="sd">    Defaults match the published HARL Bi-DexHands-style values where</span>
@@ -21049,6 +21071,22 @@ AoI-conditioned variants are Phase-2 per ADR-004 §Open
 questions).</p>
           </div>
         </li>
+        <li class="doc-section-item field-body">
+          <b><code><span title="concerto.training.config.SafetyConfig.tau_brake">tau_brake</span></code></b>
+              (<code><span title="float">float</span></code>)
+          –
+          <div class="doc-md-description">
+            <p>Per-step braking-fallback TTC threshold in seconds
+(P1.04.6; ADR-007 §Stage 1b training-vs-deployment parity).
+When the smallest pairwise time-to-collision drops below
+this, :func:<code>concerto.safety.braking.maybe_brake</code> overrides
+the ego action with the per-uid emergency-controller's
+push-apart response — the per-step backstop that does not
+depend on QP feasibility (Wang-Ames-Egerstedt 2017 eq. 17;
+ADR-004 risk-mitigation #1). Default matches
+:data:<code>concerto.safety.braking.DEFAULT_TAU_BRAKE</code> (100 ms).</p>
+          </div>
+        </li>
     </ul>
 
 
@@ -21120,7 +21158,17 @@ questions).</p>
 <span class="normal">230</span>
 <span class="normal">231</span>
 <span class="normal">232</span>
-<span class="normal">233</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">SafetyConfig</span><span class="p">(</span><span class="n">_FrozenModel</span><span class="p">):</span>
+<span class="normal">233</span>
+<span class="normal">234</span>
+<span class="normal">235</span>
+<span class="normal">236</span>
+<span class="normal">237</span>
+<span class="normal">238</span>
+<span class="normal">239</span>
+<span class="normal">240</span>
+<span class="normal">241</span>
+<span class="normal">242</span>
+<span class="normal">243</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">SafetyConfig</span><span class="p">(</span><span class="n">_FrozenModel</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Safety-stack runtime configuration for the training rollout (P1.04.5; ADR-007 §Stage 1b).</span>
 
 <span class="sd">    Phase-1 P1.04.5 wires the CBF-QP outer filter into</span>
@@ -21173,6 +21221,15 @@ questions).</p>
 <span class="sd">            :func:`concerto.safety.conformal.constant_velocity_predict`;</span>
 <span class="sd">            AoI-conditioned variants are Phase-2 per ADR-004 §Open</span>
 <span class="sd">            questions).</span>
+<span class="sd">        tau_brake: Per-step braking-fallback TTC threshold in seconds</span>
+<span class="sd">            (P1.04.6; ADR-007 §Stage 1b training-vs-deployment parity).</span>
+<span class="sd">            When the smallest pairwise time-to-collision drops below</span>
+<span class="sd">            this, :func:`concerto.safety.braking.maybe_brake` overrides</span>
+<span class="sd">            the ego action with the per-uid emergency-controller&#39;s</span>
+<span class="sd">            push-apart response — the per-step backstop that does not</span>
+<span class="sd">            depend on QP feasibility (Wang-Ames-Egerstedt 2017 eq. 17;</span>
+<span class="sd">            ADR-004 risk-mitigation #1). Default matches</span>
+<span class="sd">            :data:`concerto.safety.braking.DEFAULT_TAU_BRAKE` (100 ms).</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">enabled</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
@@ -21181,6 +21238,7 @@ questions).</p>
     <span class="n">lambda_safe</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span>
     <span class="n">n_warmup_steps</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span> <span class="n">ge</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
     <span class="n">predictor_kind</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;constant_velocity&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;constant_velocity&quot;</span>
+    <span class="n">tau_brake</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="mf">0.100</span><span class="p">,</span> <span class="n">gt</span><span class="o">=</span><span class="mf">0.0</span><span class="p">)</span>
 </code></pre></div></td></tr></table></div>
               </details>
 
@@ -21389,17 +21447,7 @@ duplicate agent uids, etc.).</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/concerto/training/config.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">310</span>
-<span class="normal">311</span>
-<span class="normal">312</span>
-<span class="normal">313</span>
-<span class="normal">314</span>
-<span class="normal">315</span>
-<span class="normal">316</span>
-<span class="normal">317</span>
-<span class="normal">318</span>
-<span class="normal">319</span>
-<span class="normal">320</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">320</span>
 <span class="normal">321</span>
 <span class="normal">322</span>
 <span class="normal">323</span>
@@ -21433,7 +21481,17 @@ duplicate agent uids, etc.).</p>
 <span class="normal">351</span>
 <span class="normal">352</span>
 <span class="normal">353</span>
-<span class="normal">354</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">load_config</span><span class="p">(</span>
+<span class="normal">354</span>
+<span class="normal">355</span>
+<span class="normal">356</span>
+<span class="normal">357</span>
+<span class="normal">358</span>
+<span class="normal">359</span>
+<span class="normal">360</span>
+<span class="normal">361</span>
+<span class="normal">362</span>
+<span class="normal">363</span>
+<span class="normal">364</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">load_config</span><span class="p">(</span>
     <span class="o">*</span><span class="p">,</span>
     <span class="n">config_path</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span>
     <span class="n">overrides</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -21586,8 +21644,7 @@ changing :func:<code>train</code>.</p>
 
               <details class="mkdocstrings-source">
                 <summary>Source code in <code>src/concerto/training/ego_aht.py</code></summary>
-                <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">135</span>
-<span class="normal">136</span>
+                <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">136</span>
 <span class="normal">137</span>
 <span class="normal">138</span>
 <span class="normal">139</span>
@@ -21639,7 +21696,8 @@ changing :func:<code>train</code>.</p>
 <span class="normal">185</span>
 <span class="normal">186</span>
 <span class="normal">187</span>
-<span class="normal">188</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">EgoTrainer</span><span class="p">(</span><span class="n">Protocol</span><span class="p">):</span>
+<span class="normal">188</span>
+<span class="normal">189</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">EgoTrainer</span><span class="p">(</span><span class="n">Protocol</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Minimal contract the training loop expects of an ego trainer (T4b.11; ADR-002 §Decisions).</span>
 
 <span class="sd">    Two concrete implementations satisfy this Protocol:</span>
@@ -21729,14 +21787,14 @@ changing :func:<code>train</code>.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/concerto/training/ego_aht.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">153</span>
-<span class="normal">154</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">154</span>
 <span class="normal">155</span>
 <span class="normal">156</span>
 <span class="normal">157</span>
 <span class="normal">158</span>
 <span class="normal">159</span>
-<span class="normal">160</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">act</span><span class="p">(</span>
+<span class="normal">160</span>
+<span class="normal">161</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">act</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
     <span class="n">obs</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span>
     <span class="o">*</span><span class="p">,</span>
@@ -21781,8 +21839,7 @@ and project issue #62 for the root-cause writeup). Default
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/concerto/training/ego_aht.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">162</span>
-<span class="normal">163</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">163</span>
 <span class="normal">164</span>
 <span class="normal">165</span>
 <span class="normal">166</span>
@@ -21799,7 +21856,8 @@ and project issue #62 for the root-cause writeup). Default
 <span class="normal">177</span>
 <span class="normal">178</span>
 <span class="normal">179</span>
-<span class="normal">180</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">observe</span><span class="p">(</span>
+<span class="normal">180</span>
+<span class="normal">181</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">observe</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
     <span class="n">obs</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span>
     <span class="n">reward</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
@@ -21842,9 +21900,9 @@ and project issue #62 for the root-cause writeup). Default
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/concerto/training/ego_aht.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">186</span>
-<span class="normal">187</span>
-<span class="normal">188</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">state_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">187</span>
+<span class="normal">188</span>
+<span class="normal">189</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">state_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Return the trainer&#39;s torch state-dict for checkpointing (ADR-002 §Decisions).&quot;&quot;&quot;</span>
     <span class="o">...</span>  <span class="c1"># pragma: no cover</span>
 </code></pre></div></td></tr></table></div>
@@ -21871,9 +21929,9 @@ and project issue #62 for the root-cause writeup). Default
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/concerto/training/ego_aht.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">182</span>
-<span class="normal">183</span>
-<span class="normal">184</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">183</span>
+<span class="normal">184</span>
+<span class="normal">185</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Run one optimisation epoch on the buffered rollout (ADR-002 §Decisions).&quot;&quot;&quot;</span>
     <span class="o">...</span>  <span class="c1"># pragma: no cover</span>
 </code></pre></div></td></tr></table></div>
@@ -21922,8 +21980,7 @@ satisfies this Protocol structurally.</p>
 
               <details class="mkdocstrings-source">
                 <summary>Source code in <code>src/concerto/training/ego_aht.py</code></summary>
-                <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">67</span>
-<span class="normal">68</span>
+                <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">68</span>
 <span class="normal">69</span>
 <span class="normal">70</span>
 <span class="normal">71</span>
@@ -21953,7 +22010,8 @@ satisfies this Protocol structurally.</p>
 <span class="normal">95</span>
 <span class="normal">96</span>
 <span class="normal">97</span>
-<span class="normal">98</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@runtime_checkable</span>
+<span class="normal">98</span>
+<span class="normal">99</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@runtime_checkable</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">EnvLike</span><span class="p">(</span><span class="n">Protocol</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Structural Gymnasium-multi-agent env contract the loop needs (T4b.11; ADR-002 §Decisions).</span>
 
@@ -22023,14 +22081,14 @@ satisfies this Protocol structurally.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/concerto/training/ego_aht.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">77</span>
-<span class="normal">78</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">78</span>
 <span class="normal">79</span>
 <span class="normal">80</span>
 <span class="normal">81</span>
 <span class="normal">82</span>
 <span class="normal">83</span>
-<span class="normal">84</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">reset</span><span class="p">(</span>
+<span class="normal">84</span>
+<span class="normal">85</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">reset</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
     <span class="o">*</span><span class="p">,</span>
     <span class="n">seed</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -22071,8 +22129,7 @@ of the action dict is intentional in some wrappers' rate-limit
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/concerto/training/ego_aht.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">86</span>
-<span class="normal">87</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">87</span>
 <span class="normal">88</span>
 <span class="normal">89</span>
 <span class="normal">90</span>
@@ -22083,7 +22140,8 @@ of the action dict is intentional in some wrappers' rate-limit
 <span class="normal">95</span>
 <span class="normal">96</span>
 <span class="normal">97</span>
-<span class="normal">98</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">step</span><span class="p">(</span>
+<span class="normal">98</span>
+<span class="normal">99</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">step</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
     <span class="n">action</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">floating</span><span class="p">]],</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">bool</span><span class="p">,</span> <span class="nb">bool</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]:</span>
@@ -22149,8 +22207,7 @@ a mutable <code>object</code> annotation.</p>
 
               <details class="mkdocstrings-source">
                 <summary>Source code in <code>src/concerto/training/ego_aht.py</code></summary>
-                <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">101</span>
-<span class="normal">102</span>
+                <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">102</span>
 <span class="normal">103</span>
 <span class="normal">104</span>
 <span class="normal">105</span>
@@ -22180,7 +22237,8 @@ a mutable <code>object</code> annotation.</p>
 <span class="normal">129</span>
 <span class="normal">130</span>
 <span class="normal">131</span>
-<span class="normal">132</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@runtime_checkable</span>
+<span class="normal">132</span>
+<span class="normal">133</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@runtime_checkable</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">PartnerLike</span><span class="p">(</span><span class="n">Protocol</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Structural ``FrozenPartner`` contract the loop needs (T4b.11; ADR-009 §Decision).</span>
 
@@ -22248,14 +22306,14 @@ a mutable <code>object</code> annotation.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/concerto/training/ego_aht.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">125</span>
-<span class="normal">126</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">126</span>
 <span class="normal">127</span>
 <span class="normal">128</span>
 <span class="normal">129</span>
 <span class="normal">130</span>
 <span class="normal">131</span>
-<span class="normal">132</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">act</span><span class="p">(</span>
+<span class="normal">132</span>
+<span class="normal">133</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">act</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
     <span class="n">obs</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span>
     <span class="o">*</span><span class="p">,</span>
@@ -22287,9 +22345,9 @@ a mutable <code>object</code> annotation.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/concerto/training/ego_aht.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">121</span>
-<span class="normal">122</span>
-<span class="normal">123</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">reset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">seed</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">122</span>
+<span class="normal">123</span>
+<span class="normal">124</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">reset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">seed</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Reset internal episode state (ADR-009 §Decision).&quot;&quot;&quot;</span>
     <span class="o">...</span>  <span class="c1"># pragma: no cover</span>
 </code></pre></div></td></tr></table></div>
@@ -22338,8 +22396,7 @@ via the trainer-factory seam (ADR-002 §Decisions; plan/05 §3.5).</p>
 
               <details class="mkdocstrings-source">
                 <summary>Source code in <code>src/concerto/training/ego_aht.py</code></summary>
-                <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">279</span>
-<span class="normal">280</span>
+                <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">280</span>
 <span class="normal">281</span>
 <span class="normal">282</span>
 <span class="normal">283</span>
@@ -22395,7 +22452,8 @@ via the trainer-factory seam (ADR-002 §Decisions; plan/05 §3.5).</p>
 <span class="normal">333</span>
 <span class="normal">334</span>
 <span class="normal">335</span>
-<span class="normal">336</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">RandomEgoTrainer</span><span class="p">:</span>
+<span class="normal">336</span>
+<span class="normal">337</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">RandomEgoTrainer</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Reference :class:`EgoTrainer` that samples uniformly from the action space.</span>
 
 <span class="sd">    Exists so :func:`train` can be exercised end-to-end before the HARL</span>
@@ -22522,8 +22580,7 @@ P6 reproducibility.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/concerto/training/ego_aht.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">290</span>
-<span class="normal">291</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">291</span>
 <span class="normal">292</span>
 <span class="normal">293</span>
 <span class="normal">294</span>
@@ -22538,7 +22595,8 @@ P6 reproducibility.</p>
 <span class="normal">303</span>
 <span class="normal">304</span>
 <span class="normal">305</span>
-<span class="normal">306</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">ego_uid</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">action_dim</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">root_seed</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="normal">306</span>
+<span class="normal">307</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">ego_uid</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">action_dim</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">root_seed</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Build a uniform-random reference trainer (T4b.11; ADR-002 §Decisions).</span>
 
 <span class="sd">    Args:</span>
@@ -22581,8 +22639,7 @@ P6 reproducibility.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/concerto/training/ego_aht.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">308</span>
-<span class="normal">309</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">309</span>
 <span class="normal">310</span>
 <span class="normal">311</span>
 <span class="normal">312</span>
@@ -22591,7 +22648,8 @@ P6 reproducibility.</p>
 <span class="normal">315</span>
 <span class="normal">316</span>
 <span class="normal">317</span>
-<span class="normal">318</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">act</span><span class="p">(</span>
+<span class="normal">318</span>
+<span class="normal">319</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">act</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
     <span class="n">obs</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span>
     <span class="o">*</span><span class="p">,</span>
@@ -22632,8 +22690,7 @@ P6 reproducibility.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/concerto/training/ego_aht.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">320</span>
-<span class="normal">321</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">321</span>
 <span class="normal">322</span>
 <span class="normal">323</span>
 <span class="normal">324</span>
@@ -22641,7 +22698,8 @@ P6 reproducibility.</p>
 <span class="normal">326</span>
 <span class="normal">327</span>
 <span class="normal">328</span>
-<span class="normal">329</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">observe</span><span class="p">(</span>
+<span class="normal">329</span>
+<span class="normal">330</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">observe</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
     <span class="n">obs</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span>
     <span class="n">reward</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
@@ -22675,9 +22733,9 @@ P6 reproducibility.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/concerto/training/ego_aht.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">334</span>
-<span class="normal">335</span>
-<span class="normal">336</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">state_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">335</span>
+<span class="normal">336</span>
+<span class="normal">337</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">state_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Return an empty dict (ADR-002 §Decisions: trainer is parameter-free).&quot;&quot;&quot;</span>
     <span class="k">return</span> <span class="p">{}</span>
 </code></pre></div></td></tr></table></div>
@@ -22704,8 +22762,8 @@ P6 reproducibility.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/concerto/training/ego_aht.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">331</span>
-<span class="normal">332</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">332</span>
+<span class="normal">333</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;No-op (ADR-002 §Decisions): reference trainer has no learnable params.&quot;&quot;&quot;</span>
 </code></pre></div></td></tr></table></div>
             </details>
@@ -22796,8 +22854,7 @@ from this list.</p>
 
               <details class="mkdocstrings-source">
                 <summary>Source code in <code>src/concerto/training/ego_aht.py</code></summary>
-                <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">219</span>
-<span class="normal">220</span>
+                <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">220</span>
 <span class="normal">221</span>
 <span class="normal">222</span>
 <span class="normal">223</span>
@@ -22818,7 +22875,8 @@ from this list.</p>
 <span class="normal">238</span>
 <span class="normal">239</span>
 <span class="normal">240</span>
-<span class="normal">241</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="normal">241</span>
+<span class="normal">242</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">RewardCurve</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Result of one ego-AHT training run (T4b.11; T4b.13 consumer; ADR-002 §Decisions).</span>
 
@@ -22903,8 +22961,7 @@ on the partner as its first construction step.</p>
 
               <details class="mkdocstrings-source">
                 <summary>Source code in <code>src/concerto/training/ego_aht.py</code></summary>
-                <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">191</span>
-<span class="normal">192</span>
+                <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">192</span>
 <span class="normal">193</span>
 <span class="normal">194</span>
 <span class="normal">195</span>
@@ -22928,7 +22985,8 @@ on the partner as its first construction step.</p>
 <span class="normal">213</span>
 <span class="normal">214</span>
 <span class="normal">215</span>
-<span class="normal">216</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">TrainerFactory</span><span class="p">(</span><span class="n">Protocol</span><span class="p">):</span>
+<span class="normal">216</span>
+<span class="normal">217</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">TrainerFactory</span><span class="p">(</span><span class="n">Protocol</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Constructor that builds an :class:`EgoTrainer` (T4b.11; ADR-002 §Decisions).</span>
 
 <span class="sd">    The seam through which :func:`train` plugs in the algorithm.</span>
@@ -22994,8 +23052,7 @@ on the partner as its first construction step.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/concerto/training/ego_aht.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">207</span>
-<span class="normal">208</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">208</span>
 <span class="normal">209</span>
 <span class="normal">210</span>
 <span class="normal">211</span>
@@ -23003,7 +23060,8 @@ on the partner as its first construction step.</p>
 <span class="normal">213</span>
 <span class="normal">214</span>
 <span class="normal">215</span>
-<span class="normal">216</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="fm">__call__</span><span class="p">(</span>
+<span class="normal">216</span>
+<span class="normal">217</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="fm">__call__</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
     <span class="n">cfg</span><span class="p">:</span> <span class="n">EgoAHTConfig</span><span class="p">,</span>
     <span class="o">*</span><span class="p">,</span>
@@ -23102,8 +23160,7 @@ rollouts. When :func:<code>train</code> is called without a
 
               <details class="mkdocstrings-source">
                 <summary>Source code in <code>src/concerto/training/ego_aht.py</code></summary>
-                <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">244</span>
-<span class="normal">245</span>
+                <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">245</span>
 <span class="normal">246</span>
 <span class="normal">247</span>
 <span class="normal">248</span>
@@ -23134,7 +23191,8 @@ rollouts. When :func:<code>train</code> is called without a
 <span class="normal">273</span>
 <span class="normal">274</span>
 <span class="normal">275</span>
-<span class="normal">276</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">TrainingResult</span><span class="p">(</span><span class="n">NamedTuple</span><span class="p">):</span>
+<span class="normal">276</span>
+<span class="normal">277</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">TrainingResult</span><span class="p">(</span><span class="n">NamedTuple</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Return value of :func:`train` and :func:`chamber.benchmarks.training_runner.run_training`.</span>
 
 <span class="sd">    Pairs the diagnostic reward stream (:class:`RewardCurve`) with the</span>
@@ -23215,6 +23273,10 @@ rollouts. When :func:<code>train</code> is called without a
     <span class="p">]</span>
     <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">safety_dt</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">safety_emergency_controllers</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span>
+        <span class="nb">str</span><span class="p">,</span> <span class="n">EmergencyController</span>
+    <span class="p">]</span>
+    <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TrainingResult</span>
 </code></pre></div>
 
@@ -23366,6 +23428,30 @@ constant-velocity predictor lookahead + numerical-
 difference velocity. Typically <code>env.control_timestep</code>.</p>
           </div>
         </li>
+        <li class="doc-section-item field-body">
+            <b><code>safety_emergency_controllers</code></b>
+              (<code><span title="collections.abc.Mapping">Mapping</span>[<span title="str">str</span>, <a class="autorefs autorefs-internal" title="EmergencyController (concerto.safety.emergency.EmergencyController)" href="#concerto.safety.EmergencyController">EmergencyController</a>] | None</code>, default:
+                  <code>None</code>
+)
+          –
+          <div class="doc-md-description">
+            <p>Optional per-uid
+:class:<code>concerto.safety.emergency.EmergencyController</code>
+dispatch map (P1.04.6; ADR-007 §Stage 1b Rev 8). Consulted
+by :func:<code>concerto.safety.braking.maybe_brake</code> at each
+per-step braking call to translate the aggregate Cartesian
+repulsion into the per-uid control-space override.
+<code>None</code> falls back to a per-uid
+:class:<code>concerto.safety.emergency.CartesianAccelEmergencyController</code>
+— correct for double-integrator agents but a silent
+dimension-mismatch foot-gun for 7-DOF arms. Wired by
+:class:<code>chamber.benchmarks.stage1_common.TrainedPolicyFactory</code>
+via
+:func:<code>chamber.benchmarks.training_runner.build_emergency_controllers</code>.
+Honoured only when <code>cfg.safety.enabled=True</code> AND the rest
+of the safety stack is wired.</p>
+          </div>
+        </li>
     </ul>
 
 
@@ -23411,8 +23497,7 @@ difference velocity. Typically <code>env.control_timestep</code>.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/concerto/training/ego_aht.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">339</span>
-<span class="normal">340</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">340</span>
 <span class="normal">341</span>
 <span class="normal">342</span>
 <span class="normal">343</span>
@@ -23759,7 +23844,80 @@ difference velocity. Typically <code>env.control_timestep</code>.</p>
 <span class="normal">684</span>
 <span class="normal">685</span>
 <span class="normal">686</span>
-<span class="normal">687</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">train</span><span class="p">(</span>  <span class="c1"># noqa: PLR0912, PLR0915 - P1.04.5 added safety-stack integration to the canonical training loop; the body&#39;s branch + statement counts exceed the default thresholds because the safety path is interleaved per step. Refactoring into a SafetyFilterDriver collaborator is the Phase-2 cleanup path (see Plan-subagent D1 alternative).</span>
+<span class="normal">687</span>
+<span class="normal">688</span>
+<span class="normal">689</span>
+<span class="normal">690</span>
+<span class="normal">691</span>
+<span class="normal">692</span>
+<span class="normal">693</span>
+<span class="normal">694</span>
+<span class="normal">695</span>
+<span class="normal">696</span>
+<span class="normal">697</span>
+<span class="normal">698</span>
+<span class="normal">699</span>
+<span class="normal">700</span>
+<span class="normal">701</span>
+<span class="normal">702</span>
+<span class="normal">703</span>
+<span class="normal">704</span>
+<span class="normal">705</span>
+<span class="normal">706</span>
+<span class="normal">707</span>
+<span class="normal">708</span>
+<span class="normal">709</span>
+<span class="normal">710</span>
+<span class="normal">711</span>
+<span class="normal">712</span>
+<span class="normal">713</span>
+<span class="normal">714</span>
+<span class="normal">715</span>
+<span class="normal">716</span>
+<span class="normal">717</span>
+<span class="normal">718</span>
+<span class="normal">719</span>
+<span class="normal">720</span>
+<span class="normal">721</span>
+<span class="normal">722</span>
+<span class="normal">723</span>
+<span class="normal">724</span>
+<span class="normal">725</span>
+<span class="normal">726</span>
+<span class="normal">727</span>
+<span class="normal">728</span>
+<span class="normal">729</span>
+<span class="normal">730</span>
+<span class="normal">731</span>
+<span class="normal">732</span>
+<span class="normal">733</span>
+<span class="normal">734</span>
+<span class="normal">735</span>
+<span class="normal">736</span>
+<span class="normal">737</span>
+<span class="normal">738</span>
+<span class="normal">739</span>
+<span class="normal">740</span>
+<span class="normal">741</span>
+<span class="normal">742</span>
+<span class="normal">743</span>
+<span class="normal">744</span>
+<span class="normal">745</span>
+<span class="normal">746</span>
+<span class="normal">747</span>
+<span class="normal">748</span>
+<span class="normal">749</span>
+<span class="normal">750</span>
+<span class="normal">751</span>
+<span class="normal">752</span>
+<span class="normal">753</span>
+<span class="normal">754</span>
+<span class="normal">755</span>
+<span class="normal">756</span>
+<span class="normal">757</span>
+<span class="normal">758</span>
+<span class="normal">759</span>
+<span class="normal">760</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">train</span><span class="p">(</span>  <span class="c1"># noqa: PLR0912, PLR0915 - P1.04.5 added safety-stack integration to the canonical training loop; the body&#39;s branch + statement counts exceed the default thresholds because the safety path is interleaved per step. Refactoring into a SafetyFilterDriver collaborator is the Phase-2 cleanup path (see Plan-subagent D1 alternative).</span>
     <span class="n">cfg</span><span class="p">:</span> <span class="n">EgoAHTConfig</span><span class="p">,</span>
     <span class="o">*</span><span class="p">,</span>
     <span class="n">env</span><span class="p">:</span> <span class="n">EnvLike</span><span class="p">,</span>
@@ -23778,6 +23936,20 @@ difference velocity. Typically <code>env.control_timestep</code>.</p>
     <span class="n">safety_bounds</span><span class="p">:</span> <span class="n">Bounds</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">safety_snapshot_builder</span><span class="p">:</span> <span class="p">(</span><span class="n">Callable</span><span class="p">[[</span><span class="n">EnvLike</span><span class="p">],</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">AgentSnapshot</span><span class="p">]]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">)</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">safety_dt</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="c1"># ----- P1.04.6: braking-fallback parity (ADR-007 §Stage 1b Rev 8). -----</span>
+    <span class="c1"># ``safety_emergency_controllers`` is the per-uid emergency-controller</span>
+    <span class="c1"># dispatch map :func:`concerto.safety.braking.maybe_brake` consults.</span>
+    <span class="c1"># When ``None`` the braking layer falls back to a per-uid</span>
+    <span class="c1"># :class:`CartesianAccelEmergencyController` — correct for</span>
+    <span class="c1"># double-integrator agents but a silent dimension-mismatch foot-gun</span>
+    <span class="c1"># for 7-DOF arms; the chamber-side caller</span>
+    <span class="c1"># (:class:`chamber.benchmarks.stage1_common.TrainedPolicyFactory`)</span>
+    <span class="c1"># populates it via</span>
+    <span class="c1"># :func:`chamber.benchmarks.training_runner.build_emergency_controllers`.</span>
+    <span class="c1"># Read only when ``cfg.safety.enabled=True`` AND the other safety</span>
+    <span class="c1"># kwargs are passed (the validation block below ties presence to</span>
+    <span class="c1"># ``_safety_active``).</span>
+    <span class="n">safety_emergency_controllers</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">EmergencyController</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TrainingResult</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Run one ego-AHT training loop (T4b.11; ADR-002 §Decisions; plan/05 §3.5).</span>
 
@@ -23831,6 +24003,21 @@ difference velocity. Typically <code>env.control_timestep</code>.</p>
 <span class="sd">        safety_dt: Optional control-step dt in seconds for the</span>
 <span class="sd">            constant-velocity predictor lookahead + numerical-</span>
 <span class="sd">            difference velocity. Typically ``env.control_timestep``.</span>
+<span class="sd">        safety_emergency_controllers: Optional per-uid</span>
+<span class="sd">            :class:`concerto.safety.emergency.EmergencyController`</span>
+<span class="sd">            dispatch map (P1.04.6; ADR-007 §Stage 1b Rev 8). Consulted</span>
+<span class="sd">            by :func:`concerto.safety.braking.maybe_brake` at each</span>
+<span class="sd">            per-step braking call to translate the aggregate Cartesian</span>
+<span class="sd">            repulsion into the per-uid control-space override.</span>
+<span class="sd">            ``None`` falls back to a per-uid</span>
+<span class="sd">            :class:`concerto.safety.emergency.CartesianAccelEmergencyController`</span>
+<span class="sd">            — correct for double-integrator agents but a silent</span>
+<span class="sd">            dimension-mismatch foot-gun for 7-DOF arms. Wired by</span>
+<span class="sd">            :class:`chamber.benchmarks.stage1_common.TrainedPolicyFactory`</span>
+<span class="sd">            via</span>
+<span class="sd">            :func:`chamber.benchmarks.training_runner.build_emergency_controllers`.</span>
+<span class="sd">            Honoured only when ``cfg.safety.enabled=True`` AND the rest</span>
+<span class="sd">            of the safety stack is wired.</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        :class:`TrainingResult` NamedTuple carrying ``curve`` (the</span>
@@ -23945,6 +24132,7 @@ difference velocity. Typically <code>env.control_timestep</code>.</p>
     <span class="c1"># Imports are unconditional (not inside `if _safety_active:`) so</span>
     <span class="c1"># the symbols are bound for pyright&#39;s flow analysis across the</span>
     <span class="c1"># loop body; their *use* is still guarded by `_safety_active`.</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">concerto.safety.braking</span><span class="w"> </span><span class="kn">import</span> <span class="n">maybe_brake</span>  <span class="c1"># noqa: PLC0415</span>
     <span class="kn">from</span><span class="w"> </span><span class="nn">concerto.safety.conformal</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>  <span class="c1"># noqa: PLC0415 - lazy by design (see comment above)</span>
         <span class="n">constant_velocity_predict</span><span class="p">,</span>
         <span class="n">update_lambda_from_predictor</span><span class="p">,</span>
@@ -23986,35 +24174,77 @@ difference velocity. Typically <code>env.control_timestep</code>.</p>
                 <span class="k">for</span> <span class="n">uid</span> <span class="ow">in</span> <span class="n">snaps_now</span>
                 <span class="k">if</span> <span class="n">uid</span> <span class="o">!=</span> <span class="n">ego_uid</span>
             <span class="p">}</span>
-            <span class="k">try</span><span class="p">:</span>
-                <span class="n">safe_ego</span><span class="p">,</span> <span class="n">info</span> <span class="o">=</span> <span class="n">_filter</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
-                    <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">ego_action_nominal</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">),</span>
-                    <span class="n">obs</span><span class="o">=</span><span class="p">{</span>
-                        <span class="s2">&quot;agent_states&quot;</span><span class="p">:</span> <span class="n">snaps_now</span><span class="p">,</span>
-                        <span class="s2">&quot;meta&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;partner_id&quot;</span><span class="p">:</span> <span class="n">cfg</span><span class="o">.</span><span class="n">partner</span><span class="o">.</span><span class="n">class_name</span><span class="p">},</span>
-                    <span class="p">},</span>
-                    <span class="n">state</span><span class="o">=</span><span class="n">_state</span><span class="p">,</span>
-                    <span class="n">bounds</span><span class="o">=</span><span class="n">_bounds</span><span class="p">,</span>
-                    <span class="n">ego_uid</span><span class="o">=</span><span class="n">ego_uid</span><span class="p">,</span>
-                    <span class="n">partner_predicted_states</span><span class="o">=</span><span class="n">partner_predicted</span><span class="p">,</span>
-                    <span class="n">dt</span><span class="o">=</span><span class="n">_dt</span><span class="p">,</span>
-                <span class="p">)</span>
-                <span class="n">ego_action</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">safe_ego</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">ego_action_nominal</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
-                <span class="n">fallback_fired</span> <span class="o">=</span> <span class="nb">bool</span><span class="p">(</span><span class="n">info</span><span class="p">[</span><span class="s2">&quot;fallback_fired&quot;</span><span class="p">])</span>
-                <span class="n">qp_infeasible</span> <span class="o">=</span> <span class="kc">False</span>
-            <span class="k">except</span> <span class="n">ConcertoSafetyInfeasible</span><span class="p">:</span>
-                <span class="c1"># Training-time policy: pass the nominal action through</span>
-                <span class="c1"># so the trainer learns from the unfiltered consequence.</span>
-                <span class="c1"># Deployment policy differs (the integrated stack routes</span>
-                <span class="c1"># to maybe_brake here); P1.04.6 closes the asymmetry.</span>
-                <span class="n">ego_action</span> <span class="o">=</span> <span class="n">ego_action_nominal</span>
+            <span class="c1"># P1.04.6 (ADR-007 §Stage 1b Rev 8): per-step braking</span>
+            <span class="c1"># fallback in front of the CBF-QP — matches the deployment-</span>
+            <span class="c1"># time composition order in</span>
+            <span class="c1"># ``tests/integration/test_safety_in_loop.py``. Independent</span>
+            <span class="c1"># of QP feasibility (Wang-Ames-Egerstedt 2017 eq. 17). We</span>
+            <span class="c1"># build a proposed-action dict over BOTH uids so</span>
+            <span class="c1"># :func:`maybe_brake` evaluates pairwise TTC over the cell,</span>
+            <span class="c1"># but only adopt the override for ``ego_uid`` — the partner</span>
+            <span class="c1"># is frozen per ADR-009 §Decision and its action stays</span>
+            <span class="c1"># untouched. ``safe_ego`` is what propagates into the</span>
+            <span class="c1"># trainer&#39;s learning signal.</span>
+            <span class="n">proposed_for_braking</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="n">ego_uid</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">ego_action_nominal</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">),</span>
+                <span class="n">partner_uid</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">partner_action</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">),</span>
+            <span class="p">}</span>
+            <span class="n">braking_override</span><span class="p">,</span> <span class="n">braking_fired</span> <span class="o">=</span> <span class="n">maybe_brake</span><span class="p">(</span>
+                <span class="n">proposed_for_braking</span><span class="p">,</span>
+                <span class="n">snaps_now</span><span class="p">,</span>
+                <span class="n">bounds</span><span class="o">=</span><span class="n">_bounds</span><span class="p">,</span>
+                <span class="n">tau_brake</span><span class="o">=</span><span class="n">cfg</span><span class="o">.</span><span class="n">safety</span><span class="o">.</span><span class="n">tau_brake</span><span class="p">,</span>
+                <span class="n">emergency_controllers</span><span class="o">=</span><span class="n">safety_emergency_controllers</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="k">if</span> <span class="n">braking_fired</span> <span class="ow">and</span> <span class="n">braking_override</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="c1"># Per-step backstop fired: take the ego override and</span>
+                <span class="c1"># skip the QP for this step. ``fallback_fired`` (the</span>
+                <span class="c1"># CBF-QP&#39;s internal 1-D projection fallback flag) stays</span>
+                <span class="c1"># ``False`` — those two flags are independent telemetry</span>
+                <span class="c1"># channels on the audit-gate (one is &quot;QP ran and used</span>
+                <span class="c1"># its internal fallback&quot;; the other is &quot;QP did not run,</span>
+                <span class="c1"># braking took over&quot;). ``qp_infeasible`` is also False:</span>
+                <span class="c1"># the QP did not raise, it simply was not called.</span>
+                <span class="n">ego_action</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">braking_override</span><span class="p">[</span><span class="n">ego_uid</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">ego_action_nominal</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
                 <span class="n">fallback_fired</span> <span class="o">=</span> <span class="kc">False</span>
-                <span class="n">qp_infeasible</span> <span class="o">=</span> <span class="kc">True</span>
+                <span class="n">qp_infeasible</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">safe_ego</span><span class="p">,</span> <span class="n">info</span> <span class="o">=</span> <span class="n">_filter</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+                        <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">ego_action_nominal</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">),</span>
+                        <span class="n">obs</span><span class="o">=</span><span class="p">{</span>
+                            <span class="s2">&quot;agent_states&quot;</span><span class="p">:</span> <span class="n">snaps_now</span><span class="p">,</span>
+                            <span class="s2">&quot;meta&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;partner_id&quot;</span><span class="p">:</span> <span class="n">cfg</span><span class="o">.</span><span class="n">partner</span><span class="o">.</span><span class="n">class_name</span><span class="p">},</span>
+                        <span class="p">},</span>
+                        <span class="n">state</span><span class="o">=</span><span class="n">_state</span><span class="p">,</span>
+                        <span class="n">bounds</span><span class="o">=</span><span class="n">_bounds</span><span class="p">,</span>
+                        <span class="n">ego_uid</span><span class="o">=</span><span class="n">ego_uid</span><span class="p">,</span>
+                        <span class="n">partner_predicted_states</span><span class="o">=</span><span class="n">partner_predicted</span><span class="p">,</span>
+                        <span class="n">dt</span><span class="o">=</span><span class="n">_dt</span><span class="p">,</span>
+                    <span class="p">)</span>
+                    <span class="n">ego_action</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">safe_ego</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">ego_action_nominal</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+                    <span class="n">fallback_fired</span> <span class="o">=</span> <span class="nb">bool</span><span class="p">(</span><span class="n">info</span><span class="p">[</span><span class="s2">&quot;fallback_fired&quot;</span><span class="p">])</span>
+                    <span class="n">qp_infeasible</span> <span class="o">=</span> <span class="kc">False</span>
+                <span class="k">except</span> <span class="n">ConcertoSafetyInfeasible</span><span class="p">:</span>
+                    <span class="c1"># Pre-P1.04.6 training-time policy was to pass the</span>
+                    <span class="c1"># nominal action through; P1.04.6&#39;s braking layer</span>
+                    <span class="c1"># now runs upstream of this branch, so reaching</span>
+                    <span class="c1"># here means the QP raised AFTER braking didn&#39;t</span>
+                    <span class="c1"># fire (i.e. TTC &gt;= tau_brake but the QP still</span>
+                    <span class="c1"># found no feasible projection — a tighter QP</span>
+                    <span class="c1"># constraint than the braking TTC predicts).</span>
+                    <span class="c1"># Surface as the unfiltered-passthrough still, so</span>
+                    <span class="c1"># the trainer can learn from the consequence; the</span>
+                    <span class="c1"># ``qp_infeasible`` flag is what audits this.</span>
+                    <span class="n">ego_action</span> <span class="o">=</span> <span class="n">ego_action_nominal</span>
+                    <span class="n">fallback_fired</span> <span class="o">=</span> <span class="kc">False</span>
+                    <span class="n">qp_infeasible</span> <span class="o">=</span> <span class="kc">True</span>
             <span class="n">snaps_prev</span> <span class="o">=</span> <span class="n">snaps_now</span>
             <span class="n">aggregator</span><span class="o">.</span><span class="n">observe</span><span class="p">(</span>
                 <span class="n">_state</span><span class="o">.</span><span class="n">lambda_</span><span class="p">,</span>
                 <span class="n">fallback_fired</span><span class="o">=</span><span class="n">fallback_fired</span><span class="p">,</span>
                 <span class="n">qp_infeasible</span><span class="o">=</span><span class="n">qp_infeasible</span><span class="p">,</span>
+                <span class="n">braking_fired</span><span class="o">=</span><span class="n">braking_fired</span><span class="p">,</span>
             <span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">ego_action</span> <span class="o">=</span> <span class="n">ego_action_nominal</span>
@@ -53651,28 +53881,7 @@ from <code>PANDA_CARTESIAN_ACCEL_CAPACITY_MS2 = 10.0 m/s²</code>).</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/chamber/benchmarks/training_runner.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">375</span>
-<span class="normal">376</span>
-<span class="normal">377</span>
-<span class="normal">378</span>
-<span class="normal">379</span>
-<span class="normal">380</span>
-<span class="normal">381</span>
-<span class="normal">382</span>
-<span class="normal">383</span>
-<span class="normal">384</span>
-<span class="normal">385</span>
-<span class="normal">386</span>
-<span class="normal">387</span>
-<span class="normal">388</span>
-<span class="normal">389</span>
-<span class="normal">390</span>
-<span class="normal">391</span>
-<span class="normal">392</span>
-<span class="normal">393</span>
-<span class="normal">394</span>
-<span class="normal">395</span>
-<span class="normal">396</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">396</span>
 <span class="normal">397</span>
 <span class="normal">398</span>
 <span class="normal">399</span>
@@ -53682,7 +53891,28 @@ from <code>PANDA_CARTESIAN_ACCEL_CAPACITY_MS2 = 10.0 m/s²</code>).</p>
 <span class="normal">403</span>
 <span class="normal">404</span>
 <span class="normal">405</span>
-<span class="normal">406</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">build_bounds_for_env</span><span class="p">(</span><span class="n">env</span><span class="p">:</span> <span class="n">gym</span><span class="o">.</span><span class="n">Env</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Bounds</span><span class="p">:</span>
+<span class="normal">406</span>
+<span class="normal">407</span>
+<span class="normal">408</span>
+<span class="normal">409</span>
+<span class="normal">410</span>
+<span class="normal">411</span>
+<span class="normal">412</span>
+<span class="normal">413</span>
+<span class="normal">414</span>
+<span class="normal">415</span>
+<span class="normal">416</span>
+<span class="normal">417</span>
+<span class="normal">418</span>
+<span class="normal">419</span>
+<span class="normal">420</span>
+<span class="normal">421</span>
+<span class="normal">422</span>
+<span class="normal">423</span>
+<span class="normal">424</span>
+<span class="normal">425</span>
+<span class="normal">426</span>
+<span class="normal">427</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">build_bounds_for_env</span><span class="p">(</span><span class="n">env</span><span class="p">:</span> <span class="n">gym</span><span class="o">.</span><span class="n">Env</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Bounds</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Source per-task :class:`Bounds` from the env (P1.04.5; ADR-006 §Decision).</span>
 
 <span class="sd">    Delegates to ``env.build_bounds()`` when present</span>
@@ -53826,28 +54056,7 @@ identity).</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/chamber/benchmarks/training_runner.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">267</span>
-<span class="normal">268</span>
-<span class="normal">269</span>
-<span class="normal">270</span>
-<span class="normal">271</span>
-<span class="normal">272</span>
-<span class="normal">273</span>
-<span class="normal">274</span>
-<span class="normal">275</span>
-<span class="normal">276</span>
-<span class="normal">277</span>
-<span class="normal">278</span>
-<span class="normal">279</span>
-<span class="normal">280</span>
-<span class="normal">281</span>
-<span class="normal">282</span>
-<span class="normal">283</span>
-<span class="normal">284</span>
-<span class="normal">285</span>
-<span class="normal">286</span>
-<span class="normal">287</span>
-<span class="normal">288</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">288</span>
 <span class="normal">289</span>
 <span class="normal">290</span>
 <span class="normal">291</span>
@@ -53901,7 +54110,28 @@ identity).</p>
 <span class="normal">339</span>
 <span class="normal">340</span>
 <span class="normal">341</span>
-<span class="normal">342</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">build_control_models</span><span class="p">(</span><span class="n">env</span><span class="p">:</span> <span class="n">gym</span><span class="o">.</span><span class="n">Env</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">AgentControlModel</span><span class="p">]:</span>
+<span class="normal">342</span>
+<span class="normal">343</span>
+<span class="normal">344</span>
+<span class="normal">345</span>
+<span class="normal">346</span>
+<span class="normal">347</span>
+<span class="normal">348</span>
+<span class="normal">349</span>
+<span class="normal">350</span>
+<span class="normal">351</span>
+<span class="normal">352</span>
+<span class="normal">353</span>
+<span class="normal">354</span>
+<span class="normal">355</span>
+<span class="normal">356</span>
+<span class="normal">357</span>
+<span class="normal">358</span>
+<span class="normal">359</span>
+<span class="normal">360</span>
+<span class="normal">361</span>
+<span class="normal">362</span>
+<span class="normal">363</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">build_control_models</span><span class="p">(</span><span class="n">env</span><span class="p">:</span> <span class="n">gym</span><span class="o">.</span><span class="n">Env</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">AgentControlModel</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Build a per-uid :class:`AgentControlModel` map from an env (ADR-004 §Decision; spike_004A).</span>
 
 <span class="sd">    Two-tier dispatch (P1.03 / Task B):</span>
@@ -53977,6 +54207,172 @@ identity).</p>
         <span class="p">)</span>
         <span class="n">control_models</span><span class="p">[</span><span class="n">uid</span><span class="p">]</span> <span class="o">=</span> <span class="n">model</span>
     <span class="k">return</span> <span class="n">control_models</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h2 id="chamber.benchmarks.training_runner.build_emergency_controllers" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">build_emergency_controllers</span>
+
+
+</h2>
+<div class="doc-signature highlight"><pre><span></span><code><span class="nf">build_emergency_controllers</span><span class="p">(</span>
+    <span class="n">env</span><span class="p">:</span> <span class="n">Env</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">EmergencyController</span><span class="p">]</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Build per-uid emergency-controller dispatch for the cell's env (P1.04.6).</p>
+<p>ADR-007 §Stage 1b Rev 8: the training-time
+:func:<code>concerto.safety.braking.maybe_brake</code> call routes each
+dangerous-pair uid's aggregate repulsion through its
+:class:<code>~concerto.safety.emergency.EmergencyController</code> to translate
+the Cartesian vector into a control-space override. Heterogeneous
+embodiments need heterogeneous controllers:</p>
+<ul>
+<li><strong>7-DOF panda uids</strong> (action_dim != position_dim): dispatch to
+  :class:<code>~concerto.safety.emergency.JacobianEmergencyController</code>
+  with the env-built :class:<code>JacobianControlModel</code> (same instance
+  the outer CBF row uses, so the kinematic convention is configured
+  once at chamber-side wiring time per ADR-004 §Revision history
+  2026-05-17).</li>
+<li><strong>Double-integrator uids</strong> (action_dim == position_dim, fetch /
+  MPE / Stage-0 default): dispatch to
+  :class:<code>~concerto.safety.emergency.CartesianAccelEmergencyController</code>.</li>
+</ul>
+<p>Dispatch on :class:<code>JacobianControlModel</code> instance identity rather
+than on <code>uid</code> strings or <code>action_dim</code> heuristics — the model is
+the source-of-truth for the embodiment / control-space mapping.</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <ul>
+        <li class="doc-section-item field-body">
+            <b><code>env</code></b>
+              (<code><span title="gymnasium.Env">Env</span>[<span title="typing.Any">Any</span>, <span title="typing.Any">Any</span>]</code>)
+          –
+          <div class="doc-md-description">
+            <p>A multi-agent Gymnasium-conformant env. Must expose
+<code>build_control_models()</code> (the env-side dispatch) or match
+the default-DI fallback in :func:<code>build_control_models</code>.</p>
+          </div>
+        </li>
+    </ul>
+
+
+<p><span class="doc-section-title">Returns:</span></p>
+    <ul>
+        <li class="doc-section-item field-body">
+              <code><span title="dict">dict</span>[<span title="str">str</span>, <a class="autorefs autorefs-internal" title="EmergencyController (concerto.safety.emergency.EmergencyController)" href="#concerto.safety.EmergencyController">EmergencyController</a>]</code>
+          –
+          <div class="doc-md-description">
+            <p><code>{uid: EmergencyController}</code> for every uid in the cell.</p>
+          </div>
+        </li>
+    </ul>
+
+
+            <details class="mkdocstrings-source">
+              <summary>Source code in <code>src/chamber/benchmarks/training_runner.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">500</span>
+<span class="normal">501</span>
+<span class="normal">502</span>
+<span class="normal">503</span>
+<span class="normal">504</span>
+<span class="normal">505</span>
+<span class="normal">506</span>
+<span class="normal">507</span>
+<span class="normal">508</span>
+<span class="normal">509</span>
+<span class="normal">510</span>
+<span class="normal">511</span>
+<span class="normal">512</span>
+<span class="normal">513</span>
+<span class="normal">514</span>
+<span class="normal">515</span>
+<span class="normal">516</span>
+<span class="normal">517</span>
+<span class="normal">518</span>
+<span class="normal">519</span>
+<span class="normal">520</span>
+<span class="normal">521</span>
+<span class="normal">522</span>
+<span class="normal">523</span>
+<span class="normal">524</span>
+<span class="normal">525</span>
+<span class="normal">526</span>
+<span class="normal">527</span>
+<span class="normal">528</span>
+<span class="normal">529</span>
+<span class="normal">530</span>
+<span class="normal">531</span>
+<span class="normal">532</span>
+<span class="normal">533</span>
+<span class="normal">534</span>
+<span class="normal">535</span>
+<span class="normal">536</span>
+<span class="normal">537</span>
+<span class="normal">538</span>
+<span class="normal">539</span>
+<span class="normal">540</span>
+<span class="normal">541</span>
+<span class="normal">542</span>
+<span class="normal">543</span>
+<span class="normal">544</span>
+<span class="normal">545</span>
+<span class="normal">546</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">build_emergency_controllers</span><span class="p">(</span>
+    <span class="n">env</span><span class="p">:</span> <span class="n">gym</span><span class="o">.</span><span class="n">Env</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">EmergencyController</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Build per-uid emergency-controller dispatch for the cell&#39;s env (P1.04.6).</span>
+
+<span class="sd">    ADR-007 §Stage 1b Rev 8: the training-time</span>
+<span class="sd">    :func:`concerto.safety.braking.maybe_brake` call routes each</span>
+<span class="sd">    dangerous-pair uid&#39;s aggregate repulsion through its</span>
+<span class="sd">    :class:`~concerto.safety.emergency.EmergencyController` to translate</span>
+<span class="sd">    the Cartesian vector into a control-space override. Heterogeneous</span>
+<span class="sd">    embodiments need heterogeneous controllers:</span>
+
+<span class="sd">    - **7-DOF panda uids** (action_dim != position_dim): dispatch to</span>
+<span class="sd">      :class:`~concerto.safety.emergency.JacobianEmergencyController`</span>
+<span class="sd">      with the env-built :class:`JacobianControlModel` (same instance</span>
+<span class="sd">      the outer CBF row uses, so the kinematic convention is configured</span>
+<span class="sd">      once at chamber-side wiring time per ADR-004 §Revision history</span>
+<span class="sd">      2026-05-17).</span>
+<span class="sd">    - **Double-integrator uids** (action_dim == position_dim, fetch /</span>
+<span class="sd">      MPE / Stage-0 default): dispatch to</span>
+<span class="sd">      :class:`~concerto.safety.emergency.CartesianAccelEmergencyController`.</span>
+
+<span class="sd">    Dispatch on :class:`JacobianControlModel` instance identity rather</span>
+<span class="sd">    than on ``uid`` strings or ``action_dim`` heuristics — the model is</span>
+<span class="sd">    the source-of-truth for the embodiment / control-space mapping.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        env: A multi-agent Gymnasium-conformant env. Must expose</span>
+<span class="sd">            ``build_control_models()`` (the env-side dispatch) or match</span>
+<span class="sd">            the default-DI fallback in :func:`build_control_models`.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        ``{uid: EmergencyController}`` for every uid in the cell.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">concerto.safety.emergency</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+        <span class="n">CartesianAccelEmergencyController</span><span class="p">,</span>
+        <span class="n">JacobianEmergencyController</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">control_models</span> <span class="o">=</span> <span class="n">build_control_models</span><span class="p">(</span><span class="n">env</span><span class="p">)</span>
+    <span class="n">controllers</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">EmergencyController</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">uid</span><span class="p">,</span> <span class="n">model</span> <span class="ow">in</span> <span class="n">control_models</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">JacobianControlModel</span><span class="p">):</span>
+            <span class="n">controllers</span><span class="p">[</span><span class="n">uid</span><span class="p">]</span> <span class="o">=</span> <span class="n">JacobianEmergencyController</span><span class="p">(</span><span class="n">control_model</span><span class="o">=</span><span class="n">model</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">controllers</span><span class="p">[</span><span class="n">uid</span><span class="p">]</span> <span class="o">=</span> <span class="n">CartesianAccelEmergencyController</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">controllers</span>
 </code></pre></div></td></tr></table></div>
             </details>
     </div>
@@ -54083,12 +54479,7 @@ SAPIEN / Vulkan is unavailable (see ADR-001 §Risks).</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/chamber/benchmarks/training_runner.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 57</span>
-<span class="normal"> 58</span>
-<span class="normal"> 59</span>
-<span class="normal"> 60</span>
-<span class="normal"> 61</span>
-<span class="normal"> 62</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 62</span>
 <span class="normal"> 63</span>
 <span class="normal"> 64</span>
 <span class="normal"> 65</span>
@@ -54173,7 +54564,12 @@ SAPIEN / Vulkan is unavailable (see ADR-001 §Risks).</p>
 <span class="normal">144</span>
 <span class="normal">145</span>
 <span class="normal">146</span>
-<span class="normal">147</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">build_env</span><span class="p">(</span><span class="n">env_cfg</span><span class="p">:</span> <span class="n">EnvConfig</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">root_seed</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">EnvLike</span><span class="p">:</span>
+<span class="normal">147</span>
+<span class="normal">148</span>
+<span class="normal">149</span>
+<span class="normal">150</span>
+<span class="normal">151</span>
+<span class="normal">152</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">build_env</span><span class="p">(</span><span class="n">env_cfg</span><span class="p">:</span> <span class="n">EnvConfig</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">root_seed</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">EnvLike</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Construct the env from :class:`EnvConfig` (T4b.11; ADR-002 §Decisions; plan/05 §3.5).</span>
 
 <span class="sd">    Dispatch table:</span>
@@ -54338,12 +54734,7 @@ classes) applies uniformly.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/chamber/benchmarks/training_runner.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">150</span>
-<span class="normal">151</span>
-<span class="normal">152</span>
-<span class="normal">153</span>
-<span class="normal">154</span>
-<span class="normal">155</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">155</span>
 <span class="normal">156</span>
 <span class="normal">157</span>
 <span class="normal">158</span>
@@ -54365,7 +54756,12 @@ classes) applies uniformly.</p>
 <span class="normal">174</span>
 <span class="normal">175</span>
 <span class="normal">176</span>
-<span class="normal">177</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">build_partner</span><span class="p">(</span><span class="n">partner_cfg</span><span class="p">:</span> <span class="n">PartnerConfig</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">PartnerLike</span><span class="p">:</span>
+<span class="normal">177</span>
+<span class="normal">178</span>
+<span class="normal">179</span>
+<span class="normal">180</span>
+<span class="normal">181</span>
+<span class="normal">182</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">build_partner</span><span class="p">(</span><span class="n">partner_cfg</span><span class="p">:</span> <span class="n">PartnerConfig</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">PartnerLike</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Construct the frozen partner from :class:`PartnerConfig` (ADR-009 §Decision).</span>
 
 <span class="sd">    Builds a :class:`~chamber.partners.api.PartnerSpec` from the config</span>
@@ -54464,28 +54860,7 @@ and for the numerical-difference velocity computation in
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/chamber/benchmarks/training_runner.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">444</span>
-<span class="normal">445</span>
-<span class="normal">446</span>
-<span class="normal">447</span>
-<span class="normal">448</span>
-<span class="normal">449</span>
-<span class="normal">450</span>
-<span class="normal">451</span>
-<span class="normal">452</span>
-<span class="normal">453</span>
-<span class="normal">454</span>
-<span class="normal">455</span>
-<span class="normal">456</span>
-<span class="normal">457</span>
-<span class="normal">458</span>
-<span class="normal">459</span>
-<span class="normal">460</span>
-<span class="normal">461</span>
-<span class="normal">462</span>
-<span class="normal">463</span>
-<span class="normal">464</span>
-<span class="normal">465</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">465</span>
 <span class="normal">466</span>
 <span class="normal">467</span>
 <span class="normal">468</span>
@@ -54496,7 +54871,28 @@ and for the numerical-difference velocity computation in
 <span class="normal">473</span>
 <span class="normal">474</span>
 <span class="normal">475</span>
-<span class="normal">476</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">build_safety_dt</span><span class="p">(</span><span class="n">env</span><span class="p">:</span> <span class="n">gym</span><span class="o">.</span><span class="n">Env</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="o">*</span><span class="p">,</span> <span class="n">fallback</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.02</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="normal">476</span>
+<span class="normal">477</span>
+<span class="normal">478</span>
+<span class="normal">479</span>
+<span class="normal">480</span>
+<span class="normal">481</span>
+<span class="normal">482</span>
+<span class="normal">483</span>
+<span class="normal">484</span>
+<span class="normal">485</span>
+<span class="normal">486</span>
+<span class="normal">487</span>
+<span class="normal">488</span>
+<span class="normal">489</span>
+<span class="normal">490</span>
+<span class="normal">491</span>
+<span class="normal">492</span>
+<span class="normal">493</span>
+<span class="normal">494</span>
+<span class="normal">495</span>
+<span class="normal">496</span>
+<span class="normal">497</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">build_safety_dt</span><span class="p">(</span><span class="n">env</span><span class="p">:</span> <span class="n">gym</span><span class="o">.</span><span class="n">Env</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="o">*</span><span class="p">,</span> <span class="n">fallback</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.02</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Source the control-step dt from the env (P1.04.5; ADR-007 §Stage 1b).</span>
 
 <span class="sd">    Reads :attr:`env.control_timestep` (the ManiSkill BaseEnv default;</span>
@@ -54593,34 +54989,34 @@ DI dispatch in :func:<code>build_control_models</code>).</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/chamber/benchmarks/training_runner.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">345</span>
-<span class="normal">346</span>
-<span class="normal">347</span>
-<span class="normal">348</span>
-<span class="normal">349</span>
-<span class="normal">350</span>
-<span class="normal">351</span>
-<span class="normal">352</span>
-<span class="normal">353</span>
-<span class="normal">354</span>
-<span class="normal">355</span>
-<span class="normal">356</span>
-<span class="normal">357</span>
-<span class="normal">358</span>
-<span class="normal">359</span>
-<span class="normal">360</span>
-<span class="normal">361</span>
-<span class="normal">362</span>
-<span class="normal">363</span>
-<span class="normal">364</span>
-<span class="normal">365</span>
-<span class="normal">366</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">366</span>
 <span class="normal">367</span>
 <span class="normal">368</span>
 <span class="normal">369</span>
 <span class="normal">370</span>
 <span class="normal">371</span>
-<span class="normal">372</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">build_safety_filter</span><span class="p">(</span><span class="n">env</span><span class="p">:</span> <span class="n">gym</span><span class="o">.</span><span class="n">Env</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">EgoOnlySafetyFilter</span><span class="p">:</span>
+<span class="normal">372</span>
+<span class="normal">373</span>
+<span class="normal">374</span>
+<span class="normal">375</span>
+<span class="normal">376</span>
+<span class="normal">377</span>
+<span class="normal">378</span>
+<span class="normal">379</span>
+<span class="normal">380</span>
+<span class="normal">381</span>
+<span class="normal">382</span>
+<span class="normal">383</span>
+<span class="normal">384</span>
+<span class="normal">385</span>
+<span class="normal">386</span>
+<span class="normal">387</span>
+<span class="normal">388</span>
+<span class="normal">389</span>
+<span class="normal">390</span>
+<span class="normal">391</span>
+<span class="normal">392</span>
+<span class="normal">393</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">build_safety_filter</span><span class="p">(</span><span class="n">env</span><span class="p">:</span> <span class="n">gym</span><span class="o">.</span><span class="n">Env</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">EgoOnlySafetyFilter</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Construct the CBF-QP outer filter for the cell&#39;s env (P1.04.5; ADR-007 §Stage 1b).</span>
 
 <span class="sd">    Wraps :meth:`concerto.safety.cbf_qp.ExpCBFQP.ego_only` with the</span>
@@ -54732,28 +55128,7 @@ the per-uid snapshot dict.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/chamber/benchmarks/training_runner.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">409</span>
-<span class="normal">410</span>
-<span class="normal">411</span>
-<span class="normal">412</span>
-<span class="normal">413</span>
-<span class="normal">414</span>
-<span class="normal">415</span>
-<span class="normal">416</span>
-<span class="normal">417</span>
-<span class="normal">418</span>
-<span class="normal">419</span>
-<span class="normal">420</span>
-<span class="normal">421</span>
-<span class="normal">422</span>
-<span class="normal">423</span>
-<span class="normal">424</span>
-<span class="normal">425</span>
-<span class="normal">426</span>
-<span class="normal">427</span>
-<span class="normal">428</span>
-<span class="normal">429</span>
-<span class="normal">430</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">430</span>
 <span class="normal">431</span>
 <span class="normal">432</span>
 <span class="normal">433</span>
@@ -54764,7 +55139,28 @@ the per-uid snapshot dict.</p>
 <span class="normal">438</span>
 <span class="normal">439</span>
 <span class="normal">440</span>
-<span class="normal">441</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">build_safety_snapshot_builder</span><span class="p">(</span>
+<span class="normal">441</span>
+<span class="normal">442</span>
+<span class="normal">443</span>
+<span class="normal">444</span>
+<span class="normal">445</span>
+<span class="normal">446</span>
+<span class="normal">447</span>
+<span class="normal">448</span>
+<span class="normal">449</span>
+<span class="normal">450</span>
+<span class="normal">451</span>
+<span class="normal">452</span>
+<span class="normal">453</span>
+<span class="normal">454</span>
+<span class="normal">455</span>
+<span class="normal">456</span>
+<span class="normal">457</span>
+<span class="normal">458</span>
+<span class="normal">459</span>
+<span class="normal">460</span>
+<span class="normal">461</span>
+<span class="normal">462</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">build_safety_snapshot_builder</span><span class="p">(</span>
     <span class="n">env</span><span class="p">:</span> <span class="n">gym</span><span class="o">.</span><span class="n">Env</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">gym</span><span class="o">.</span><span class="n">Env</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="n">Any</span><span class="p">]],</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">AgentSnapshot</span><span class="p">]]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Return the env&#39;s ``build_agent_snapshots`` method, or ``None`` (P1.04.5; ADR-007 §Stage 1b).</span>
@@ -54824,6 +55220,10 @@ the per-uid snapshot dict.</p>
     <span class="p">]</span>
     <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">safety_dt</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">safety_emergency_controllers</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span>
+        <span class="nb">str</span><span class="p">,</span> <span class="n">EmergencyController</span>
+    <span class="p">]</span>
+    <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TrainingResult</span>
 </code></pre></div>
 
@@ -54951,6 +55351,23 @@ vector; mutated in place per step).</p>
 predictor lookahead.</p>
           </div>
         </li>
+        <li class="doc-section-item field-body">
+            <b><code>safety_emergency_controllers</code></b>
+              (<code><span title="collections.abc.Mapping">Mapping</span>[<span title="str">str</span>, <a class="autorefs autorefs-internal" title="EmergencyController (concerto.safety.emergency.EmergencyController)" href="#concerto.safety.EmergencyController">EmergencyController</a>] | None</code>, default:
+                  <code>None</code>
+)
+          –
+          <div class="doc-md-description">
+            <p>Optional per-uid
+:class:<code>~concerto.safety.emergency.EmergencyController</code>
+map (P1.04.6; ADR-007 §Stage 1b Rev 8). Threaded through to
+:func:<code>concerto.training.ego_aht.train</code> for the in-rollout
+:func:<code>concerto.safety.braking.maybe_brake</code> call. Built per
+cell by
+:class:<code>chamber.benchmarks.stage1_common.TrainedPolicyFactory</code>
+via :func:<code>build_emergency_controllers</code>.</p>
+          </div>
+        </li>
     </ul>
 
 
@@ -55008,12 +55425,7 @@ predictor lookahead.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/chamber/benchmarks/training_runner.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">180</span>
-<span class="normal">181</span>
-<span class="normal">182</span>
-<span class="normal">183</span>
-<span class="normal">184</span>
-<span class="normal">185</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">185</span>
 <span class="normal">186</span>
 <span class="normal">187</span>
 <span class="normal">188</span>
@@ -55092,7 +55504,28 @@ predictor lookahead.</p>
 <span class="normal">261</span>
 <span class="normal">262</span>
 <span class="normal">263</span>
-<span class="normal">264</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">run_training</span><span class="p">(</span>
+<span class="normal">264</span>
+<span class="normal">265</span>
+<span class="normal">266</span>
+<span class="normal">267</span>
+<span class="normal">268</span>
+<span class="normal">269</span>
+<span class="normal">270</span>
+<span class="normal">271</span>
+<span class="normal">272</span>
+<span class="normal">273</span>
+<span class="normal">274</span>
+<span class="normal">275</span>
+<span class="normal">276</span>
+<span class="normal">277</span>
+<span class="normal">278</span>
+<span class="normal">279</span>
+<span class="normal">280</span>
+<span class="normal">281</span>
+<span class="normal">282</span>
+<span class="normal">283</span>
+<span class="normal">284</span>
+<span class="normal">285</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">run_training</span><span class="p">(</span>
     <span class="n">cfg</span><span class="p">:</span> <span class="n">EgoAHTConfig</span><span class="p">,</span>
     <span class="o">*</span><span class="p">,</span>
     <span class="n">trainer_factory</span><span class="p">:</span> <span class="n">TrainerFactory</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -55106,6 +55539,13 @@ predictor lookahead.</p>
     <span class="n">safety_bounds</span><span class="p">:</span> <span class="n">Bounds</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">safety_snapshot_builder</span><span class="p">:</span> <span class="p">(</span><span class="n">Callable</span><span class="p">[[</span><span class="n">EnvLike</span><span class="p">],</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">AgentSnapshot</span><span class="p">]]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">)</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">safety_dt</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="c1"># P1.04.6 / ADR-007 §Stage 1b Rev 8: per-uid emergency-controller</span>
+    <span class="c1"># dispatch for :func:`concerto.safety.braking.maybe_brake`. ``None``</span>
+    <span class="c1"># falls back to the Cartesian default — correct for double-</span>
+    <span class="c1"># integrator MPE-stand-in cells but a silent dimension-mismatch</span>
+    <span class="c1"># foot-gun for the Stage-1b 7-DOF panda uid. Stage-1b callers must</span>
+    <span class="c1"># populate via :func:`build_emergency_controllers`.</span>
+    <span class="n">safety_emergency_controllers</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">EmergencyController</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TrainingResult</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Build env + partner and run the ego-AHT training loop (T4b.11; ADR-002 §Decisions).</span>
 
@@ -55149,6 +55589,14 @@ predictor lookahead.</p>
 <span class="sd">            :class:`AgentSnapshot` map per step.</span>
 <span class="sd">        safety_dt: Optional control-step dt in seconds for the</span>
 <span class="sd">            predictor lookahead.</span>
+<span class="sd">        safety_emergency_controllers: Optional per-uid</span>
+<span class="sd">            :class:`~concerto.safety.emergency.EmergencyController`</span>
+<span class="sd">            map (P1.04.6; ADR-007 §Stage 1b Rev 8). Threaded through to</span>
+<span class="sd">            :func:`concerto.training.ego_aht.train` for the in-rollout</span>
+<span class="sd">            :func:`concerto.safety.braking.maybe_brake` call. Built per</span>
+<span class="sd">            cell by</span>
+<span class="sd">            :class:`chamber.benchmarks.stage1_common.TrainedPolicyFactory`</span>
+<span class="sd">            via :func:`build_emergency_controllers`.</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        :class:`~concerto.training.ego_aht.TrainingResult` —</span>
@@ -55176,6 +55624,7 @@ predictor lookahead.</p>
         <span class="n">safety_bounds</span><span class="o">=</span><span class="n">safety_bounds</span><span class="p">,</span>
         <span class="n">safety_snapshot_builder</span><span class="o">=</span><span class="n">safety_snapshot_builder</span><span class="p">,</span>
         <span class="n">safety_dt</span><span class="o">=</span><span class="n">safety_dt</span><span class="p">,</span>
+        <span class="n">safety_emergency_controllers</span><span class="o">=</span><span class="n">safety_emergency_controllers</span><span class="p">,</span>
     <span class="p">)</span>
 </code></pre></div></td></tr></table></div>
             </details>
@@ -58983,7 +59432,20 @@ spike_run = _run_axis_with_factories(
 <span class="normal">566</span>
 <span class="normal">567</span>
 <span class="normal">568</span>
-<span class="normal">569</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">TrainedPolicyFactory</span><span class="p">:</span>
+<span class="normal">569</span>
+<span class="normal">570</span>
+<span class="normal">571</span>
+<span class="normal">572</span>
+<span class="normal">573</span>
+<span class="normal">574</span>
+<span class="normal">575</span>
+<span class="normal">576</span>
+<span class="normal">577</span>
+<span class="normal">578</span>
+<span class="normal">579</span>
+<span class="normal">580</span>
+<span class="normal">581</span>
+<span class="normal">582</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">TrainedPolicyFactory</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Phase-1 :class:`EgoActionFactory` — wires the ego-AHT training loop per cell.</span>
 
 <span class="sd">    ADR-007 §Stage 1b production factory. Implements the</span>
@@ -59305,12 +59767,16 @@ spike_run = _run_axis_with_factories(
 <span class="sd">        Returns:</span>
 <span class="sd">            ``dict`` with keys ``safety_filter``, ``safety_state``,</span>
 <span class="sd">            ``safety_bounds``, ``safety_snapshot_builder``,</span>
-<span class="sd">            ``safety_dt``. All-``None`` when ``cfg.safety.enabled``</span>
-<span class="sd">            is False; all-populated otherwise. The dict unpacks</span>
-<span class="sd">            directly into the :func:`run_training` kwargs (intent-</span>
-<span class="sd">            mismatch detection lives in</span>
+<span class="sd">            ``safety_dt``, and ``safety_emergency_controllers``</span>
+<span class="sd">            (P1.04.6 addition; ADR-007 §Stage 1b Rev 8). All-``None``</span>
+<span class="sd">            when ``cfg.safety.enabled`` is False; all-populated</span>
+<span class="sd">            otherwise. The dict unpacks directly into the</span>
+<span class="sd">            :func:`run_training` kwargs (intent-mismatch detection for</span>
+<span class="sd">            the first five keys lives in</span>
 <span class="sd">            :func:`concerto.training.ego_aht.train`&#39;s validation</span>
-<span class="sd">            block).</span>
+<span class="sd">            block; ``safety_emergency_controllers`` is a free-standing</span>
+<span class="sd">            hint, only consulted when the first five are wired and</span>
+<span class="sd">            :func:`concerto.safety.braking.maybe_brake` fires).</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">cfg</span><span class="o">.</span><span class="n">safety</span><span class="o">.</span><span class="n">enabled</span><span class="p">:</span>
             <span class="k">return</span> <span class="p">{</span>
@@ -59319,12 +59785,14 @@ spike_run = _run_axis_with_factories(
                 <span class="s2">&quot;safety_bounds&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
                 <span class="s2">&quot;safety_snapshot_builder&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
                 <span class="s2">&quot;safety_dt&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+                <span class="s2">&quot;safety_emergency_controllers&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
             <span class="p">}</span>
         <span class="c1"># Lazy imports: keep the factory Tier-1-import-safe on</span>
         <span class="c1"># Vulkan-less hosts; safety_state construction only resolves</span>
         <span class="c1"># when the cfg says so.</span>
         <span class="kn">from</span><span class="w"> </span><span class="nn">chamber.benchmarks.training_runner</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
             <span class="n">build_bounds_for_env</span><span class="p">,</span>
+            <span class="n">build_emergency_controllers</span><span class="p">,</span>
             <span class="n">build_safety_dt</span><span class="p">,</span>
             <span class="n">build_safety_filter</span><span class="p">,</span>
             <span class="n">build_safety_snapshot_builder</span><span class="p">,</span>
@@ -59337,6 +59805,12 @@ spike_run = _run_axis_with_factories(
         <span class="n">safety_bounds</span> <span class="o">=</span> <span class="n">build_bounds_for_env</span><span class="p">(</span><span class="n">env</span><span class="p">)</span>
         <span class="n">snapshot_builder</span> <span class="o">=</span> <span class="n">build_safety_snapshot_builder</span><span class="p">(</span><span class="n">env</span><span class="p">)</span>
         <span class="n">safety_dt</span> <span class="o">=</span> <span class="n">build_safety_dt</span><span class="p">(</span><span class="n">env</span><span class="p">)</span>
+        <span class="c1"># P1.04.6 (ADR-007 §Stage 1b Rev 8): per-uid emergency-controller</span>
+        <span class="c1"># dispatch for the in-rollout :func:`maybe_brake` call. Built</span>
+        <span class="c1"># from the same env-side control-model map :func:`build_safety_filter`</span>
+        <span class="c1"># consumes, so the Jacobian-vs-DI dispatch matches the outer CBF</span>
+        <span class="c1"># row&#39;s per-uid embodiment assumption.</span>
+        <span class="n">emergency_controllers</span> <span class="o">=</span> <span class="n">build_emergency_controllers</span><span class="p">(</span><span class="n">env</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">snapshot_builder</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
                 <span class="s2">&quot;TrainedPolicyFactory._build_safety_for_cell: cfg.safety.enabled &quot;</span>
@@ -59363,6 +59837,7 @@ spike_run = _run_axis_with_factories(
             <span class="s2">&quot;safety_bounds&quot;</span><span class="p">:</span> <span class="n">safety_bounds</span><span class="p">,</span>
             <span class="s2">&quot;safety_snapshot_builder&quot;</span><span class="p">:</span> <span class="n">snapshot_builder</span><span class="p">,</span>
             <span class="s2">&quot;safety_dt&quot;</span><span class="p">:</span> <span class="n">safety_dt</span><span class="p">,</span>
+            <span class="s2">&quot;safety_emergency_controllers&quot;</span><span class="p">:</span> <span class="n">emergency_controllers</span><span class="p">,</span>
         <span class="p">}</span>
 </code></pre></div></td></tr></table></div>
               </details>
