@@ -13,34 +13,40 @@ import numpy as np
 import pytest
 
 from concerto.safety.api import DEFAULT_WARMUP_STEPS, SafetyState
-from concerto.safety.conformal import reset_on_partner_swap, update_lambda
+
+_PAIR_AB: tuple[str, str] = ("a", "b")
+_PAIR_AC: tuple[str, str] = ("a", "c")
+_PAIR_BC: tuple[str, str] = ("b", "c")
+from concerto.safety.conformal import reset_on_partner_swap, update_lambda  # noqa: E402
 
 
 def test_partner_swap_resets_lambda_to_lambda_safe() -> None:
     """ADR-004 risk-mitigation #2: ``lambda`` is reset to ``lambda_safe`` on swap."""
     state = SafetyState(
-        lambda_=np.array([0.42, -0.13], dtype=np.float64),  # adapted to partner-1
+        lambda_={_PAIR_AB: 0.42, _PAIR_AC: -0.13},  # adapted to partner-1
         epsilon=0.05,
         eta=0.05,
     )
-    reset_on_partner_swap(state, n_pairs=2, lambda_safe=0.0, n_warmup_steps=DEFAULT_WARMUP_STEPS)
-    np.testing.assert_array_equal(state.lambda_, [0.0, 0.0])
+    reset_on_partner_swap(
+        state, uids=("a", "b", "c"), lambda_safe=0.0, n_warmup_steps=DEFAULT_WARMUP_STEPS
+    )
+    assert state.lambda_ == {_PAIR_AB: 0.0, _PAIR_AC: 0.0, _PAIR_BC: 0.0}
     assert state.warmup_steps_remaining == DEFAULT_WARMUP_STEPS
 
 
 def test_partner_swap_warmup_decrements_to_zero_then_clamps() -> None:
     """ADR-004 risk-mitigation #2: warmup_steps_remaining decrements + clamps at 0."""
     state = SafetyState(
-        lambda_=np.zeros(1, dtype=np.float64),
+        lambda_={_PAIR_AB: 0.0},
         epsilon=0.05,
         eta=0.05,
         warmup_steps_remaining=5,
     )
     for expected_remaining in (4, 3, 2, 1, 0):
-        update_lambda(state, np.zeros(1, dtype=np.float64), in_warmup=True)
+        update_lambda(state, {_PAIR_AB: 0.0}, in_warmup=True)
         assert state.warmup_steps_remaining == expected_remaining
     # Further warmup-mode calls clamp at 0 (no underflow).
-    update_lambda(state, np.zeros(1, dtype=np.float64), in_warmup=True)
+    update_lambda(state, {_PAIR_AB: 0.0}, in_warmup=True)
     assert state.warmup_steps_remaining == 0
 
 
@@ -52,22 +58,22 @@ def test_partner_swap_warmup_widens_step_relative_to_steady_state() -> None:
     (ADR-004 risk-mitigation #2).
     """
     base = SafetyState(
-        lambda_=np.zeros(1, dtype=np.float64),
+        lambda_={_PAIR_AB: 0.0},
         epsilon=0.05,
         eta=0.1,
         warmup_steps_remaining=10,
     )
     warm = SafetyState(
-        lambda_=np.zeros(1, dtype=np.float64),
+        lambda_={_PAIR_AB: 0.0},
         epsilon=0.05,
         eta=0.1,
         warmup_steps_remaining=10,
     )
-    losses = np.array([0.0], dtype=np.float64)
+    losses: dict[tuple[str, str], float] = {_PAIR_AB: 0.0}
     for _ in range(5):
         update_lambda(base, losses, in_warmup=False)
         update_lambda(warm, losses, in_warmup=True)
-    assert warm.lambda_[0] > base.lambda_[0]
+    assert warm.lambda_[_PAIR_AB] > base.lambda_[_PAIR_AB]
 
 
 def test_partner_swap_per_pair_loss_decreases_over_warmup() -> None:
@@ -82,12 +88,12 @@ def test_partner_swap_per_pair_loss_decreases_over_warmup() -> None:
     """
     rng = np.random.default_rng(0)
     state = SafetyState(
-        lambda_=np.zeros(1, dtype=np.float64),
+        lambda_={_PAIR_AB: 0.0},
         epsilon=0.05,
         eta=0.1,
     )
     # Worst-case bound seeds the swap; warmup window primed.
-    reset_on_partner_swap(state, n_pairs=1, lambda_safe=1.0, n_warmup_steps=200)
+    reset_on_partner_swap(state, uids=("a", "b"), lambda_safe=1.0, n_warmup_steps=200)
 
     losses_first_quartile: list[float] = []
     losses_last_quartile: list[float] = []
@@ -95,14 +101,14 @@ def test_partner_swap_per_pair_loss_decreases_over_warmup() -> None:
     for k in range(n):
         # Stationary prediction-vs-truth gap stream — Theorem 3 setup.
         e_k = float(rng.normal(0.0, 0.3))
-        l_k = max(0.0, float(state.lambda_[0]) - e_k)
+        l_k = max(0.0, state.lambda_[_PAIR_AB] - e_k)
         if k < n // 4:
             losses_first_quartile.append(l_k)
         elif k >= 3 * n // 4:
             losses_last_quartile.append(l_k)
         update_lambda(
             state,
-            np.array([l_k], dtype=np.float64),
+            {_PAIR_AB: l_k},
             in_warmup=state.warmup_steps_remaining > 0,
         )
 
@@ -116,24 +122,24 @@ def test_partner_swap_per_pair_loss_decreases_over_warmup() -> None:
 def test_partner_swap_lambda_safe_can_be_nonzero() -> None:
     """ADR-006 risk #3: ``lambda_safe`` is configurable, not zero by default."""
     state = SafetyState(
-        lambda_=np.zeros(1, dtype=np.float64),
+        lambda_={_PAIR_AB: 0.0},
         epsilon=0.05,
         eta=0.05,
     )
-    reset_on_partner_swap(state, n_pairs=1, lambda_safe=0.25, n_warmup_steps=10)
-    assert state.lambda_[0] == 0.25
+    reset_on_partner_swap(state, uids=("a", "b"), lambda_safe=0.25, n_warmup_steps=10)
+    assert state.lambda_[_PAIR_AB] == 0.25
     assert state.warmup_steps_remaining == 10
 
 
 def test_partner_swap_changes_pair_count() -> None:
     """ADR-004 risk-mitigation #2: partner swap can also change the pair count."""
     state = SafetyState(
-        lambda_=np.array([0.5, -0.3, 0.1], dtype=np.float64),  # 3 pairs
+        lambda_={_PAIR_AB: 0.5, _PAIR_AC: -0.3, _PAIR_BC: 0.1},  # 3 pairs
         epsilon=0.05,
         eta=0.05,
     )
-    reset_on_partner_swap(state, n_pairs=1, lambda_safe=0.0, n_warmup_steps=20)
-    assert state.lambda_.shape == (1,)
+    reset_on_partner_swap(state, uids=("a", "b"), lambda_safe=0.0, n_warmup_steps=20)
+    assert state.lambda_ == {_PAIR_AB: 0.0}
     assert state.warmup_steps_remaining == 20
 
 
@@ -179,7 +185,7 @@ def test_partner_swap_consumer_gates_on_partner_id_none() -> None:
         "a": np.zeros(2, dtype=np.float64),
         "b": np.zeros(2, dtype=np.float64),
     }
-    state = SafetyState(lambda_=np.zeros(1, dtype=np.float64))
+    state = SafetyState(lambda_={_PAIR_AB: 0.0})
     # partner_id is None: must NOT raise.
     from typing import cast
 
@@ -196,19 +202,19 @@ def test_partner_swap_consumer_gates_on_partner_id_none() -> None:
 
 
 def test_partner_swap_update_lambda_mismatch_after_pair_count_change_raises() -> None:
-    """ADR-004 risk-mitigation #2: mid-episode pair-count change without reset surfaces loudly.
+    """ADR-004 risk-mitigation #2: mid-episode pair-set change without reset surfaces loudly.
 
     If a caller forgets to call :func:`reset_on_partner_swap` after a
-    partner-set change, the next ``update_lambda`` call sees a shape
+    partner-set change, the next ``update_lambda`` call sees a key-set
     mismatch between ``state.lambda_`` and the supplied per-pair loss
-    vector and raises ValueError so the bug doesn't silently corrupt
+    dict and raises ValueError so the bug doesn't silently corrupt
     the conformal state.
     """
     state = SafetyState(
-        lambda_=np.zeros(2, dtype=np.float64),  # 2 pairs
+        lambda_={_PAIR_AB: 0.0, _PAIR_AC: 0.0},  # 2 pairs
         epsilon=0.05,
         eta=0.05,
     )
-    # Loss vector for 1 pair (post-swap) but state still has 2 — caller forgot to reset.
-    with pytest.raises(ValueError, match="shape"):
-        update_lambda(state, np.zeros(1, dtype=np.float64), in_warmup=False)
+    # Loss dict for 1 pair (post-swap) but state still has 2 — caller forgot to reset.
+    with pytest.raises(ValueError, match="key set"):
+        update_lambda(state, {_PAIR_AB: 0.0}, in_warmup=False)

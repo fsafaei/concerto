@@ -181,6 +181,7 @@ from concerto.safety.api import (
     Bounds,
     DoubleIntegratorControlModel,
     SafetyState,
+    make_lambda_dict,
 )
 from concerto.safety.braking import maybe_brake
 from concerto.safety.cbf_qp import AgentSnapshot, ExpCBFQP
@@ -194,8 +195,11 @@ bounds = Bounds(
     comm_latency_ms=1.0,
     force_limit=20.0,
 )
+# Issue #144 / ADR-014 v3: ``SafetyState.lambda_`` is a
+# ``dict[tuple[str, str], float]`` keyed by canonical UID-pair
+# tuples. Build it via :func:`make_lambda_dict` over the agent set.
 state = SafetyState(
-    lambda_=np.zeros(1, dtype=np.float64),
+    lambda_=make_lambda_dict(("a", "b")),
     epsilon=-0.05,
     eta=0.01,
 )

@@ -44,7 +44,7 @@ class TestSafetyAggregatorRunningStats:
         """All λ = 0.5 → lambda_steady_state = 0.5; var = 0."""
         agg = SafetyAggregator(n_pairs=1, cartesian_accel_capacity=10.0)
         for _ in range(100):
-            agg.observe(np.array([0.5], dtype=np.float64))
+            agg.observe({("a", "b"): 0.5})
         summary = agg.finalise(safety_enabled=True)
         assert summary["n_filter_calls"] == 100
         np.testing.assert_allclose(_f(summary, "lambda_mean"), 0.5)
@@ -56,7 +56,7 @@ class TestSafetyAggregatorRunningStats:
         """λ at 9.5, threshold 0.9 x 10 = 9.0 → saturated True."""
         agg = SafetyAggregator(n_pairs=1, cartesian_accel_capacity=10.0, saturation_threshold=0.9)
         for _ in range(50):
-            agg.observe(np.array([9.5], dtype=np.float64))
+            agg.observe({("a", "b"): 9.5})
         summary = agg.finalise(safety_enabled=True)
         assert summary["saturated"] is True
         np.testing.assert_allclose(_f(summary, "lambda_steady_state"), 9.5)
@@ -65,7 +65,7 @@ class TestSafetyAggregatorRunningStats:
         """Linear ramp 0→1 over 100 steps: steady_state = mean of last 10 ≈ 0.945."""
         agg = SafetyAggregator(n_pairs=1, cartesian_accel_capacity=10.0)
         for i in range(100):
-            agg.observe(np.array([i / 99.0], dtype=np.float64))
+            agg.observe({("a", "b"): i / 99.0})
         summary = agg.finalise(safety_enabled=True)
         # Final 10% = last 10 samples (steps 90-99), mean = (90+91+...+99)/99 / 10
         expected_steady_state = float(np.mean([i / 99.0 for i in range(90, 100)]))
@@ -80,7 +80,7 @@ class TestSafetyAggregatorRunningStats:
         agg = SafetyAggregator(n_pairs=1, cartesian_accel_capacity=10.0)
         rng = np.random.default_rng(0)
         for _ in range(100):
-            agg.observe(np.array([rng.uniform(0.4, 0.6)], dtype=np.float64))
+            agg.observe({("a", "b"): float(rng.uniform(0.4, 0.6))})
         summary = agg.finalise(safety_enabled=True)
         # Uniform(0.4, 0.6) has variance (0.2)^2/12 ≈ 0.0033
         assert _f(summary, "lambda_var") > 1e-3
@@ -94,7 +94,7 @@ class TestSafetyAggregatorWindowFlush:
     def test_flush_returns_window_aggregate_and_resets(self) -> None:
         agg = SafetyAggregator(n_pairs=1, cartesian_accel_capacity=10.0)
         for i in range(10):
-            agg.observe(np.array([float(i)], dtype=np.float64))
+            agg.observe({("a", "b"): float(i)})
         window = agg.flush_window_stats()
         assert window["n_obs"] == 10
         np.testing.assert_allclose(_f(window, "lambda_mean"), 4.5)
@@ -105,10 +105,10 @@ class TestSafetyAggregatorWindowFlush:
     def test_window_flush_does_not_clear_total_stats(self) -> None:
         agg = SafetyAggregator(n_pairs=1, cartesian_accel_capacity=10.0)
         for _ in range(10):
-            agg.observe(np.array([1.0], dtype=np.float64))
+            agg.observe({("a", "b"): 1.0})
         agg.flush_window_stats()  # discard window
         for _ in range(10):
-            agg.observe(np.array([2.0], dtype=np.float64))
+            agg.observe({("a", "b"): 2.0})
         summary = agg.finalise(safety_enabled=True)
         assert summary["n_filter_calls"] == 20
         np.testing.assert_allclose(_f(summary, "lambda_mean"), 1.5)
@@ -129,7 +129,7 @@ class TestSafetyAggregatorEventCounters:
         agg = SafetyAggregator(n_pairs=1, cartesian_accel_capacity=10.0)
         for i in range(10):
             agg.observe(
-                np.array([0.0], dtype=np.float64),
+                {("a", "b"): 0.0},
                 fallback_fired=(i % 3 == 0),
             )
         window = agg.flush_window_stats()
@@ -138,9 +138,9 @@ class TestSafetyAggregatorEventCounters:
     def test_qp_infeasible_counted_separately_from_fallback(self) -> None:
         """ConcertoSafetyInfeasible is a worse signal than fallback-fired."""
         agg = SafetyAggregator(n_pairs=1, cartesian_accel_capacity=10.0)
-        agg.observe(np.array([0.0]), fallback_fired=True)
-        agg.observe(np.array([0.0]), qp_infeasible=True)
-        agg.observe(np.array([0.0]), fallback_fired=True, qp_infeasible=True)
+        agg.observe({("a", "b"): 0.0}, fallback_fired=True)
+        agg.observe({("a", "b"): 0.0}, qp_infeasible=True)
+        agg.observe({("a", "b"): 0.0}, fallback_fired=True, qp_infeasible=True)
         summary = agg.finalise(safety_enabled=True)
         assert summary["n_fallback_fires"] == 2
         assert summary["n_qp_infeasible"] == 2
@@ -152,7 +152,7 @@ class TestSafetyAggregatorShapeValidation:
     def test_observe_rejects_wrong_n_pairs(self) -> None:
         agg = SafetyAggregator(n_pairs=2, cartesian_accel_capacity=10.0)
         with pytest.raises(ValueError, match="n_pairs"):
-            agg.observe(np.array([0.5], dtype=np.float64))  # shape (1,), expected (2,)
+            agg.observe({("a", "b"): 0.5})  # shape (1,), expected (2,)
 
 
 class TestSafetyAggregatorForwardCompat:
@@ -161,14 +161,14 @@ class TestSafetyAggregatorForwardCompat:
     def test_finalise_includes_p104_6_fields_zero_filled(self) -> None:
         """n_braking_fires + braking_fire_rate default to 0; P1.04.6 populates."""
         agg = SafetyAggregator(n_pairs=1, cartesian_accel_capacity=10.0)
-        agg.observe(np.array([0.1], dtype=np.float64))
+        agg.observe({("a", "b"): 0.1})
         summary = agg.finalise(safety_enabled=True)
         assert summary["n_braking_fires"] == 0
         assert summary["braking_fire_rate"] == 0.0
 
     def test_predictor_kind_round_trips(self) -> None:
         agg = SafetyAggregator(n_pairs=1, cartesian_accel_capacity=10.0)
-        agg.observe(np.array([0.1], dtype=np.float64))
+        agg.observe({("a", "b"): 0.1})
         summary = agg.finalise(safety_enabled=True, predictor_kind="constant_velocity")
         assert summary["predictor_kind"] == "constant_velocity"
 

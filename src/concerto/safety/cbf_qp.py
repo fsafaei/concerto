@@ -52,7 +52,7 @@ from typing import TYPE_CHECKING, cast, overload
 
 import numpy as np
 
-from concerto.safety.api import SafetyMode, canonical_pair_order
+from concerto.safety.api import SafetyMode, canonical_pair_key, canonical_pair_order
 from concerto.safety.budget_split import ProportionalBudgetSplit
 from concerto.safety.solvers import ClarabelSolver
 
@@ -779,16 +779,22 @@ class ExpCBFQP:
 
         ego_model = self._control_models[ego_uid]
         # Canonical lexicographic order over partner UIDs so the
-        # per-pair indexing into ``state.lambda_`` is stable across
-        # callers and across dict reconstruction (external-review P1,
-        # 2026-05-16; see :func:`concerto.safety.api.canonical_pair_order`).
+        # per-pair iteration is deterministic. Issue #144 promoted
+        # ``state.lambda_`` to a :data:`LambdaDict` keyed by canonical
+        # UID-pair tuples, so misalignment is now caught at the type
+        # level via the key-set check below; the canonical sort is
+        # still useful for building ``partner_uids`` so the row
+        # ordering in the QP is stable across callers.
         partner_uids = canonical_pair_order(uid for uid in snaps if uid != ego_uid)
         n_pairs = len(partner_uids)
-        if state.lambda_.shape != (n_pairs,):
+        expected_pair_keys = {
+            canonical_pair_key(ego_uid, partner_uid) for partner_uid in partner_uids
+        }
+        if set(state.lambda_.keys()) != expected_pair_keys:
             msg = (
-                f"state.lambda_ shape mismatch: expected ({n_pairs},), "
-                f"got {state.lambda_.shape}. Reset SafetyState on partner-set "
-                "change per ADR-004 risk-mitigation #2."
+                f"state.lambda_ key set mismatch: expected {sorted(expected_pair_keys)!r}, "
+                f"got {sorted(state.lambda_.keys())!r}. Reset SafetyState on "
+                "partner-set change per ADR-004 risk-mitigation #2."
             )
             raise ValueError(msg)
 
@@ -830,13 +836,14 @@ class ExpCBFQP:
                 snap_pred=partner_predicted_states[partner_uid],
                 dt=dt,
             )
+            pair_key = canonical_pair_key(ego_uid, partner_uid)
             cart_row, rhs, h_ij = _build_ego_only_row(
                 ego_snap=snaps[ego_uid],
                 partner_snap=snaps[partner_uid],
                 partner_predicted_accel=partner_pred_accel,
                 alpha_pair=alpha_pair,
                 gamma=self._cbf_gamma,
-                lambda_ij=float(state.lambda_[pair_idx]),
+                lambda_ij=float(state.lambda_[pair_key]),
             )
             # Project the Cartesian row to action space via the ego's
             # control-model Jacobian. ``cart_row == -n_hat``; for
@@ -873,7 +880,7 @@ class ExpCBFQP:
         qp_solve_ms = (time.perf_counter() - start) * 1000.0
 
         info: FilterInfo = {
-            "lambda": state.lambda_.copy(),
+            "lambda": dict(state.lambda_),
             "constraint_violation": constraint_violation,
             "prediction_gap_loss": None,
             "fallback_fired": False,
@@ -922,11 +929,12 @@ class ExpCBFQP:
                 raise ValueError(msg)
 
         # Canonical lexicographic order over proposed_action UIDs so the
-        # QP variable layout, the per-pair slot assignments, and the
-        # per-pair indexing into ``state.lambda_`` are all stable
-        # across callers and across dict reconstruction (external-
-        # review P1, 2026-05-16; see
-        # :func:`concerto.safety.api.canonical_pair_order`).
+        # QP variable layout and the per-pair slot assignments are
+        # stable across callers and across dict reconstruction. Issue
+        # #144 promoted ``state.lambda_`` to a :data:`LambdaDict` keyed
+        # by canonical UID-pair tuples, so per-pair slack lookup is
+        # uid-driven rather than pair-index-driven — the canonical
+        # sort still gates the QP variable layout.
         uids = canonical_pair_order(proposed_action.keys())
         slot_of: dict[str, int] = {}
         offset = 0
@@ -955,11 +963,16 @@ class ExpCBFQP:
         u_hat = np.concatenate(u_hat_parts).astype(np.float64, copy=False)
 
         n_pairs = (len(uids) * (len(uids) - 1)) // 2
-        if state.lambda_.shape != (n_pairs,):
+        expected_pair_keys: set[tuple[str, str]] = set()
+        for a, uid_i in enumerate(uids):
+            for uid_j in uids[a + 1 :]:
+                expected_pair_keys.add((uid_i, uid_j))
+        if set(state.lambda_.keys()) != expected_pair_keys:
             msg = (
-                f"state.lambda_ shape mismatch: expected ({n_pairs},), "
-                f"got {state.lambda_.shape}. Reset SafetyState on partner-set "
-                "change per ADR-004 risk-mitigation #2."
+                f"state.lambda_ key set mismatch: expected "
+                f"{sorted(expected_pair_keys)!r}, got {sorted(state.lambda_.keys())!r}. "
+                "Reset SafetyState on partner-set change per ADR-004 "
+                "risk-mitigation #2."
             )
             raise ValueError(msg)
 
@@ -980,7 +993,7 @@ class ExpCBFQP:
                     snap_j=snaps[uid_j],
                     alpha_pair=alpha_pair,
                     gamma=self._cbf_gamma,
-                    lambda_ij=float(state.lambda_[pair_idx]),
+                    lambda_ij=float(state.lambda_[(uid_i, uid_j)]),
                 )
                 action_row = _project_cartesian_row_to_action(
                     pair_row,
@@ -1064,7 +1077,7 @@ class ExpCBFQP:
             safe_action[uid] = x_safe[slot : slot + width].astype(np.float64, copy=True)
 
         info: FilterInfo = {
-            "lambda": state.lambda_.copy(),
+            "lambda": dict(state.lambda_),
             "constraint_violation": constraint_violation,
             "prediction_gap_loss": None,
             "fallback_fired": False,

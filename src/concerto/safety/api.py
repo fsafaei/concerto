@@ -32,7 +32,7 @@ from __future__ import annotations
 import warnings
 from dataclasses import dataclass
 from enum import Enum
-from typing import TYPE_CHECKING, Protocol, TypedDict, runtime_checkable
+from typing import TYPE_CHECKING, Any, Protocol, TypedDict, runtime_checkable
 
 import numpy as np
 import numpy.typing as npt
@@ -44,6 +44,17 @@ if TYPE_CHECKING:
 
 #: Per-agent action vector alias. Public so Protocol signatures stay readable.
 FloatArray = npt.NDArray[np.float64]
+
+#: Conformal-slack dict type alias (issue #144 / ADR-004 §Decision; ADR-014 v3).
+#:
+#: ``SafetyState.lambda_`` and ``FilterInfo["lambda"]`` carry one
+#: ``float`` entry per agent pair, keyed by a lexicographically-ordered
+#: UID tuple ``(uid_a, uid_b)`` with ``uid_a < uid_b``. The dict-key
+#: invariant subsumes the pre-issue-#144 pair-index alignment risk: a
+#: caller that reconstructs the snapshot dict in a different order
+#: still indexes via the same canonical tuple key, so the per-pair
+#: slack cannot silently misalign with the pairwise CBF constraint.
+LambdaDict = dict[tuple[str, str], float]
 
 
 def canonical_pair_order(uids: Iterable[str]) -> list[str]:
@@ -63,22 +74,15 @@ def canonical_pair_order(uids: Iterable[str]) -> list[str]:
     ``uid_a < uid_b`` lexicographically) is stable across callers and
     across dict reconstruction (external-review P1, 2026-05-16).
 
-    Pre-amendment, each entry point used ``list(<dict>.keys())`` and
-    relied on Python 3.7+'s insertion-order guarantee — but the
-    invariant was implicit, and any caller that reconstructed the
-    snapshot dict in a different order silently misaligned the
-    per-pair conformal-slack vector ``SafetyState.lambda_`` with the
-    pairwise CBF constraints. The canonical sort makes the pair index
-    a pure function of the uid set, eliminating the cross-call
-    misalignment failure mode.
-
-    The structurally cleanest fix (promoting ``lambda_`` to
-    ``dict[tuple[str, str], float]``) is deferred to Phase-1 — it
-    requires bumping the ADR-014 ``FilterInfo["lambda"]`` wire
-    contract and the three-table renderer at the same time, which
-    busts the Phase-0 diff budget. Tracking issue is opened alongside
-    the present PR; the Stage-1 AS spike is the natural integration
-    point.
+    Post-issue-#144 the structural fix (``lambda_: LambdaDict``) makes
+    the pair-keying part of the type system: lookups go via the
+    lexicographic tuple key produced by :func:`canonical_pair_key`, and
+    callers no longer rely on the canonical ordering to index a flat
+    array. The helper is retained as a primitive because the
+    upper-triangular pair iteration in
+    :func:`make_pair_keys` and the cbf_qp call-sites still needs a
+    deterministic uid ordering to build the canonical set of pair
+    tuples.
 
     Args:
         uids: An iterable of agent UIDs.
@@ -96,6 +100,195 @@ def canonical_pair_order(uids: Iterable[str]) -> list[str]:
         msg = f"duplicate uids in pair iteration: {out!r}"
         raise ValueError(msg)
     return out
+
+
+def canonical_pair_key(a: str, b: str) -> tuple[str, str]:
+    """Return the lexicographically-ordered pair key for ``(a, b)`` (ADR-004 §Decision; issue #144).
+
+    The canonical key for any agent pair is the unique 2-tuple of UIDs
+    sorted lexicographically. Callers that already know the canonical
+    order (e.g. a nested loop with the outer uid lex-smaller than the
+    inner) can build the tuple directly; this helper is for sites that
+    take an unordered ``(uid_a, uid_b)`` pair (e.g. EGO_ONLY mode's
+    ``(ego_uid, partner_uid)`` rows, where neither side is guaranteed
+    to be lex-smaller) and need the canonical lookup key for
+    :data:`LambdaDict` indexing.
+
+    Args:
+        a: First UID.
+        b: Second UID (must differ from ``a``).
+
+    Returns:
+        ``(a, b)`` if ``a < b`` lexicographically, otherwise ``(b, a)``.
+
+    Raises:
+        ValueError: If ``a == b`` (an agent pair always has two
+            distinct UIDs).
+    """
+    if a == b:
+        msg = f"canonical_pair_key requires distinct UIDs; got {a!r} == {b!r}"
+        raise ValueError(msg)
+    return (a, b) if a < b else (b, a)
+
+
+def make_pair_keys(uids: Iterable[str]) -> list[tuple[str, str]]:
+    """Build the canonical upper-triangular pair-key list (ADR-004 §Decision; issue #144).
+
+    Returns the list of ``(uid_i, uid_j)`` tuples with ``i < j`` over
+    the lexicographically-sorted UID order produced by
+    :func:`canonical_pair_order`. Used by :func:`make_lambda_dict`,
+    the cbf_qp call-sites, and any other consumer that needs to
+    enumerate the canonical pair set for a uid collection.
+
+    Args:
+        uids: Iterable of agent UIDs (must not contain duplicates).
+
+    Returns:
+        A new list of pair-key tuples in canonical iteration order
+        (outer loop over lex-sorted uids, inner loop over the
+        suffix). The list length is ``n*(n-1)/2`` for ``n`` distinct
+        uids.
+    """
+    sorted_uids = canonical_pair_order(uids)
+    pairs: list[tuple[str, str]] = []
+    for i, a in enumerate(sorted_uids):
+        pairs.extend((a, b) for b in sorted_uids[i + 1 :])
+    return pairs
+
+
+def make_lambda_dict(uids: Iterable[str], *, fill: float = 0.0) -> LambdaDict:
+    """Construct a :data:`LambdaDict` over the canonical pair set (ADR-004 §Decision; issue #144).
+
+    The convenience constructor for :class:`SafetyState`'s ``lambda_``
+    field. Each canonical pair-key produced by :func:`make_pair_keys`
+    maps to ``fill``; callers seed every pair to the same scalar
+    (typically the warm-start ``lambda_safe`` from
+    :func:`concerto.safety.conformal.reset_on_partner_swap`) and the
+    conformal layer updates entries in place per step.
+
+    Args:
+        uids: Iterable of agent UIDs.
+        fill: Initial per-pair value (default ``0.0``).
+
+    Returns:
+        A fresh :data:`LambdaDict` with one entry per canonical pair.
+    """
+    return {key: float(fill) for key in make_pair_keys(uids)}
+
+
+def lambda_to_jsonable(d: LambdaDict) -> list[dict[str, Any]]:
+    """Serialise a :data:`LambdaDict` for JSON round-trip (ADR-014 §Decision; issue #144).
+
+    JSON does not have tuple keys natively. The structured list form
+    ``[{"a": uid_a, "b": uid_b, "value": λ}, ...]`` is the canonical
+    wire encoding for v3 :data:`LambdaDict` payloads — pair-keys are
+    explicit named fields rather than stringified tuples, so a reader
+    cannot accidentally split or rejoin the pair on the wrong
+    delimiter.
+
+    Args:
+        d: A :data:`LambdaDict`.
+
+    Returns:
+        A list of plain-dict entries with ``"a"``, ``"b"``, and
+        ``"value"`` fields, ordered by the canonical pair-key order
+        from :func:`make_pair_keys` over the dict's UID set so the
+        wire encoding is determinstic.
+    """
+    uids: set[str] = set()
+    for a, b in d:
+        uids.add(a)
+        uids.add(b)
+    payload: list[dict[str, Any]] = []
+    for a, b in make_pair_keys(uids):
+        if (a, b) not in d:
+            continue
+        payload.append({"a": a, "b": b, "value": float(d[(a, b)])})
+    return payload
+
+
+def lambda_from_jsonable(
+    payload: object,
+    *,
+    uids: Iterable[str] | None = None,
+) -> LambdaDict:
+    """Deserialise a :data:`LambdaDict` from a JSON-decoded payload (ADR-014 §Decision; issue #144).
+
+    Accepts either:
+
+    - **v3 (current)** — a list of structured entries
+      ``[{"a": uid_a, "b": uid_b, "value": λ}, ...]`` as produced by
+      :func:`lambda_to_jsonable`. Each entry's pair is canonicalised
+      via :func:`canonical_pair_key` so a misordered ``(b, a)`` entry
+      on the wire is rebuilt under the canonical ``(a, b)`` key.
+    - **v2 (legacy)** — a flat list / sequence of floats of length
+      ``n*(n-1)/2`` plus an explicit ``uids`` keyword. The values are
+      assumed to be indexed in the canonical pair-iteration order
+      (the implicit invariant that issue #144 closed by promoting to
+      a dict). Reading this form emits a :class:`DeprecationWarning`
+      and the legacy reader is targeted for removal in v0.6.0.
+
+    Args:
+        payload: The JSON-decoded structure (list of dicts for v3, or
+            a list of floats for v2).
+        uids: Required for v2; ignored for v3. The UID set whose
+            canonical pair order indexed the legacy ndarray.
+
+    Returns:
+        A fresh :data:`LambdaDict`.
+
+    Raises:
+        TypeError: When ``payload`` is neither a v3 structured list
+            nor a v2 flat float list, or v2 was passed without
+            ``uids``.
+        ValueError: When a v3 entry lists ``a == b`` (canonical pair
+            keys always have distinct UIDs), or the v2 length does
+            not match the canonical pair count for ``uids``.
+    """
+    if not isinstance(payload, list):
+        msg = f"lambda_from_jsonable: expected list payload, got {type(payload).__name__}"
+        raise TypeError(msg)
+    payload_list: list[Any] = payload  # type: ignore[assignment]
+    if payload_list and isinstance(payload_list[0], dict):
+        # v3 structured-entry form.
+        out: LambdaDict = {}
+        for entry in payload_list:
+            if not isinstance(entry, dict):
+                msg = f"lambda_from_jsonable: v3 entries must be dicts; got {type(entry).__name__}"
+                raise TypeError(msg)
+            entry_dict: dict[str, Any] = entry  # type: ignore[assignment]
+            a = str(entry_dict["a"])
+            b = str(entry_dict["b"])
+            key = canonical_pair_key(a, b)
+            out[key] = float(entry_dict["value"])
+        return out
+    # v2 legacy ndarray / flat-float-list form.
+    if uids is None:
+        msg = (
+            "lambda_from_jsonable: legacy v2 ndarray payload requires the "
+            "explicit ``uids`` keyword (the canonical pair order that "
+            "indexed the array). Issue #144 closed the implicit-order "
+            "invariant; the v2 reader is deprecated and targeted for "
+            "removal in v0.6.0."
+        )
+        raise TypeError(msg)
+    warnings.warn(
+        "lambda_from_jsonable: legacy v2 (ndarray) payload — pair-keying "
+        "via implicit canonical-pair-order is deprecated in favour of the "
+        "v3 structured-list form. Targeted for removal in v0.6.0; see "
+        "issue #144 + ADR-014 §Revision history.",
+        DeprecationWarning,
+        stacklevel=2,
+    )
+    keys = make_pair_keys(uids)
+    if len(payload_list) != len(keys):
+        msg = (
+            f"lambda_from_jsonable: v2 payload length {len(payload_list)} does "
+            f"not match the canonical pair count {len(keys)} for the given "
+            f"UID set."
+        )
+        raise ValueError(msg)
+    return {key: float(value) for key, value in zip(keys, payload_list, strict=True)}
 
 
 @dataclass(frozen=True)
@@ -191,10 +384,13 @@ DEFAULT_WARMUP_STEPS: int = 50
 class SafetyState:
     """Mutable conformal CBF state (Huriot & Sibai 2025 §IV; ADR-004 §Decision).
 
-    The conformal slack vector ``lambda_`` carries one entry per agent
-    pair ``(i, j)``; it is updated each control step by
-    ``concerto.safety.conformal.update_lambda`` according to Theorem 3's
-    rule ``lambda_{k+1} = lambda_k + eta * (eps - l_k)``. ADR-004
+    The conformal slack dict ``lambda_`` carries one entry per agent
+    pair, keyed by a lexicographically-ordered UID tuple
+    ``(uid_a, uid_b)`` with ``uid_a < uid_b``. Each entry is updated
+    each control step by
+    :func:`concerto.safety.conformal.update_lambda` according to
+    Theorem 3's rule
+    ``lambda_{k+1} = lambda_k + eta * (eps - l_k)``. ADR-004
     risk-mitigation #2 motivates the partner-swap warmup window: on
     partner identity change (detected via ``obs["meta"]["partner_id"]``)
     the state is reset to ``lambda_safe`` (the value guaranteeing QP
@@ -202,9 +398,21 @@ class SafetyState:
     Assumption A2) and the next ``warmup_steps_remaining`` steps run with
     a tighter eps.
 
+    Issue #144 / ADR-014 v3 (2026-05-19) promoted ``lambda_`` from a
+    canonical-pair-order-indexed :class:`numpy.ndarray` to a
+    :data:`LambdaDict` keyed by canonical UID-pair tuples. The
+    structural fix subsumes the implicit pair-index alignment
+    invariant the prior Phase-0 amendment (canonical_pair_order)
+    enforced via runtime asserts: a caller that rebuilds the snapshot
+    dict in a different insertion order still keys into the same
+    canonical tuple, so per-pair slack cannot silently misalign with
+    the pairwise CBF constraint.
+
     Attributes:
-        lambda_: Per-pair slack values, shape ``(N_pairs,)`` and dtype
-            ``float64``. Initialised to ``lambda_safe``; mutated in place.
+        lambda_: Per-pair slack as a :data:`LambdaDict`. Construct
+            via :func:`make_lambda_dict` (or directly when the canonical
+            pair set is already in hand). Mutated in place by
+            :func:`concerto.safety.conformal.update_lambda`.
         epsilon: Target average loss. ADR-004 §Decision pins the default
             to ``-0.05`` (conservative manipulation regime).
         eta: Conformal learning rate (default ``0.01``).
@@ -212,7 +420,7 @@ class SafetyState:
             zero outside the warmup window (ADR-004 risk-mitigation #2).
     """
 
-    lambda_: FloatArray
+    lambda_: LambdaDict
     epsilon: float = DEFAULT_EPSILON
     eta: float = DEFAULT_ETA
     warmup_steps_remaining: int = 0
@@ -224,9 +432,9 @@ class SafetyState:
 FilterInfo = TypedDict(
     "FilterInfo",
     {
-        "lambda": FloatArray,
+        "lambda": LambdaDict,
         "constraint_violation": FloatArray,
-        "prediction_gap_loss": FloatArray | None,
+        "prediction_gap_loss": LambdaDict | None,
         "fallback_fired": bool,
         "qp_solve_ms": float,
     },
@@ -238,15 +446,24 @@ Returned by :meth:`EgoOnlySafetyFilter.filter` and
 
 The fields populate the three-table renderer's row data:
 
-- ``lambda`` — current conformal slack vector; feeds Table 3
-  (conservativeness gap λ mean/var vs. oracle gt/noLearn).
+- ``lambda`` — current conformal slack as a :data:`LambdaDict`
+  (per-pair UID-tuple keys → ``float``); feeds Table 3
+  (conservativeness gap λ mean/var vs. oracle gt/noLearn). Issue #144
+  promoted this field from a canonical-pair-order ndarray to the
+  dict form so the per-pair indexing is part of the type system; see
+  :func:`lambda_to_jsonable` / :func:`lambda_from_jsonable` for the
+  ADR-014 v3 wire encoding.
 - ``constraint_violation`` — per-pair non-negative violation signal
   ``max(0, -h_ij)`` from the CBF backbone. Zero when the constraint is
   satisfied; positive when the barrier is in the violated half-space.
-  Counted into Table 2's per-condition violation rates.
+  Counted into Table 2's per-condition violation rates. Stays as a
+  :class:`numpy.ndarray` indexed by the canonical pair-iteration
+  order produced by :func:`make_pair_keys` over the filter's UID set
+  — issue #144's structural fix targets ``lambda`` only.
 - ``prediction_gap_loss`` — per-pair Huriot & Sibai 2025 §IV.A loss
   ``max(0, predicted_h - actual_h)`` against a partner-trajectory
-  predictor. This is the signal that drives the conformal update
+  predictor as a :data:`LambdaDict` (same keying as ``lambda``).
+  This is the signal that drives the conformal update
   (``update_lambda``); :data:`None` when no predictor is wired (the
   CBF backbone alone cannot compute it — see
   ``concerto.safety.conformal.update_lambda_from_predictor``).
@@ -826,7 +1043,13 @@ __all__ = [
     "FloatArray",
     "JacobianControlModel",
     "JointSafetyFilter",
+    "LambdaDict",
     "SafetyMode",
     "SafetyState",
+    "canonical_pair_key",
     "canonical_pair_order",
+    "lambda_from_jsonable",
+    "lambda_to_jsonable",
+    "make_lambda_dict",
+    "make_pair_keys",
 ]

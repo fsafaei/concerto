@@ -36,11 +36,18 @@ from typing import TYPE_CHECKING
 
 import numpy as np
 
-from concerto.safety.api import DEFAULT_WARMUP_STEPS, canonical_pair_order
+from concerto.safety.api import (
+    DEFAULT_WARMUP_STEPS,
+    canonical_pair_order,
+    make_lambda_dict,
+    make_pair_keys,
+)
 from concerto.safety.cbf_qp import AgentSnapshot, pair_h_value
 
 if TYPE_CHECKING:
-    from concerto.safety.api import FloatArray, SafetyState
+    from collections.abc import Iterable
+
+    from concerto.safety.api import FloatArray, LambdaDict, SafetyState
 
 #: Multiplier applied to ``state.epsilon`` during the partner-swap
 #: warmup window (ADR-004 risk-mitigation #2). For positive ``eps`` the
@@ -52,16 +59,16 @@ _WARMUP_EPSILON_FACTOR: float = 1.5
 
 def update_lambda(
     state: SafetyState,
-    loss_k: FloatArray,
+    loss_k: LambdaDict,
     *,
     in_warmup: bool = False,
 ) -> None:
     """Conformal slack update (Huriot & Sibai 2025 §IV; ADR-004 §Decision).
 
     Applies Theorem 3's rule ``lambda_{k+1} = lambda_k + eta * (eps - l_k)``
-    in place on ``state.lambda_``. This is the low-level primitive:
-    callers MUST supply ``loss_k`` as the Huriot & Sibai §IV.A
-    prediction-gap loss — i.e. the output of
+    in place on every entry of ``state.lambda_``. This is the low-level
+    primitive: callers MUST supply ``loss_k`` as the Huriot & Sibai
+    §IV.A prediction-gap loss — i.e. the output of
     :func:`compute_per_pair_loss` against a partner-trajectory
     predictor — and NOT the constraint-violation signal ``-h`` from the
     CBF backbone. Theorem 3's risk bound holds for the prediction gap
@@ -80,20 +87,27 @@ def update_lambda(
         state: Mutable :class:`concerto.safety.api.SafetyState`;
             ``lambda_`` is updated in place.
         loss_k: Per-pair prediction-gap loss ``l_k = max(0, predicted_h -
-            actual_h)``, shape ``(N_pairs,)`` matching ``state.lambda_``.
+            actual_h)`` as a :data:`LambdaDict` keyed by canonical
+            UID-pair tuples (identical key-set to ``state.lambda_``).
             Derived from :func:`compute_per_pair_loss` (Huriot &
             Sibai §IV.A), not from ``FilterInfo["constraint_violation"]``.
         in_warmup: When True, narrow ``eps`` and decrement
             ``warmup_steps_remaining`` (ADR-004 risk-mitigation #2).
 
     Raises:
-        ValueError: If ``loss_k`` shape mismatches ``state.lambda_``.
+        ValueError: If ``loss_k`` does not share the exact key set of
+            ``state.lambda_`` (issue #144 made pair-keying a type
+            invariant; cross-uid mismatch is loud-fail at this seam).
     """
-    if loss_k.shape != state.lambda_.shape:
-        msg = f"loss_k shape {loss_k.shape} mismatches state.lambda_ shape {state.lambda_.shape}"
+    if loss_k.keys() != state.lambda_.keys():
+        msg = (
+            f"loss_k key set {sorted(loss_k.keys())!r} mismatches "
+            f"state.lambda_ key set {sorted(state.lambda_.keys())!r}"
+        )
         raise ValueError(msg)
     epsilon = state.epsilon * _WARMUP_EPSILON_FACTOR if in_warmup else state.epsilon
-    state.lambda_ = state.lambda_ + state.eta * (epsilon - loss_k)
+    for key, current in state.lambda_.items():
+        state.lambda_[key] = current + state.eta * (epsilon - loss_k[key])
     if in_warmup:
         state.warmup_steps_remaining = max(0, state.warmup_steps_remaining - 1)
 
@@ -126,7 +140,7 @@ def compute_prediction_gap_for_pairs(
     *,
     alpha_pair: float,
     gamma: float,
-) -> FloatArray:
+) -> LambdaDict:
     """Per-pair Huriot & Sibai §IV.A prediction-gap loss from snapshot pairs (ADR-004 §Decision).
 
     Evaluates the Wang-Ames-Egerstedt 2017 §III pairwise barrier value
@@ -153,21 +167,19 @@ def compute_prediction_gap_for_pairs(
             ``gamma``.
 
     Returns:
-        Per-pair loss, shape ``(N_pairs,)``, dtype ``float64``. Pair
-        order is the upper-triangular iteration ``(i, j) with i < j``
-        over the canonical lexicographic UID order
-        (:func:`concerto.safety.api.canonical_pair_order`). Dict
-        insertion order does not affect the result; the only invariant
-        the caller must satisfy is that the *key sets* of
-        ``snaps_now`` and ``snaps_predicted`` match.
+        Per-pair loss as a :data:`LambdaDict` keyed by canonical
+        UID-pair tuples (issue #144 / ADR-014 v3). Dict insertion
+        order does not affect the result; the only invariant the
+        caller must satisfy is that the *key sets* of ``snaps_now``
+        and ``snaps_predicted`` match.
 
     Raises:
         ValueError: If the two snapshot dicts do not share identical
-            key sets (the pair-index alignment with ``state.lambda_``
+            key sets (the pair-key alignment with ``state.lambda_``
             depends on it). Pre-amendment this also rejected differing
             insertion orders; that constraint is lifted in this
-            release because both inputs are canonicalised internally
-            (external-review P1, 2026-05-16).
+            release because both inputs are keyed by canonical UID-pair
+            tuples internally (external-review P1, 2026-05-16; issue #144).
     """
     del gamma  # currently unused; kept on the signature for forward compat
     if set(snaps_now.keys()) != set(snaps_predicted.keys()):
@@ -176,22 +188,15 @@ def compute_prediction_gap_for_pairs(
             f"got {sorted(snaps_now.keys())!r} vs {sorted(snaps_predicted.keys())!r}"
         )
         raise ValueError(msg)
-    uids = canonical_pair_order(snaps_now.keys())
-    n = len(uids)
-    n_pairs = (n * (n - 1)) // 2
-    predicted_h = np.zeros(n_pairs, dtype=np.float64)
-    actual_h = np.zeros(n_pairs, dtype=np.float64)
-    pair_idx = 0
-    for a, uid_i in enumerate(uids):
-        for uid_j in uids[a + 1 :]:
-            predicted_h[pair_idx] = pair_h_value(
-                snaps_predicted[uid_i], snaps_predicted[uid_j], alpha_pair=alpha_pair
-            )
-            actual_h[pair_idx] = pair_h_value(
-                snaps_now[uid_i], snaps_now[uid_j], alpha_pair=alpha_pair
-            )
-            pair_idx += 1
-    return compute_per_pair_loss(predicted_h, actual_h)
+    pair_keys = make_pair_keys(snaps_now.keys())
+    loss: LambdaDict = {}
+    for uid_i, uid_j in pair_keys:
+        predicted_h = pair_h_value(
+            snaps_predicted[uid_i], snaps_predicted[uid_j], alpha_pair=alpha_pair
+        )
+        actual_h = pair_h_value(snaps_now[uid_i], snaps_now[uid_j], alpha_pair=alpha_pair)
+        loss[(uid_i, uid_j)] = max(0.0, float(predicted_h - actual_h))
+    return loss
 
 
 def update_lambda_from_predictor(
@@ -203,7 +208,7 @@ def update_lambda_from_predictor(
     gamma: float,
     dt: float,
     in_warmup: bool = False,
-) -> FloatArray:
+) -> LambdaDict:
     """Wire the constant-velocity predictor into the conformal update (ADR-004 §Decision).
 
     Computes the predictor's forecast for step ``k+1`` from the previous
@@ -232,8 +237,8 @@ def update_lambda_from_predictor(
             ``warmup_steps_remaining`` (ADR-004 risk-mitigation #2).
 
     Returns:
-        The per-pair prediction-gap loss vector used to drive the
-        update — callers populate
+        The per-pair prediction-gap loss :data:`LambdaDict` used to
+        drive the update — callers populate
         :class:`concerto.safety.api.FilterInfo` ``"prediction_gap_loss"``
         from this for the ADR-014 three-table report.
 
@@ -241,7 +246,7 @@ def update_lambda_from_predictor(
         ValueError: If ``snaps_now`` and ``snaps_prev`` do not share
             identical key *sets* (insertion order is tolerated as of
             the 2026-05-16 canonical-pair-keying amendment; see
-            ADR-004 §Decision), or if the resulting loss shape
+            ADR-004 §Decision), or if the resulting loss key-set
             mismatches ``state.lambda_``.
     """
     if set(snaps_now.keys()) != set(snaps_prev.keys()):
@@ -295,7 +300,7 @@ def compute_per_pair_loss(
 def reset_on_partner_swap(
     state: SafetyState,
     *,
-    n_pairs: int,
+    uids: Iterable[str],
     lambda_safe: float = 0.0,
     n_warmup_steps: int = DEFAULT_WARMUP_STEPS,
 ) -> None:
@@ -304,10 +309,16 @@ def reset_on_partner_swap(
     On partner identity change (detected via
     ``obs["meta"]["partner_id"]`` mismatch with the previous step), the
     conformal layer's stationarity assumption breaks (ADR-006 risk #3).
-    This helper resets ``state.lambda_`` to a vector of ``lambda_safe``
-    values and primes ``warmup_steps_remaining`` so the next
-    ``n_warmup_steps`` calls to :func:`update_lambda` use the narrower
-    warmup target.
+    This helper rebuilds ``state.lambda_`` as a fresh
+    :data:`concerto.safety.api.LambdaDict` over the canonical pair set
+    for ``uids`` (every entry initialised to ``lambda_safe``) and
+    primes ``warmup_steps_remaining`` so the next ``n_warmup_steps``
+    calls to :func:`update_lambda` use the narrower warmup target.
+
+    Issue #144 / ADR-014 v3 (2026-05-19) replaced the prior
+    ``n_pairs: int`` argument with ``uids: Iterable[str]``: the dict
+    representation of ``lambda_`` requires the actual UID set to build
+    the canonical pair-key tuples, not just the pair count.
 
     The default ``lambda_safe=0.0`` is a Phase-0 conservative
     *placeholder*, **not** a derived QP-feasibility-preserving value.
@@ -324,7 +335,9 @@ def reset_on_partner_swap(
 
     Args:
         state: Mutable :class:`SafetyState`.
-        n_pairs: Number of agent pairs (sets the new ``lambda_`` length).
+        uids: Iterable of agent UIDs in the (post-swap) partner set;
+            determines the canonical pair-key set of the rebuilt
+            ``state.lambda_``.
         lambda_safe: Per-pair slack used at reset. **Phase-0 placeholder
             default: ``0.0``.** The derived QP-feasibility-preserving form
             named in ADR-006 §Decision is not implemented; see the
@@ -334,7 +347,7 @@ def reset_on_partner_swap(
         n_warmup_steps: Length of the high-caution window (default
             :data:`concerto.safety.api.DEFAULT_WARMUP_STEPS` = 50).
     """
-    state.lambda_ = np.full(n_pairs, lambda_safe, dtype=np.float64)
+    state.lambda_ = make_lambda_dict(uids, fill=lambda_safe)
     state.warmup_steps_remaining = n_warmup_steps
 
 

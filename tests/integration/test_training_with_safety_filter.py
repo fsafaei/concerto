@@ -88,8 +88,8 @@ def _build_test_safety_wire(
         "partner": DoubleIntegratorControlModel(uid="partner", action_dim=2),
     }
     safety_filter = ExpCBFQP.ego_only(control_models=control_models)
-    state = SafetyState(lambda_=np.zeros(1, dtype=np.float64))
-    reset_on_partner_swap(state, n_pairs=1, lambda_safe=0.0, n_warmup_steps=5)
+    state = SafetyState(lambda_={("ego", "partner"): 0.0})
+    reset_on_partner_swap(state, uids=("ego", "partner"), lambda_safe=0.0, n_warmup_steps=5)
     bounds = Bounds(
         action_linf_component=1.0,
         cartesian_accel_capacity=1.0,

@@ -54,7 +54,7 @@ from typing import TYPE_CHECKING
 import numpy as np
 
 if TYPE_CHECKING:  # pragma: no cover
-    from numpy.typing import NDArray
+    from concerto.safety.api import LambdaDict
 
 #: Threshold below which ``lambda_mean`` is treated as "λ stayed at 0"
 #: for predicate B's conditional. 1e-6 is well below the conformal
@@ -135,19 +135,22 @@ class SafetyAggregator:
 
     def observe(
         self,
-        lambda_: NDArray[np.float64],
+        lambda_: LambdaDict,
         *,
         fallback_fired: bool = False,
         qp_infeasible: bool = False,
     ) -> None:
-        """Record one per-step λ vector + filter-event flags (ADR-007 §Stage 1b).
+        """Record one per-step λ dict + filter-event flags (ADR-007 §Stage 1b).
 
         Args:
-            lambda_: Per-pair conformal slack vector
-                (``state.lambda_``). Shape ``(n_pairs,)``,
-                dtype float64. The aggregator reduces to a scalar
-                (mean across pairs) for the running stats; per-pair
-                min/max is preserved on the window aggregate.
+            lambda_: Per-pair conformal slack
+                (``state.lambda_``) as a
+                :data:`concerto.safety.api.LambdaDict` keyed by
+                canonical UID-pair tuples. Issue #144 promoted this
+                from an ndarray of shape ``(n_pairs,)``; the
+                aggregator still reduces to a scalar (mean across
+                pairs) for the running stats and preserves per-pair
+                min/max on the window aggregate.
             fallback_fired: Whether the CBF-QP backbone reported a
                 fallback-fire on this step (from
                 ``FilterInfo["fallback_fired"]``). Counted into the
@@ -158,16 +161,31 @@ class SafetyAggregator:
                 can distinguish "fallback fired" (a recoverable event)
                 from "QP infeasible" (a worse signal).
         """
-        if lambda_.shape != (self.n_pairs,):
+        if len(lambda_) != self.n_pairs:
             msg = (
-                f"SafetyAggregator: lambda_ shape {lambda_.shape} mismatches "
-                f"expected ({self.n_pairs},) — the n_pairs constructed at "
+                f"SafetyAggregator: lambda_ size {len(lambda_)} mismatches "
+                f"expected n_pairs={self.n_pairs} — the n_pairs constructed at "
                 "cell start must match SafetyState.lambda_ size."
             )
             raise ValueError(msg)
-        scalar = float(lambda_.mean())
-        per_pair_max = float(lambda_.max())
-        per_pair_min = float(lambda_.min())
+        if self.n_pairs == 0:
+            # Edge case: zero-pair cell (single-agent or degenerate);
+            # observe is a no-op for the stats but still bumps the
+            # event counters so the audit-gate sees the step.
+            if fallback_fired:
+                self._n_fallback_fires_total += 1
+                self._window_n_fallback_fires += 1
+            if qp_infeasible:
+                self._n_qp_infeasible_total += 1
+                self._window_n_qp_infeasible += 1
+            self._n_obs_total += 1
+            self._window_n_obs += 1
+            self._lambda_history.append(0.0)
+            return
+        values = list(lambda_.values())
+        scalar = float(sum(values) / len(values))
+        per_pair_max = float(max(values))
+        per_pair_min = float(min(values))
         # Total running stats.
         self._n_obs_total += 1
         self._sum_lambda += scalar

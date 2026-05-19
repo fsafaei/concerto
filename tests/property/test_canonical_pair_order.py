@@ -92,8 +92,9 @@ def test_lambda_pair_alignment_survives_dict_reconstruction() -> None:
     """
     cbf = ExpCBFQP.centralized(control_models=_models(("a", "b", "c")), cbf_gamma=2.0)
     bounds = _bounds()
-    state_a = SafetyState(lambda_=np.array([0.1, 0.2, 0.3], dtype=np.float64))
-    state_b = SafetyState(lambda_=np.array([0.1, 0.2, 0.3], dtype=np.float64))
+    lambda_seed = {("a", "b"): 0.1, ("a", "c"): 0.2, ("b", "c"): 0.3}
+    state_a = SafetyState(lambda_=dict(lambda_seed))
+    state_b = SafetyState(lambda_=dict(lambda_seed))
 
     # Geometry: pair (a, b) is in penetration (distance < safety) so its
     # CBF constraint is strongly active; pair (a, c) is mildly closing;
@@ -135,9 +136,9 @@ def test_lambda_pair_alignment_survives_dict_reconstruction() -> None:
     # constraints are addressed by uid, not by dict insertion order.
     for uid in ("a", "b", "c"):
         np.testing.assert_allclose(raw_natural[uid], raw_reordered[uid], rtol=1e-9, atol=1e-9)
-    np.testing.assert_allclose(
-        info_natural["lambda"], info_reordered["lambda"], rtol=1e-9, atol=1e-9
-    )
+    # Lambda is now a dict[tuple[str, str], float] (issue #144);
+    # equality is dict-level.
+    assert info_natural["lambda"] == info_reordered["lambda"]
     np.testing.assert_allclose(
         info_natural["constraint_violation"],
         info_reordered["constraint_violation"],
@@ -170,7 +171,12 @@ def test_lambda_pair_alignment_three_agents() -> None:
         "b": np.zeros(2, dtype=np.float64),
         "c": np.zeros(2, dtype=np.float64),
     }
-    state = SafetyState(lambda_=np.array([0.05, 0.10, 0.15], dtype=np.float64))
+    seed_lambda: dict[tuple[str, str], float] = {
+        ("a", "b"): 0.05,
+        ("a", "c"): 0.10,
+        ("b", "c"): 0.15,
+    }
+    state = SafetyState(lambda_=dict(seed_lambda))
 
     _, info = cbf.filter(
         proposed_action=proposed,
@@ -178,10 +184,10 @@ def test_lambda_pair_alignment_three_agents() -> None:
         state=state,
         bounds=bounds,
     )
-    assert info["lambda"].shape == (3,)
+    assert len(info["lambda"]) == 3
     assert info["constraint_violation"].shape == (3,)
     # Repeat under reordered input. The two outputs MUST agree elementwise.
-    state_reordered = SafetyState(lambda_=np.array([0.05, 0.10, 0.15], dtype=np.float64))
+    state_reordered = SafetyState(lambda_=dict(seed_lambda))
     snaps_reordered = {key: snaps[key] for key in ("b", "c", "a")}
     proposed_reordered = {key: proposed[key] for key in ("b", "c", "a")}
     _, info_reordered = cbf.filter(
@@ -218,7 +224,8 @@ def test_compute_prediction_gap_for_pairs_invariant_under_reordering() -> None:
     loss_reordered = compute_prediction_gap_for_pairs(
         snaps_reordered, predicted_reordered, alpha_pair=10.0, gamma=2.0
     )
-    np.testing.assert_allclose(loss_natural, loss_reordered, rtol=1e-12, atol=1e-12)
+    # Loss is now a dict[tuple[str, str], float] (issue #144).
+    assert loss_natural == loss_reordered
 
 
 def test_update_lambda_loss_alignment_after_dict_reconstruction() -> None:
@@ -240,19 +247,20 @@ def test_update_lambda_loss_alignment_after_dict_reconstruction() -> None:
         uid: constant_velocity_predict(snap, 0.05) for uid, snap in snaps_natural.items()
     }
 
+    seed_lambda: dict[tuple[str, str], float] = {
+        ("a", "b"): 0.1,
+        ("a", "c"): 0.2,
+        ("b", "c"): 0.3,
+    }
     # Run 1: natural order.
-    state_natural = SafetyState(
-        lambda_=np.array([0.1, 0.2, 0.3], dtype=np.float64), epsilon=epsilon, eta=eta
-    )
+    state_natural = SafetyState(lambda_=dict(seed_lambda), epsilon=epsilon, eta=eta)
     loss_natural = compute_prediction_gap_for_pairs(
         snaps_natural, snaps_predicted, alpha_pair=10.0, gamma=2.0
     )
     update_lambda(state_natural, loss_natural)
 
     # Run 2: reordered.
-    state_reordered = SafetyState(
-        lambda_=np.array([0.1, 0.2, 0.3], dtype=np.float64), epsilon=epsilon, eta=eta
-    )
+    state_reordered = SafetyState(lambda_=dict(seed_lambda), epsilon=epsilon, eta=eta)
     snaps_reorder = {key: snaps_natural[key] for key in ("c", "a", "b")}
     predicted_reorder = {key: snaps_predicted[key] for key in ("c", "a", "b")}
     loss_reordered = compute_prediction_gap_for_pairs(
@@ -260,9 +268,7 @@ def test_update_lambda_loss_alignment_after_dict_reconstruction() -> None:
     )
     update_lambda(state_reordered, loss_reordered)
 
-    np.testing.assert_allclose(
-        state_natural.lambda_, state_reordered.lambda_, rtol=1e-12, atol=1e-12
-    )
+    assert state_natural.lambda_ == state_reordered.lambda_
 
 
 def test_ego_only_partner_set_invariant_under_dict_reordering() -> None:
@@ -279,7 +285,11 @@ def test_ego_only_partner_set_invariant_under_dict_reordering() -> None:
         "p1": constant_velocity_predict(snaps_natural["p1"], 0.05),
         "p2": constant_velocity_predict(snaps_natural["p2"], 0.05),
     }
-    state = SafetyState(lambda_=np.array([0.05, 0.10], dtype=np.float64))
+    seed_lambda: dict[tuple[str, str], float] = {
+        ("ego", "p1"): 0.05,
+        ("ego", "p2"): 0.10,
+    }
+    state = SafetyState(lambda_=dict(seed_lambda))
 
     raw_natural, info_natural = cbf.filter(
         proposed_action=np.zeros(2, dtype=np.float64),
@@ -294,7 +304,7 @@ def test_ego_only_partner_set_invariant_under_dict_reordering() -> None:
     # Reorder both partner dicts (snapshots + predictions). Same payload.
     snaps_reordered = {key: snaps_natural[key] for key in ("p2", "ego", "p1")}
     partner_pred_reordered = {key: partner_pred_natural[key] for key in ("p2", "p1")}
-    state_reordered = SafetyState(lambda_=np.array([0.05, 0.10], dtype=np.float64))
+    state_reordered = SafetyState(lambda_=dict(seed_lambda))
 
     raw_reordered, info_reordered = cbf.filter(
         proposed_action=np.zeros(2, dtype=np.float64),
@@ -332,7 +342,8 @@ def test_compute_prediction_gap_for_pairs_accepts_distinct_key_orders() -> None:
         "a": constant_velocity_predict(snaps_now["a"], 0.05),
     }
     loss = compute_prediction_gap_for_pairs(snaps_now, snaps_pred, alpha_pair=10.0, gamma=2.0)
-    assert loss.shape == (1,)
+    assert len(loss) == 1
+    assert ("a", "b") in loss
 
 
 def test_compute_prediction_gap_for_pairs_rejects_mismatched_key_sets() -> None:
