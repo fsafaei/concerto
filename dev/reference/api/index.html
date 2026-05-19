@@ -2447,6 +2447,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#chamber.envs.Stage1OMChannelFilter.__getattr__" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        __getattr__
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#chamber.envs.Stage1OMChannelFilter.__init__" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2911,6 +2922,17 @@
     <span class="md-ellipsis">
       
         condition_id
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#chamber.envs.stage1_obs_filter.Stage1OMChannelFilter.__getattr__" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        __getattr__
       
     </span>
   </a>
@@ -7125,6 +7147,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#chamber.envs.Stage1OMChannelFilter.__getattr__" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        __getattr__
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#chamber.envs.Stage1OMChannelFilter.__init__" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -7589,6 +7622,17 @@
     <span class="md-ellipsis">
       
         condition_id
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#chamber.envs.stage1_obs_filter.Stage1OMChannelFilter.__getattr__" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        __getattr__
       
     </span>
   </a>
@@ -26240,7 +26284,21 @@ obs).</p>
 <span class="normal">330</span>
 <span class="normal">331</span>
 <span class="normal">332</span>
-<span class="normal">333</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">Stage1OMChannelFilter</span><span class="p">(</span><span class="n">gym</span><span class="o">.</span><span class="n">ObservationWrapper</span><span class="p">):</span>  <span class="c1"># type: ignore[type-arg]</span>
+<span class="normal">333</span>
+<span class="normal">334</span>
+<span class="normal">335</span>
+<span class="normal">336</span>
+<span class="normal">337</span>
+<span class="normal">338</span>
+<span class="normal">339</span>
+<span class="normal">340</span>
+<span class="normal">341</span>
+<span class="normal">342</span>
+<span class="normal">343</span>
+<span class="normal">344</span>
+<span class="normal">345</span>
+<span class="normal">346</span>
+<span class="normal">347</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">Stage1OMChannelFilter</span><span class="p">(</span><span class="n">gym</span><span class="o">.</span><span class="n">ObservationWrapper</span><span class="p">):</span>  <span class="c1"># type: ignore[type-arg]</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;OM-axis per-condition channel filter (ADR-007 §Stage 1b).</span>
 
 <span class="sd">    Reads the inner env&#39;s ``condition_id`` at construction time and</span>
@@ -26327,6 +26385,20 @@ obs).</p>
                     <span class="n">filtered_extra</span><span class="p">[</span><span class="n">ch</span><span class="p">]</span> <span class="o">=</span> <span class="n">val</span>
             <span class="n">out</span><span class="p">[</span><span class="s2">&quot;extra&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">filtered_extra</span>
         <span class="k">return</span> <span class="n">out</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__getattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>  <span class="c1"># noqa: ANN401 - mirrors Stage1ASStateSynthesizer&#39;s forwarding contract</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Forward attribute access to the inner env (Tier-2 caller contract).</span>
+
+<span class="sd">        Mirrors :meth:`Stage1ASStateSynthesizer.__getattr__`: Gymnasium 1.3</span>
+<span class="sd">        removed :class:`gym.Wrapper`&#39;s implicit forwarding, so callers of</span>
+<span class="sd">        :func:`chamber.envs.stage1_pickplace.make_stage1_pickplace_env`</span>
+<span class="sd">        — which now applies this wrapper on top of the AS synthesizer —</span>
+<span class="sd">        would otherwise lose access to SAPIEN-env attributes such as</span>
+<span class="sd">        ``env.agent``, ``env.obs_mode``, ``env.condition_config``.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">name</span> <span class="o">==</span> <span class="s2">&quot;env&quot;</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
 </code></pre></div></td></tr></table></div>
               </details>
 
@@ -26366,6 +26438,61 @@ obs).</p>
 
 
 
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="chamber.envs.Stage1OMChannelFilter.__getattr__" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">__getattr__</span>
+
+
+</h3>
+<div class="doc-signature highlight"><pre><span></span><code><span class="nf">__getattr__</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Forward attribute access to the inner env (Tier-2 caller contract).</p>
+<p>Mirrors :meth:<code>Stage1ASStateSynthesizer.__getattr__</code>: Gymnasium 1.3
+removed :class:<code>gym.Wrapper</code>'s implicit forwarding, so callers of
+:func:<code>chamber.envs.stage1_pickplace.make_stage1_pickplace_env</code>
+— which now applies this wrapper on top of the AS synthesizer —
+would otherwise lose access to SAPIEN-env attributes such as
+<code>env.agent</code>, <code>env.obs_mode</code>, <code>env.condition_config</code>.</p>
+
+
+            <details class="mkdocstrings-source">
+              <summary>Source code in <code>src/chamber/envs/stage1_obs_filter.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">335</span>
+<span class="normal">336</span>
+<span class="normal">337</span>
+<span class="normal">338</span>
+<span class="normal">339</span>
+<span class="normal">340</span>
+<span class="normal">341</span>
+<span class="normal">342</span>
+<span class="normal">343</span>
+<span class="normal">344</span>
+<span class="normal">345</span>
+<span class="normal">346</span>
+<span class="normal">347</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="fm">__getattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>  <span class="c1"># noqa: ANN401 - mirrors Stage1ASStateSynthesizer&#39;s forwarding contract</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Forward attribute access to the inner env (Tier-2 caller contract).</span>
+
+<span class="sd">    Mirrors :meth:`Stage1ASStateSynthesizer.__getattr__`: Gymnasium 1.3</span>
+<span class="sd">    removed :class:`gym.Wrapper`&#39;s implicit forwarding, so callers of</span>
+<span class="sd">    :func:`chamber.envs.stage1_pickplace.make_stage1_pickplace_env`</span>
+<span class="sd">    — which now applies this wrapper on top of the AS synthesizer —</span>
+<span class="sd">    would otherwise lose access to SAPIEN-env attributes such as</span>
+<span class="sd">    ``env.agent``, ``env.obs_mode``, ``env.condition_config``.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">name</span> <span class="o">==</span> <span class="s2">&quot;env&quot;</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+    <span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
 
 <div class="doc doc-object doc-function">
 
@@ -28038,7 +28165,12 @@ initialisation fails (CPU-only host without a fallback
 <span class="normal">1219</span>
 <span class="normal">1220</span>
 <span class="normal">1221</span>
-<span class="normal">1222</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">make_stage1_pickplace_env</span><span class="p">(</span>
+<span class="normal">1222</span>
+<span class="normal">1223</span>
+<span class="normal">1224</span>
+<span class="normal">1225</span>
+<span class="normal">1226</span>
+<span class="normal">1227</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">make_stage1_pickplace_env</span><span class="p">(</span>
     <span class="o">*</span><span class="p">,</span>
     <span class="n">condition_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
     <span class="n">episode_length</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">DEFAULT_EPISODE_LENGTH</span><span class="p">,</span>
@@ -28757,12 +28889,17 @@ initialisation fails (CPU-only host without a fallback
     <span class="p">)</span>
     <span class="c1"># AS conditions: ManiSkill v3 obs_mode=&quot;state_dict&quot; emits per-agent</span>
     <span class="c1"># Dict(qpos, qvel) but EgoPPOTrainer.from_config reads</span>
-    <span class="c1"># obs[&quot;agent&quot;][ego_uid][&quot;state&quot;]. The wrapper synthesises that key</span>
-    <span class="c1"># from concat(qpos, qvel); pass-through for OM conditions (which</span>
-    <span class="c1"># have their own channel filter for the modality dispatch).</span>
-    <span class="kn">from</span><span class="w"> </span><span class="nn">chamber.envs.stage1_obs_filter</span><span class="w"> </span><span class="kn">import</span> <span class="n">Stage1ASStateSynthesizer</span>
+    <span class="c1"># obs[&quot;agent&quot;][ego_uid][&quot;state&quot;]. The AS synthesizer adds that key;</span>
+    <span class="c1"># pass-through for OM conditions. The OM channel filter then masks</span>
+    <span class="c1"># per-condition for OM-vision-only; pass-through for AS and OM-hetero.</span>
+    <span class="c1"># Wired in fixed order so OM callers of the factory don&#39;t have to</span>
+    <span class="c1"># wrap manually (issue #165 §Proposed scope 4).</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">chamber.envs.stage1_obs_filter</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+        <span class="n">Stage1ASStateSynthesizer</span><span class="p">,</span>
+        <span class="n">Stage1OMChannelFilter</span><span class="p">,</span>
+    <span class="p">)</span>
 
-    <span class="k">return</span> <span class="n">Stage1ASStateSynthesizer</span><span class="p">(</span><span class="n">inner</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">Stage1OMChannelFilter</span><span class="p">(</span><span class="n">Stage1ASStateSynthesizer</span><span class="p">(</span><span class="n">inner</span><span class="p">))</span>
 </code></pre></div></td></tr></table></div>
             </details>
     </div>
@@ -32704,7 +32841,12 @@ initialisation fails (CPU-only host without a fallback
 <span class="normal">1219</span>
 <span class="normal">1220</span>
 <span class="normal">1221</span>
-<span class="normal">1222</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">make_stage1_pickplace_env</span><span class="p">(</span>
+<span class="normal">1222</span>
+<span class="normal">1223</span>
+<span class="normal">1224</span>
+<span class="normal">1225</span>
+<span class="normal">1226</span>
+<span class="normal">1227</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">make_stage1_pickplace_env</span><span class="p">(</span>
     <span class="o">*</span><span class="p">,</span>
     <span class="n">condition_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
     <span class="n">episode_length</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">DEFAULT_EPISODE_LENGTH</span><span class="p">,</span>
@@ -33423,12 +33565,17 @@ initialisation fails (CPU-only host without a fallback
     <span class="p">)</span>
     <span class="c1"># AS conditions: ManiSkill v3 obs_mode=&quot;state_dict&quot; emits per-agent</span>
     <span class="c1"># Dict(qpos, qvel) but EgoPPOTrainer.from_config reads</span>
-    <span class="c1"># obs[&quot;agent&quot;][ego_uid][&quot;state&quot;]. The wrapper synthesises that key</span>
-    <span class="c1"># from concat(qpos, qvel); pass-through for OM conditions (which</span>
-    <span class="c1"># have their own channel filter for the modality dispatch).</span>
-    <span class="kn">from</span><span class="w"> </span><span class="nn">chamber.envs.stage1_obs_filter</span><span class="w"> </span><span class="kn">import</span> <span class="n">Stage1ASStateSynthesizer</span>
+    <span class="c1"># obs[&quot;agent&quot;][ego_uid][&quot;state&quot;]. The AS synthesizer adds that key;</span>
+    <span class="c1"># pass-through for OM conditions. The OM channel filter then masks</span>
+    <span class="c1"># per-condition for OM-vision-only; pass-through for AS and OM-hetero.</span>
+    <span class="c1"># Wired in fixed order so OM callers of the factory don&#39;t have to</span>
+    <span class="c1"># wrap manually (issue #165 §Proposed scope 4).</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">chamber.envs.stage1_obs_filter</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+        <span class="n">Stage1ASStateSynthesizer</span><span class="p">,</span>
+        <span class="n">Stage1OMChannelFilter</span><span class="p">,</span>
+    <span class="p">)</span>
 
-    <span class="k">return</span> <span class="n">Stage1ASStateSynthesizer</span><span class="p">(</span><span class="n">inner</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">Stage1OMChannelFilter</span><span class="p">(</span><span class="n">Stage1ASStateSynthesizer</span><span class="p">(</span><span class="n">inner</span><span class="p">))</span>
 </code></pre></div></td></tr></table></div>
             </details>
     </div>
@@ -34387,7 +34534,21 @@ obs).</p>
 <span class="normal">330</span>
 <span class="normal">331</span>
 <span class="normal">332</span>
-<span class="normal">333</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">Stage1OMChannelFilter</span><span class="p">(</span><span class="n">gym</span><span class="o">.</span><span class="n">ObservationWrapper</span><span class="p">):</span>  <span class="c1"># type: ignore[type-arg]</span>
+<span class="normal">333</span>
+<span class="normal">334</span>
+<span class="normal">335</span>
+<span class="normal">336</span>
+<span class="normal">337</span>
+<span class="normal">338</span>
+<span class="normal">339</span>
+<span class="normal">340</span>
+<span class="normal">341</span>
+<span class="normal">342</span>
+<span class="normal">343</span>
+<span class="normal">344</span>
+<span class="normal">345</span>
+<span class="normal">346</span>
+<span class="normal">347</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">Stage1OMChannelFilter</span><span class="p">(</span><span class="n">gym</span><span class="o">.</span><span class="n">ObservationWrapper</span><span class="p">):</span>  <span class="c1"># type: ignore[type-arg]</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;OM-axis per-condition channel filter (ADR-007 §Stage 1b).</span>
 
 <span class="sd">    Reads the inner env&#39;s ``condition_id`` at construction time and</span>
@@ -34474,6 +34635,20 @@ obs).</p>
                     <span class="n">filtered_extra</span><span class="p">[</span><span class="n">ch</span><span class="p">]</span> <span class="o">=</span> <span class="n">val</span>
             <span class="n">out</span><span class="p">[</span><span class="s2">&quot;extra&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">filtered_extra</span>
         <span class="k">return</span> <span class="n">out</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__getattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>  <span class="c1"># noqa: ANN401 - mirrors Stage1ASStateSynthesizer&#39;s forwarding contract</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Forward attribute access to the inner env (Tier-2 caller contract).</span>
+
+<span class="sd">        Mirrors :meth:`Stage1ASStateSynthesizer.__getattr__`: Gymnasium 1.3</span>
+<span class="sd">        removed :class:`gym.Wrapper`&#39;s implicit forwarding, so callers of</span>
+<span class="sd">        :func:`chamber.envs.stage1_pickplace.make_stage1_pickplace_env`</span>
+<span class="sd">        — which now applies this wrapper on top of the AS synthesizer —</span>
+<span class="sd">        would otherwise lose access to SAPIEN-env attributes such as</span>
+<span class="sd">        ``env.agent``, ``env.obs_mode``, ``env.condition_config``.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">name</span> <span class="o">==</span> <span class="s2">&quot;env&quot;</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
 </code></pre></div></td></tr></table></div>
               </details>
 
@@ -34513,6 +34688,61 @@ obs).</p>
 
 
 
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="chamber.envs.stage1_obs_filter.Stage1OMChannelFilter.__getattr__" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">__getattr__</span>
+
+
+</h3>
+<div class="doc-signature highlight"><pre><span></span><code><span class="nf">__getattr__</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Forward attribute access to the inner env (Tier-2 caller contract).</p>
+<p>Mirrors :meth:<code>Stage1ASStateSynthesizer.__getattr__</code>: Gymnasium 1.3
+removed :class:<code>gym.Wrapper</code>'s implicit forwarding, so callers of
+:func:<code>chamber.envs.stage1_pickplace.make_stage1_pickplace_env</code>
+— which now applies this wrapper on top of the AS synthesizer —
+would otherwise lose access to SAPIEN-env attributes such as
+<code>env.agent</code>, <code>env.obs_mode</code>, <code>env.condition_config</code>.</p>
+
+
+            <details class="mkdocstrings-source">
+              <summary>Source code in <code>src/chamber/envs/stage1_obs_filter.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">335</span>
+<span class="normal">336</span>
+<span class="normal">337</span>
+<span class="normal">338</span>
+<span class="normal">339</span>
+<span class="normal">340</span>
+<span class="normal">341</span>
+<span class="normal">342</span>
+<span class="normal">343</span>
+<span class="normal">344</span>
+<span class="normal">345</span>
+<span class="normal">346</span>
+<span class="normal">347</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="fm">__getattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>  <span class="c1"># noqa: ANN401 - mirrors Stage1ASStateSynthesizer&#39;s forwarding contract</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Forward attribute access to the inner env (Tier-2 caller contract).</span>
+
+<span class="sd">    Mirrors :meth:`Stage1ASStateSynthesizer.__getattr__`: Gymnasium 1.3</span>
+<span class="sd">    removed :class:`gym.Wrapper`&#39;s implicit forwarding, so callers of</span>
+<span class="sd">    :func:`chamber.envs.stage1_pickplace.make_stage1_pickplace_env`</span>
+<span class="sd">    — which now applies this wrapper on top of the AS synthesizer —</span>
+<span class="sd">    would otherwise lose access to SAPIEN-env attributes such as</span>
+<span class="sd">    ``env.agent``, ``env.obs_mode``, ``env.condition_config``.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">name</span> <span class="o">==</span> <span class="s2">&quot;env&quot;</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+    <span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
 
 <div class="doc doc-object doc-function">
 
