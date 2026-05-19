@@ -3,8 +3,10 @@
 
 Twin of :mod:`tests.integration.test_stage1_as_real_stage1b`. The full
 Stage-1b science launch is out-of-scope here; founder runs the launcher
-``scripts/repro/stage1_om_stage1b.sh``. This Tier-2 test pins only the
-end-to-end dispatch smoke (1 seed x 1 episode x 2 conditions).
+``scripts/repro/stage1_om_stage1b.sh``. This Tier-2 test shrinks both
+the prereg (1 seed x 1 episode x 2 conditions) and the cfg
+(``total_frames=1000``, smaller rollout_length/batch_size) so the
+smoke completes in ~2 min on the RTX 2080.
 """
 
 from __future__ import annotations
@@ -18,6 +20,7 @@ from chamber.benchmarks.stage1_om import run_axis
 from chamber.evaluation.prereg import load_prereg
 from chamber.evaluation.results import SpikeRun
 from chamber.utils.device import sapien_gpu_available
+from concerto.training.config import load_config as _real_load_config
 
 pytestmark = [
     pytest.mark.slow,
@@ -33,17 +36,32 @@ _REPO_ROOT = Path(__file__).resolve().parents[2]
 
 @pytest.fixture(autouse=True)
 def _tiny_prereg_for_smoke(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Shrink the prereg sample sizes for the Tier-2 dispatch smoke."""
+    """Shrink the prereg + cfg for the Tier-2 smoke (twin of the AS variant)."""
     spec = load_prereg(_REPO_ROOT / "spikes" / "preregistration" / "OM.yaml")
     tiny = spec.model_copy(update={"seeds": [0], "episodes_per_seed": 1})
 
-    def _fake_load(*args, **kwargs):  # type: ignore[no-untyped-def]
+    def _fake_load_prereg(*args, **kwargs):  # type: ignore[no-untyped-def]
         del args, kwargs
         return tiny, _REPO_ROOT / "spikes" / "preregistration" / "OM.yaml"
 
+    def _shrunken_load_config(*args, **kwargs):  # type: ignore[no-untyped-def]
+        cfg = _real_load_config(*args, **kwargs)
+        return cfg.model_copy(
+            update={
+                "total_frames": 1000,
+                "happo": cfg.happo.model_copy(
+                    update={"rollout_length": 256, "batch_size": 64}
+                ),
+            }
+        )
+
     monkeypatch.setattr(
         "chamber.benchmarks.stage1_om._load_canonical_prereg",
-        _fake_load,
+        _fake_load_prereg,
+    )
+    monkeypatch.setattr(
+        "concerto.training.config.load_config",
+        _shrunken_load_config,
     )
 
 
