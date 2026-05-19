@@ -574,7 +574,11 @@ def make_stage1_pickplace_env(
         # try/except ensures this import is the place where a Tier-1
         # context would have already failed if it was going to.
         import chamber.agents  # noqa: F401 - side-effect import for register_agent
-        from chamber.agents.panda_jacobian import PANDA_ARM_DOF, PandaJacobianProvider
+        from chamber.agents.panda_jacobian import (
+            CARTESIAN_POSITION_DIM,
+            PANDA_ARM_DOF,
+            PandaJacobianProvider,
+        )
         from chamber.envs._sapien_compat import (
             load_agent_with_bare_uids,
             patch_sapien_urdf_no_visual_material,
@@ -654,6 +658,22 @@ def make_stage1_pickplace_env(
             self._cube_spawn_half_size: float = 0.05
             self._cube_spawn_center: tuple[float, float] = (0.0, 0.0)
             self._max_goal_height: float = 0.3
+            # Attributes that ``_initialize_episode`` / ``_before_simulation_step``
+            # touch MUST be assigned before ``super().__init__()``: ManiSkill's
+            # ``BaseEnv.__init__`` calls ``self.reset(...)`` during super-init
+            # (mani_skill/envs/sapien_env.py:327), which invokes
+            # ``_initialize_episode`` *and* the post-reset qpos primer below
+            # before the subclass body resumes. Subclass attributes written
+            # after super-init do not yet exist when those hooks fire.
+            self._panda_arm_dof: int = PANDA_ARM_DOF
+            # Per-uid cache for the numerical-difference velocity in
+            # build_agent_snapshots (D8 of the P1.04.5 design pass).
+            # Cleared by _initialize_episode at every reset so the
+            # cross-episode position delta doesn't produce a spurious
+            # first-step velocity. The first-step velocity defaults to
+            # zero on each fresh episode (the agents start at rest by
+            # construction).
+            self._prev_positions: dict[str, NDArray[np.float64]] = {}
             try:
                 super().__init__(
                     robot_uids=self._condition_config.agent_uids,  # type: ignore[arg-type]
@@ -678,15 +698,6 @@ def make_stage1_pickplace_env(
             # identical, so reusing the v3-URDF chain for the partner
             # introduces no error in the linear Jacobian.
             self._jacobian_provider: PandaJacobianProvider = PandaJacobianProvider()
-            self._panda_arm_dof: int = PANDA_ARM_DOF
-            # Per-uid cache for the numerical-difference velocity in
-            # build_agent_snapshots (D8 of the P1.04.5 design pass).
-            # Cleared by _initialize_episode at every reset so the
-            # cross-episode position delta doesn't produce a spurious
-            # first-step velocity. The first-step velocity defaults to
-            # zero on each fresh episode (the agents start at rest by
-            # construction).
-            self._prev_positions: dict[str, NDArray[np.float64]] = {}
             # Per-uid safety radii (Q3 of the P1.04.5 design pass).
             # Asserted at construction against URDF-envelope minimums.
             self._safety_radii: dict[str, float] = {
@@ -799,6 +810,14 @@ def make_stage1_pickplace_env(
                 goal_xyz[:, 1] = xy_goal[:, 1] + self._cube_spawn_center[1]
                 goal_xyz[:, 2] = z_goal + xyz[:, 2]
                 self.goal_site.set_pose(Pose.create_from_pq(goal_xyz))
+            # Prime the qpos cache so the Jacobian closure has a valid
+            # value at the first safety-filter call. The training loop
+            # in ``concerto.training.ego_aht.train`` queries the filter
+            # *before* the first ``env.step()`` (act-then-step order),
+            # so the per-physics-step ``_before_simulation_step`` hook
+            # has not yet fired after a reset. Without this primer the
+            # closure raises the "qpos not yet cached" guard.
+            self._refresh_latest_qpos()
 
         # ----- Observation / reward / success (panda-routed; ADR-007 §Stage 1b) -----
 
@@ -931,6 +950,30 @@ def make_stage1_pickplace_env(
 
         # ----- Per-step qpos refresh (Jacobian closure feed) -----
 
+        def _refresh_latest_qpos(self) -> None:
+            """Snapshot every panda uid's arm qpos into :attr:`_latest_qpos`.
+
+            P1.04.5; ADR-007 §Stage 1b. Called from both
+            :meth:`_before_simulation_step` (each physics step) and
+            :meth:`_initialize_episode` (post-reset primer). The latter
+            primes the cache between ``env.reset()`` and the first
+            ``env.step()`` so the safety filter — which the training
+            loop runs *before* the first step — can read a valid qpos
+            without raising the "qpos not yet cached" guard.
+            """
+            for uid in self.robot_uids:  # type: ignore[union-attr]
+                if uid in ("panda_wristcam", "panda_partner"):
+                    agent = self.agent.agents_dict[uid]  # type: ignore[attr-defined]
+                    full_qpos = agent.robot.get_qpos()
+                    # Slice off the 2 gripper-finger joints; the
+                    # Jacobian chain to panda_hand_tcp covers the 7 arm
+                    # joints only.
+                    qpos_arm = np.asarray(
+                        full_qpos.detach().cpu(),
+                        dtype=np.float64,  # type: ignore[union-attr]
+                    ).reshape(-1)[: self._panda_arm_dof]
+                    self._latest_qpos[uid] = qpos_arm
+
         def _before_simulation_step(self) -> None:
             """Cache panda arm qpos before each physics step (Jacobian closure feed).
 
@@ -946,18 +989,7 @@ def make_stage1_pickplace_env(
             follow-up).
             """
             super()._before_simulation_step()
-            for uid in self.robot_uids:  # type: ignore[union-attr]
-                if uid in ("panda_wristcam", "panda_partner"):
-                    agent = self.agent.agents_dict[uid]  # type: ignore[attr-defined]
-                    full_qpos = agent.robot.get_qpos()
-                    # Slice off the 2 gripper-finger joints; the
-                    # Jacobian chain to panda_hand_tcp covers the 7 arm
-                    # joints only.
-                    qpos_arm = np.asarray(
-                        full_qpos.detach().cpu(),
-                        dtype=np.float64,  # type: ignore[union-attr]
-                    ).reshape(-1)[: self._panda_arm_dof]
-                    self._latest_qpos[uid] = qpos_arm
+            self._refresh_latest_qpos()
 
         # ----- Public API for the safety-stack consumer -----
 
@@ -1026,6 +1058,18 @@ def make_stage1_pickplace_env(
             choice of URDF). The closure resolves to the correct uid's
             latest qpos at call time.
             """
+            # Source the panda action dim from the action space (same
+            # path the fetch dim is sourced from below). Falls back to
+            # 8 — the ``pd_joint_delta_pos`` default (7 arm + 1 mimic-
+            # gripper). The closure captures this value once at
+            # build-time, which is correct: action-space shape is fixed
+            # over an env's lifetime.
+            panda_action_dim = 8
+            action_space = self.action_space
+            if isinstance(action_space, gym.spaces.Dict):
+                sub_panda = action_space.spaces.get("panda_wristcam")
+                if isinstance(sub_panda, gym.spaces.Box) and sub_panda.shape is not None:
+                    panda_action_dim = int(sub_panda.shape[0])
 
             def _panda_jacobian(snap: AgentSnapshot) -> NDArray[np.float64]:
                 # Pull the live qpos from the env's cache; the closure
@@ -1039,20 +1083,33 @@ def make_stage1_pickplace_env(
                         "the first env.step() — reset the env first."
                     )
                     raise RuntimeError(msg)
-                return self._jacobian_provider(snap, qpos)
+                # PandaJacobianProvider returns the linear (3, 7) Jacobian
+                # for the 7-joint chain to ``panda_hand_tcp``. The
+                # ``pd_joint_delta_pos`` control mode's panda action is
+                # 8-D (7 arm deltas + 1 mimic-gripper delta — see the
+                # ``panda_action_dim=8`` default in
+                # :func:`build_control_models_for_condition`). Pad with
+                # a zero column so the JacobianControlModel matmul
+                # ``jac @ action`` composes: the mimic-gripper joint is
+                # a sibling of ``panda_hand``, not in the TCP kinematic
+                # chain, so its contribution to TCP Cartesian position
+                # is zero by construction.
+                jac_3x7 = self._jacobian_provider(snap, qpos)
+                jac_padded = np.zeros((CARTESIAN_POSITION_DIM, panda_action_dim), dtype=np.float64)
+                jac_padded[:, : self._panda_arm_dof] = jac_3x7
+                return jac_padded
 
             fetch_uid_dim: int | None = None
             partner_uid = self._condition_config.agent_uids[1]
-            if partner_uid == "fetch":
-                action_space = self.action_space
-                if isinstance(action_space, gym.spaces.Dict):
-                    sub = action_space.spaces.get(partner_uid)
-                    if isinstance(sub, gym.spaces.Box) and sub.shape is not None:
-                        fetch_uid_dim = int(sub.shape[0])
+            if partner_uid == "fetch" and isinstance(action_space, gym.spaces.Dict):
+                sub = action_space.spaces.get(partner_uid)
+                if isinstance(sub, gym.spaces.Box) and sub.shape is not None:
+                    fetch_uid_dim = int(sub.shape[0])
             return build_control_models_for_condition(
                 self._condition_config.condition_id,
                 jacobian_fn=_panda_jacobian,
                 fetch_action_dim=fetch_uid_dim,
+                panda_action_dim=panda_action_dim,
             )
 
         # ----- P1.04.5: safety-stack snapshot + bounds wiring -----
