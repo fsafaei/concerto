@@ -247,9 +247,15 @@ class TestJacobianClosureRoundTrip:
             panda_model = models["panda_wristcam"]
             assert isinstance(panda_model, JacobianControlModel)
             assert panda_model.jacobian_fn is not None
-            # Small joint-space action (7 arm joints; gripper drops out
-            # of the Jacobian's domain by chain choice).
-            action = np.array([0.01, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], dtype=np.float64)
+            # Small joint-space action — full 8-D pd_joint_delta_pos
+            # action vector (7 arm joints + 1 mimic-gripper). The
+            # padded Jacobian's gripper column is zero by construction
+            # (chamber.envs.stage1_pickplace._panda_jacobian), so the
+            # mimic-gripper component drops out of the Cartesian-
+            # acceleration output regardless of its value; we still
+            # need an 8-element vector to satisfy the matmul shape.
+            action = np.zeros(panda_model.action_dim, dtype=np.float64)
+            action[0] = 0.01
             snap = AgentSnapshot(
                 position=np.zeros(3, dtype=np.float64),
                 velocity=np.zeros(3, dtype=np.float64),
