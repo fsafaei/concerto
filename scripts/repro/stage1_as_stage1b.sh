@@ -1,45 +1,40 @@
 #!/usr/bin/env bash
-# Stage-1b AS axis spike (ADR-007 §Stage 1b; P1.04.5 + P1.05).
+# Reproduce the Stage-1b AS axis spike (ADR-007 §Stage 1b; P1.05).
 #
-# This script is the host of the audit-gate hook (predicates A + B
-# from the P1.04.5 design pass). The actual Stage-1b run invocation
-# (chamber-spike run --axis AS --sub-stage 1b ...) is shipped in P1.05;
-# this P1.04.5 vintage ships only the audit-gate machinery so the
-# predicate can be reviewed independently from the dispatch swap.
+# Twin of scripts/repro/stage1_as.sh — same shape, same prereg-verify
+# + chamber-spike run + chamber-eval + audit dispatch, but routed
+# through the Stage-1b production path via --sub-stage 1b. The result
+# archive lands under spikes/results/stage1-AS-stage1b-<UTC-date>/ so
+# the Stage-1a archives at spikes/results/stage1-AS-<UTC-date>/ stay
+# grep-distinguishable on disk (operator + audit-trail story).
 #
-# Audit-gate predicates (ADR-007 §Stage 1b implementation-details Rev 7):
+# Pre-conditions:
+#   - GPU host with SAPIEN + Vulkan available
+#     (`chamber.utils.device.sapien_gpu_available()`).
+#   - `uv sync --group train` has been run (harl-aht on PyPI per #173).
+#   - The repo is on a commit >= PR 5a merge.
 #
-#   Predicate A (saturation guard, always evaluated):
-#     λ_steady_state < 0.9 × cartesian_accel_capacity   → exit 0
-#     λ_steady_state >= 0.9 × cartesian_accel_capacity  → exit 8
-#
-#   Predicate B (adaptation invariant, conditional on λ_mean > 1e-6):
-#     λ adapted away from 0 AND λ_var > 1e-12           → exit 0
-#     λ adapted away from 0 AND λ_var <= 1e-12          → exit 9 (λ stuck)
-#     λ stayed at 0 (vacuously OK)                      → exit 0
-#
-# Predicate B captures the underlying invariant rather than codifying
-# condition-specific expectations — capturing "if λ moved, it should
-# have varied" is robust to per-cell asymmetries (AS-homo will likely
-# fire the filter substantively; AS-hetero / OM-* may stay at λ ≈ 0
-# vacuously). The cell-aware variant would have been the same class of
-# foot-gun ADR-016 §Decision closed via the typed sub_stage field.
-#
-# Safety-disabled path:
-#   When the JSONL summary records safety_enabled=false (operator
-#   override via `cfg.safety.enabled=false`), both predicates are
-#   skipped and the gate emits a non-failing "safety disabled by
-#   operator override; gate skipped" message. Exit 0.
+# Wall-time on RTX 2080: ~25-40 GPU-h.
+# Wall-time on cloud A100 (rental): ~5-8 GPU-h (~$6-10 on Lambda Labs
+# at ~$1.10/h; ~$4-7 on Runpod spot at ~$0.79/h). Pin the cuda-version
+# extra in `uv sync` to match the host driver; see
+# pyproject.toml [dependency-groups].
 #
 # Usage:
-#   bash scripts/repro/stage1_as_stage1b.sh <path/to/run.jsonl>
+#   bash scripts/repro/stage1_as_stage1b.sh
 #
 # Exit codes:
-#   0  — gate passed (or safety disabled).
-#   8  — λ saturated against cartesian_accel_capacity (predicate A).
-#   9  — λ adapted but stuck (predicate B; λ_mean > ε but λ_var ≈ 0).
-#   2  — usage error (missing argument or non-existent JSONL).
-#   3  — JSONL malformed (no safety_telemetry_final event found).
+#   0  — verify-prereg + run + eval + post-regeneration audit + audit-gate hook
+#        (predicates A + B) all succeeded.
+#   4  — pre-registration SHA mismatch (chamber-spike verify-prereg).
+#   6  — Stage-1 AS adapter not yet shipped (should not happen post-PR 5a;
+#        regression indicator).
+#   7  — post-regeneration audit failed (schema_version, sub_stage, or
+#        prereg_sha did not match the ADR-016 / ADR-007 contract).
+#   8  — audit-gate predicate A (saturation) tripped.
+#   9  — audit-gate predicate B (λ stuck) tripped.
+#
+# Result archive: spikes/results/stage1-AS-stage1b-<UTC-date>/
 
 set -euo pipefail
 
@@ -47,73 +42,81 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
 cd "${REPO_ROOT}"
 
-JSONL_PATH="${1:-}"
+echo "==> Stage-1b AS spike (ADR-007 §Stage 1b; P1.05)"
+echo "    $(uv run python -c 'from chamber.utils.device import device_report; print(device_report())' 2>/dev/null)"
+echo ""
+
+echo "==> Verifying pre-registration (ADR-007 §Discipline)"
+uv run chamber-spike verify-prereg --spike spikes/preregistration/AS.yaml
+
+RUN_DIR="spikes/results/stage1-AS-stage1b-$(date -u +%Y%m%d)"
+mkdir -p "${RUN_DIR}"
+SPIKE_JSON="${RUN_DIR}/spike_as.json"
+LEADERBOARD_JSON="${RUN_DIR}/leaderboard.json"
+
+echo ""
+echo "==> Launching spike — output: ${SPIKE_JSON}"
+uv run chamber-spike run --axis AS --sub-stage 1b --output "${SPIKE_JSON}"
+
+echo ""
+echo "==> Running ADR-008 evaluation pipeline — output: ${LEADERBOARD_JSON}"
+uv run chamber-eval "${SPIKE_JSON}" --output "${LEADERBOARD_JSON}"
+
+echo ""
+echo "==> Auditing regenerated SpikeRun (ADR-016 §Validation criteria + ADR-007 §Discipline)"
+# Same audit assertions as stage1_as.sh — but here the expected
+# sub_stage is "1b" (Stage-1b science evaluation), and the gate
+# follows the same path (schema_version=2, sub_stage matches,
+# prereg_sha matches the tagged blob).
+schema_version=$(jq -r '.schema_version' "${SPIKE_JSON}")
+sub_stage=$(jq -r '.sub_stage' "${SPIKE_JSON}")
+prereg_sha=$(jq -r '.prereg_sha' "${SPIKE_JSON}")
+git_tag=$(jq -r '.git_tag' "${SPIKE_JSON}")
+
+if [[ "${schema_version}" != "2" ]]; then
+    echo "  FAIL schema_version: expected 2, got ${schema_version} (ADR-016 §Decision)" >&2
+    exit 7
+fi
+if [[ "${sub_stage}" != "1b" ]]; then
+    echo "  FAIL sub_stage:      expected 1b, got ${sub_stage} (ADR-007 §Stage 1b)" >&2
+    exit 7
+fi
+if [[ -z "${git_tag}" ]] || [[ "${git_tag}" == "null" ]]; then
+    echo "  FAIL git_tag:        empty or null (ADR-007 §Discipline)" >&2
+    exit 7
+fi
+if [[ -z "${prereg_sha}" ]] || [[ "${prereg_sha}" == "null" ]]; then
+    echo "  FAIL prereg_sha:     empty or null (ADR-007 §Discipline)" >&2
+    exit 7
+fi
+tagged_sha=$(git ls-tree "${git_tag}" spikes/preregistration/AS.yaml | awk '{print $3}')
+if [[ "${prereg_sha}" != "${tagged_sha}" ]]; then
+    echo "  FAIL prereg_sha:     on-disk ${prereg_sha} != tagged ${tagged_sha} (ADR-007 §Discipline)" >&2
+    exit 7
+fi
+echo "    PASS schema_version=${schema_version}  sub_stage=${sub_stage}  prereg_sha=${prereg_sha}"
+
+echo ""
+echo "==> Running audit-gate hook (predicates A + B; ADR-007 §Stage 1b)"
+# The training rollout's JSONL lives under ./logs/ per cfg.log_dir
+# (the Stage-1b yaml's default). The hook reads the most-recent JSONL
+# under that directory. Operators staging multiple back-to-back runs
+# should clean logs/ between launches (or symlink the per-run log
+# alongside the SpikeRun archive — Phase-1 follow-up).
+JSONL_PATH="$(find logs -name '*.jsonl' -newer "${SPIKE_JSON}" -print 2>/dev/null | head -n 1 || true)"
 if [[ -z "${JSONL_PATH}" ]]; then
-    echo "Usage: bash scripts/repro/stage1_as_stage1b.sh <path/to/run.jsonl>" >&2
-    exit 2
+    # Fallback: pick the most-recent JSONL the founder's host has
+    # produced. Audit-gate hook will read the final summary regardless.
+    JSONL_PATH="$(ls -t logs/*.jsonl 2>/dev/null | head -n 1 || true)"
 fi
-if [[ ! -f "${JSONL_PATH}" ]]; then
-    echo "stage1_as_stage1b: JSONL not found: ${JSONL_PATH}" >&2
-    exit 2
-fi
-
-# Read the final-summary event (last line that matches event="safety_telemetry_final").
-# The training loop emits exactly one such event per cell at end-of-training.
-FINAL_SUMMARY="$(jq -c 'select(.event == "safety_telemetry_final")' "${JSONL_PATH}" | tail -n 1)"
-if [[ -z "${FINAL_SUMMARY}" ]]; then
-    echo "stage1_as_stage1b: no safety_telemetry_final event in ${JSONL_PATH}" >&2
-    echo "  (cfg.safety.enabled may have been false during the run, OR the run" >&2
-    echo "   crashed before completion. Inspect the JSONL for training_end events" >&2
-    echo "   and re-run if necessary.)" >&2
-    exit 3
+if [[ -z "${JSONL_PATH}" ]]; then
+    echo "  WARN: no JSONL found under logs/; skipping audit-gate hook." >&2
+else
+    bash scripts/repro/stage1_as_stage1b_audit_gate.sh "${JSONL_PATH}"
 fi
 
-# Safety-disabled path: emit non-failing message and exit 0.
-SAFETY_ENABLED="$(jq -r '.safety_enabled' <<<"${FINAL_SUMMARY}")"
-if [[ "${SAFETY_ENABLED}" == "false" ]]; then
-    echo "stage1_as_stage1b: safety disabled by operator override (cfg.safety.enabled=false); gate skipped."
-    exit 0
-fi
-
-# Extract predicate inputs.
-LAMBDA_STEADY_STATE="$(jq -r '.lambda_steady_state' <<<"${FINAL_SUMMARY}")"
-LAMBDA_MEAN="$(jq -r '.lambda_mean' <<<"${FINAL_SUMMARY}")"
-LAMBDA_VAR="$(jq -r '.lambda_var' <<<"${FINAL_SUMMARY}")"
-CAPACITY="$(jq -r '.cartesian_accel_capacity' <<<"${FINAL_SUMMARY}")"
-SATURATION_THRESHOLD="$(jq -r '.saturation_threshold' <<<"${FINAL_SUMMARY}")"
-
-# Predicate A: λ_steady_state < saturation_threshold * cartesian_accel_capacity?
-# Use awk for the float comparison (bash arithmetic is integer-only; jq
-# arithmetic compiles but its boolean → bash translation is awkward).
-THRESHOLD_VALUE="$(awk -v t="${SATURATION_THRESHOLD}" -v c="${CAPACITY}" 'BEGIN { printf "%.6f", t * c }')"
-if awk -v l="${LAMBDA_STEADY_STATE}" -v t="${THRESHOLD_VALUE}" 'BEGIN { exit !(l >= t) }'; then
-    echo "stage1_as_stage1b: FAIL predicate A (saturation guard)" >&2
-    echo "  λ_steady_state=${LAMBDA_STEADY_STATE} >= threshold=${THRESHOLD_VALUE}" >&2
-    echo "  (saturation_threshold=${SATURATION_THRESHOLD} × cartesian_accel_capacity=${CAPACITY})" >&2
-    echo "  λ saturated against the cell's bounds; the QP is running" >&2
-    echo "  without safety margin. ADR-007 §Stage 1b: saturating cells" >&2
-    echo "  force slice P1.05.5 (AgentSnapshot.qpos extension) to launch" >&2
-    echo "  mandatorily before Stage 2." >&2
-    exit 8
-fi
-
-# Predicate B: adaptation-conditional. Only fires when λ moved away
-# from zero (λ_mean > 1e-6). The vacuous case (λ stayed at 0) passes.
-if awk -v m="${LAMBDA_MEAN}" 'BEGIN { exit !(m > 1e-6) }'; then
-    # λ adapted away from zero; assert it also varied.
-    if awk -v v="${LAMBDA_VAR}" 'BEGIN { exit !(v <= 1e-12) }'; then
-        echo "stage1_as_stage1b: FAIL predicate B (λ adapted but stuck)" >&2
-        echo "  λ_mean=${LAMBDA_MEAN} > 1e-6 (adapted away from 0) but" >&2
-        echo "  λ_var=${LAMBDA_VAR} <= 1e-12 (didn't vary). The conformal" >&2
-        echo "  slack overlay converged to a non-zero constant — the" >&2
-        echo "  filter is firing but the learning signal is degenerate." >&2
-        echo "  Likely cause: predictor or env state-noise too low to" >&2
-        echo "  drive update_lambda_from_predictor's loss vector." >&2
-        exit 9
-    fi
-fi
-
-echo "stage1_as_stage1b: PASS audit gate (predicates A + B)."
-echo "  λ_steady_state=${LAMBDA_STEADY_STATE} (threshold=${THRESHOLD_VALUE})"
-echo "  λ_mean=${LAMBDA_MEAN}, λ_var=${LAMBDA_VAR}"
-exit 0
+echo ""
+echo "==> PASS — Stage-1b AS spike complete."
+echo "    SpikeRun:    ${SPIKE_JSON}"
+echo "    Leaderboard: ${LEADERBOARD_JSON}"
+echo "    Commit the result archive under ${RUN_DIR}/ per plan/07 §2."

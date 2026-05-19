@@ -100,7 +100,7 @@ from chamber.benchmarks.stage1_common import (
 )
 from chamber.envs.mpe_cooperative_push import MPECooperativePushEnv
 from chamber.evaluation.prereg import PreregistrationSpec, load_prereg, verify_git_tag
-from chamber.evaluation.results import EpisodeResult, SpikeRun
+from chamber.evaluation.results import EpisodeResult, SpikeRun, SubStage
 from chamber.partners.api import PartnerSpec
 from chamber.partners.heuristic import ScriptedHeuristicPartner
 from concerto.training.seeding import derive_substream
@@ -267,6 +267,16 @@ class _ObsChannelFilterEnv(gym.Env):  # type: ignore[type-arg]
 #: ``spikes/preregistration/`` set.
 _PREREG_RELATIVE_PATH: Path = Path("spikes") / "preregistration" / "OM.yaml"
 
+#: Canonical Stage-1b config path (P1.05; ADR-007 §Stage 1b). Twin of
+#: the path in :mod:`chamber.benchmarks.stage1_as`; both axes share
+#: the single ``configs/training/ego_aht_happo/stage1_pickplace.yaml``
+#: because the env + trainer config is the same across AS / OM (only
+#: the obs builder differs, and that's keyed by the env's
+#: ``condition_id`` at the chamber-side ``build_env`` dispatch).
+_STAGE1B_CONFIG_PATH: Path = (
+    Path("configs") / "training" / "ego_aht_happo" / "stage1_pickplace.yaml"
+)
+
 
 def run_axis(args: argparse.Namespace) -> SpikeRun:
     """Run the Stage-1 OM spike end-to-end (T5b.2; ADR-007 §Implementation staging).
@@ -309,12 +319,37 @@ def run_axis(args: argparse.Namespace) -> SpikeRun:
     # in ``tests/integration/test_stage1_om_real.py`` is the
     # regression pin.
     prereg_sha = verify_git_tag(spec, prereg_path, repo_path=Path.cwd())
-    return _run_axis_with_factories(
-        prereg=spec,
-        prereg_sha=prereg_sha,
-        env_factory=_default_env_factory,
-        ego_action_factory=_zero_ego_action_factory,
+
+    sub_stage = getattr(args, "sub_stage", "1a")
+    if sub_stage == "1a":
+        return _run_axis_with_factories(
+            prereg=spec,
+            prereg_sha=prereg_sha,
+            env_factory=_default_env_factory,
+            ego_action_factory=_zero_ego_action_factory,
+            sub_stage="1a",
+        )
+    if sub_stage == "1b":
+        # P1.05: science-evaluation dispatch (mirror of stage1_as).
+        from chamber.benchmarks.stage1_common import (
+            TrainedPolicyFactory,
+        )
+        from concerto.training.config import load_config
+
+        cfg = load_config(config_path=_STAGE1B_CONFIG_PATH)
+        return _run_axis_with_factories(
+            prereg=spec,
+            prereg_sha=prereg_sha,
+            env_factory=_stage1b_env_factory,
+            ego_action_factory=TrainedPolicyFactory(cfg=cfg),
+            sub_stage="1b",
+        )
+    msg = (
+        f"stage1_om.run_axis: unknown sub_stage {sub_stage!r}. "
+        "Valid: '1a' (Phase-0 MPE stand-in) or '1b' (Phase-1 real "
+        "ManiSkill v3 obs-modality factory + trained-ego factory)."
     )
+    raise ValueError(msg)
 
 
 def _load_canonical_prereg() -> tuple[PreregistrationSpec, Path]:
@@ -344,6 +379,7 @@ def _run_axis_with_factories(
     prereg_sha: str,
     env_factory: EnvFactory,
     ego_action_factory: EgoActionFactory,
+    sub_stage: SubStage = "1a",
 ) -> SpikeRun:
     """Drive the spike with injectable env + ego factories (T5b.2; plan/07 §3).
 
@@ -376,6 +412,10 @@ def _run_axis_with_factories(
             :class:`~chamber.benchmarks.stage1_common.EgoActionFactory`
             Protocol. Stage-1a production default is
             :func:`~chamber.benchmarks.stage1_common._zero_ego_action_factory`.
+        sub_stage: Sub-stage label stamped on the returned
+            :attr:`SpikeRun.sub_stage` (ADR-016 §Decision). Stage-1a
+            callers pass ``"1a"``; Stage-1b callers pass ``"1b"``
+            (P1.05 dispatch).
 
     Returns:
         The aggregated :class:`SpikeRun`.
@@ -405,9 +445,17 @@ def _run_axis_with_factories(
             # the cell (ADR-007 §Stage 1b).
             env = env_factory(condition_id, agent_uids, seed)
             ego_action = ego_action_factory(env, seed)
+            # Stage-1b OM: both conditions share ("panda_wristcam",
+            # "fetch") and the fetch partner's action_dim is 13. Stage-1a
+            # keeps the Phase-0 default 2-D.
+            partner_action_dim = _resolve_partner_action_dim(
+                env, partner_uid=partner_uid, sub_stage=sub_stage
+            )
             for episode_idx in range(prereg.episodes_per_seed):
                 initial_state_seed = _derive_episode_seed(seed=seed, episode_idx=episode_idx)
-                partner = _make_scripted_partner(partner_uid=partner_uid)
+                partner = _make_scripted_partner(
+                    partner_uid=partner_uid, action_dim=partner_action_dim
+                )
                 episode_results.append(
                     _run_one_episode(
                         env=env,
@@ -427,14 +475,10 @@ def _run_axis_with_factories(
         prereg_sha=prereg_sha,
         git_tag=prereg.git_tag,
         axis=_AXIS,
-        # ADR-007 §Stage 1a + ADR-016 §Decision: the OM adapter ships
-        # against the Phase-0 MPE stand-in (no real ≥20 pp gate
-        # measurement). The Stage-1b adapter (Phase 1, real ManiSkill
-        # obs-modality factory) will stamp ``sub_stage="1b"`` at the
-        # same construction site once it lands. The summarizer routes
-        # off this field directly (no metadata-dict fallback per
-        # ADR-016).
-        sub_stage="1a",
+        # P1.05 (ADR-007 §Stage 1a/§Stage 1b + ADR-016 §Decision):
+        # parametric. Stage-1a callers pass "1a"; the Stage-1b dispatch
+        # (chamber-spike run --axis OM --sub-stage 1b) passes "1b".
+        sub_stage=sub_stage,
         condition_pair=condition_pair,
         seeds=list(prereg.seeds),
         episode_results=episode_results,
@@ -532,14 +576,81 @@ def _default_env_factory(
     return _ObsChannelFilterEnv(inner, channel_indices=channels)
 
 
-def _make_scripted_partner(*, partner_uid: str) -> ScriptedHeuristicPartner:
-    """Construct the scripted-heuristic partner with the right uid (plan/04 §3.4)."""
+def _stage1b_env_factory(
+    condition_id: str, agent_uids: tuple[str, str], root_seed: int
+) -> gym.Env[Any, Any]:
+    """Build the per-condition Stage-1b OM env (P1.05; ADR-007 §Stage 1b).
+
+    Twin of :func:`chamber.benchmarks.stage1_as._stage1b_env_factory` —
+    routes through
+    :func:`chamber.envs.stage1_pickplace.make_stage1_pickplace_env`.
+    The env's own ``_CONDITION_TABLE`` selects the OM-homo / OM-hetero
+    obs builder (vision-only vs vision + force-torque + proprio); the
+    Phase-0 ``_ObsChannelFilterEnv`` wrapper is intentionally NOT
+    applied to the Stage-1b env — the obs-modality factory inside the
+    real ManiSkill env supplies the actual signal.
+    """
+    from chamber.envs.stage1_pickplace import (
+        _CONDITION_TABLE,
+        make_stage1_pickplace_env,
+    )
+
+    expected_uids = _CONDITION_TABLE[condition_id].agent_uids
+    if expected_uids != agent_uids:
+        msg = (
+            f"_stage1b_env_factory: condition_id {condition_id!r} env-side "
+            f"agent_uids {expected_uids} != adapter-side {agent_uids}. "
+            "The two _CONDITION_UIDS tables have drifted; the env-side "
+            "table in chamber.envs.stage1_pickplace is canonical "
+            "(ADR-007 §Discipline)."
+        )
+        raise ValueError(msg)
+    return make_stage1_pickplace_env(condition_id=condition_id, root_seed=root_seed)
+
+
+def _resolve_partner_action_dim(
+    env: gym.Env[Any, Any],
+    *,
+    partner_uid: str,
+    sub_stage: SubStage,
+) -> int:
+    """Resolve the scripted partner's action dim (P1.05; ADR-007 §Stage 1b).
+
+    Twin of :func:`chamber.benchmarks.stage1_as._resolve_partner_action_dim`.
+    Stage-1a returns the Phase-0 default 2-D; Stage-1b reads
+    ``env.action_space.spaces[partner_uid].shape[0]``.
+    """
+    if sub_stage == "1a":
+        return 2
+    action_space = env.action_space
+    if not isinstance(action_space, gym.spaces.Dict):
+        return 2
+    sub = action_space.spaces.get(partner_uid)
+    if sub is None or not isinstance(sub, gym.spaces.Box):
+        return 2
+    if sub.shape is None:
+        return 2
+    return int(sub.shape[0])
+
+
+def _make_scripted_partner(*, partner_uid: str, action_dim: int = 2) -> ScriptedHeuristicPartner:
+    """Construct the scripted-heuristic partner with the right uid (plan/04 §3.4).
+
+    Stage-1a keeps the Phase-0 default ``action_dim=2`` (MPE stand-in).
+    Stage-1b passes the resolved per-condition action dim so the
+    scripted partner's act() returns a correctly-sized vector that the
+    ManiSkill v3 step boundary accepts.
+    """
     spec = PartnerSpec(
         class_name="scripted_heuristic",
         seed=0,
         checkpoint_step=None,
         weights_uri=None,
-        extra={"uid": partner_uid, "target_xy": "0.0,0.0", "action_dim": "2"},
+        extra={
+            "uid": partner_uid,
+            "target_xy": "0.0,0.0",
+            "action_dim": str(action_dim),
+        },
     )
     return ScriptedHeuristicPartner(spec)
 

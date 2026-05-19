@@ -29,7 +29,7 @@ Two cases (per the P1.04 prompt §D):
 
 The full Stage-1b science run (5 seeds x 100k frames per axis) is out
 of scope for Tier-2; that's the founder-launched
-``scripts/repro/stage1_as_stage1b.sh`` (P1.05).
+``scripts/repro/stage1_as_stage1b.sh`` (P1.05 launcher).
 """
 
 from __future__ import annotations
