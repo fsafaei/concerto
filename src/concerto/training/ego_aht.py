@@ -50,6 +50,7 @@ if TYPE_CHECKING:  # pragma: no cover
 
     from concerto.safety.api import Bounds, EgoOnlySafetyFilter, SafetyState
     from concerto.safety.cbf_qp import AgentSnapshot
+    from concerto.safety.emergency import EmergencyController
     from concerto.training.config import EgoAHTConfig
 
 #: Fallback ego-action dim used by the default :class:`RandomEgoTrainer`
@@ -355,6 +356,20 @@ def train(  # noqa: PLR0912, PLR0915 - P1.04.5 added safety-stack integration to
     safety_bounds: Bounds | None = None,
     safety_snapshot_builder: (Callable[[EnvLike], dict[str, AgentSnapshot]] | None) = None,
     safety_dt: float | None = None,
+    # ----- P1.04.6: braking-fallback parity (ADR-007 §Stage 1b Rev 8). -----
+    # ``safety_emergency_controllers`` is the per-uid emergency-controller
+    # dispatch map :func:`concerto.safety.braking.maybe_brake` consults.
+    # When ``None`` the braking layer falls back to a per-uid
+    # :class:`CartesianAccelEmergencyController` — correct for
+    # double-integrator agents but a silent dimension-mismatch foot-gun
+    # for 7-DOF arms; the chamber-side caller
+    # (:class:`chamber.benchmarks.stage1_common.TrainedPolicyFactory`)
+    # populates it via
+    # :func:`chamber.benchmarks.training_runner.build_emergency_controllers`.
+    # Read only when ``cfg.safety.enabled=True`` AND the other safety
+    # kwargs are passed (the validation block below ties presence to
+    # ``_safety_active``).
+    safety_emergency_controllers: Mapping[str, EmergencyController] | None = None,
 ) -> TrainingResult:
     """Run one ego-AHT training loop (T4b.11; ADR-002 §Decisions; plan/05 §3.5).
 
@@ -408,6 +423,21 @@ def train(  # noqa: PLR0912, PLR0915 - P1.04.5 added safety-stack integration to
         safety_dt: Optional control-step dt in seconds for the
             constant-velocity predictor lookahead + numerical-
             difference velocity. Typically ``env.control_timestep``.
+        safety_emergency_controllers: Optional per-uid
+            :class:`concerto.safety.emergency.EmergencyController`
+            dispatch map (P1.04.6; ADR-007 §Stage 1b Rev 8). Consulted
+            by :func:`concerto.safety.braking.maybe_brake` at each
+            per-step braking call to translate the aggregate Cartesian
+            repulsion into the per-uid control-space override.
+            ``None`` falls back to a per-uid
+            :class:`concerto.safety.emergency.CartesianAccelEmergencyController`
+            — correct for double-integrator agents but a silent
+            dimension-mismatch foot-gun for 7-DOF arms. Wired by
+            :class:`chamber.benchmarks.stage1_common.TrainedPolicyFactory`
+            via
+            :func:`chamber.benchmarks.training_runner.build_emergency_controllers`.
+            Honoured only when ``cfg.safety.enabled=True`` AND the rest
+            of the safety stack is wired.
 
     Returns:
         :class:`TrainingResult` NamedTuple carrying ``curve`` (the
@@ -522,6 +552,7 @@ def train(  # noqa: PLR0912, PLR0915 - P1.04.5 added safety-stack integration to
     # Imports are unconditional (not inside `if _safety_active:`) so
     # the symbols are bound for pyright's flow analysis across the
     # loop body; their *use* is still guarded by `_safety_active`.
+    from concerto.safety.braking import maybe_brake  # noqa: PLC0415
     from concerto.safety.conformal import (  # noqa: PLC0415 - lazy by design (see comment above)
         constant_velocity_predict,
         update_lambda_from_predictor,
@@ -563,35 +594,77 @@ def train(  # noqa: PLR0912, PLR0915 - P1.04.5 added safety-stack integration to
                 for uid in snaps_now
                 if uid != ego_uid
             }
-            try:
-                safe_ego, info = _filter.filter(
-                    np.asarray(ego_action_nominal, dtype=np.float64),
-                    obs={
-                        "agent_states": snaps_now,
-                        "meta": {"partner_id": cfg.partner.class_name},
-                    },
-                    state=_state,
-                    bounds=_bounds,
-                    ego_uid=ego_uid,
-                    partner_predicted_states=partner_predicted,
-                    dt=_dt,
-                )
-                ego_action = np.asarray(safe_ego, dtype=ego_action_nominal.dtype)
-                fallback_fired = bool(info["fallback_fired"])
-                qp_infeasible = False
-            except ConcertoSafetyInfeasible:
-                # Training-time policy: pass the nominal action through
-                # so the trainer learns from the unfiltered consequence.
-                # Deployment policy differs (the integrated stack routes
-                # to maybe_brake here); P1.04.6 closes the asymmetry.
-                ego_action = ego_action_nominal
+            # P1.04.6 (ADR-007 §Stage 1b Rev 8): per-step braking
+            # fallback in front of the CBF-QP — matches the deployment-
+            # time composition order in
+            # ``tests/integration/test_safety_in_loop.py``. Independent
+            # of QP feasibility (Wang-Ames-Egerstedt 2017 eq. 17). We
+            # build a proposed-action dict over BOTH uids so
+            # :func:`maybe_brake` evaluates pairwise TTC over the cell,
+            # but only adopt the override for ``ego_uid`` — the partner
+            # is frozen per ADR-009 §Decision and its action stays
+            # untouched. ``safe_ego`` is what propagates into the
+            # trainer's learning signal.
+            proposed_for_braking = {
+                ego_uid: np.asarray(ego_action_nominal, dtype=np.float64),
+                partner_uid: np.asarray(partner_action, dtype=np.float64),
+            }
+            braking_override, braking_fired = maybe_brake(
+                proposed_for_braking,
+                snaps_now,
+                bounds=_bounds,
+                tau_brake=cfg.safety.tau_brake,
+                emergency_controllers=safety_emergency_controllers,
+            )
+            if braking_fired and braking_override is not None:
+                # Per-step backstop fired: take the ego override and
+                # skip the QP for this step. ``fallback_fired`` (the
+                # CBF-QP's internal 1-D projection fallback flag) stays
+                # ``False`` — those two flags are independent telemetry
+                # channels on the audit-gate (one is "QP ran and used
+                # its internal fallback"; the other is "QP did not run,
+                # braking took over"). ``qp_infeasible`` is also False:
+                # the QP did not raise, it simply was not called.
+                ego_action = np.asarray(braking_override[ego_uid], dtype=ego_action_nominal.dtype)
                 fallback_fired = False
-                qp_infeasible = True
+                qp_infeasible = False
+            else:
+                try:
+                    safe_ego, info = _filter.filter(
+                        np.asarray(ego_action_nominal, dtype=np.float64),
+                        obs={
+                            "agent_states": snaps_now,
+                            "meta": {"partner_id": cfg.partner.class_name},
+                        },
+                        state=_state,
+                        bounds=_bounds,
+                        ego_uid=ego_uid,
+                        partner_predicted_states=partner_predicted,
+                        dt=_dt,
+                    )
+                    ego_action = np.asarray(safe_ego, dtype=ego_action_nominal.dtype)
+                    fallback_fired = bool(info["fallback_fired"])
+                    qp_infeasible = False
+                except ConcertoSafetyInfeasible:
+                    # Pre-P1.04.6 training-time policy was to pass the
+                    # nominal action through; P1.04.6's braking layer
+                    # now runs upstream of this branch, so reaching
+                    # here means the QP raised AFTER braking didn't
+                    # fire (i.e. TTC >= tau_brake but the QP still
+                    # found no feasible projection — a tighter QP
+                    # constraint than the braking TTC predicts).
+                    # Surface as the unfiltered-passthrough still, so
+                    # the trainer can learn from the consequence; the
+                    # ``qp_infeasible`` flag is what audits this.
+                    ego_action = ego_action_nominal
+                    fallback_fired = False
+                    qp_infeasible = True
             snaps_prev = snaps_now
             aggregator.observe(
                 _state.lambda_,
                 fallback_fired=fallback_fired,
                 qp_infeasible=qp_infeasible,
+                braking_fired=braking_fired,
             )
         else:
             ego_action = ego_action_nominal

@@ -110,3 +110,9 @@ safety:
   lambda_safe: 0.0
   n_warmup_steps: 50
   predictor_kind: constant_velocity
+  # P1.04.6 / ADR-007 §Stage 1b Rev 8: per-step braking-fallback TTC
+  # threshold in seconds. concerto.safety.braking.maybe_brake fires
+  # when the smallest pairwise time-to-collision drops below this.
+  # 100 ms matches concerto.safety.braking.DEFAULT_TAU_BRAKE and
+  # plan/03 §2 Decision row "Braking fallback trigger".
+  tau_brake: 0.100

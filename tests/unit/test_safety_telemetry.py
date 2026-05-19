@@ -155,16 +155,57 @@ class TestSafetyAggregatorShapeValidation:
             agg.observe({("a", "b"): 0.5})  # shape (1,), expected (2,)
 
 
-class TestSafetyAggregatorForwardCompat:
-    """P1.04.6 forward-compat fields are present + zero-filled in P1.04.5 records."""
+class TestSafetyAggregatorBrakingFires:
+    """P1.04.6: ``braking_fired`` populates ``n_braking_fires`` and ``braking_fire_rate``."""
 
-    def test_finalise_includes_p104_6_fields_zero_filled(self) -> None:
-        """n_braking_fires + braking_fire_rate default to 0; P1.04.6 populates."""
+    def test_no_braking_fires_yields_zero_fields(self) -> None:
+        """When no step fired braking, both fields stay 0 / 0.0 (matches pre-P1.04.6 vintage)."""
         agg = SafetyAggregator(n_pairs=1, cartesian_accel_capacity=10.0)
         agg.observe({("a", "b"): 0.1})
         summary = agg.finalise(safety_enabled=True)
         assert summary["n_braking_fires"] == 0
         assert summary["braking_fire_rate"] == 0.0
+
+    def test_braking_fired_counter_increments_and_rate_normalises(self) -> None:
+        """3 fires over 10 steps → n_braking_fires=3, braking_fire_rate=0.3."""
+        agg = SafetyAggregator(n_pairs=1, cartesian_accel_capacity=10.0)
+        for k in range(10):
+            agg.observe({("a", "b"): 0.1}, braking_fired=(k < 3))
+        summary = agg.finalise(safety_enabled=True)
+        assert summary["n_braking_fires"] == 3
+        assert summary["braking_fire_rate"] == pytest.approx(0.3)
+
+    def test_window_flush_reports_braking_fires_and_resets(self) -> None:
+        """The per-rollout-window dict carries ``n_braking_fires`` and the counter resets."""
+        agg = SafetyAggregator(n_pairs=1, cartesian_accel_capacity=10.0)
+        for _ in range(5):
+            agg.observe({("a", "b"): 0.1}, braking_fired=True)
+        window_a = agg.flush_window_stats()
+        assert window_a["n_braking_fires"] == 5
+        # Next window starts at zero — running cell-total still climbs.
+        for _ in range(2):
+            agg.observe({("a", "b"): 0.1}, braking_fired=True)
+        window_b = agg.flush_window_stats()
+        assert window_b["n_braking_fires"] == 2
+        summary = agg.finalise(safety_enabled=True)
+        assert summary["n_braking_fires"] == 7
+
+    def test_braking_fires_counted_independently_of_fallback_and_qp_infeasible(self) -> None:
+        """The three event flags are independent counters on the same observe call."""
+        agg = SafetyAggregator(n_pairs=1, cartesian_accel_capacity=10.0)
+        agg.observe(
+            {("a", "b"): 0.1}, fallback_fired=True, qp_infeasible=False, braking_fired=False
+        )
+        agg.observe(
+            {("a", "b"): 0.1}, fallback_fired=False, qp_infeasible=True, braking_fired=False
+        )
+        agg.observe(
+            {("a", "b"): 0.1}, fallback_fired=False, qp_infeasible=False, braking_fired=True
+        )
+        summary = agg.finalise(safety_enabled=True)
+        assert summary["n_fallback_fires"] == 1
+        assert summary["n_qp_infeasible"] == 1
+        assert summary["n_braking_fires"] == 1
 
     def test_predictor_kind_round_trips(self) -> None:
         agg = SafetyAggregator(n_pairs=1, cartesian_accel_capacity=10.0)
