@@ -34,6 +34,11 @@ from chamber.evaluation.hrs import (
     compute_hrs_scalar,
     compute_hrs_vector,
 )
+from chamber.evaluation.oscbf_aggregate import (
+    SlackAggregate,
+    aggregate_oscbf_slack,
+    make_condition_row,
+)
 from chamber.evaluation.prereg import (
     PreregistrationError,
     PreregistrationSpec,
@@ -68,12 +73,15 @@ __all__ = [
     "PairedEpisode",
     "PreregistrationError",
     "PreregistrationSpec",
+    "SlackAggregate",
     "SpikeRun",
     "aggregate_metrics",
+    "aggregate_oscbf_slack",
     "cluster_bootstrap",
     "compute_hrs_scalar",
     "compute_hrs_vector",
     "load_prereg",
+    "make_condition_row",
     "pacluster_bootstrap",
     "render_leaderboard",
     "render_three_table_safety_report",
