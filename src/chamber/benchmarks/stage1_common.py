@@ -508,12 +508,16 @@ class TrainedPolicyFactory:
         Returns:
             ``dict`` with keys ``safety_filter``, ``safety_state``,
             ``safety_bounds``, ``safety_snapshot_builder``,
-            ``safety_dt``. All-``None`` when ``cfg.safety.enabled``
-            is False; all-populated otherwise. The dict unpacks
-            directly into the :func:`run_training` kwargs (intent-
-            mismatch detection lives in
+            ``safety_dt``, and ``safety_emergency_controllers``
+            (P1.04.6 addition; ADR-007 §Stage 1b Rev 8). All-``None``
+            when ``cfg.safety.enabled`` is False; all-populated
+            otherwise. The dict unpacks directly into the
+            :func:`run_training` kwargs (intent-mismatch detection for
+            the first five keys lives in
             :func:`concerto.training.ego_aht.train`'s validation
-            block).
+            block; ``safety_emergency_controllers`` is a free-standing
+            hint, only consulted when the first five are wired and
+            :func:`concerto.safety.braking.maybe_brake` fires).
         """
         if not cfg.safety.enabled:
             return {
@@ -522,12 +526,14 @@ class TrainedPolicyFactory:
                 "safety_bounds": None,
                 "safety_snapshot_builder": None,
                 "safety_dt": None,
+                "safety_emergency_controllers": None,
             }
         # Lazy imports: keep the factory Tier-1-import-safe on
         # Vulkan-less hosts; safety_state construction only resolves
         # when the cfg says so.
         from chamber.benchmarks.training_runner import (
             build_bounds_for_env,
+            build_emergency_controllers,
             build_safety_dt,
             build_safety_filter,
             build_safety_snapshot_builder,
@@ -540,6 +546,12 @@ class TrainedPolicyFactory:
         safety_bounds = build_bounds_for_env(env)
         snapshot_builder = build_safety_snapshot_builder(env)
         safety_dt = build_safety_dt(env)
+        # P1.04.6 (ADR-007 §Stage 1b Rev 8): per-uid emergency-controller
+        # dispatch for the in-rollout :func:`maybe_brake` call. Built
+        # from the same env-side control-model map :func:`build_safety_filter`
+        # consumes, so the Jacobian-vs-DI dispatch matches the outer CBF
+        # row's per-uid embodiment assumption.
+        emergency_controllers = build_emergency_controllers(env)
         if snapshot_builder is None:
             msg = (
                 "TrainedPolicyFactory._build_safety_for_cell: cfg.safety.enabled "
@@ -566,6 +578,7 @@ class TrainedPolicyFactory:
             "safety_bounds": safety_bounds,
             "safety_snapshot_builder": snapshot_builder,
             "safety_dt": safety_dt,
+            "safety_emergency_controllers": emergency_controllers,
         }
 
 

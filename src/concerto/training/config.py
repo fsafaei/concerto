@@ -223,6 +223,15 @@ class SafetyConfig(_FrozenModel):
             :func:`concerto.safety.conformal.constant_velocity_predict`;
             AoI-conditioned variants are Phase-2 per ADR-004 §Open
             questions).
+        tau_brake: Per-step braking-fallback TTC threshold in seconds
+            (P1.04.6; ADR-007 §Stage 1b training-vs-deployment parity).
+            When the smallest pairwise time-to-collision drops below
+            this, :func:`concerto.safety.braking.maybe_brake` overrides
+            the ego action with the per-uid emergency-controller's
+            push-apart response — the per-step backstop that does not
+            depend on QP feasibility (Wang-Ames-Egerstedt 2017 eq. 17;
+            ADR-004 risk-mitigation #1). Default matches
+            :data:`concerto.safety.braking.DEFAULT_TAU_BRAKE` (100 ms).
     """
 
     enabled: bool = False
@@ -231,6 +240,7 @@ class SafetyConfig(_FrozenModel):
     lambda_safe: float = 0.0
     n_warmup_steps: int = Field(default=50, ge=0)
     predictor_kind: Literal["constant_velocity"] = "constant_velocity"
+    tau_brake: float = Field(default=0.100, gt=0.0)
 
 
 class HAPPOHyperparams(_FrozenModel):

@@ -236,7 +236,7 @@ class TestSafetyTelemetryEmitsExpectedEvents:
             "n_filter_calls",
             "n_fallback_fires",
             "n_qp_infeasible",
-            # P1.04.6 forward-compat fields:
+            # P1.04.6 braking-fallback parity fields:
             "n_braking_fires",
             "braking_fire_rate",
         ):

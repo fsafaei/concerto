@@ -41,7 +41,11 @@ from chamber.benchmarks.stage0_smoke_adapter import make_stage0_training_env
 from chamber.envs.mpe_cooperative_push import MPECooperativePushEnv
 from chamber.partners.api import PartnerSpec
 from chamber.partners.registry import load_partner
-from concerto.safety.api import AgentControlModel, DoubleIntegratorControlModel
+from concerto.safety.api import (
+    AgentControlModel,
+    DoubleIntegratorControlModel,
+    JacobianControlModel,
+)
 from concerto.training.ego_aht import EnvLike, PartnerLike, TrainingResult, train
 
 if TYPE_CHECKING:  # pragma: no cover
@@ -50,6 +54,7 @@ if TYPE_CHECKING:  # pragma: no cover
 
     from concerto.safety.api import Bounds, EgoOnlySafetyFilter, SafetyState
     from concerto.safety.cbf_qp import AgentSnapshot
+    from concerto.safety.emergency import EmergencyController
     from concerto.training.config import EgoAHTConfig, EnvConfig, PartnerConfig
     from concerto.training.ego_aht import TrainerFactory
 
@@ -191,6 +196,13 @@ def run_training(
     safety_bounds: Bounds | None = None,
     safety_snapshot_builder: (Callable[[EnvLike], dict[str, AgentSnapshot]] | None) = None,
     safety_dt: float | None = None,
+    # P1.04.6 / ADR-007 §Stage 1b Rev 8: per-uid emergency-controller
+    # dispatch for :func:`concerto.safety.braking.maybe_brake`. ``None``
+    # falls back to the Cartesian default — correct for double-
+    # integrator MPE-stand-in cells but a silent dimension-mismatch
+    # foot-gun for the Stage-1b 7-DOF panda uid. Stage-1b callers must
+    # populate via :func:`build_emergency_controllers`.
+    safety_emergency_controllers: Mapping[str, EmergencyController] | None = None,
 ) -> TrainingResult:
     """Build env + partner and run the ego-AHT training loop (T4b.11; ADR-002 §Decisions).
 
@@ -234,6 +246,14 @@ def run_training(
             :class:`AgentSnapshot` map per step.
         safety_dt: Optional control-step dt in seconds for the
             predictor lookahead.
+        safety_emergency_controllers: Optional per-uid
+            :class:`~concerto.safety.emergency.EmergencyController`
+            map (P1.04.6; ADR-007 §Stage 1b Rev 8). Threaded through to
+            :func:`concerto.training.ego_aht.train` for the in-rollout
+            :func:`concerto.safety.braking.maybe_brake` call. Built per
+            cell by
+            :class:`chamber.benchmarks.stage1_common.TrainedPolicyFactory`
+            via :func:`build_emergency_controllers`.
 
     Returns:
         :class:`~concerto.training.ego_aht.TrainingResult` —
@@ -261,6 +281,7 @@ def run_training(
         safety_bounds=safety_bounds,
         safety_snapshot_builder=safety_snapshot_builder,
         safety_dt=safety_dt,
+        safety_emergency_controllers=safety_emergency_controllers,
     )
 
 
@@ -476,9 +497,59 @@ def build_safety_dt(env: gym.Env[Any, Any], *, fallback: float = 0.02) -> float:
         return fallback
 
 
+def build_emergency_controllers(
+    env: gym.Env[Any, Any],
+) -> dict[str, EmergencyController]:
+    """Build per-uid emergency-controller dispatch for the cell's env (P1.04.6).
+
+    ADR-007 §Stage 1b Rev 8: the training-time
+    :func:`concerto.safety.braking.maybe_brake` call routes each
+    dangerous-pair uid's aggregate repulsion through its
+    :class:`~concerto.safety.emergency.EmergencyController` to translate
+    the Cartesian vector into a control-space override. Heterogeneous
+    embodiments need heterogeneous controllers:
+
+    - **7-DOF panda uids** (action_dim != position_dim): dispatch to
+      :class:`~concerto.safety.emergency.JacobianEmergencyController`
+      with the env-built :class:`JacobianControlModel` (same instance
+      the outer CBF row uses, so the kinematic convention is configured
+      once at chamber-side wiring time per ADR-004 §Revision history
+      2026-05-17).
+    - **Double-integrator uids** (action_dim == position_dim, fetch /
+      MPE / Stage-0 default): dispatch to
+      :class:`~concerto.safety.emergency.CartesianAccelEmergencyController`.
+
+    Dispatch on :class:`JacobianControlModel` instance identity rather
+    than on ``uid`` strings or ``action_dim`` heuristics — the model is
+    the source-of-truth for the embodiment / control-space mapping.
+
+    Args:
+        env: A multi-agent Gymnasium-conformant env. Must expose
+            ``build_control_models()`` (the env-side dispatch) or match
+            the default-DI fallback in :func:`build_control_models`.
+
+    Returns:
+        ``{uid: EmergencyController}`` for every uid in the cell.
+    """
+    from concerto.safety.emergency import (
+        CartesianAccelEmergencyController,
+        JacobianEmergencyController,
+    )
+
+    control_models = build_control_models(env)
+    controllers: dict[str, EmergencyController] = {}
+    for uid, model in control_models.items():
+        if isinstance(model, JacobianControlModel):
+            controllers[uid] = JacobianEmergencyController(control_model=model)
+        else:
+            controllers[uid] = CartesianAccelEmergencyController()
+    return controllers
+
+
 __all__ = [
     "build_bounds_for_env",
     "build_control_models",
+    "build_emergency_controllers",
     "build_env",
     "build_partner",
     "build_safety_dt",

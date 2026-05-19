@@ -37,13 +37,16 @@ condition-aware variant would have been the same class of foot-gun
 ADR-016 §Decision closed by replacing the ``_DEFAULT_STAGE_BY_AXIS``
 silent-fallback with the typed ``sub_stage`` field.
 
-Forward-compat note (P1.04.6, next slice):
-:class:`SafetyAggregator` will be extended in P1.04.6 with
-``n_braking_fires`` and ``braking_fire_rate`` fields to support the
-braking-fallback parity comparative audit (CBF-only vs CBF+braking λ
-steady-state on a 200-step AS-homo smoke). The current Aggregator's
-schema is forward-additive — new fields default to ``0`` for P1.04.5
-JSONL records so the P1.04.6 audit can read both vintages.
+Braking-fallback parity (P1.04.6; ADR-007 §Stage 1b Revision 8):
+:class:`SafetyAggregator` now tracks per-step ``braking_fired`` events
+from :func:`concerto.safety.braking.maybe_brake` and exposes
+``n_braking_fires`` + ``braking_fire_rate`` on the final summary.
+Pre-P1.04.6 vintage JSONL still parses cleanly — the two fields were
+forward-compat zero-filled in P1.04.5 records (the same field names
+are populated truthfully in P1.04.6+). The comparative audit
+(``scripts/repro/braking_parity_comparative_audit.sh``) reads the
+final summary from a CBF-only run and a CBF+braking run on the same
+200-step AS-homo seed and emits the λ steady-state diff.
 """
 
 from __future__ import annotations
@@ -117,6 +120,12 @@ class SafetyAggregator:
     _min_lambda: float = field(default=np.inf)
     _n_fallback_fires_total: int = 0
     _n_qp_infeasible_total: int = 0
+    # P1.04.6: per-step ``braking_fired`` events from
+    # :func:`concerto.safety.braking.maybe_brake`. Counted independently
+    # of ``fallback_fired`` (the CBF-QP backbone's internal one-D
+    # gradient-projection fallback) so the audit-gate can attribute
+    # safety-overrides to the right layer.
+    _n_braking_fires_total: int = 0
     # Per-rollout-window state (cleared by flush_window_stats).
     _window_n_obs: int = 0
     _window_sum_lambda: float = 0.0
@@ -125,6 +134,7 @@ class SafetyAggregator:
     _window_min_lambda: float = field(default=np.inf)
     _window_n_fallback_fires: int = 0
     _window_n_qp_infeasible: int = 0
+    _window_n_braking_fires: int = 0
     # Per-step λ history (for steady-state tail computation at finalise).
     # NOTE: this is the only O(N_steps) state. For the Stage-1b budget
     # (100k frames x 5 seeds x 4 cells), a single cell's history is
@@ -139,6 +149,7 @@ class SafetyAggregator:
         *,
         fallback_fired: bool = False,
         qp_infeasible: bool = False,
+        braking_fired: bool = False,
     ) -> None:
         """Record one per-step λ dict + filter-event flags (ADR-007 §Stage 1b).
 
@@ -160,6 +171,13 @@ class SafetyAggregator:
                 on this step. Counted separately so the audit-gate
                 can distinguish "fallback fired" (a recoverable event)
                 from "QP infeasible" (a worse signal).
+            braking_fired: Whether the P1.04.6 per-step braking
+                fallback (:func:`concerto.safety.braking.maybe_brake`)
+                overrode the proposed action on this step. Counted
+                separately from ``fallback_fired`` because the two
+                layers are distinct: ``maybe_brake`` is the
+                pre-QP per-step backstop; ``fallback_fired`` is the
+                CBF-QP's own internal 1-D projection fallback.
         """
         if len(lambda_) != self.n_pairs:
             msg = (
@@ -178,6 +196,9 @@ class SafetyAggregator:
             if qp_infeasible:
                 self._n_qp_infeasible_total += 1
                 self._window_n_qp_infeasible += 1
+            if braking_fired:
+                self._n_braking_fires_total += 1
+                self._window_n_braking_fires += 1
             self._n_obs_total += 1
             self._window_n_obs += 1
             self._lambda_history.append(0.0)
@@ -196,6 +217,8 @@ class SafetyAggregator:
             self._n_fallback_fires_total += 1
         if qp_infeasible:
             self._n_qp_infeasible_total += 1
+        if braking_fired:
+            self._n_braking_fires_total += 1
         # Window running stats.
         self._window_n_obs += 1
         self._window_sum_lambda += scalar
@@ -206,6 +229,8 @@ class SafetyAggregator:
             self._window_n_fallback_fires += 1
         if qp_infeasible:
             self._window_n_qp_infeasible += 1
+        if braking_fired:
+            self._window_n_braking_fires += 1
         # Per-step history for the steady-state tail computation at
         # finalise. Single scalar per step; cheap.
         self._lambda_history.append(scalar)
@@ -242,6 +267,7 @@ class SafetyAggregator:
                 "lambda_min": 0.0,
                 "n_fallback_fires": 0,
                 "n_qp_infeasible": 0,
+                "n_braking_fires": 0,
             }
         n = self._window_n_obs
         mean = self._window_sum_lambda / n
@@ -254,6 +280,7 @@ class SafetyAggregator:
             "lambda_min": self._window_min_lambda,
             "n_fallback_fires": self._window_n_fallback_fires,
             "n_qp_infeasible": self._window_n_qp_infeasible,
+            "n_braking_fires": self._window_n_braking_fires,
         }
         # Reset the window.
         self._window_n_obs = 0
@@ -263,6 +290,7 @@ class SafetyAggregator:
         self._window_min_lambda = np.inf
         self._window_n_fallback_fires = 0
         self._window_n_qp_infeasible = 0
+        self._window_n_braking_fires = 0
         return record
 
     def finalise(
@@ -318,10 +346,21 @@ class SafetyAggregator:
                     "cartesian_accel_capacity": float,
                     "saturation_threshold": float,
                     "saturated": bool,
-                    "n_braking_fires": int,  # P1.04.6 forward-compat (0 here)
-                    "braking_fire_rate": float,  # P1.04.6 forward-compat (0.0 here)
+                    # P1.04.6: braking-fallback parity in training rollout.
+                    # ``n_braking_fires`` counts steps where
+                    # :func:`concerto.safety.braking.maybe_brake` overrode
+                    # the ego action (pre-QP per-step backstop;
+                    # ADR-004 risk-mitigation #1).
+                    # ``braking_fire_rate = n_braking_fires / n_filter_calls``.
+                    "n_braking_fires": int,
+                    "braking_fire_rate": float,
                 }
         """
+        braking_fire_rate = (
+            float(self._n_braking_fires_total) / float(self._n_obs_total)
+            if self._n_obs_total > 0
+            else 0.0
+        )
         record: dict[str, object] = {
             "event": "safety_telemetry_final",
             "safety_enabled": safety_enabled,
@@ -331,11 +370,8 @@ class SafetyAggregator:
             "n_qp_infeasible": self._n_qp_infeasible_total,
             "cartesian_accel_capacity": self.cartesian_accel_capacity,
             "saturation_threshold": self.saturation_threshold,
-            # P1.04.6 forward-compat fields. Zero / 0.0 in P1.04.5
-            # records; P1.04.6 will populate them and the audit-gate
-            # can branch on safety_enabled to know which vintage.
-            "n_braking_fires": 0,
-            "braking_fire_rate": 0.0,
+            "n_braking_fires": self._n_braking_fires_total,
+            "braking_fire_rate": braking_fire_rate,
         }
         if self._n_obs_total == 0:
             # Edge case: zero-step run (Tier-1 fake or cfg.total_frames=0).
