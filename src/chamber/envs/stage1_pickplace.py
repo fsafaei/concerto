@@ -1214,12 +1214,17 @@ def make_stage1_pickplace_env(
     )
     # AS conditions: ManiSkill v3 obs_mode="state_dict" emits per-agent
     # Dict(qpos, qvel) but EgoPPOTrainer.from_config reads
-    # obs["agent"][ego_uid]["state"]. The wrapper synthesises that key
-    # from concat(qpos, qvel); pass-through for OM conditions (which
-    # have their own channel filter for the modality dispatch).
-    from chamber.envs.stage1_obs_filter import Stage1ASStateSynthesizer
+    # obs["agent"][ego_uid]["state"]. The AS synthesizer adds that key;
+    # pass-through for OM conditions. The OM channel filter then masks
+    # per-condition for OM-vision-only; pass-through for AS and OM-hetero.
+    # Wired in fixed order so OM callers of the factory don't have to
+    # wrap manually (issue #165 §Proposed scope 4).
+    from chamber.envs.stage1_obs_filter import (
+        Stage1ASStateSynthesizer,
+        Stage1OMChannelFilter,
+    )
 
-    return Stage1ASStateSynthesizer(inner)
+    return Stage1OMChannelFilter(Stage1ASStateSynthesizer(inner))
 
 
 __all__ = [
