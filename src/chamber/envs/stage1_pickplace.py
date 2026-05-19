@@ -120,17 +120,17 @@ import numpy as np
 from chamber.envs.errors import ChamberEnvCompatibilityError
 from concerto.safety.api import (
     AgentControlModel,
+    Bounds,
     DoubleIntegratorControlModel,
     JacobianControlModel,
 )
+from concerto.safety.cbf_qp import AgentSnapshot
 from concerto.training.seeding import derive_substream
 
 if TYPE_CHECKING:  # pragma: no cover
     from collections.abc import Callable, Mapping
 
     from numpy.typing import NDArray
-
-    from concerto.safety.cbf_qp import AgentSnapshot
 
 #: Default episode horizon, in env ticks (ADR-007 §Stage 1b compute budget).
 #:
@@ -182,6 +182,105 @@ PANDA_CARTESIAN_ACCEL_CAPACITY_MS2: float = 10.0
 #: ``Bounds.cartesian_accel_capacity`` via the per-uid bounds dict,
 #: not on the control model itself.
 FETCH_CARTESIAN_ACCEL_CAPACITY_MS2: float = 1.5
+
+#: Panda end-effector + wrist sphere radius for the CBF pairwise distance
+#: barrier (P1.04.5 / ADR-007 §Stage 1b safety stack wiring).
+#:
+#: Engineering estimate — the gripper-extended envelope of the
+#: ``panda_hand`` link (8 cm finger reach + 5 cm wrist mount + 5 cm cube
+#: half-envelope ≈ 18 cm; rounding down to 10 cm so the configured
+#: radius is the inscribing sphere around the *grasping configuration*
+#: rather than the fully-extended-finger envelope). Used for both
+#: ``panda_wristcam`` and ``panda_partner`` (the panda partner shares
+#: the URDF + kinematic envelope; only the URDF visual mesh differs
+#: per P1.03's ``PandaPartner`` agent definition).
+#:
+#: The :func:`_validate_safety_radii` env-construction-time assertion
+#: pins this value against
+#: :data:`_MINIMUM_SAFETY_RADIUS_BY_UID` — a future operator who
+#: shrinks the constant below the URDF envelope minimum gets a
+#: loud-fail at env construction with the URDF source + per-uid name
+#: in the error message (not weeks later as a "λ saturates randomly"
+#: bug).
+PANDA_SAFETY_RADIUS_M: float = 0.10
+
+#: Fetch mobile-base sphere radius for the CBF pairwise distance
+#: barrier (P1.04.5 / ADR-007 §Stage 1b safety stack wiring).
+#:
+#: Engineering estimate — Fetch's ``base_link`` is a ~60 cm x 60 cm
+#: cylindrical mobile base; the inscribing sphere is ~30 cm radius
+#: with 5 cm margin for wheel-protrusion = 35 cm. The configured value
+#: covers the base + wheels but NOT the arm-extended envelope (the
+#: scripted-heuristic partner used in Phase-1 only animates the base;
+#: arm-folded configuration is assumed). A future refactor that
+#: animates the fetch's arm during partner-control must revisit this
+#: constant — :func:`_validate_safety_radii` does not currently catch
+#: the arm-extended case.
+FETCH_SAFETY_RADIUS_M: float = 0.35
+
+#: Per-uid minimum safety-radius envelope used by
+#: :func:`_validate_safety_radii` (P1.04.5 / ADR-007 §Stage 1b).
+#:
+#: Asserted at env construction: each configured radius MUST be
+#: ``>= _MINIMUM_SAFETY_RADIUS_BY_UID[uid]``. The minimums are derived
+#: from the URDF link-frame extents (panda: gripper + wrist envelope
+#: ~ 8 cm; fetch: base-link cylinder ~ 30 cm). The configured
+#: ``PANDA_SAFETY_RADIUS_M`` / ``FETCH_SAFETY_RADIUS_M`` constants
+#: above clear these minimums by design; the assertion is the
+#: regression-pin against future operator edits that would shrink
+#: them below safe values.
+_MINIMUM_SAFETY_RADIUS_BY_UID: dict[str, float] = {
+    "panda_wristcam": 0.08,
+    "panda_partner": 0.08,
+    "fetch": 0.30,
+}
+
+
+def _validate_safety_radii(
+    safety_radii: dict[str, float],
+    *,
+    minimums: dict[str, float] = _MINIMUM_SAFETY_RADIUS_BY_UID,
+) -> None:
+    """Assert configured safety radii clear the per-uid URDF envelope minimums (P1.04.5).
+
+    Called once at :class:`Stage1PickPlaceEnv` construction (Q3 from
+    the P1.04.5 design pass). Loud-fails with the per-uid name +
+    configured value + minimum envelope so a future edit that shrinks
+    a radius below the URDF-derived safe envelope surfaces at env
+    construction rather than weeks later as a "λ saturates randomly"
+    bug.
+
+    Args:
+        safety_radii: ``{uid: radius_metres}`` map the env uses for the
+            CBF pairwise distance barrier (sourced from
+            :data:`PANDA_SAFETY_RADIUS_M` / :data:`FETCH_SAFETY_RADIUS_M`).
+        minimums: Per-uid minimum-envelope map. Defaults to
+            :data:`_MINIMUM_SAFETY_RADIUS_BY_UID`; tests override.
+
+    Raises:
+        ValueError: If any uid's configured radius is below its
+            minimum. Names the uid + configured value + minimum value
+            + the source-of-truth constant in the error message.
+    """
+    for uid, configured in safety_radii.items():
+        minimum = minimums.get(uid)
+        if minimum is None:
+            # An unknown uid (Tier-2 fakes, Phase-2 envs) is a soft
+            # warning — pass-through rather than refuse so non-Stage-1b
+            # callers stay unaffected. Future Stage-2/3 envs should
+            # contribute their own entries to the minimums table.
+            continue
+        if configured < minimum:
+            msg = (
+                f"_validate_safety_radii: uid={uid!r} configured "
+                f"radius={configured:.4f} m is below the URDF-envelope "
+                f"minimum={minimum:.4f} m. Update the corresponding "
+                "module-level constant in chamber.envs.stage1_pickplace "
+                "(PANDA_SAFETY_RADIUS_M / FETCH_SAFETY_RADIUS_M); the "
+                "minimums table is _MINIMUM_SAFETY_RADIUS_BY_UID. "
+                "ADR-007 §Stage 1b safety-stack wiring (P1.04.5)."
+            )
+            raise ValueError(msg)
 
 
 class ConditionConfig(NamedTuple):
@@ -475,7 +574,11 @@ def make_stage1_pickplace_env(
         # try/except ensures this import is the place where a Tier-1
         # context would have already failed if it was going to.
         import chamber.agents  # noqa: F401 - side-effect import for register_agent
-        from chamber.agents.panda_jacobian import PANDA_ARM_DOF, PandaJacobianProvider
+        from chamber.agents.panda_jacobian import (
+            CARTESIAN_POSITION_DIM,
+            PANDA_ARM_DOF,
+            PandaJacobianProvider,
+        )
         from chamber.envs._sapien_compat import (
             load_agent_with_bare_uids,
             patch_sapien_urdf_no_visual_material,
@@ -555,6 +658,22 @@ def make_stage1_pickplace_env(
             self._cube_spawn_half_size: float = 0.05
             self._cube_spawn_center: tuple[float, float] = (0.0, 0.0)
             self._max_goal_height: float = 0.3
+            # Attributes that ``_initialize_episode`` / ``_before_simulation_step``
+            # touch MUST be assigned before ``super().__init__()``: ManiSkill's
+            # ``BaseEnv.__init__`` calls ``self.reset(...)`` during super-init
+            # (mani_skill/envs/sapien_env.py:327), which invokes
+            # ``_initialize_episode`` *and* the post-reset qpos primer below
+            # before the subclass body resumes. Subclass attributes written
+            # after super-init do not yet exist when those hooks fire.
+            self._panda_arm_dof: int = PANDA_ARM_DOF
+            # Per-uid cache for the numerical-difference velocity in
+            # build_agent_snapshots (D8 of the P1.04.5 design pass).
+            # Cleared by _initialize_episode at every reset so the
+            # cross-episode position delta doesn't produce a spurious
+            # first-step velocity. The first-step velocity defaults to
+            # zero on each fresh episode (the agents start at rest by
+            # construction).
+            self._prev_positions: dict[str, NDArray[np.float64]] = {}
             try:
                 super().__init__(
                     robot_uids=self._condition_config.agent_uids,  # type: ignore[arg-type]
@@ -579,7 +698,15 @@ def make_stage1_pickplace_env(
             # identical, so reusing the v3-URDF chain for the partner
             # introduces no error in the linear Jacobian.
             self._jacobian_provider: PandaJacobianProvider = PandaJacobianProvider()
-            self._panda_arm_dof: int = PANDA_ARM_DOF
+            # Per-uid safety radii (Q3 of the P1.04.5 design pass).
+            # Asserted at construction against URDF-envelope minimums.
+            self._safety_radii: dict[str, float] = {
+                uid: PANDA_SAFETY_RADIUS_M
+                if uid in ("panda_wristcam", "panda_partner")
+                else FETCH_SAFETY_RADIUS_M
+                for uid in self._condition_config.agent_uids
+            }
+            _validate_safety_radii(self._safety_radii)
 
         # ----- ManiSkill v3 BaseEnv hooks -----
 
@@ -642,6 +769,12 @@ def make_stage1_pickplace_env(
         def _initialize_episode(self, env_idx: torch.Tensor, options: dict[str, Any]) -> None:
             """Reset cube + goal poses per episode (P6 determinism via :attr:`_rng`)."""
             del options
+            # Clear the per-agent position cache so build_agent_snapshots'
+            # first-step velocity (numerical-difference) defaults to
+            # zero on each fresh episode rather than diffing against
+            # the previous episode's final position (R2 of the P1.04.5
+            # risk register).
+            self._prev_positions.clear()
             with torch.device(self.device):  # type: ignore[attr-defined]
                 b = len(env_idx)
                 self.table_scene.initialize(env_idx)
@@ -677,6 +810,14 @@ def make_stage1_pickplace_env(
                 goal_xyz[:, 1] = xy_goal[:, 1] + self._cube_spawn_center[1]
                 goal_xyz[:, 2] = z_goal + xyz[:, 2]
                 self.goal_site.set_pose(Pose.create_from_pq(goal_xyz))
+            # Prime the qpos cache so the Jacobian closure has a valid
+            # value at the first safety-filter call. The training loop
+            # in ``concerto.training.ego_aht.train`` queries the filter
+            # *before* the first ``env.step()`` (act-then-step order),
+            # so the per-physics-step ``_before_simulation_step`` hook
+            # has not yet fired after a reset. Without this primer the
+            # closure raises the "qpos not yet cached" guard.
+            self._refresh_latest_qpos()
 
         # ----- Observation / reward / success (panda-routed; ADR-007 §Stage 1b) -----
 
@@ -809,6 +950,30 @@ def make_stage1_pickplace_env(
 
         # ----- Per-step qpos refresh (Jacobian closure feed) -----
 
+        def _refresh_latest_qpos(self) -> None:
+            """Snapshot every panda uid's arm qpos into :attr:`_latest_qpos`.
+
+            P1.04.5; ADR-007 §Stage 1b. Called from both
+            :meth:`_before_simulation_step` (each physics step) and
+            :meth:`_initialize_episode` (post-reset primer). The latter
+            primes the cache between ``env.reset()`` and the first
+            ``env.step()`` so the safety filter — which the training
+            loop runs *before* the first step — can read a valid qpos
+            without raising the "qpos not yet cached" guard.
+            """
+            for uid in self.robot_uids:  # type: ignore[union-attr]
+                if uid in ("panda_wristcam", "panda_partner"):
+                    agent = self.agent.agents_dict[uid]  # type: ignore[attr-defined]
+                    full_qpos = agent.robot.get_qpos()
+                    # Slice off the 2 gripper-finger joints; the
+                    # Jacobian chain to panda_hand_tcp covers the 7 arm
+                    # joints only.
+                    qpos_arm = np.asarray(
+                        full_qpos.detach().cpu(),
+                        dtype=np.float64,  # type: ignore[union-attr]
+                    ).reshape(-1)[: self._panda_arm_dof]
+                    self._latest_qpos[uid] = qpos_arm
+
         def _before_simulation_step(self) -> None:
             """Cache panda arm qpos before each physics step (Jacobian closure feed).
 
@@ -824,18 +989,7 @@ def make_stage1_pickplace_env(
             follow-up).
             """
             super()._before_simulation_step()
-            for uid in self.robot_uids:  # type: ignore[union-attr]
-                if uid in ("panda_wristcam", "panda_partner"):
-                    agent = self.agent.agents_dict[uid]  # type: ignore[attr-defined]
-                    full_qpos = agent.robot.get_qpos()
-                    # Slice off the 2 gripper-finger joints; the
-                    # Jacobian chain to panda_hand_tcp covers the 7 arm
-                    # joints only.
-                    qpos_arm = np.asarray(
-                        full_qpos.detach().cpu(),
-                        dtype=np.float64,  # type: ignore[union-attr]
-                    ).reshape(-1)[: self._panda_arm_dof]
-                    self._latest_qpos[uid] = qpos_arm
+            self._refresh_latest_qpos()
 
         # ----- Public API for the safety-stack consumer -----
 
@@ -904,6 +1058,18 @@ def make_stage1_pickplace_env(
             choice of URDF). The closure resolves to the correct uid's
             latest qpos at call time.
             """
+            # Source the panda action dim from the action space (same
+            # path the fetch dim is sourced from below). Falls back to
+            # 8 — the ``pd_joint_delta_pos`` default (7 arm + 1 mimic-
+            # gripper). The closure captures this value once at
+            # build-time, which is correct: action-space shape is fixed
+            # over an env's lifetime.
+            panda_action_dim = 8
+            action_space = self.action_space
+            if isinstance(action_space, gym.spaces.Dict):
+                sub_panda = action_space.spaces.get("panda_wristcam")
+                if isinstance(sub_panda, gym.spaces.Box) and sub_panda.shape is not None:
+                    panda_action_dim = int(sub_panda.shape[0])
 
             def _panda_jacobian(snap: AgentSnapshot) -> NDArray[np.float64]:
                 # Pull the live qpos from the env's cache; the closure
@@ -917,20 +1083,124 @@ def make_stage1_pickplace_env(
                         "the first env.step() — reset the env first."
                     )
                     raise RuntimeError(msg)
-                return self._jacobian_provider(snap, qpos)
+                # PandaJacobianProvider returns the linear (3, 7) Jacobian
+                # for the 7-joint chain to ``panda_hand_tcp``. The
+                # ``pd_joint_delta_pos`` control mode's panda action is
+                # 8-D (7 arm deltas + 1 mimic-gripper delta — see the
+                # ``panda_action_dim=8`` default in
+                # :func:`build_control_models_for_condition`). Pad with
+                # a zero column so the JacobianControlModel matmul
+                # ``jac @ action`` composes: the mimic-gripper joint is
+                # a sibling of ``panda_hand``, not in the TCP kinematic
+                # chain, so its contribution to TCP Cartesian position
+                # is zero by construction.
+                jac_3x7 = self._jacobian_provider(snap, qpos)
+                jac_padded = np.zeros((CARTESIAN_POSITION_DIM, panda_action_dim), dtype=np.float64)
+                jac_padded[:, : self._panda_arm_dof] = jac_3x7
+                return jac_padded
 
             fetch_uid_dim: int | None = None
             partner_uid = self._condition_config.agent_uids[1]
-            if partner_uid == "fetch":
-                action_space = self.action_space
-                if isinstance(action_space, gym.spaces.Dict):
-                    sub = action_space.spaces.get(partner_uid)
-                    if isinstance(sub, gym.spaces.Box) and sub.shape is not None:
-                        fetch_uid_dim = int(sub.shape[0])
+            if partner_uid == "fetch" and isinstance(action_space, gym.spaces.Dict):
+                sub = action_space.spaces.get(partner_uid)
+                if isinstance(sub, gym.spaces.Box) and sub.shape is not None:
+                    fetch_uid_dim = int(sub.shape[0])
             return build_control_models_for_condition(
                 self._condition_config.condition_id,
                 jacobian_fn=_panda_jacobian,
                 fetch_action_dim=fetch_uid_dim,
+                panda_action_dim=panda_action_dim,
+            )
+
+        # ----- P1.04.5: safety-stack snapshot + bounds wiring -----
+
+        def build_agent_snapshots(self) -> dict[str, AgentSnapshot]:
+            """Build per-uid Cartesian :class:`AgentSnapshot` map (P1.04.5; ADR-007 §Stage 1b).
+
+            Reads each agent's Cartesian position (TCP pose for the
+            pandas; base-link pose for the fetch) and computes velocity
+            via numerical-difference against the cached
+            :attr:`_prev_positions` from the previous step. First-step
+            velocity defaults to zero on every fresh episode (the
+            agents start at rest by construction; the cache is cleared
+            in :meth:`_initialize_episode`).
+
+            Used by the P1.04.5 safety-stack integration: the
+            :func:`concerto.training.ego_aht.train` loop calls this
+            once per step (when the safety filter is wired) to build
+            the snapshot map the CBF-QP outer filter consumes via the
+            ``partner_predicted_states`` kwarg + the conformal update's
+            ``snaps_now`` / ``snaps_prev`` pair.
+
+            Returns:
+                ``{uid: AgentSnapshot(position, velocity, radius)}`` for
+                every uid in :attr:`ConditionConfig.agent_uids`. Position
+                is the 3-D Cartesian centre (panda TCP for the pandas;
+                fetch base origin for the fetch); velocity is the
+                numerical-difference against the previous call (zero on
+                first call after :meth:`_initialize_episode`); radius
+                is from :data:`PANDA_SAFETY_RADIUS_M` /
+                :data:`FETCH_SAFETY_RADIUS_M` (validated at env
+                construction by :func:`_validate_safety_radii`).
+            """
+            snapshots: dict[str, AgentSnapshot] = {}
+            for uid in self._condition_config.agent_uids:
+                agent = self.agent.agents_dict[uid]  # type: ignore[attr-defined]
+                if uid in ("panda_wristcam", "panda_partner"):
+                    # Panda: TCP pose. Squeeze the (num_envs=1, 3)
+                    # batch dim to a flat 3-vector for the AgentSnapshot.
+                    pos_raw = agent.tcp_pose.p
+                else:
+                    # Fetch: base-link pose (the robot's root pose).
+                    pos_raw = agent.robot.get_pose().p
+                position = np.asarray(
+                    pos_raw.detach().cpu(),
+                    dtype=np.float64,  # type: ignore[union-attr]
+                ).reshape(-1)
+                # ManiSkill emits (num_envs, 3) for each agent pose; the
+                # ravel above flattens (1, 3) -> (3,) for num_envs=1, but
+                # multi-env runs would emit (num_envs, 3) which ravels to
+                # (3*num_envs,). The Stage-1b cell construction pins
+                # num_envs=1 (factory contract); the slice is a defensive
+                # guard against future multi-env builds.
+                _cartesian_dim = 3  # ADR-004 §Decision: AgentSnapshot is 3-D Cartesian.
+                if position.shape[0] > _cartesian_dim:
+                    position = position[:_cartesian_dim]
+                prev = self._prev_positions.get(uid)
+                if prev is None:
+                    velocity = np.zeros(3, dtype=np.float64)
+                else:
+                    # Numerical-difference velocity. The dt is the
+                    # control_timestep; for the AgentSnapshot's contract
+                    # this is the per-step Cartesian velocity. The
+                    # safety filter's conformal update consumes this
+                    # value alongside dt to compute the predicted
+                    # pose; the consistency is the caller's
+                    # responsibility (see
+                    # chamber.benchmarks.training_runner.build_safety_dt).
+                    velocity = (position - prev) / float(self.control_timestep)
+                self._prev_positions[uid] = position
+                snapshots[uid] = AgentSnapshot(
+                    position=position,
+                    velocity=velocity,
+                    radius=self._safety_radii[uid],
+                )
+            return snapshots
+
+        def build_bounds(self) -> Bounds:
+            """Build the per-task :class:`Bounds` envelope (P1.04.5; ADR-006 §Decision).
+
+            Sourced from the module-level constants pinned in P1.03
+            (cartesian_accel_capacity) plus sensible Phase-1 defaults
+            for the remaining fields. Consumed by the safety filter +
+            the audit-gate predicate A's RHS (``cartesian_accel_capacity``).
+            """
+            return Bounds(
+                action_linf_component=0.1,
+                cartesian_accel_capacity=PANDA_CARTESIAN_ACCEL_CAPACITY_MS2,
+                action_rate=10.0,
+                comm_latency_ms=0.0,
+                force_limit=50.0,
             )
 
     inner = Stage1PickPlaceEnv(

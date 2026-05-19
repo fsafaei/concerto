@@ -45,9 +45,11 @@ from concerto.safety.api import AgentControlModel, DoubleIntegratorControlModel
 from concerto.training.ego_aht import EnvLike, PartnerLike, TrainingResult, train
 
 if TYPE_CHECKING:  # pragma: no cover
-    from collections.abc import Mapping
+    from collections.abc import Callable, Mapping
     from pathlib import Path
 
+    from concerto.safety.api import Bounds, EgoOnlySafetyFilter, SafetyState
+    from concerto.safety.cbf_qp import AgentSnapshot
     from concerto.training.config import EgoAHTConfig, EnvConfig, PartnerConfig
     from concerto.training.ego_aht import TrainerFactory
 
@@ -180,6 +182,15 @@ def run_training(
     *,
     trainer_factory: TrainerFactory | None = None,
     repo_root: Path | None = None,
+    # P1.04.5 / ADR-007 §Stage 1b: safety-stack kwargs threaded through
+    # to train(). All-None ⇒ pre-P1.04.5 unfiltered behaviour. When
+    # cfg.safety.enabled is True the caller must populate all five;
+    # train() loud-fails on intent mismatch.
+    safety_filter: EgoOnlySafetyFilter | None = None,
+    safety_state: SafetyState | None = None,
+    safety_bounds: Bounds | None = None,
+    safety_snapshot_builder: (Callable[[EnvLike], dict[str, AgentSnapshot]] | None) = None,
+    safety_dt: float | None = None,
 ) -> TrainingResult:
     """Build env + partner and run the ego-AHT training loop (T4b.11; ADR-002 §Decisions).
 
@@ -211,6 +222,18 @@ def run_training(
             :class:`~chamber.benchmarks.ego_ppo_trainer.EgoPPOTrainer`
             via its ``from_config`` classmethod.
         repo_root: Working-tree root for run-metadata provenance.
+        safety_filter: Optional CBF-QP outer filter (P1.04.5; ADR-007
+            §Stage 1b). All five safety kwargs are threaded through
+            to :func:`concerto.training.ego_aht.train`. The chamber-
+            side :class:`chamber.benchmarks.stage1_common.TrainedPolicyFactory`
+            constructs them per cell via :meth:`_build_safety_for_cell`.
+        safety_state: Optional :class:`SafetyState` (conformal slack
+            vector; mutated in place per step).
+        safety_bounds: Optional per-task :class:`Bounds`.
+        safety_snapshot_builder: Optional callable building the per-uid
+            :class:`AgentSnapshot` map per step.
+        safety_dt: Optional control-step dt in seconds for the
+            predictor lookahead.
 
     Returns:
         :class:`~concerto.training.ego_aht.TrainingResult` —
@@ -233,6 +256,11 @@ def run_training(
         partner=partner,
         trainer_factory=factory,
         repo_root=repo_root,
+        safety_filter=safety_filter,
+        safety_state=safety_state,
+        safety_bounds=safety_bounds,
+        safety_snapshot_builder=safety_snapshot_builder,
+        safety_dt=safety_dt,
     )
 
 
@@ -314,4 +342,147 @@ def build_control_models(env: gym.Env[Any, Any]) -> Mapping[str, AgentControlMod
     return control_models
 
 
-__all__ = ["build_control_models", "build_env", "build_partner", "run_training"]
+def build_safety_filter(env: gym.Env[Any, Any]) -> EgoOnlySafetyFilter:
+    """Construct the CBF-QP outer filter for the cell's env (P1.04.5; ADR-007 §Stage 1b).
+
+    Wraps :meth:`concerto.safety.cbf_qp.ExpCBFQP.ego_only` with the
+    per-uid control-model map sourced from
+    :func:`build_control_models` (the env's
+    ``build_control_models()`` method when present; otherwise the
+    default-DI dispatch). The filter is constructed once per
+    ``(seed, condition)`` cell by
+    :class:`chamber.benchmarks.stage1_common.TrainedPolicyFactory`
+    and handed to :func:`concerto.training.ego_aht.train` via the
+    ``safety_filter`` kwarg.
+
+    Construction is cheap (no scene-state assumed); the filter's
+    per-step :meth:`filter` method is what does the work.
+
+    Args:
+        env: A multi-agent Gymnasium-conformant env exposing a
+            ``build_control_models()`` method (or matching the default-
+            DI dispatch in :func:`build_control_models`).
+
+    Returns:
+        :class:`concerto.safety.api.EgoOnlySafetyFilter` instance.
+    """
+    from concerto.safety.cbf_qp import ExpCBFQP
+
+    control_models = build_control_models(env)
+    return ExpCBFQP.ego_only(control_models=control_models)
+
+
+def build_bounds_for_env(env: gym.Env[Any, Any]) -> Bounds:
+    """Source per-task :class:`Bounds` from the env (P1.04.5; ADR-006 §Decision).
+
+    Delegates to ``env.build_bounds()`` when present
+    (:class:`chamber.envs.stage1_pickplace.Stage1PickPlaceEnv` adds this
+    in P1.04.5); falls back to a sensible default for envs that don't
+    expose the method (Tier-1 fake envs, MPE stand-in).
+
+    Args:
+        env: A Gymnasium env. The Stage-1b env's
+            :meth:`Stage1PickPlaceEnv.build_bounds` returns the per-task
+            envelope pinned at construction (cartesian_accel_capacity
+            from ``PANDA_CARTESIAN_ACCEL_CAPACITY_MS2 = 10.0 m/s²``).
+
+    Returns:
+        :class:`concerto.safety.api.Bounds`.
+    """
+    from concerto.safety.api import Bounds
+
+    builder = getattr(env, "build_bounds", None)
+    if callable(builder):
+        return cast("Bounds", builder())
+    # Phase-0 fallback for envs without the method (MPE / Tier-1 fakes).
+    # Values matched to the Phase-0 empirical-guarantee env (MPE
+    # Cooperative-Push); per-task overrides happen via env.build_bounds.
+    return Bounds(
+        action_linf_component=1.0,
+        cartesian_accel_capacity=1.0,
+        action_rate=10.0,
+        comm_latency_ms=0.0,
+        force_limit=50.0,
+    )
+
+
+def build_safety_snapshot_builder(
+    env: gym.Env[Any, Any],
+) -> Callable[[gym.Env[Any, Any]], dict[str, AgentSnapshot]] | None:
+    """Return the env's ``build_agent_snapshots`` method, or ``None`` (P1.04.5; ADR-007 §Stage 1b).
+
+    The training loop calls the returned callable once per step (when
+    the safety filter is wired) to build the per-uid Cartesian snapshot
+    map the conformal layer consumes. Envs that don't expose
+    ``build_agent_snapshots`` return ``None``; the training loop then
+    treats the safety stack as inert (the kwargs validation in
+    :func:`concerto.training.ego_aht.train` raises if the operator
+    passed a filter without a snapshot builder).
+
+    Args:
+        env: A Gymnasium env. The Stage-1b env's
+            :meth:`Stage1PickPlaceEnv.build_agent_snapshots` returns
+            the per-uid snapshot dict.
+
+    Returns:
+        The bound method or ``None``. The returned callable's signature
+        is ``(env) -> dict[str, AgentSnapshot]`` for symmetry with the
+        other ``build_*`` helpers — implementations may ignore the
+        ``env`` arg if they're bound methods on the env itself.
+    """
+    builder = getattr(env, "build_agent_snapshots", None)
+    if not callable(builder):
+        return None
+
+    def _adapter(_env: gym.Env[Any, Any]) -> dict[str, AgentSnapshot]:
+        del _env  # builder is bound to the env already.
+        return cast("dict[str, AgentSnapshot]", builder())
+
+    return _adapter
+
+
+def build_safety_dt(env: gym.Env[Any, Any], *, fallback: float = 0.02) -> float:
+    """Source the control-step dt from the env (P1.04.5; ADR-007 §Stage 1b).
+
+    Reads :attr:`env.control_timestep` (the ManiSkill BaseEnv default;
+    forwarded through the Stage-1b wrapper chain via the
+    :class:`Stage1ASStateSynthesizer.__getattr__` forwarder). Falls
+    back to ``fallback`` (default 0.02 s — the ManiSkill v3 default)
+    on envs that don't expose ``control_timestep`` (Tier-1 fake envs
+    that aren't ManiSkill-backed).
+
+    Args:
+        env: The cell's env.
+        fallback: Default dt in seconds when the env has no
+            ``control_timestep``. The training loop's safety wiring
+            uses this for the conformal predictor's lookahead horizon
+            and for the numerical-difference velocity computation in
+            :meth:`Stage1PickPlaceEnv.build_agent_snapshots`.
+
+    Returns:
+        The control-step dt in seconds.
+    """
+    dt = getattr(env, "control_timestep", None)
+    if dt is None and hasattr(env, "get_wrapper_attr"):
+        try:
+            dt = env.get_wrapper_attr("control_timestep")
+        except AttributeError:
+            dt = None
+    if dt is None:
+        return fallback
+    try:
+        return float(dt)
+    except (TypeError, ValueError):
+        return fallback
+
+
+__all__ = [
+    "build_bounds_for_env",
+    "build_control_models",
+    "build_env",
+    "build_partner",
+    "build_safety_dt",
+    "build_safety_filter",
+    "build_safety_snapshot_builder",
+    "run_training",
+]

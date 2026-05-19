@@ -372,11 +372,18 @@ class TrainedPolicyFactory:
             condition_id=condition_id,
         )
 
-        # 5. Drive the chamber-side training entry point. Returns a
+        # 5. Build the per-cell safety stack (P1.04.5; ADR-007 §Stage 1b).
+        #    When cfg.safety.enabled=True, construct the filter +
+        #    SafetyState + Bounds + snapshot builder + dt now, pass
+        #    through to run_training. When False, all five stay None
+        #    and train() runs the pre-P1.04.5 unfiltered path.
+        safety_kwargs = self._build_safety_for_cell(env=env, cfg=cfg_for_call)
+
+        # 6. Drive the chamber-side training entry point. Returns a
         #    TrainingResult NamedTuple (P1.04) carrying the curve +
         #    the trained EgoTrainer instance — no checkpoint
         #    round-trip needed.
-        result = run_training(cfg_for_call, repo_root=None)
+        result = run_training(cfg_for_call, repo_root=None, **safety_kwargs)
         trainer = result.trainer
 
         # 6. Build the per-step closure. Deterministic mode for eval;
@@ -465,6 +472,100 @@ class TrainedPolicyFactory:
                 "partner": partner_override,
             }
         )
+
+    def _build_safety_for_cell(
+        self,
+        *,
+        env: gym.Env[Any, Any],
+        cfg: EgoAHTConfig,
+    ) -> dict[str, Any]:
+        """Construct the per-cell safety stack (P1.04.5; ADR-007 §Stage 1b).
+
+        Called once per ``(seed, condition)`` cell by
+        :meth:`__call__`. When ``cfg.safety.enabled=True`` builds the
+        filter + SafetyState + Bounds + snapshot builder + dt from the
+        env via the chamber-side helpers; otherwise returns an all-
+        ``None`` dict that's a no-op kwargs unpack at the
+        :func:`run_training` boundary.
+
+        The :class:`SafetyState` is sized to ``n_pairs = n_agents *
+        (n_agents - 1) / 2`` (1 for Stage-1b's 2-agent cell) and
+        warm-started via
+        :func:`concerto.safety.conformal.reset_on_partner_swap` with
+        ``cfg.safety.lambda_safe`` + ``cfg.safety.n_warmup_steps``.
+        Per D3 of the P1.04.5 design pass, the state is NOT reset per
+        episode — the conformal slack accumulates across episodes
+        within the cell per Huriot-Sibai §IV.A's long-run rule.
+
+        Args:
+            env: The per-cell evaluation env (the same env the
+                returned closure will step). Used to source
+                ``build_safety_filter``, ``build_bounds_for_env``,
+                ``build_safety_snapshot_builder``, ``build_safety_dt``.
+            cfg: The per-call cfg (post seed + condition_id overrides).
+                ``cfg.safety`` drives the stack's parameters.
+
+        Returns:
+            ``dict`` with keys ``safety_filter``, ``safety_state``,
+            ``safety_bounds``, ``safety_snapshot_builder``,
+            ``safety_dt``. All-``None`` when ``cfg.safety.enabled``
+            is False; all-populated otherwise. The dict unpacks
+            directly into the :func:`run_training` kwargs (intent-
+            mismatch detection lives in
+            :func:`concerto.training.ego_aht.train`'s validation
+            block).
+        """
+        if not cfg.safety.enabled:
+            return {
+                "safety_filter": None,
+                "safety_state": None,
+                "safety_bounds": None,
+                "safety_snapshot_builder": None,
+                "safety_dt": None,
+            }
+        # Lazy imports: keep the factory Tier-1-import-safe on
+        # Vulkan-less hosts; safety_state construction only resolves
+        # when the cfg says so.
+        from chamber.benchmarks.training_runner import (
+            build_bounds_for_env,
+            build_safety_dt,
+            build_safety_filter,
+            build_safety_snapshot_builder,
+        )
+        from concerto.safety.api import SafetyState
+        from concerto.safety.conformal import reset_on_partner_swap
+
+        # Construct the filter + bounds from the env.
+        safety_filter = build_safety_filter(env)
+        safety_bounds = build_bounds_for_env(env)
+        snapshot_builder = build_safety_snapshot_builder(env)
+        safety_dt = build_safety_dt(env)
+        if snapshot_builder is None:
+            msg = (
+                "TrainedPolicyFactory._build_safety_for_cell: cfg.safety.enabled "
+                "is True but env exposes no build_agent_snapshots() method. "
+                "The Stage-1b env (chamber.envs.stage1_pickplace.Stage1PickPlaceEnv) "
+                "ships this method in P1.04.5; envs that don't are not eligible "
+                "for the safety stack."
+            )
+            raise ValueError(msg)
+        # SafetyState construction + warm-start.
+        n_agents = len(cfg.env.agent_uids)
+        n_pairs = n_agents * (n_agents - 1) // 2
+        state = SafetyState(lambda_=np.zeros(n_pairs, dtype=np.float64))
+        reset_on_partner_swap(
+            state,
+            n_pairs=n_pairs,
+            lambda_safe=cfg.safety.lambda_safe,
+            n_warmup_steps=cfg.safety.n_warmup_steps,
+        )
+        return {
+            "safety_filter": safety_filter,
+            "safety_state": state,
+            "safety_bounds": safety_bounds,
+            "safety_snapshot_builder": snapshot_builder,
+            "safety_dt": safety_dt,
+        }
 
 
 __all__ = [

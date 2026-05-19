@@ -82,3 +82,31 @@ happo:
 runtime:
   device: cuda
   deterministic_torch: false
+
+# Safety-stack wiring (P1.04.5; ADR-007 §Stage 1b implementation-details
+# Rev 7). When enabled=true, the training rollout wraps the trainer's
+# nominal ego action via the CBF-QP outer filter; per-step state.lambda_
+# is captured via concerto.training.safety_telemetry.SafetyAggregator
+# and flushed to the JSONL as `safety_telemetry` (per rollout-update)
+# + `safety_telemetry_final` (per cell) events. The audit-gate hook in
+# scripts/repro/stage1_{as,om}_stage1b.sh consumes the final event;
+# predicates A (saturation) + B (adaptation-conditional λ-var) gate
+# the cell.
+#
+# Operator override: `safety.enabled=false` (Hydra `+safety.enabled=false`)
+# disables the filter — the cell trains unfiltered and the audit-gate
+# emits a non-failing "safety disabled by operator" record. Use for
+# budget triage or comparative baselines.
+#
+# saturation_threshold=0.9 leaves a 10% margin for the predicate A
+# saturation guard (λ_steady_state >= 0.9 × cartesian_accel_capacity
+# trips exit 8). cbf_gamma=5.0 matches DEFAULT_CBF_GAMMA.
+# predictor_kind=constant_velocity is the Phase-1 default per ADR-004
+# §Decision; AoI-conditioned variants are Phase-2.
+safety:
+  enabled: true
+  saturation_threshold: 0.9
+  cbf_gamma: 5.0
+  lambda_safe: 0.0
+  n_warmup_steps: 50
+  predictor_kind: constant_velocity

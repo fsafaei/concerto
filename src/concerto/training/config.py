@@ -170,6 +170,69 @@ class RuntimeConfig(_FrozenModel):
     deterministic_torch: bool = True
 
 
+class SafetyConfig(_FrozenModel):
+    """Safety-stack runtime configuration for the training rollout (P1.04.5; ADR-007 §Stage 1b).
+
+    Phase-1 P1.04.5 wires the CBF-QP outer filter into
+    :func:`concerto.training.ego_aht.train` per ADR-007 §Stage 1b
+    implementation-details paragraph 2. The filter runs once per env
+    step between the trainer's ``act`` and ``env.step``; conformal
+    slack ``state.lambda_`` accumulates per cell and the
+    :class:`concerto.training.safety_telemetry.SafetyAggregator` emits
+    a ``safety_telemetry_final`` JSONL event at end-of-cell carrying
+    the audit-gate predicate's inputs.
+
+    The block is read by
+    :class:`chamber.benchmarks.stage1_common.TrainedPolicyFactory`'s
+    per-cell construction path; non-Stage-1b yaml configs default
+    ``enabled=False`` so the filter doesn't engage outside its target
+    use case (the Phase-0 MPE empirical-guarantee config + the
+    Stage-0 smoke adapter both keep the un-filtered training rollout).
+
+    Kill-switch contract (D10 from the P1.04.5 Plan-subagent design):
+    when ``enabled=False`` the training loop skips the filter entirely
+    and emits ``safety_enabled=false`` in the JSONL summary. The
+    audit-gate hook reads that flag and emits a non-failing
+    "safety disabled by operator override; gate skipped" message — the
+    operator's intent is preserved on the audit trail.
+
+    Attributes:
+        enabled: Master switch. ``True`` (default) wires the filter +
+            telemetry into the training loop. ``False`` skips both;
+            the audit gate reads ``safety_enabled`` and treats the
+            cell as non-gated.
+        saturation_threshold: Fraction of ``cartesian_accel_capacity``
+            above which the cell is considered saturated. Default
+            ``0.9`` leaves a 10% margin — operator-tunable for the
+            audit-gate predicate A. ADR-007 §Stage 1b implementation
+            details paragraph 2 names the predicate verbatim
+            (``λ_steady_state < cartesian_accel_capacity``); the
+            ``0.9`` factor is the engineering safety margin.
+        cbf_gamma: Class-K function gain forwarded to
+            :func:`concerto.safety.conformal.update_lambda_from_predictor`.
+            Default ``5.0`` matches the existing
+            :data:`concerto.safety.cbf_qp.DEFAULT_CBF_GAMMA`.
+        lambda_safe: Per-pair slack reset value at cell start
+            (Phase-0 placeholder ``0.0`` per ADR-004 §Open questions;
+            the derived form is a Stage-2 prerequisite).
+        n_warmup_steps: Length of the warmup window after the cell
+            starts (matches
+            :data:`concerto.safety.api.DEFAULT_WARMUP_STEPS`).
+        predictor_kind: Partner-trajectory predictor (Phase-0/1
+            default ``"constant_velocity"`` per
+            :func:`concerto.safety.conformal.constant_velocity_predict`;
+            AoI-conditioned variants are Phase-2 per ADR-004 §Open
+            questions).
+    """
+
+    enabled: bool = False
+    saturation_threshold: float = Field(default=0.9, gt=0.0, le=1.0)
+    cbf_gamma: float = Field(default=5.0, gt=0.0)
+    lambda_safe: float = 0.0
+    n_warmup_steps: int = Field(default=50, ge=0)
+    predictor_kind: Literal["constant_velocity"] = "constant_velocity"
+
+
 class HAPPOHyperparams(_FrozenModel):
     """On-policy ego-AHT HAPPO hyperparameters (ADR-002 §Decisions; plan/05 §3.2).
 
@@ -241,6 +304,7 @@ class EgoAHTConfig(_FrozenModel):
     partner: PartnerConfig = Field(default_factory=PartnerConfig)
     happo: HAPPOHyperparams = Field(default_factory=HAPPOHyperparams)
     runtime: RuntimeConfig = Field(default_factory=RuntimeConfig)
+    safety: SafetyConfig = Field(default_factory=SafetyConfig)
 
 
 def load_config(
@@ -296,6 +360,7 @@ __all__ = [
     "HAPPOHyperparams",
     "PartnerConfig",
     "RuntimeConfig",
+    "SafetyConfig",
     "WandbConfig",
     "load_config",
 ]
