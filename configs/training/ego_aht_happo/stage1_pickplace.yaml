@@ -1,0 +1,112 @@
+# SPDX-License-Identifier: Apache-2.0
+# Hydra config for Stage-1b science-evaluation training runs (P1.04;
+# ADR-007 §Stage 1b; plan/07 §T5b.2).
+#
+# Mirrors mpe_cooperative_push.yaml's shape; substitutes the Stage-1b
+# real-env target (chamber.envs.stage1_pickplace.Stage1PickPlaceEnv) and
+# the GPU-side determinism caveat (plan/08 §4).
+#
+# Per ADR-007 §Discipline + ADR-007 §Stage 1b: this yaml is consumed by
+# the chamber.benchmarks.stage1_common.TrainedPolicyFactory at the
+# Stage-1b spike dispatch; the factory overrides ``seed``,
+# ``env.agent_uids``, ``env.condition_id``, and ``partner.extra.uid`` /
+# ``partner.extra.action_dim`` per ``(seed, condition)`` cell so the
+# four pre-registered condition_id strings (spikes/preregistration/
+# {AS,OM}.yaml; git tags prereg-stage1-{AS,OM}-2026-05-15) all train
+# against the right env build. The yaml's defaults pin AS-hetero
+# (panda + fetch) as the "no-override-applied" target.
+#
+# Validates against concerto.training.config.EgoAHTConfig.
+
+algo: ego_aht_happo
+seed: 0
+total_frames: 100000
+checkpoint_every: 10000
+artifacts_root: ./artifacts
+log_dir: ./logs
+
+wandb:
+  enabled: false
+  project: concerto-stage1b
+
+env:
+  task: stage1_pickplace
+  # 100-step horizon matches the Stage-1b compute budget pinned in
+  # chamber.envs.stage1_pickplace.DEFAULT_EPISODE_LENGTH (ADR-007 §Stage
+  # 1b). Longer than the MPE empirical-guarantee config (50) because
+  # the cooperative pick-place takes more steps to terminate; shorter
+  # than the upstream PickCubeEnv default (50) was intentionally
+  # bumped to accommodate the two-robot handoff (see P1.03 env module
+  # docstring for the budget rationale).
+  episode_length: 100
+  # AS-hetero default tuple — panda + fetch. The TrainedPolicyFactory
+  # overrides per-call from env.partner_uid (panda_partner for AS-homo;
+  # fetch for AS-hetero / OM-*).
+  agent_uids: [panda_wristcam, fetch]
+  # Default condition_id (AS-hetero); the factory overrides per cell
+  # from env.condition_id. Required because OM-homo / OM-hetero share
+  # the agent_uids tuple — the condition_id is the explicit
+  # disambiguator chamber.benchmarks.training_runner.build_env reads.
+  condition_id: stage1_pickplace_panda_plus_fetch_ego_aht_happo_per_agent
+
+# Frozen partner: ScriptedHeuristicPartner targeting the cube's spawn
+# region. The factory overrides extra.uid and extra.action_dim per
+# condition based on the eval env's action_space.spaces[partner_uid]
+# shape (8-D for panda_partner; 13-D for fetch).
+partner:
+  class_name: scripted_heuristic
+  seed: 0
+  checkpoint_step: null
+  weights_uri: null
+  extra:
+    uid: fetch
+    target_xy: "0.0,0.0"
+    # AS-hetero default; overridden per-cell to 8 (panda_partner) or
+    # 13 (fetch) by TrainedPolicyFactory from env.action_space.
+    action_dim: "13"
+
+happo:
+  lr: 3.0e-4
+  gamma: 0.99
+  gae_lambda: 0.95
+  clip_eps: 0.2
+  n_epochs: 4
+  rollout_length: 1024
+  batch_size: 256
+  hidden_dim: 64
+
+# GPU host (RTX 2080 / A100). plan/08 §4 GPU-determinism caveat:
+# cuDNN / cuBLAS kernels are not bit-deterministic even with the
+# deterministic flag; ADR-007 §Stage 1b accepts 95%-CI overlap as the
+# determinism contract on GPU rather than byte-identical.
+runtime:
+  device: cuda
+  deterministic_torch: false
+
+# Safety-stack wiring (P1.04.5; ADR-007 §Stage 1b implementation-details
+# Rev 7). When enabled=true, the training rollout wraps the trainer's
+# nominal ego action via the CBF-QP outer filter; per-step state.lambda_
+# is captured via concerto.training.safety_telemetry.SafetyAggregator
+# and flushed to the JSONL as `safety_telemetry` (per rollout-update)
+# + `safety_telemetry_final` (per cell) events. The audit-gate hook in
+# scripts/repro/stage1_{as,om}_stage1b.sh consumes the final event;
+# predicates A (saturation) + B (adaptation-conditional λ-var) gate
+# the cell.
+#
+# Operator override: `safety.enabled=false` (Hydra `+safety.enabled=false`)
+# disables the filter — the cell trains unfiltered and the audit-gate
+# emits a non-failing "safety disabled by operator" record. Use for
+# budget triage or comparative baselines.
+#
+# saturation_threshold=0.9 leaves a 10% margin for the predicate A
+# saturation guard (λ_steady_state >= 0.9 × cartesian_accel_capacity
+# trips exit 8). cbf_gamma=5.0 matches DEFAULT_CBF_GAMMA.
+# predictor_kind=constant_velocity is the Phase-1 default per ADR-004
+# §Decision; AoI-conditioned variants are Phase-2.
+safety:
+  enabled: true
+  saturation_threshold: 0.9
+  cbf_gamma: 5.0
+  lambda_safe: 0.0
+  n_warmup_steps: 50
+  predictor_kind: constant_velocity

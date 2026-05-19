@@ -40,7 +40,19 @@ Generated from docstrings via mkdocstrings.
 
 ::: chamber.envs.mpe_cooperative_push
 
+::: chamber.envs.stage1_pickplace
+
+::: chamber.envs.stage1_obs_filter
+
 ::: chamber.envs.errors
+
+### `chamber.agents`
+
+::: chamber.agents
+
+::: chamber.agents.panda_partner
+
+::: chamber.agents.panda_jacobian
 
 ### `chamber.comm`
 
@@ -75,3 +87,5 @@ Generated from docstrings via mkdocstrings.
 ::: chamber.benchmarks.training_runner
 
 ::: chamber.benchmarks.ego_ppo_trainer
+
+::: chamber.benchmarks.stage1_common

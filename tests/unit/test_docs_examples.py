@@ -237,7 +237,8 @@ def test_hello_spike_tutorial_code_block(tmp_path) -> None:  # type: ignore[no-u
             f"log_dir={tmp_path / 'hello_spike_logs'}",
         ],
     )
-    curve = run_training(cfg, repo_root=repo_root)
+    result = run_training(cfg, repo_root=repo_root)
+    curve = result.curve  # result is a TrainingResult NamedTuple (curve + trainer)
     # --- END ---
 
     # The published example must produce a usable RewardCurve. Verify the

@@ -61,7 +61,10 @@ def _run_once(*, seed: int, run_dir: Path, repo_root: Path):  # type: ignore[no-
             f"log_dir={run_dir / 'logs'}",
         ],
     )
-    return cfg, run_training(cfg, repo_root=repo_root)
+    # P1.04 / ADR-007 §Stage 1b: run_training returns TrainingResult
+    # (NamedTuple of curve + trained EgoTrainer); determinism test only
+    # asserts on the curve.
+    return cfg, run_training(cfg, repo_root=repo_root).curve
 
 
 @pytest.mark.slow

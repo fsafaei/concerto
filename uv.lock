@@ -365,7 +365,7 @@ wheels = [
 
 [[package]]
 name = "concerto-multirobot"
-version = "0.4.0"
+version = "0.7.0"
 source = { editable = "." }
 dependencies = [
     { name = "cvxpy" },
@@ -375,6 +375,7 @@ dependencies = [
     { name = "numpy" },
     { name = "omegaconf" },
     { name = "pydantic" },
+    { name = "pytorch-kinematics" },
     { name = "qpsolvers", extra = ["clarabel", "osqp"] },
     { name = "rich" },
     { name = "sapien" },
@@ -461,6 +462,7 @@ requires-dist = [
     { name = "pytest-benchmark", marker = "extra == 'dev'", specifier = ">=4.0" },
     { name = "pytest-cov", marker = "extra == 'dev'", specifier = ">=5.0" },
     { name = "pytest-xdist", marker = "extra == 'dev'", specifier = ">=3.6" },
+    { name = "pytorch-kinematics", specifier = ">=0.7,<1.0" },
     { name = "qpsolvers", extras = ["clarabel", "osqp"], specifier = ">=4.0" },
     { name = "rich", specifier = ">=15.0.0" },
     { name = "rliable", marker = "extra == 'eval'", specifier = ">=1.0,<2.0" },

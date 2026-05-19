@@ -35,7 +35,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Protocol, runtime_checkable
+from typing import TYPE_CHECKING, Any, NamedTuple, Protocol, cast, runtime_checkable
 
 import numpy as np
 
@@ -44,10 +44,12 @@ from concerto.training.logging import bind_run_logger, compute_run_metadata
 from concerto.training.seeding import derive_substream
 
 if TYPE_CHECKING:  # pragma: no cover
-    from collections.abc import Mapping
+    from collections.abc import Callable, Mapping
 
     from numpy.typing import NDArray
 
+    from concerto.safety.api import Bounds, EgoOnlySafetyFilter, SafetyState
+    from concerto.safety.cbf_qp import AgentSnapshot
     from concerto.training.config import EgoAHTConfig
 
 #: Fallback ego-action dim used by the default :class:`RandomEgoTrainer`
@@ -239,6 +241,41 @@ class RewardCurve:
     checkpoint_paths: list[Path] = field(default_factory=list)
 
 
+class TrainingResult(NamedTuple):
+    """Return value of :func:`train` and :func:`chamber.benchmarks.training_runner.run_training`.
+
+    Pairs the diagnostic reward stream (:class:`RewardCurve`) with the
+    trained ego policy (:class:`EgoTrainer`) so Phase-1 callers like
+    :class:`chamber.benchmarks.stage1_common.TrainedPolicyFactory`
+    (P1.04 / ADR-007 §Stage 1b) can wrap ``result.trainer.act`` in a
+    per-step closure without paying a checkpoint round-trip cost. The
+    trainer's internal state (HARL HAPPO actor + critic + optimisers)
+    survives :func:`train`'s scope through this return value rather
+    than being reloaded from disk.
+
+    NamedTuple (not a bare ``tuple[RewardCurve, EgoTrainer]``) so call
+    sites use the field names — ``result.curve`` /
+    ``result.trainer`` — instead of positional indexing. Tuple-unpack
+    still works (``curve, trainer = run_training(cfg)``) for callers
+    that prefer it.
+
+    Attributes:
+        curve: The diagnostic per-step + per-episode reward stream
+            T4b.13's empirical-guarantee assertion runs over. Same
+            shape as before P1.04 — this NamedTuple is a wrapper, not
+            a replacement.
+        trainer: The trained :class:`EgoTrainer` instance, with the
+            HARL HAPPO actor weights at their post-training state. Use
+            ``trainer.act(obs, deterministic=True)`` for evaluation
+            rollouts. When :func:`train` is called without a
+            ``trainer_factory`` (Phase-0 reference path), this is the
+            :class:`RandomEgoTrainer` fallback (parameter-free).
+    """
+
+    curve: RewardCurve
+    trainer: EgoTrainer
+
+
 class RandomEgoTrainer:
     """Reference :class:`EgoTrainer` that samples uniformly from the action space.
 
@@ -299,20 +336,41 @@ class RandomEgoTrainer:
         return {}
 
 
-def train(
+def train(  # noqa: PLR0912, PLR0915 - P1.04.5 added safety-stack integration to the canonical training loop; the body's branch + statement counts exceed the default thresholds because the safety path is interleaved per step. Refactoring into a SafetyFilterDriver collaborator is the Phase-2 cleanup path (see Plan-subagent D1 alternative).
     cfg: EgoAHTConfig,
     *,
     env: EnvLike,
     partner: PartnerLike,
     trainer_factory: TrainerFactory | None = None,
     repo_root: Path | None = None,
-) -> RewardCurve:
+    # ----- P1.04.5: safety-stack wiring (ADR-007 §Stage 1b). -----
+    # All five default to ``None``; absence means pre-P1.04.5 behaviour
+    # (the loop runs unfiltered against the partner). Presence requires
+    # all five together — validated below. ``cfg.safety.enabled`` is the
+    # operator-intent toggle; cfg-says-enabled-but-kwargs-not-passed and
+    # cfg-says-disabled-but-kwargs-passed both loud-fail (intent
+    # mismatch).
+    safety_filter: EgoOnlySafetyFilter | None = None,
+    safety_state: SafetyState | None = None,
+    safety_bounds: Bounds | None = None,
+    safety_snapshot_builder: (Callable[[EnvLike], dict[str, AgentSnapshot]] | None) = None,
+    safety_dt: float | None = None,
+) -> TrainingResult:
     """Run one ego-AHT training loop (T4b.11; ADR-002 §Decisions; plan/05 §3.5).
 
     Wires up logging, seeding, per-step rollout, checkpoint emission, and
-    the trainer-factory seam. Returns a :class:`RewardCurve` for the
-    empirical-guarantee test (T4b.13) and for the user-side T4b.14
-    zoo-seed run.
+    the trainer-factory seam. Returns a :class:`TrainingResult` (P1.04 /
+    ADR-007 §Stage 1b) carrying both the diagnostic
+    :class:`RewardCurve` and the trained :class:`EgoTrainer` instance,
+    so Phase-1 callers (notably
+    :class:`chamber.benchmarks.stage1_common.TrainedPolicyFactory`) can
+    wrap ``result.trainer.act`` in a per-cell closure without paying
+    a checkpoint round-trip.
+
+    The pre-P1.04 return type was the bare :class:`RewardCurve`; the
+    NamedTuple wrapper is backward-compatible at the tuple-unpack level
+    (``curve, trainer = train(...)``) but reads more cleanly at named
+    call sites (``result.curve`` / ``result.trainer``).
 
     Args:
         cfg: Validated :class:`~concerto.training.config.EgoAHTConfig`.
@@ -332,10 +390,31 @@ def train(
             (the real HARL-HAPPO trainer; plan/05 §3.5) here.
         repo_root: Working-tree root for the run-metadata bundle
             (defaults to :func:`pathlib.Path.cwd`).
+        safety_filter: Optional CBF-QP outer filter (P1.04.5;
+            ADR-007 §Stage 1b). All five safety kwargs must be passed
+            together when ``cfg.safety.enabled=True``; passing any
+            with the cfg disabled (or partial sets) raises
+            :class:`ValueError` (intent-mismatch contract).
+        safety_state: Optional :class:`SafetyState` — the conformal
+            slack vector (mutated in place per step by
+            :func:`update_lambda_from_predictor`).
+        safety_bounds: Optional per-task :class:`Bounds` — the
+            cell's CBF/Cartesian envelope (audit-gate predicate A's
+            RHS is sourced from ``cartesian_accel_capacity``).
+        safety_snapshot_builder: Optional ``(env) -> dict[str,
+            AgentSnapshot]`` callable that the loop invokes per step
+            to build the per-uid Cartesian snapshot map the filter
+            consumes via ``partner_predicted_states``.
+        safety_dt: Optional control-step dt in seconds for the
+            constant-velocity predictor lookahead + numerical-
+            difference velocity. Typically ``env.control_timestep``.
 
     Returns:
-        :class:`RewardCurve` carrying per-step + per-episode ego rewards
-        and the list of saved checkpoint paths.
+        :class:`TrainingResult` NamedTuple carrying ``curve`` (the
+        :class:`RewardCurve` with per-step + per-episode ego rewards
+        and saved checkpoint paths) and ``trainer`` (the trained
+        :class:`EgoTrainer` instance whose ``act`` method evaluation
+        rollouts wrap).
     """
     repo_root = repo_root or Path.cwd()
     ctx = compute_run_metadata(
@@ -365,6 +444,54 @@ def train(
     else:
         trainer = trainer_factory(cfg, env=env, partner=partner, ego_uid=ego_uid)
 
+    # P1.04.5: validate the safety-stack kwargs against cfg.safety.enabled
+    # (ADR-007 §Stage 1b lifecycle contract). Intent-mismatch loud-fails:
+    # cfg-says-enabled-but-some-kwarg-None and cfg-says-disabled-but-some-
+    # kwarg-not-None both raise. Both-aligned paths (all five None when
+    # disabled; all five non-None when enabled) proceed.
+    _safety_kwargs_passed = (
+        safety_filter is not None
+        and safety_state is not None
+        and safety_bounds is not None
+        and safety_snapshot_builder is not None
+        and safety_dt is not None
+    )
+    _safety_kwargs_partial = (
+        safety_filter is not None
+        or safety_state is not None
+        or safety_bounds is not None
+        or safety_snapshot_builder is not None
+        or safety_dt is not None
+    ) and not _safety_kwargs_passed
+    if _safety_kwargs_partial:
+        msg = (
+            "train(): safety-stack kwargs must be passed as a complete set "
+            "(safety_filter + safety_state + safety_bounds + "
+            "safety_snapshot_builder + safety_dt) or all None. Partial "
+            "wiring is an operator-intent mismatch."
+        )
+        raise ValueError(msg)
+    if cfg.safety.enabled and not _safety_kwargs_passed:
+        msg = (
+            "train(): cfg.safety.enabled is True but the safety-stack kwargs "
+            "were not passed. The chamber-side caller "
+            "(chamber.benchmarks.stage1_common.TrainedPolicyFactory) wires "
+            "them; tests that invoke train() directly with cfg.safety.enabled "
+            "must construct the SafetyState + filter + bounds + snapshot "
+            "builder + dt themselves (see "
+            "chamber.benchmarks.training_runner.build_safety_*)."
+        )
+        raise ValueError(msg)
+    if not cfg.safety.enabled and _safety_kwargs_passed:
+        msg = (
+            "train(): cfg.safety.enabled is False but safety-stack kwargs "
+            "were passed. Either set cfg.safety.enabled=True (and run with "
+            "the filter) or drop the kwargs (and run unfiltered). Mixed "
+            "intent is loud-fail by design (ADR-007 §Stage 1b discipline)."
+        )
+        raise ValueError(msg)
+    _safety_active: bool = cfg.safety.enabled and _safety_kwargs_passed
+
     obs, _ = env.reset(seed=cfg.seed)
     partner.reset(seed=cfg.seed)
     curve = RewardCurve(run_id=ctx.run_id)
@@ -376,9 +503,98 @@ def train(
     # local pre-PR review).
     episode_index = 0
 
+    # P1.04.5: safety-stack runtime state.
+    aggregator = None
+    snaps_prev: dict[str, AgentSnapshot] | None = None
+    # The validation block above guarantees all five safety kwargs are
+    # non-None iff _safety_active is True. The casts below narrow for
+    # pyright across the loop body (S101 avoided by not using ``assert``).
+    _filter = cast("EgoOnlySafetyFilter", safety_filter)
+    _state = cast("SafetyState", safety_state)
+    _bounds = cast("Bounds", safety_bounds)
+    _builder = cast("Callable[[EnvLike], dict[str, AgentSnapshot]]", safety_snapshot_builder)
+    _dt = cast("float", safety_dt)
+    # Lazy imports to keep concerto.training.ego_aht Tier-1-import-safe;
+    # the safety_telemetry module only resolves when train() is called,
+    # not at concerto.training import time. ADR-004 §Decision: the
+    # safety stack is itself a concerto.* module, so this keeps train()
+    # importable for consumers that don't pull in safety_telemetry.
+    # Imports are unconditional (not inside `if _safety_active:`) so
+    # the symbols are bound for pyright's flow analysis across the
+    # loop body; their *use* is still guarded by `_safety_active`.
+    from concerto.safety.conformal import (  # noqa: PLC0415 - lazy by design (see comment above)
+        constant_velocity_predict,
+        update_lambda_from_predictor,
+    )
+    from concerto.safety.errors import ConcertoSafetyInfeasible  # noqa: PLC0415
+    from concerto.training.safety_telemetry import SafetyAggregator  # noqa: PLC0415
+
+    if _safety_active:
+        _filter.reset(seed=cfg.seed)
+        aggregator = SafetyAggregator(
+            n_pairs=int(_state.lambda_.shape[0]),
+            cartesian_accel_capacity=_bounds.cartesian_accel_capacity,
+            saturation_threshold=cfg.safety.saturation_threshold,
+        )
+
     for step in range(cfg.total_frames):
-        ego_action = trainer.act(obs)
+        ego_action_nominal = trainer.act(obs)
         partner_action = partner.act(obs)
+        if _safety_active and aggregator is not None:
+            snaps_now = _builder(env)
+            # Conformal update against the previous step's snapshots
+            # (skipped on first step + at episode boundaries, where
+            # snaps_prev is None — the predictor cannot meaningfully
+            # forecast across a reset).
+            if snaps_prev is not None:
+                update_lambda_from_predictor(
+                    _state,
+                    snaps_now=snaps_now,
+                    snaps_prev=snaps_prev,
+                    alpha_pair=2.0 * _bounds.cartesian_accel_capacity,
+                    gamma=cfg.safety.cbf_gamma,
+                    dt=_dt,
+                    in_warmup=(_state.warmup_steps_remaining > 0),
+                )
+            # Forecast partner state for the next control step
+            # (constant-velocity stub per ADR-004 §Decision).
+            partner_predicted = {
+                uid: constant_velocity_predict(snaps_now[uid], _dt)
+                for uid in snaps_now
+                if uid != ego_uid
+            }
+            try:
+                safe_ego, info = _filter.filter(
+                    np.asarray(ego_action_nominal, dtype=np.float64),
+                    obs={
+                        "agent_states": snaps_now,
+                        "meta": {"partner_id": cfg.partner.class_name},
+                    },
+                    state=_state,
+                    bounds=_bounds,
+                    ego_uid=ego_uid,
+                    partner_predicted_states=partner_predicted,
+                    dt=_dt,
+                )
+                ego_action = np.asarray(safe_ego, dtype=ego_action_nominal.dtype)
+                fallback_fired = bool(info["fallback_fired"])
+                qp_infeasible = False
+            except ConcertoSafetyInfeasible:
+                # Training-time policy: pass the nominal action through
+                # so the trainer learns from the unfiltered consequence.
+                # Deployment policy differs (the integrated stack routes
+                # to maybe_brake here); P1.04.6 closes the asymmetry.
+                ego_action = ego_action_nominal
+                fallback_fired = False
+                qp_infeasible = True
+            snaps_prev = snaps_now
+            aggregator.observe(
+                _state.lambda_,
+                fallback_fired=fallback_fired,
+                qp_infeasible=qp_infeasible,
+            )
+        else:
+            ego_action = ego_action_nominal
         action = {ego_uid: ego_action, partner_uid: partner_action}
         # The trainer.observe(s') contract: this loop passes the *next*
         # observation (the post-step obs), reward, and done flag. M4b-7's
@@ -399,6 +615,9 @@ def train(
 
         if (step + 1) % cfg.happo.rollout_length == 0:
             trainer.update()
+            if aggregator is not None:
+                window = aggregator.flush_window_stats()
+                logger.info("safety_telemetry", step=step + 1, **window)
             logger.info(
                 "rollout_update",
                 step=step + 1,
@@ -423,6 +642,14 @@ def train(
             episode_reward_acc = 0.0
             episode_in_progress = False
             episode_index += 1
+            # P1.04.5: reset snaps_prev so the conformal update on the
+            # first step of the new episode does not diff across the
+            # reset boundary (the cross-episode position delta would
+            # produce a spurious large prediction-gap loss). SafetyState
+            # itself is NOT reset — D3 of the design pass mandates
+            # per-cell accumulation per Huriot-Sibai §IV.A.
+            if _safety_active:
+                snaps_prev = None
             # P6 reproducibility: derive a per-episode seed via a stable
             # substream rather than additive int mixing (cfg.seed +
             # episode_index would collide across runs). The substream
@@ -443,12 +670,21 @@ def train(
     if episode_in_progress:
         curve.per_episode_ego_rewards.append(episode_reward_acc)
 
+    # P1.04.5: emit the per-cell safety_telemetry_final summary the
+    # audit-gate hook reads (predicates A + B; ADR-007 §Stage 1b).
+    if aggregator is not None:
+        final_summary = aggregator.finalise(
+            safety_enabled=cfg.safety.enabled,
+            predictor_kind=cfg.safety.predictor_kind,
+        )
+        event_name = str(final_summary.pop("event", "safety_telemetry_final"))
+        logger.info(event_name, **final_summary)
     logger.info(
         "training_end",
         n_episodes=len(curve.per_episode_ego_rewards),
         n_checkpoints=len(curve.checkpoint_paths),
     )
-    return curve
+    return TrainingResult(curve=curve, trainer=trainer)
 
 
 def _save_run_checkpoint(
@@ -486,5 +722,6 @@ __all__ = [
     "RandomEgoTrainer",
     "RewardCurve",
     "TrainerFactory",
+    "TrainingResult",
     "train",
 ]

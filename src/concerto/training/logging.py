@@ -78,6 +78,21 @@ class RunContext:
     pyproject_hash: str
     run_kind: str
     extra: dict[str, str] = field(default_factory=dict)
+    #: Optional safety-stack telemetry summary (P1.04.5; ADR-007 §Stage 1b).
+    #:
+    #: ``None`` for pre-P1.04.5 callers; populated by
+    #: :func:`concerto.training.ego_aht.train` at end-of-cell when
+    #: ``safety_filter`` was wired (the
+    #: :class:`concerto.training.safety_telemetry.SafetyAggregator`'s
+    #: ``finalise()`` output). Forward-additive widening — existing
+    #: JSONL parsers ignore the field; the new audit-gate hook reads
+    #: the ``safety_telemetry_final`` JSONL event directly (more
+    #: discoverable than reading the in-memory ``RunContext`` post-
+    #: training). The ``RunContext`` carrying the field is the
+    #: source-of-truth for in-process callers (e.g.
+    #: :class:`chamber.benchmarks.stage1_common.TrainedPolicyFactory`)
+    #: that need the summary without re-parsing the JSONL.
+    safety_telemetry: dict[str, object] | None = None
 
 
 def _detect_git_sha(repo_root: Path) -> str:
