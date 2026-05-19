@@ -357,7 +357,16 @@ class TestStage1ASStateSynthesizer:
 
 
 class _FakeInnerEnv(gym.Env):  # type: ignore[type-arg]
-    """Minimal gym.Env shape for filter tests (no SAPIEN dependency)."""
+    """Minimal gym.Env shape for filter tests (no SAPIEN dependency).
+
+    Mirrors the real :class:`Stage1PickPlaceEnv`'s ``obs_mode="state_dict"``
+    per-agent contract: each uid emits ``qpos`` / ``qvel`` (not the legacy
+    ``joint_pos`` / ``joint_vel`` keys). Aligned with the new
+    ``_FakeStateDictEnv`` fixture (added for the AS synthesizer's Tier-1
+    regression pin) so a future contract-drift bug on the OM axis would
+    surface in unit tests rather than only on the first GPU run
+    (issue #165 §Finding 2).
+    """
 
     metadata: ClassVar[dict[str, object]] = {"render_modes": []}  # type: ignore[misc]
 
@@ -369,13 +378,13 @@ class _FakeInnerEnv(gym.Env):  # type: ignore[type-arg]
                     {
                         "panda_wristcam": gym.spaces.Dict(
                             {
-                                "joint_pos": gym.spaces.Box(-1, 1, (7,), np.float32),
-                                "joint_vel": gym.spaces.Box(-1, 1, (7,), np.float32),
+                                "qpos": gym.spaces.Box(-1, 1, (7,), np.float32),
+                                "qvel": gym.spaces.Box(-1, 1, (7,), np.float32),
                             }
                         ),
                         "fetch": gym.spaces.Dict(
                             {
-                                "joint_pos": gym.spaces.Box(-1, 1, (12,), np.float32),
+                                "qpos": gym.spaces.Box(-1, 1, (12,), np.float32),
                             }
                         ),
                     }
@@ -399,11 +408,11 @@ class _FakeInnerEnv(gym.Env):  # type: ignore[type-arg]
         return {
             "agent": {
                 "panda_wristcam": {
-                    "joint_pos": np.ones(7, dtype=np.float32),
-                    "joint_vel": np.ones(7, dtype=np.float32),
+                    "qpos": np.ones(7, dtype=np.float32),
+                    "qvel": np.ones(7, dtype=np.float32),
                 },
                 "fetch": {
-                    "joint_pos": np.ones(12, dtype=np.float32),
+                    "qpos": np.ones(12, dtype=np.float32),
                 },
             },
             "extra": {
@@ -425,7 +434,7 @@ class TestStage1OMChannelFilter:
         # No mutation expected — every value matches the input
         # template.
         np.testing.assert_allclose(obs["extra"]["force_torque"], 2.0)
-        np.testing.assert_allclose(obs["agent"]["panda_wristcam"]["joint_pos"], 1.0)
+        np.testing.assert_allclose(obs["agent"]["panda_wristcam"]["qpos"], 1.0)
 
     def test_pass_through_under_as_homo_condition(self) -> None:
         inner = _FakeInnerEnv(condition_id="stage1_pickplace_panda_only_mappo_shared_param")
@@ -434,7 +443,7 @@ class TestStage1OMChannelFilter:
         obs = wrap.observation(_FakeInnerEnv._sample_obs())
         # AS conditions do not filter — FT + proprio untouched.
         np.testing.assert_allclose(obs["extra"]["force_torque"], 2.0)
-        np.testing.assert_allclose(obs["agent"]["panda_wristcam"]["joint_pos"], 1.0)
+        np.testing.assert_allclose(obs["agent"]["panda_wristcam"]["qpos"], 1.0)
 
     def test_pass_through_under_om_hetero(self) -> None:
         inner = _FakeInnerEnv(condition_id="stage1_pickplace_vision_plus_force_torque_plus_proprio")
@@ -442,16 +451,16 @@ class TestStage1OMChannelFilter:
         obs = wrap.observation(_FakeInnerEnv._sample_obs())
         # OM-hetero keeps everything.
         np.testing.assert_allclose(obs["extra"]["force_torque"], 2.0)
-        np.testing.assert_allclose(obs["agent"]["panda_wristcam"]["joint_pos"], 1.0)
+        np.testing.assert_allclose(obs["agent"]["panda_wristcam"]["qpos"], 1.0)
 
     def test_om_vision_only_zeros_proprio_and_force_torque_but_keeps_tcp_goal(self) -> None:
         inner = _FakeInnerEnv(condition_id="stage1_pickplace_vision_only")
         wrap = Stage1OMChannelFilter(inner)  # type: ignore[arg-type]
         obs = wrap.observation(_FakeInnerEnv._sample_obs())
         # Per-uid proprio zero-masked.
-        np.testing.assert_allclose(obs["agent"]["panda_wristcam"]["joint_pos"], 0.0)
-        np.testing.assert_allclose(obs["agent"]["panda_wristcam"]["joint_vel"], 0.0)
-        np.testing.assert_allclose(obs["agent"]["fetch"]["joint_pos"], 0.0)
+        np.testing.assert_allclose(obs["agent"]["panda_wristcam"]["qpos"], 0.0)
+        np.testing.assert_allclose(obs["agent"]["panda_wristcam"]["qvel"], 0.0)
+        np.testing.assert_allclose(obs["agent"]["fetch"]["qpos"], 0.0)
         # Force-torque zero-masked.
         np.testing.assert_allclose(obs["extra"]["force_torque"], 0.0)
         # Cube-pose zero-masked (cube state is "state-info" not "vision").
@@ -466,8 +475,8 @@ class TestStage1OMChannelFilter:
         inner = _FakeInnerEnv(condition_id="stage1_pickplace_vision_only")
         wrap = Stage1OMChannelFilter(inner)  # type: ignore[arg-type]
         obs = wrap.observation(_FakeInnerEnv._sample_obs())
-        assert obs["agent"]["panda_wristcam"]["joint_pos"].dtype == np.float32
-        assert obs["agent"]["panda_wristcam"]["joint_pos"].shape == (7,)
+        assert obs["agent"]["panda_wristcam"]["qpos"].dtype == np.float32
+        assert obs["agent"]["panda_wristcam"]["qpos"].shape == (7,)
         assert obs["extra"]["force_torque"].dtype == np.float32
         assert obs["extra"]["force_torque"].shape == (6,)
 
