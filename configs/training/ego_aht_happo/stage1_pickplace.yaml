@@ -116,3 +116,15 @@ safety:
   # 100 ms matches concerto.safety.braking.DEFAULT_TAU_BRAKE and
   # plan/03 §2 Decision row "Braking fallback trigger".
   tau_brake: 0.100
+  # P1.05.7 / issue #180: symmetric clamp on conformal slack lambda.
+  # Each per-pair lambda is clamped to
+  # ±clamp_floor_ratio × cartesian_accel_capacity per step. Without
+  # the clamp the eps=-0.05 regime drifts unboundedly negative
+  # (P1.05 100k-frame probe measured lambda_ss ≈ -49.76, well past
+  # the audit-gate boundary of ±9.0). At cap=10 m/s², the clamp
+  # engages at ±7.0 and the audit gate (saturation_threshold=0.9)
+  # trips at ±9.0 — a 2.0 m/s² buffer between in-loop clamping
+  # (operational) and audit-gate tripping (diagnostic).
+  # MUST satisfy clamp_floor_ratio < saturation_threshold; the
+  # SafetyConfig @model_validator loud-fails otherwise.
+  clamp_floor_ratio: 0.7

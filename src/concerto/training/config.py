@@ -34,7 +34,7 @@ from typing import Literal
 from hydra import compose, initialize_config_dir
 from hydra.core.global_hydra import GlobalHydra
 from omegaconf import OmegaConf
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 
 class _FrozenModel(BaseModel):
@@ -232,6 +232,31 @@ class SafetyConfig(_FrozenModel):
             depend on QP feasibility (Wang-Ames-Egerstedt 2017 eq. 17;
             ADR-004 risk-mitigation #1). Default matches
             :data:`concerto.safety.braking.DEFAULT_TAU_BRAKE` (100 ms).
+        clamp_floor_ratio: Per-step symmetric clamp on ``state.lambda_``
+            (P1.05.7 / issue #180; ADR-004 §Decision Revision 6). Each
+            per-pair λ is clamped to
+            ``[-clamp_floor_ratio x cartesian_accel_capacity,
+            +clamp_floor_ratio x cartesian_accel_capacity]`` after each
+            :func:`concerto.safety.conformal.update_lambda_from_predictor`
+            step. Must be strictly less than
+            :attr:`saturation_threshold` so the audit-gate predicate A
+            (which trips at ``|λ_ss| >= saturation_threshold x cap``)
+            reserves a clean margin above the clamp boundary for "the
+            clamp itself failed" pathological cases. The buffer
+            ``(saturation_threshold - clamp_floor_ratio) x cap`` is the
+            engineering safety margin between in-loop clamping
+            (operational) and audit-gate tripping (diagnostic). With
+            production defaults (0.9 vs 0.7, cap = 10) the buffer is
+            2.0 m/s². Trades Huriot-Sibai 2025 §VI Theorem 3's exact
+            long-run average-loss bound for operational robustness —
+            the bound now holds modulo the clamped boundary, which is
+            consistent with the engineering meaning of "conformal
+            slack bounded by the conservative manipulation envelope".
+            Pre-launch evidence: P1.05 100k-frame AS-hetero probe
+            measured drift of exactly ``-η x |ε| = -5e-04`` per step
+            (matches analytic to 4 decimal places), projecting
+            unclamped λ_ss ≈ -49.76 at the production budget — well
+            past the audit-gate boundary of ±9.0.
     """
 
     enabled: bool = False
@@ -241,6 +266,30 @@ class SafetyConfig(_FrozenModel):
     n_warmup_steps: int = Field(default=50, ge=0)
     predictor_kind: Literal["constant_velocity"] = "constant_velocity"
     tau_brake: float = Field(default=0.100, gt=0.0)
+    clamp_floor_ratio: float = Field(default=0.7, gt=0.0, le=1.0)
+
+    @model_validator(mode="after")
+    def _validate_clamp_below_saturation(self) -> SafetyConfig:
+        """clamp_floor_ratio must be strictly less than saturation_threshold (P1.05.7 / #180).
+
+        Without the strict inequality the clamp would engage at the same
+        boundary the audit-gate trips, producing |λ_ss| == threshold ==
+        audit-gate-trip on every clamped step. The default 0.7 < 0.9
+        leaves a 0.2 x cap = 2.0 m/s² buffer at production cap. Tests
+        in ``tests/unit/test_safety_config_clamp.py`` pin both this
+        invariant + the boundary-buffer arithmetic.
+        """
+        if self.clamp_floor_ratio >= self.saturation_threshold:
+            msg = (
+                f"SafetyConfig.clamp_floor_ratio={self.clamp_floor_ratio} must be "
+                f"strictly less than saturation_threshold={self.saturation_threshold}. "
+                "The clamp engages at clamp_floor_ratio x cartesian_accel_capacity; "
+                "the audit-gate predicate A trips at saturation_threshold x cap "
+                "(P1.04.5 / #178). The buffer between them is the engineering "
+                "safety margin — see ADR-004 §Decision Revision 6 (#180)."
+            )
+            raise ValueError(msg)
+        return self
 
 
 class HAPPOHyperparams(_FrozenModel):

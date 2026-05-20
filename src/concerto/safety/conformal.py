@@ -62,6 +62,7 @@ def update_lambda(
     loss_k: LambdaDict,
     *,
     in_warmup: bool = False,
+    lambda_bound: float | None = None,
 ) -> None:
     """Conformal slack update (Huriot & Sibai 2025 §IV; ADR-004 §Decision).
 
@@ -83,6 +84,31 @@ def update_lambda(
     risk-mitigation #2). The ``warmup_steps_remaining`` counter
     decrements each warmup step (clamped to zero).
 
+    Symmetric clamp (P1.05.7 / issue #180; ADR-004 §Decision Rev 6):
+    when ``lambda_bound`` is not ``None``, each per-pair λ is clamped
+    to ``[-lambda_bound, +lambda_bound]`` *after* the Theorem 3 update.
+    The clamp is symmetric (both directions) per the #178 lesson that
+    asymmetric safety surfaces have credibility blind spots. The
+    bound is supplied by callers as ``clamp_floor_ratio x
+    cartesian_accel_capacity`` (production wiring lives in
+    :func:`concerto.training.ego_aht.train`'s safety block; defaults
+    ``0.7 x 10 = 7.0`` so the audit-gate's symmetric predicate A
+    (``|λ| >= 0.9 x cap = 9``) reserves a 2.0 m/s² buffer above the
+    clamp boundary). When ``lambda_bound`` is ``None`` (default), no
+    clamp — preserves the Theorem 3 primitive for analysis tests +
+    backwards compat with all pre-P1.05.7 callers.
+
+    Trade-off (ADR-004 §Decision Revision 6): the clamped variant
+    trades Theorem 3's exact long-run average-loss bound for
+    operational robustness — the bound now holds modulo the clamped
+    boundary, which is consistent with the engineering meaning of
+    "conformal slack bounded by the conservative manipulation
+    envelope". Pre-launch evidence (P1.05 100k-frame AS-hetero probe)
+    measured drift exactly ``-η x |ε| = -5e-04`` per step, projecting
+    unclamped λ_ss ≈ -49.76 — clamp engages at step ~14000 under
+    production defaults and pins λ at ``-lambda_bound`` for the
+    remaining ~86k frames.
+
     Args:
         state: Mutable :class:`concerto.safety.api.SafetyState`;
             ``lambda_`` is updated in place.
@@ -93,11 +119,17 @@ def update_lambda(
             Sibai §IV.A), not from ``FilterInfo["constraint_violation"]``.
         in_warmup: When True, narrow ``eps`` and decrement
             ``warmup_steps_remaining`` (ADR-004 risk-mitigation #2).
+        lambda_bound: Optional symmetric clamp magnitude. ``None``
+            (default) ⇒ Theorem 3 unclamped primitive (pre-P1.05.7
+            behaviour). When a strictly positive float, each λ is
+            clamped to ``[-lambda_bound, +lambda_bound]`` after the
+            Theorem 3 update.
 
     Raises:
         ValueError: If ``loss_k`` does not share the exact key set of
             ``state.lambda_`` (issue #144 made pair-keying a type
-            invariant; cross-uid mismatch is loud-fail at this seam).
+            invariant; cross-uid mismatch is loud-fail at this seam),
+            or if ``lambda_bound`` is non-positive.
     """
     if loss_k.keys() != state.lambda_.keys():
         msg = (
@@ -105,9 +137,24 @@ def update_lambda(
             f"state.lambda_ key set {sorted(state.lambda_.keys())!r}"
         )
         raise ValueError(msg)
+    if lambda_bound is not None and lambda_bound <= 0.0:
+        msg = (
+            f"lambda_bound must be strictly positive when set; got {lambda_bound}. "
+            "Pass ``None`` to skip the clamp."
+        )
+        raise ValueError(msg)
     epsilon = state.epsilon * _WARMUP_EPSILON_FACTOR if in_warmup else state.epsilon
     for key, current in state.lambda_.items():
-        state.lambda_[key] = current + state.eta * (epsilon - loss_k[key])
+        updated = current + state.eta * (epsilon - loss_k[key])
+        if lambda_bound is not None:
+            # Symmetric clamp (#180): both directions. np.clip avoided
+            # for the scalar inline-path; the equivalent min/max is
+            # cheaper + clearer at this scale.
+            if updated > lambda_bound:
+                updated = lambda_bound
+            elif updated < -lambda_bound:
+                updated = -lambda_bound
+        state.lambda_[key] = updated
     if in_warmup:
         state.warmup_steps_remaining = max(0, state.warmup_steps_remaining - 1)
 
@@ -208,6 +255,7 @@ def update_lambda_from_predictor(
     gamma: float,
     dt: float,
     in_warmup: bool = False,
+    lambda_bound: float | None = None,
 ) -> LambdaDict:
     """Wire the constant-velocity predictor into the conformal update (ADR-004 §Decision).
 
@@ -218,6 +266,11 @@ def update_lambda_from_predictor(
     driving ``lambda`` is the predictor's error from one step ago — the
     quantity Theorem 3's risk bound is stated against, not the per-step
     CBF gap from the QP backbone.
+
+    The ``lambda_bound`` kwarg (P1.05.7 / issue #180) is forwarded to
+    :func:`update_lambda` for the symmetric clamp; see that function's
+    docstring for the engineering motivation + the clamp-vs-audit-gate
+    boundary buffer story.
 
     Args:
         state: Mutable :class:`SafetyState`; ``lambda_`` is updated in
@@ -235,6 +288,12 @@ def update_lambda_from_predictor(
             of ``snaps_now``.
         in_warmup: When True, narrow ``eps`` and decrement
             ``warmup_steps_remaining`` (ADR-004 risk-mitigation #2).
+        lambda_bound: Optional symmetric clamp magnitude
+            (``[-lambda_bound, +lambda_bound]``). Forwarded to
+            :func:`update_lambda`. ``None`` ⇒ Theorem 3 unclamped
+            primitive (pre-P1.05.7 behaviour); a positive float ⇒
+            clamp engaged. The Phase-1 training rollout supplies
+            ``cfg.safety.clamp_floor_ratio x bounds.cartesian_accel_capacity``.
 
     Returns:
         The per-pair prediction-gap loss :data:`LambdaDict` used to
@@ -247,7 +306,9 @@ def update_lambda_from_predictor(
             identical key *sets* (insertion order is tolerated as of
             the 2026-05-16 canonical-pair-keying amendment; see
             ADR-004 §Decision), or if the resulting loss key-set
-            mismatches ``state.lambda_``.
+            mismatches ``state.lambda_``, or if ``lambda_bound`` is
+            non-positive when set (forwarded loud-fail from
+            :func:`update_lambda`).
     """
     if set(snaps_now.keys()) != set(snaps_prev.keys()):
         msg = (
@@ -263,7 +324,7 @@ def update_lambda_from_predictor(
         alpha_pair=alpha_pair,
         gamma=gamma,
     )
-    update_lambda(state, loss, in_warmup=in_warmup)
+    update_lambda(state, loss, in_warmup=in_warmup, lambda_bound=lambda_bound)
     return loss
 
 
