@@ -562,10 +562,14 @@ def train(  # noqa: PLR0912, PLR0915 - P1.04.5 added safety-stack integration to
 
     if _safety_active:
         _filter.reset(seed=cfg.seed)
+        # P1.05.7 / #180: emit lambda_clamp_bound so the audit-gate hook
+        # can distinguish the clamp-saturated regime (var=0 by design)
+        # from "adapted but stuck" (var=0 by degenerate update).
         aggregator = SafetyAggregator(
             n_pairs=len(_state.lambda_),
             cartesian_accel_capacity=_bounds.cartesian_accel_capacity,
             saturation_threshold=cfg.safety.saturation_threshold,
+            lambda_clamp_bound=cfg.safety.clamp_floor_ratio * _bounds.cartesian_accel_capacity,
         )
 
     for step in range(cfg.total_frames):
@@ -578,6 +582,16 @@ def train(  # noqa: PLR0912, PLR0915 - P1.04.5 added safety-stack integration to
             # snaps_prev is None — the predictor cannot meaningfully
             # forecast across a reset).
             if snaps_prev is not None:
+                # P1.05.7 / issue #180: symmetric clamp on λ. The bound
+                # is ``clamp_floor_ratio x cartesian_accel_capacity``;
+                # the audit-gate predicate A trips at
+                # ``saturation_threshold x cap`` (the SafetyConfig
+                # @model_validator guarantees the strict inequality
+                # so the buffer is non-zero). Without the clamp the
+                # negative-eps regime drifts unboundedly negative —
+                # P1.05 100k-frame AS-hetero probe measured drift
+                # exactly -η x |ε| = -5e-04 / step, projecting
+                # λ_ss ≈ -49.76 at the production budget.
                 update_lambda_from_predictor(
                     _state,
                     snaps_now=snaps_now,
@@ -586,6 +600,7 @@ def train(  # noqa: PLR0912, PLR0915 - P1.04.5 added safety-stack integration to
                     gamma=cfg.safety.cbf_gamma,
                     dt=_dt,
                     in_warmup=(_state.warmup_steps_remaining > 0),
+                    lambda_bound=cfg.safety.clamp_floor_ratio * _bounds.cartesian_accel_capacity,
                 )
             # Forecast partner state for the next control step
             # (constant-velocity stub per ADR-004 §Decision).

@@ -95,6 +95,74 @@ def test_update_lambda_default_state_uses_adr004_constants() -> None:
     assert state.lambda_[_PAIR_AB] < 0.0  # negative epsilon biases toward tighter constraint
 
 
+# ----- P1.05.7 / issue #180: symmetric λ clamp -----
+
+
+class TestUpdateLambdaSymmetricClamp:
+    """``lambda_bound`` kwarg clamps λ to ``[-bound, +bound]`` per step (#180)."""
+
+    def test_clamp_none_preserves_unclamped_theorem3_behaviour(self) -> None:
+        """``lambda_bound=None`` (default) ⇒ pre-P1.05.7 behaviour, no clamp."""
+        state = SafetyState(lambda_={_PAIR_AB: -0.1}, epsilon=-0.05, eta=0.1)
+        update_lambda(state, {_PAIR_AB: 0.0}, in_warmup=False)
+        # No clamp ⇒ updated to -0.1 + 0.1 * (-0.05) = -0.105.
+        assert state.lambda_[_PAIR_AB] == pytest.approx(-0.105)
+
+    def test_clamp_pins_negative_drift_at_negative_bound(self) -> None:
+        """Production case: long negative drift gets pinned at ``-lambda_bound``."""
+        state = SafetyState(lambda_={_PAIR_AB: -6.9}, epsilon=-0.05, eta=0.1)
+        update_lambda(state, {_PAIR_AB: 0.0}, in_warmup=False, lambda_bound=7.0)
+        # Unclamped: -6.9 + 0.1*(-0.05) = -6.905; still inside the bound.
+        assert state.lambda_[_PAIR_AB] == pytest.approx(-6.905)
+
+        # Now push past the boundary: λ would drop to -7.005 — clamped to -7.0.
+        state2 = SafetyState(lambda_={_PAIR_AB: -7.0}, epsilon=-0.05, eta=0.1)
+        update_lambda(state2, {_PAIR_AB: 0.0}, in_warmup=False, lambda_bound=7.0)
+        assert state2.lambda_[_PAIR_AB] == -7.0
+
+    def test_clamp_pins_positive_drift_at_positive_bound(self) -> None:
+        """Symmetric: positive drift gets pinned at ``+lambda_bound``."""
+        # Standard Theorem 3 regime (eps>0): λ drifts positive when loss < eps.
+        state = SafetyState(lambda_={_PAIR_AB: 7.0}, epsilon=0.5, eta=0.1)
+        update_lambda(state, {_PAIR_AB: 0.0}, in_warmup=False, lambda_bound=7.0)
+        # Unclamped would be 7.05; clamped to 7.0.
+        assert state.lambda_[_PAIR_AB] == 7.0
+
+    def test_clamp_holds_under_repeated_drift(self) -> None:
+        """100 consecutive unconstrained-loss steps: λ never crosses ±bound."""
+        state = SafetyState(lambda_={_PAIR_AB: 0.0}, epsilon=-0.05, eta=0.1)
+        for _ in range(100):
+            update_lambda(state, {_PAIR_AB: 0.0}, in_warmup=False, lambda_bound=0.3)
+        # Without clamp: 100 x 0.1 x -0.05 = -0.5. With clamp at 0.3: pinned to -0.3.
+        assert state.lambda_[_PAIR_AB] == -0.3
+
+    def test_clamp_does_not_alter_in_bound_updates(self) -> None:
+        """Steps that stay inside the bound are byte-identical to the unclamped path."""
+        state_clamped = SafetyState(lambda_={_PAIR_AB: 0.0}, epsilon=-0.05, eta=0.01)
+        state_unclamped = SafetyState(lambda_={_PAIR_AB: 0.0}, epsilon=-0.05, eta=0.01)
+        for _ in range(50):  # eta*|eps|*50 = -0.025, well inside ±7.0
+            update_lambda(state_clamped, {_PAIR_AB: 0.0}, in_warmup=False, lambda_bound=7.0)
+            update_lambda(state_unclamped, {_PAIR_AB: 0.0}, in_warmup=False)
+        assert state_clamped.lambda_[_PAIR_AB] == state_unclamped.lambda_[_PAIR_AB]
+
+    def test_clamp_rejects_non_positive_bound(self) -> None:
+        """``lambda_bound=0`` or negative ⇒ ValueError (operator-intent loud-fail)."""
+        state = SafetyState(lambda_={_PAIR_AB: 0.0})
+        with pytest.raises(ValueError, match="strictly positive"):
+            update_lambda(state, {_PAIR_AB: 0.0}, lambda_bound=0.0)
+        with pytest.raises(ValueError, match="strictly positive"):
+            update_lambda(state, {_PAIR_AB: 0.0}, lambda_bound=-1.0)
+
+    def test_clamp_applied_per_pair_not_globally(self) -> None:
+        """Multi-pair: each pair's λ clamps independently."""
+        state = SafetyState(lambda_={_PAIR_AB: -6.99, _PAIR_AC: 0.0}, epsilon=-0.05, eta=0.5)
+        update_lambda(state, {_PAIR_AB: 0.0, _PAIR_AC: 0.0}, lambda_bound=7.0)
+        # _PAIR_AB: -6.99 + 0.5*-0.05 = -7.015 → clamped to -7.0.
+        # _PAIR_AC:   0.0 + 0.5*-0.05 = -0.025 (inside bound, no clamp).
+        assert state.lambda_[_PAIR_AB] == -7.0
+        assert state.lambda_[_PAIR_AC] == pytest.approx(-0.025)
+
+
 def test_compute_per_pair_loss_positive_on_overestimate() -> None:
     pred = np.array([0.5, 0.2, 0.3], dtype=np.float64)
     actual = np.array([0.3, 0.4, 0.3], dtype=np.float64)

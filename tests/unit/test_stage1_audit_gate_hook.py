@@ -219,6 +219,84 @@ class TestAuditGatePredicateB:
         assert code == 0
 
 
+# ----- Predicate B clamp-saturation branch (P1.05.7 / #180) -----
+
+
+class TestAuditGatePredicateBClampSaturated:
+    """λ pinned at the symmetric clamp boundary passes B with a note (#180)."""
+
+    def test_negative_lambda_at_clamp_bound_passes_with_note(self, tmp_path: Path) -> None:
+        """λ_mean = -7.0 == -clamp_bound, λ_var = 0 ⇒ clamp-saturated (pass)."""
+        jsonl = _write_jsonl(
+            tmp_path,
+            _final(
+                lambda_steady_state=-7.0,
+                lambda_mean=-7.0,
+                lambda_var=0.0,
+                lambda_clamp_bound=7.0,
+            ),
+        )
+        code, stdout, _ = _run_hook(_AS_SCRIPT, jsonl)
+        assert code == 0
+        assert "clamp-saturated" in stdout.lower()
+
+    def test_positive_lambda_at_clamp_bound_passes_with_note(self, tmp_path: Path) -> None:
+        """Symmetric: λ_mean = +7.0 == +clamp_bound ⇒ clamp-saturated (pass)."""
+        jsonl = _write_jsonl(
+            tmp_path,
+            _final(
+                lambda_steady_state=7.0,
+                lambda_mean=7.0,
+                lambda_var=0.0,
+                lambda_clamp_bound=7.0,
+            ),
+        )
+        code, stdout, _ = _run_hook(_AS_SCRIPT, jsonl)
+        assert code == 0
+        assert "clamp-saturated" in stdout.lower()
+
+    def test_off_boundary_with_zero_var_still_trips_predicate_b(self, tmp_path: Path) -> None:
+        """λ_mean = -3.0 (not at ±7.0 boundary) with var=0 ⇒ genuine "stuck", exit 9."""
+        jsonl = _write_jsonl(
+            tmp_path,
+            _final(
+                lambda_steady_state=-3.0,
+                lambda_mean=-3.0,
+                lambda_var=0.0,
+                lambda_clamp_bound=7.0,
+            ),
+        )
+        code, _, stderr = _run_hook(_AS_SCRIPT, jsonl)
+        assert code == 9
+        assert "predicate B" in stderr
+        # The note in the error message clarifies it's not the clamp regime.
+        assert "not at the boundary" in stderr.lower()
+
+    def test_null_clamp_bound_falls_through_to_legacy_predicate_b(self, tmp_path: Path) -> None:
+        """Pre-P1.05.7 vintage (no clamp_bound field) still trips on adapted-but-stuck."""
+        # _final()'s defaults don't include lambda_clamp_bound; emit without it.
+        event = _final(lambda_steady_state=-3.0, lambda_mean=-3.0, lambda_var=0.0)
+        event.pop("lambda_clamp_bound", None)  # belt-and-suspenders
+        jsonl = _write_jsonl(tmp_path, event)
+        code, _, stderr = _run_hook(_AS_SCRIPT, jsonl)
+        assert code == 9
+        assert "predicate B" in stderr
+
+    def test_clamp_bound_near_but_not_at_boundary_still_trips(self, tmp_path: Path) -> None:
+        """λ_mean = -6.9 (off by 0.1) with var=0 ⇒ above 1e-6 tolerance → exit 9."""
+        jsonl = _write_jsonl(
+            tmp_path,
+            _final(
+                lambda_steady_state=-6.9,
+                lambda_mean=-6.9,
+                lambda_var=0.0,
+                lambda_clamp_bound=7.0,
+            ),
+        )
+        code, _, _ = _run_hook(_AS_SCRIPT, jsonl)
+        assert code == 9
+
+
 # ----- Safety-disabled path -----
 
 

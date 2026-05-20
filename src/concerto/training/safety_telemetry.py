@@ -106,11 +106,22 @@ class SafetyAggregator:
             for the cell (the audit-gate predicate A's RHS).
         saturation_threshold: ``cfg.safety.saturation_threshold``
             (0.9 by default per :class:`SafetyConfig`).
+        lambda_clamp_bound: ``cfg.safety.clamp_floor_ratio x
+            cartesian_accel_capacity`` when the in-loop symmetric
+            clamp is wired (P1.05.7 / #180); ``None`` when no clamp.
+            Emitted on the per-cell final summary so the audit-gate
+            hook can distinguish the clamp-saturated regime
+            (``λ_var == 0`` because λ is pinned at ±bound by the
+            clamp — operationally correct) from genuine "adapted but
+            stuck" (``λ_var == 0`` for non-boundary λ_mean — the
+            degenerate-update failure predicate B was designed to
+            catch). Pre-P1.05.7 vintage emits ``None``.
     """
 
     n_pairs: int
     cartesian_accel_capacity: float
     saturation_threshold: float = 0.9
+    lambda_clamp_bound: float | None = None
 
     # ----- running statistics (private; reset by flush) -----
     _n_obs_total: int = 0
@@ -372,6 +383,13 @@ class SafetyAggregator:
             "saturation_threshold": self.saturation_threshold,
             "n_braking_fires": self._n_braking_fires_total,
             "braking_fire_rate": braking_fire_rate,
+            # P1.05.7 / #180: distinguishes the clamp-saturated regime
+            # (λ_var == 0 because λ pinned at ±bound by the clamp;
+            # operationally correct) from genuine "adapted but stuck"
+            # (λ_var == 0 for non-boundary λ_mean; degenerate update).
+            # ``None`` when no clamp wired (pre-P1.05.7 / Phase-2
+            # AoI-conditioned analysis paths).
+            "lambda_clamp_bound": self.lambda_clamp_bound,
         }
         if self._n_obs_total == 0:
             # Edge case: zero-step run (Tier-1 fake or cfg.total_frames=0).

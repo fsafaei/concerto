@@ -97,6 +97,10 @@ LAMBDA_MEAN="$(jq -r '.lambda_mean' <<<"${FINAL_SUMMARY}")"
 LAMBDA_VAR="$(jq -r '.lambda_var' <<<"${FINAL_SUMMARY}")"
 CAPACITY="$(jq -r '.cartesian_accel_capacity' <<<"${FINAL_SUMMARY}")"
 SATURATION_THRESHOLD="$(jq -r '.saturation_threshold' <<<"${FINAL_SUMMARY}")"
+# P1.05.7 / #180: clamp bound surfaces the clamp-saturated regime so
+# predicate B distinguishes it from genuine "adapted but stuck". Pre-
+# P1.05.7 JSONL emits this as null; jq -r yields the string "null".
+LAMBDA_CLAMP_BOUND="$(jq -r '.lambda_clamp_bound // empty' <<<"${FINAL_SUMMARY}")"
 
 # Predicate A: |λ_steady_state| < saturation_threshold * cartesian_accel_capacity?
 # Use awk for the float comparison (bash arithmetic is integer-only; jq
@@ -122,17 +126,50 @@ fi
 # from zero (|λ_mean| > 1e-6). The vacuous case (λ stayed at 0) passes.
 # Absolute-value form mirrors predicate A's symmetric treatment under
 # the eps<0 regime — λ drifting negatively is still "adapted".
+#
+# P1.05.7 / #180 clamp-saturation branch: when |λ_mean - signed_bound|
+# is within 1e-6 of the clamp boundary, the cell is in the clamp-
+# saturated regime — λ_var == 0 is OPERATIONALLY CORRECT (every per-
+# pair λ pinned at ±bound by the symmetric clamp). Pass with a note;
+# distinct from "adapted but stuck" (λ_mean some non-boundary value
+# with var=0, indicating a degenerate update).
 if awk -v m="${LAMBDA_MEAN}" 'BEGIN { abs_m = (m < 0) ? -m : m; exit !(abs_m > 1e-6) }'; then
     # λ adapted away from zero; assert it also varied.
     if awk -v v="${LAMBDA_VAR}" 'BEGIN { exit !(v <= 1e-12) }'; then
-        echo "stage1_as_stage1b_audit_gate: FAIL predicate B (λ adapted but stuck)" >&2
-        echo "  |λ_mean|=|${LAMBDA_MEAN}| > 1e-6 (adapted away from 0) but" >&2
-        echo "  λ_var=${LAMBDA_VAR} <= 1e-12 (didn't vary). The conformal" >&2
-        echo "  slack overlay converged to a non-zero constant — the" >&2
-        echo "  filter is firing but the learning signal is degenerate." >&2
-        echo "  Likely cause: predictor or env state-noise too low to" >&2
-        echo "  drive update_lambda_from_predictor's loss vector." >&2
-        exit 9
+        # Check clamp-saturation branch first (#180).
+        clamp_saturated=0
+        if [[ -n "${LAMBDA_CLAMP_BOUND}" ]] && [[ "${LAMBDA_CLAMP_BOUND}" != "null" ]]; then
+            # signed_bound has the same sign as λ_mean.
+            if awk -v m="${LAMBDA_MEAN}" -v b="${LAMBDA_CLAMP_BOUND}" \
+                'BEGIN { signed_b = (m < 0) ? -b : b; d = m - signed_b; abs_d = (d < 0) ? -d : d; exit !(abs_d < 1e-6) }'; then
+                clamp_saturated=1
+            fi
+        fi
+        if [[ "${clamp_saturated}" == "1" ]]; then
+            echo "stage1_as_stage1b_audit_gate: PASS predicate B (clamp-saturated; #180)."
+            echo "  λ_mean=${LAMBDA_MEAN} ≈ signed_clamp_bound=±${LAMBDA_CLAMP_BOUND}"
+            echo "  λ_var=${LAMBDA_VAR} (zero by design — every per-pair λ pinned" >&2
+            echo "  at the symmetric clamp boundary). The conformal mechanism is" >&2
+            echo "  subordinated to the clamp this cell; the safety stack is" >&2
+            echo "  running with the in-loop operating envelope. Diagnostic note:" >&2
+            echo "  predictor loss is effectively zero throughout the rollout —" >&2
+            echo "  if this surface persists across Stage-1b axes the conformal" >&2
+            echo "  layer's adaptation premise (ADR-004 §Decision) deserves" >&2
+            echo "  review at Stage-2 entry." >&2
+        else
+            echo "stage1_as_stage1b_audit_gate: FAIL predicate B (λ adapted but stuck)" >&2
+            echo "  |λ_mean|=|${LAMBDA_MEAN}| > 1e-6 (adapted away from 0) but" >&2
+            echo "  λ_var=${LAMBDA_VAR} <= 1e-12 (didn't vary). The conformal" >&2
+            echo "  slack overlay converged to a non-zero constant — the" >&2
+            echo "  filter is firing but the learning signal is degenerate." >&2
+            echo "  Likely cause: predictor or env state-noise too low to" >&2
+            echo "  drive update_lambda_from_predictor's loss vector." >&2
+            if [[ -n "${LAMBDA_CLAMP_BOUND}" ]] && [[ "${LAMBDA_CLAMP_BOUND}" != "null" ]]; then
+                echo "  Note: clamp_bound=${LAMBDA_CLAMP_BOUND} present but λ_mean is" >&2
+                echo "  not at the boundary — degenerate update, not clamp saturation." >&2
+            fi
+            exit 9
+        fi
     fi
 fi
 
