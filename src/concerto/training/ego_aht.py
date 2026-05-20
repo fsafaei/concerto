@@ -562,10 +562,15 @@ def train(  # noqa: PLR0912, PLR0915 - P1.04.5 added safety-stack integration to
 
     if _safety_active:
         _filter.reset(seed=cfg.seed)
+        # P1.05.7 / #180: emit lambda_clamp_bound so the audit-gate hook
+        # can distinguish the clamp-saturated regime (var=0 by design)
+        # from "adapted but stuck" (var=0 by degenerate update).
         aggregator = SafetyAggregator(
             n_pairs=len(_state.lambda_),
             cartesian_accel_capacity=_bounds.cartesian_accel_capacity,
             saturation_threshold=cfg.safety.saturation_threshold,
+            lambda_clamp_bound=cfg.safety.clamp_floor_ratio
+            * _bounds.cartesian_accel_capacity,
         )
 
     for step in range(cfg.total_frames):
