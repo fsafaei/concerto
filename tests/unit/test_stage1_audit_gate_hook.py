@@ -272,9 +272,7 @@ class TestAuditGatePredicateBClampSaturated:
         # The note in the error message clarifies it's not the clamp regime.
         assert "not at the boundary" in stderr.lower()
 
-    def test_null_clamp_bound_falls_through_to_legacy_predicate_b(
-        self, tmp_path: Path
-    ) -> None:
+    def test_null_clamp_bound_falls_through_to_legacy_predicate_b(self, tmp_path: Path) -> None:
         """Pre-P1.05.7 vintage (no clamp_bound field) still trips on adapted-but-stuck."""
         # _final()'s defaults don't include lambda_clamp_bound; emit without it.
         event = _final(lambda_steady_state=-3.0, lambda_mean=-3.0, lambda_var=0.0)

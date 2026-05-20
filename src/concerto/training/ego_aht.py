@@ -569,8 +569,7 @@ def train(  # noqa: PLR0912, PLR0915 - P1.04.5 added safety-stack integration to
             n_pairs=len(_state.lambda_),
             cartesian_accel_capacity=_bounds.cartesian_accel_capacity,
             saturation_threshold=cfg.safety.saturation_threshold,
-            lambda_clamp_bound=cfg.safety.clamp_floor_ratio
-            * _bounds.cartesian_accel_capacity,
+            lambda_clamp_bound=cfg.safety.clamp_floor_ratio * _bounds.cartesian_accel_capacity,
         )
 
     for step in range(cfg.total_frames):

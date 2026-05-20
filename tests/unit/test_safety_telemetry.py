@@ -226,18 +226,14 @@ class TestSafetyAggregatorLambdaClampBound:
 
     def test_clamp_bound_round_trips(self) -> None:
         """``lambda_clamp_bound=7.0`` ⇒ final summary carries 7.0 verbatim."""
-        agg = SafetyAggregator(
-            n_pairs=1, cartesian_accel_capacity=10.0, lambda_clamp_bound=7.0
-        )
+        agg = SafetyAggregator(n_pairs=1, cartesian_accel_capacity=10.0, lambda_clamp_bound=7.0)
         agg.observe({("a", "b"): 0.1})
         summary = agg.finalise(safety_enabled=True)
         assert summary["lambda_clamp_bound"] == 7.0
 
     def test_clamp_bound_zero_step_run_still_emits(self) -> None:
         """Edge case: zero-step run with clamp_bound set ⇒ field still present."""
-        agg = SafetyAggregator(
-            n_pairs=1, cartesian_accel_capacity=10.0, lambda_clamp_bound=7.0
-        )
+        agg = SafetyAggregator(n_pairs=1, cartesian_accel_capacity=10.0, lambda_clamp_bound=7.0)
         summary = agg.finalise(safety_enabled=True)
         assert summary["lambda_clamp_bound"] == 7.0
 
