@@ -26,6 +26,7 @@ cd "${REPO_ROOT}"
 
 echo "==> Stage-1b OM spike (ADR-007 §Stage 1b; P1.05)"
 echo "    $(uv run python -c 'from chamber.utils.device import device_report; print(device_report())' 2>/dev/null)"
+echo "    $(uv run python -c 'import torch; print(f"torch={torch.__version__}, cuda={torch.version.cuda}")' 2>/dev/null)"
 echo ""
 
 echo "==> Verifying pre-registration (ADR-007 §Discipline)"

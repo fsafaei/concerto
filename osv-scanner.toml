@@ -143,33 +143,9 @@ Companion to the PYSEC-2025-192/196 class of local torch API issues.
 No upstream patched version as of 2026-05-20.
 """
 
-[[IgnoredVulns]]
-id = "PYSEC-2025-203"
-ignoreUntil = 2026-12-31
-reason = """
-torch availability-only advisory (CVSS 3.1 7.5 AV:N C:N I:N A:H).
-**Upstream fix lands in torch 2.9.0**, but torch 2.9.0+ wheels default
-to cuda 13 — incompatible with the project's RTX 2080 dev box on
-cuda 12.x driver. Cleared by the post-#180 follow-up PR that pins
-torch to PyTorch's cu12 wheel index ([[tool.uv.index]] against
-``download.pytorch.org/whl/cu128``), then bumps to >=2.9.0.
-"""
-
-[[IgnoredVulns]]
-id = "PYSEC-2025-204"
-ignoreUntil = 2026-12-31
-reason = """
-torch availability-only advisory (CVSS 3.1 7.5 AV:N C:N I:N A:H).
-Companion to PYSEC-2025-203 (same fix-in-2.9.0 cu12-wheel-pin gating).
-"""
-
-[[IgnoredVulns]]
-id = "PYSEC-2025-206"
-ignoreUntil = 2026-12-31
-reason = """
-torch low-severity availability advisory (CVSS 3.1 5.3 AV:N C:N I:N A:L).
-Companion to PYSEC-2025-203/204 (same fix-in-2.9.0 cu12-wheel-pin gating).
-"""
+# PYSEC-2025-203 / -204 / -206 cleared by the cu128 wheel-pin PR
+# (torch 2.11.0+cu128; fix lands in torch 2.9.0+). Entries removed
+# 2026-05-20 alongside the [[tool.uv.index]] block in pyproject.toml.
 
 [[IgnoredVulns]]
 id = "PYSEC-2025-210"

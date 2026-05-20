@@ -103,8 +103,18 @@ KNOWN_CLEAN: frozenset[str] = frozenset(
 # they are not linked into CONCERTO source code and do not affect the
 # project's open-source licence obligations. Matched by name only (no version
 # pin) so this list stays valid across CUDA minor-version bumps.
+#
+# 2026-05-20 additions (ADR-002 §Revision history; PR for cu128 wheel-pin):
+# torch 2.11.0+cu128 introduces three additional NVIDIA-EULA transitive deps
+# on Linux — same exemption rationale as the existing entries below.
 PROPRIETARY_RUNTIME_EXEMPTIONS: frozenset[str] = frozenset(
     {
+        # PyTorch CUDA-toolkit Python bindings (CUDA 12.x; same NVIDIA EULA
+        # family). Pulled in by torch >=2.10 via the cu128 wheel index.
+        "cuda-bindings",
+        "cuda-pathfinder",
+        "cuda-toolkit",
+        # nvidia-* CUDA runtime libs (the canonical pre-cu128 set):
         "nvidia-cublas-cu12",
         "nvidia-cuda-cupti-cu12",
         "nvidia-cuda-nvrtc-cu12",
@@ -118,6 +128,9 @@ PROPRIETARY_RUNTIME_EXEMPTIONS: frozenset[str] = frozenset(
         "nvidia-cusparselt-cu12",
         "nvidia-nccl-cu12",
         "nvidia-nvjitlink-cu12",
+        # NVSHMEM (NCCL-aligned multi-GPU shared-memory lib), introduced by
+        # torch 2.11.0+cu128:
+        "nvidia-nvshmem-cu12",
         "nvidia-nvtx-cu12",
     }
 )
