@@ -6,16 +6,22 @@
 # scripts/repro/stage1_om_stage1b.sh (the launcher) has emitted the
 # safety_telemetry_final JSONL.
 #
-# Audit-gate predicates (ADR-007 §Stage 1b implementation-details Rev 7):
+# Audit-gate predicates (ADR-007 §Stage 1b implementation-details
+# Rev 10 — symmetric saturation; closes issue #178):
 #
-#   Predicate A (saturation guard, always evaluated):
-#     λ_steady_state < 0.9 × cartesian_accel_capacity   → exit 0
-#     λ_steady_state >= 0.9 × cartesian_accel_capacity  → exit 8
+#   Predicate A (saturation guard, both directions, always evaluated):
+#     |λ_steady_state| <  0.9 × cartesian_accel_capacity   → exit 0
+#     |λ_steady_state| >= 0.9 × cartesian_accel_capacity   → exit 8
 #
-#   Predicate B (adaptation invariant, conditional on λ_mean > 1e-6):
-#     λ adapted away from 0 AND λ_var > 1e-12           → exit 0
-#     λ adapted away from 0 AND λ_var <= 1e-12          → exit 9 (λ stuck)
-#     λ stayed at 0 (vacuously OK)                      → exit 0
+#   Predicate B (adaptation invariant, conditional on |λ_mean| > 1e-6):
+#     λ adapted away from 0 AND λ_var > 1e-12              → exit 0
+#     λ adapted away from 0 AND λ_var <= 1e-12             → exit 9 (λ stuck)
+#     λ stayed at 0 (vacuously OK)                         → exit 0
+#
+# See scripts/repro/stage1_as_stage1b_audit_gate.sh for the absolute-
+# value rationale (#178): the Phase-0 eps=-0.05 regime drifts λ
+# negative at production scale, and the original positive-only
+# predicate A would silently miss it.
 #
 # Predicate B captures the underlying invariant rather than codifying
 # condition-specific expectations — capturing "if λ moved, it should
@@ -81,28 +87,35 @@ LAMBDA_VAR="$(jq -r '.lambda_var' <<<"${FINAL_SUMMARY}")"
 CAPACITY="$(jq -r '.cartesian_accel_capacity' <<<"${FINAL_SUMMARY}")"
 SATURATION_THRESHOLD="$(jq -r '.saturation_threshold' <<<"${FINAL_SUMMARY}")"
 
-# Predicate A: λ_steady_state < saturation_threshold * cartesian_accel_capacity?
+# Predicate A: |λ_steady_state| < saturation_threshold * cartesian_accel_capacity?
 # Use awk for the float comparison (bash arithmetic is integer-only; jq
 # arithmetic compiles but its boolean → bash translation is awkward).
+# The absolute-value form (issue #178) catches both positive saturation
+# (Theorem 3 standard regime, eps>0) and negative saturation (project's
+# Phase-0 eps=-0.05 regime where λ drifts negative).
 THRESHOLD_VALUE="$(awk -v t="${SATURATION_THRESHOLD}" -v c="${CAPACITY}" 'BEGIN { printf "%.6f", t * c }')"
-if awk -v l="${LAMBDA_STEADY_STATE}" -v t="${THRESHOLD_VALUE}" 'BEGIN { exit !(l >= t) }'; then
-    echo "stage1_om_stage1b_audit_gate: FAIL predicate A (saturation guard)" >&2
-    echo "  λ_steady_state=${LAMBDA_STEADY_STATE} >= threshold=${THRESHOLD_VALUE}" >&2
+if awk -v l="${LAMBDA_STEADY_STATE}" -v t="${THRESHOLD_VALUE}" \
+    'BEGIN { abs_l = (l < 0) ? -l : l; exit !(abs_l >= t) }'; then
+    echo "stage1_om_stage1b_audit_gate: FAIL predicate A (saturation guard, symmetric)" >&2
+    echo "  |λ_steady_state|=|${LAMBDA_STEADY_STATE}| >= threshold=${THRESHOLD_VALUE}" >&2
     echo "  (saturation_threshold=${SATURATION_THRESHOLD} × cartesian_accel_capacity=${CAPACITY})" >&2
     echo "  λ saturated against the cell's bounds; the QP is running" >&2
     echo "  without safety margin. ADR-007 §Stage 1b: saturating cells" >&2
     echo "  force slice P1.05.5 (AgentSnapshot.qpos extension) to launch" >&2
-    echo "  mandatorily before Stage 2." >&2
+    echo "  mandatorily before Stage 2. (#178: negative drift under" >&2
+    echo "  eps<0 regime trips this symmetric check at production scale.)" >&2
     exit 8
 fi
 
-# Predicate B: adaptation-conditional. Only fires when λ moved away
-# from zero (λ_mean > 1e-6). The vacuous case (λ stayed at 0) passes.
-if awk -v m="${LAMBDA_MEAN}" 'BEGIN { exit !(m > 1e-6) }'; then
+# Predicate B: adaptation-conditional. Only fires when |λ| moved away
+# from zero (|λ_mean| > 1e-6). The vacuous case (λ stayed at 0) passes.
+# Absolute-value form mirrors predicate A's symmetric treatment under
+# the eps<0 regime.
+if awk -v m="${LAMBDA_MEAN}" 'BEGIN { abs_m = (m < 0) ? -m : m; exit !(abs_m > 1e-6) }'; then
     # λ adapted away from zero; assert it also varied.
     if awk -v v="${LAMBDA_VAR}" 'BEGIN { exit !(v <= 1e-12) }'; then
         echo "stage1_om_stage1b_audit_gate: FAIL predicate B (λ adapted but stuck)" >&2
-        echo "  λ_mean=${LAMBDA_MEAN} > 1e-6 (adapted away from 0) but" >&2
+        echo "  |λ_mean|=|${LAMBDA_MEAN}| > 1e-6 (adapted away from 0) but" >&2
         echo "  λ_var=${LAMBDA_VAR} <= 1e-12 (didn't vary). The conformal" >&2
         echo "  slack overlay converged to a non-zero constant — the" >&2
         echo "  filter is firing but the learning signal is degenerate." >&2
