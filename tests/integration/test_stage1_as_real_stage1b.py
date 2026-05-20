@@ -78,9 +78,7 @@ def _tiny_prereg_for_smoke(monkeypatch: pytest.MonkeyPatch) -> None:
         return cfg.model_copy(
             update={
                 "total_frames": 1000,
-                "happo": cfg.happo.model_copy(
-                    update={"rollout_length": 256, "batch_size": 64}
-                ),
+                "happo": cfg.happo.model_copy(update={"rollout_length": 256, "batch_size": 64}),
             }
         )
 
