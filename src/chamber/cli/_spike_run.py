@@ -124,6 +124,22 @@ def add_parser(sub: argparse._SubParsersAction) -> None:  # type: ignore[type-ar
         help="ADR-007 §3.4 axis to spike.",
     )
     parser.add_argument(
+        "--sub-stage",
+        dest="sub_stage",
+        choices=["1a", "1b"],
+        default="1a",
+        help=(
+            "ADR-007 §Implementation staging sub-stage. '1a' (default) = "
+            "rig validation (MPE stand-in, _zero_ego_action_factory; the "
+            "Phase-0 default path). '1b' = science evaluation (real "
+            "Stage-1 pick-place env, TrainedPolicyFactory; the Phase-1 "
+            "production path; requires SAPIEN + Vulkan + the train "
+            "dependency group). Only the AS / OM axes honour --sub-stage; "
+            "Stage-2/3 axes (CR / CM / PF / SA) reject --sub-stage 1b "
+            "since they have no 1a/1b distinction."
+        ),
+    )
+    parser.add_argument(
         "--output",
         type=Path,
         required=True,
@@ -175,6 +191,21 @@ def run(args: argparse.Namespace) -> int:
             f"output={args.output} episodes={len(spike_run.episode_results)}"
         )
         return 0
+
+    # P1.05 dispatch contract: --sub-stage 1b is only valid for Stage-1
+    # axes (AS / OM). Stage-2/3 axes have no 1a/1b distinction; the
+    # adapter's own validation would silently consume the flag.
+    sub_stage = getattr(args, "sub_stage", "1a")
+    stage = _STAGE_BY_AXIS[args.axis]
+    if sub_stage == "1b" and stage != 1:
+        msg = (
+            f"chamber-spike run --axis {args.axis} --sub-stage 1b: the "
+            f"--sub-stage flag is only valid for Stage-1 axes (AS / OM). "
+            f"Axis {args.axis} is Stage-{stage}; re-run without "
+            f"--sub-stage (Stage-{stage} axes have no 1a/1b split)."
+        )
+        print(f"chamber-spike run: FAIL -- {msg}", file=sys.stderr)
+        return 2
 
     adapter = _resolve_adapter(args.axis)
     if adapter is None:

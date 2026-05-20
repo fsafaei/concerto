@@ -16,8 +16,8 @@ import subprocess
 from pathlib import Path
 
 _REPO_ROOT = Path(__file__).resolve().parents[2]
-_AS_SCRIPT = _REPO_ROOT / "scripts" / "repro" / "stage1_as_stage1b.sh"
-_OM_SCRIPT = _REPO_ROOT / "scripts" / "repro" / "stage1_om_stage1b.sh"
+_AS_SCRIPT = _REPO_ROOT / "scripts" / "repro" / "stage1_as_stage1b_audit_gate.sh"
+_OM_SCRIPT = _REPO_ROOT / "scripts" / "repro" / "stage1_om_stage1b_audit_gate.sh"
 
 
 def _write_jsonl(tmp_path: Path, *events: dict) -> Path:

@@ -210,7 +210,13 @@ class TestArgparseSurface:
             main(["run", "--help"])
         assert excinfo.value.code == 0
         captured = capsys.readouterr()
-        for flag in ("--axis", "--output", "--dry-run", "--dry-run-hetero-success-count"):
+        for flag in (
+            "--axis",
+            "--output",
+            "--dry-run",
+            "--dry-run-hetero-success-count",
+            "--sub-stage",
+        ):
             assert flag in captured.out
 
     def test_bad_axis_choice_errors(
@@ -236,3 +242,70 @@ class TestArgparseSurface:
                     str(out),
                 ]
             )
+
+
+# ---------------------------------------------------------------------------
+# P1.05 --sub-stage flag (ADR-007 §Stage 1a / §Stage 1b)
+# ---------------------------------------------------------------------------
+
+
+class TestSubStageFlagOnRealRun:
+    """P1.05: --sub-stage routes to the right adapter path."""
+
+    @pytest.mark.parametrize("axis", ["CR", "CM", "PF", "SA"])
+    def test_sub_stage_1b_rejected_for_non_stage1_axes(
+        self, axis: str, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+        """--axis CR/CM/PF/SA combined with --sub-stage 1b exits 2 with a clear message.
+
+        Stage-2 / Stage-3 axes have no 1a/1b distinction; the CLI
+        rejects the combination at dispatch time so the operator
+        notices before the spike launches.
+        """
+        out = tmp_path / "spike.json"
+        rc = main(
+            [
+                "run",
+                "--axis",
+                axis,
+                "--sub-stage",
+                "1b",
+                "--output",
+                str(out),
+            ]
+        )
+        assert rc == 2
+        captured = capsys.readouterr()
+        assert "--sub-stage 1b" in captured.err
+        assert "Stage-1 axes" in captured.err
+        assert axis in captured.err
+        assert not out.exists()
+
+    def test_sub_stage_1a_accepted_for_non_stage1_axes(
+        self,
+        tmp_path: Path,
+        capsys: pytest.CaptureFixture[str],
+    ) -> None:
+        """--axis CR --sub-stage 1a falls through to the adapter-not-wired path (unchanged)."""
+        out = tmp_path / "spike.json"
+        rc = main(
+            [
+                "run",
+                "--axis",
+                "CR",
+                "--sub-stage",
+                "1a",  # default; explicit here for the test
+                "--output",
+                str(out),
+            ]
+        )
+        assert rc == ADAPTER_NOT_WIRED_EXIT_CODE
+        captured = capsys.readouterr()
+        assert "not yet shipped" in captured.err
+
+    def test_sub_stage_choice_rejects_unknown_values(self, tmp_path: Path) -> None:
+        """argparse choices=... rejects values other than 1a / 1b."""
+        out = tmp_path / "spike.json"
+        with pytest.raises(SystemExit) as excinfo:
+            main(["run", "--axis", "AS", "--sub-stage", "2", "--output", str(out)])
+        assert excinfo.value.code == 2
