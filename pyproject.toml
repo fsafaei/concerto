@@ -25,7 +25,7 @@ classifiers = [
 # Runtime deps. Each entry is justified by an ADR or a tooling decision.
 dependencies = [
   "numpy>=1.26,<2.2",
-  "torch>=2.8,<2.9",                 # ADR-002 PyTorch; >=2.8 closes GHSA-53q9-r3pm-6pq6, GHSA-887c-mr87-cxwp, GHSA-3749-ghw9-m3mg
+  "torch>=2.9,<3.0",                 # ADR-002 PyTorch; >=2.8 closes GHSA-53q9-r3pm-6pq6, GHSA-887c-mr87-cxwp, GHSA-3749-ghw9-m3mg; >=2.9 closes PYSEC-2025-203/204/206 (availability-only AV:N C:N I:N A:H/L). Pinned to the cu128 wheel index on Linux via [tool.uv.sources] below — torch 2.12+ defaults to cu130 which is incompatible with NVIDIA driver 535.x (CUDA 12.x runtime). Cuda-major coupling discipline pinned in ADR-002 §Revision history (2026-05-20).
   "gymnasium>=1.3.0,<2.0",             # standard env API
   "mani-skill==3.0.1",               # ADR-001; git commit a4a4f92 pinned in uv.lock
   "sapien>=3.0,<4.0",                # ADR-005 (transitive but pinned for clarity)
@@ -109,8 +109,25 @@ name = "test-pypi"
 url = "https://test.pypi.org/simple/"
 explicit = true   # only packages explicitly routed to this index resolve here
 
+# ADR-002 §Revision history (2026-05-20): pin torch to PyTorch's
+# cu128 wheel index on Linux. From torch 2.12 onwards the PyPI
+# default wheel ships cu130, which requires NVIDIA driver >=580
+# (CUDA toolkit 13.x runtime). The project's RTX 2080 box ships
+# driver 535.x — incompatible with cu130. Pinning at the wheel-
+# index level (rather than the version specifier) lets us bump
+# torch within the cu128 series without dragging in the cu130-
+# default-wheel breakage. Mac / Windows hosts still resolve torch
+# via the PyPI default (CPU on Mac, no platform mismatch).
+[[tool.uv.index]]
+name = "pytorch-cu128"
+url = "https://download.pytorch.org/whl/cu128"
+explicit = true   # only torch (and torch-aligned cuda nvidia-* wheels) resolve here
+
 [tool.uv.sources]
 harl-aht = { index = "test-pypi" }
+torch = [
+    { index = "pytorch-cu128", marker = "sys_platform == 'linux'" },
+]
 
 [tool.pytest.ini_options]
 addopts = [
