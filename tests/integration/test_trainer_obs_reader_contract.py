@@ -11,12 +11,12 @@ P1.04 Tier-2 tests verified that :class:`EgoPPOTrainer` ran end-to-end
 against a real :class:`Stage1PickPlaceEnv` instance but did NOT verify
 what the trainer actually read from the env's obs dict. Surface 6 of
 the failure investigation identified that the trainer's obs reader
-(:func:`chamber.benchmarks.ego_ppo_trainer._flat_ego_obs`) indexes only
+(:func:`chamber.benchmarks.ego_ppo_trainer._flat_ego_obs`) indexed only
 ``obs["agent"][ego_uid]["state"]`` — a flat 18-D ``concat(qpos, qvel)``
 synthesised by :class:`Stage1ASStateSynthesizer`. Cube pose, goal
-position, ego TCP pose, and partner qpos+qvel are PRESENT in the env's
+position, ego TCP pose, and partner qpos+qvel were PRESENT in the env's
 obs dict (under ``obs["extra"]`` and the partner's sibling subtree) but
-live in paths the trainer never reads. The ego trained for 100k frames
+lived in paths the trainer never read; the ego trained for 100k frames
 blind to task-relevant signal. Full runtime evidence:
 ``spikes/results/stage1-failure-investigation/2026-05-20/surface_6_obs_contract_audit.txt``.
 
@@ -29,22 +29,28 @@ at Tier-2 acceptance time. The contract:
     enough to cover task-relevant fields (cube pose + goal position +
     partner state) in addition to the ego's own qpos+qvel.
 
-Operationalised as a proxy assertion on ``trainer._obs_dim``: the
-current main reads 18 floats per step; any remediation that widens the
-trainer's view must push this to ≥ 30 (well above 18, well below the
-expected ~50+ if the full hetero feature set is included). The exact
-concat order is intentionally NOT pinned — the remediation slice may
-arrive in several layouts (state-key widening, comm-channel-mediated,
-multi-path reader); a proxy threshold is robust to all of them. The
-field-specific positive tests live in the Stage-2 Tier-1 suite (S2-E
-in the remediation prompt), not here.
+Operationalised as a proxy assertion on ``trainer._obs_dim``: pre-
+P1.05.8 the trainer read 18 floats per step; the P1.05.8 remediation
+widens :class:`Stage1ASStateSynthesizer` to concatenate
+``[ego_qpos, ego_qvel, partner_qpos, partner_qvel, cube_pose,
+goal_pos, tcp_pose]`` and pushes ``_obs_dim`` well above the 30-float
+threshold this pin asserts. The exact concat order is NOT pinned here
+— the field-specific positive tests live in
+``tests/unit/test_stage1_pickplace_tier1.py``; this pin is the
+structural floor.
 
-The class is marked ``@pytest.mark.xfail(strict=True)`` so it xfails on
-current main and will xpass when the Surface 6 remediation lands. The
-xfail-strict discipline forces the remediation PR to also remove the
-xfail marker, closing the regression-pin lifecycle cleanly. Closure
-rationale is the consultation brief at
-``spikes/results/stage1-failure-investigation/2026-05-20/CONSULTATION_BRIEF.md``.
+The test was originally marked ``@pytest.mark.xfail(strict=True)`` so
+it xfailed on pre-P1.05.8 main and xpassed when the Surface 6
+remediation landed. The xfail-strict discipline forced the
+remediation PR (P1.05.8) to remove the marker in the same commit as
+the synthesizer widening, closing the regression-pin lifecycle
+cleanly. **As of 2026-05-21 / P1.05.8 the contract is met and the
+xfail marker is removed; the assertion is now a positive Tier-1
+regression net.** Closure rationale is the consultation brief at
+``spikes/results/stage1-failure-investigation/2026-05-20/CONSULTATION_BRIEF.md``;
+ADR amendments at ADR-002 §Revision history 2026-05-21, ADR-007
+§Stage 1b Rev 12, and ADR-009 §Decision direct-observation-of-
+partner-pose paragraph.
 
 The test is Tier-1 (no SAPIEN, no GPU): it composes a
 :class:`tests.fakes.FakeStage1PickPlaceObs` with the real
@@ -57,8 +63,6 @@ not only on the GPU box where the original gap shipped from.
 """
 
 from __future__ import annotations
-
-import pytest
 
 from chamber.benchmarks.ego_ppo_trainer import EgoPPOTrainer
 from chamber.envs.stage1_obs_filter import Stage1ASStateSynthesizer
@@ -94,20 +98,6 @@ def _build_frozen_partner() -> ScriptedHeuristicPartner:
     )
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason=(
-        "PR #182 Surface 6 (DEFECT): EgoPPOTrainer._flat_ego_obs reads "
-        "only obs['agent'][ego_uid]['state'] (shape (18,) = ego qpos+qvel). "
-        "Cube pose, goal position, and partner state are present-but-unread "
-        "in the env's obs dict. Remediation gated on the consultation brief "
-        "at spikes/results/stage1-failure-investigation/2026-05-20/"
-        "CONSULTATION_BRIEF.md. When the obs-reader (or the AS state "
-        "synthesizer) is widened to cover task-relevant fields, this test "
-        "xpasses and the xfail marker MUST be removed in the same PR "
-        "(Stage-2 Task S2-D in the remediation prompt)."
-    ),
-)
 class TestTrainerObsReaderContract:
     """Pins the :class:`EgoPPOTrainer` obs-reader contract (PR #182 Surface 6).
 

@@ -244,13 +244,56 @@ class TestPandaJacobianProvider:
 # ----- Stage1ASStateSynthesizer (qpos+qvel -> state; ADR-007 §Stage 1b AS axis) -----
 
 
+#: Per-uid qpos / qvel dims encoded in the AS Tier-1 fake. Pinned
+#: here so the per-condition-shape assertions below are self-
+#: documenting; the real SAPIEN env's dims are pinned by the Tier-2
+#: integration test (``test_stage1_as_real_stage1b.py``).
+_FAKE_EGO_QPOS_DIM: int = 9  # panda_wristcam: 7 arm + 2 mimic-gripper
+_FAKE_PANDA_PARTNER_QPOS_DIM: int = 9  # panda_partner mirrors the ego
+_FAKE_FETCH_QPOS_DIM: int = 15  # fetch (Tier-1 assumption; Tier-2 pins truth)
+_FAKE_CUBE_POSE_DIM: int = 7
+_FAKE_GOAL_POS_DIM: int = 3
+_FAKE_TCP_POSE_DIM: int = 7
+
+#: Base offsets for the deterministic-counter obs the fake emits.
+#: Used so the positional concat-order test can read each slot's
+#: contribution to the widened ``state`` vector by inspection.
+_OFFSET_EGO_QPOS: int = 100
+_OFFSET_EGO_QVEL: int = 200
+_OFFSET_PARTNER_QPOS: int = 300
+_OFFSET_PARTNER_QVEL: int = 400
+_OFFSET_CUBE_POSE: int = 500
+_OFFSET_GOAL_POS: int = 600
+_OFFSET_TCP_POSE: int = 700
+
+
 class _FakeStateDictEnv(gym.Env):  # type: ignore[type-arg]
     """Mirrors ManiSkill v3 ``obs_mode="state_dict"`` shape for the AS axis.
 
     The real Stage1PickPlaceEnv under AS conditions emits per-agent
-    ``Dict(qpos, qvel, ...)``; this fake matches that contract so the
-    Tier-1 wrapper test exercises the same code path the Tier-2 SAPIEN
-    test exercises end-to-end (regression-pin against further drift).
+    ``Dict(qpos, qvel, ...)`` and ``obs["extra"]`` carrying the task
+    fields ``cube_pose / goal_pos / tcp_pose``. This fake mirrors
+    that contract for both AS-homo (panda + panda_partner) and
+    AS-hetero (panda + fetch) so the Tier-1 wrapper tests exercise
+    the same code paths the Tier-2 SAPIEN tests exercise end-to-end.
+
+    Per-uid qpos / qvel dims are pinned by module-level constants
+    (``_FAKE_EGO_QPOS_DIM = 9``, ``_FAKE_PANDA_PARTNER_QPOS_DIM = 9``,
+    ``_FAKE_FETCH_QPOS_DIM = 15``). Whatever the real SAPIEN env's
+    fetch qpos shape turns out to be, the synthesiser's
+    shape-from-env logic adapts automatically (it reads
+    ``inner.spaces["agent"][partner_uid]["qpos"].shape``); the
+    Tier-2 integration test ``test_trainer_obs_dim_matches_widened_
+    state_per_condition`` pins the real per-condition dim.
+
+    The fake emits deterministic-counter values keyed by per-slot
+    base offsets (``_OFFSET_EGO_QPOS = 100`` etc.) so the positional
+    concat-order test can read each slot's contribution to the
+    widened ``state`` vector by inspection. Pre-P1.05.8 the wrapper
+    composed ``state`` from ego qpos+qvel only; post-P1.05.8 the
+    ego's ``state`` concatenates
+    ``[ego_qpos, ego_qvel, partner_qpos, partner_qvel, cube_pose,
+    goal_pos, tcp_pose]`` per ADR-007 §Stage 1b Rev 12.
     """
 
     metadata: ClassVar[dict[str, object]] = {"render_modes": []}  # type: ignore[misc]
@@ -263,15 +306,52 @@ class _FakeStateDictEnv(gym.Env):  # type: ignore[type-arg]
                     {
                         "panda_wristcam": gym.spaces.Dict(
                             {
-                                "qpos": gym.spaces.Box(-np.inf, np.inf, (1, 9), np.float32),
-                                "qvel": gym.spaces.Box(-np.inf, np.inf, (1, 9), np.float32),
+                                "qpos": gym.spaces.Box(
+                                    -np.inf, np.inf, (1, _FAKE_EGO_QPOS_DIM), np.float32
+                                ),
+                                "qvel": gym.spaces.Box(
+                                    -np.inf, np.inf, (1, _FAKE_EGO_QPOS_DIM), np.float32
+                                ),
+                            }
+                        ),
+                        "panda_partner": gym.spaces.Dict(
+                            {
+                                "qpos": gym.spaces.Box(
+                                    -np.inf,
+                                    np.inf,
+                                    (1, _FAKE_PANDA_PARTNER_QPOS_DIM),
+                                    np.float32,
+                                ),
+                                "qvel": gym.spaces.Box(
+                                    -np.inf,
+                                    np.inf,
+                                    (1, _FAKE_PANDA_PARTNER_QPOS_DIM),
+                                    np.float32,
+                                ),
                             }
                         ),
                         "fetch": gym.spaces.Dict(
                             {
-                                "qpos": gym.spaces.Box(-np.inf, np.inf, (1, 15), np.float32),
-                                "qvel": gym.spaces.Box(-np.inf, np.inf, (1, 15), np.float32),
+                                "qpos": gym.spaces.Box(
+                                    -np.inf, np.inf, (1, _FAKE_FETCH_QPOS_DIM), np.float32
+                                ),
+                                "qvel": gym.spaces.Box(
+                                    -np.inf, np.inf, (1, _FAKE_FETCH_QPOS_DIM), np.float32
+                                ),
                             }
+                        ),
+                    }
+                ),
+                "extra": gym.spaces.Dict(
+                    {
+                        "cube_pose": gym.spaces.Box(
+                            -np.inf, np.inf, (1, _FAKE_CUBE_POSE_DIM), np.float32
+                        ),
+                        "goal_pos": gym.spaces.Box(
+                            -np.inf, np.inf, (1, _FAKE_GOAL_POS_DIM), np.float32
+                        ),
+                        "tcp_pose": gym.spaces.Box(
+                            -np.inf, np.inf, (1, _FAKE_TCP_POSE_DIM), np.float32
                         ),
                     }
                 ),
@@ -283,30 +363,54 @@ class _FakeStateDictEnv(gym.Env):  # type: ignore[type-arg]
 
     @staticmethod
     def _sample_obs() -> dict:
+        def _counter(offset: int, n: int) -> np.ndarray:  # type: ignore[type-arg]
+            return (offset + np.arange(n, dtype=np.float32)).reshape(1, n)
+
         return {
             "agent": {
                 "panda_wristcam": {
-                    "qpos": np.arange(9, dtype=np.float32).reshape(1, 9),
-                    "qvel": np.arange(9, 18, dtype=np.float32).reshape(1, 9),
+                    "qpos": _counter(_OFFSET_EGO_QPOS, _FAKE_EGO_QPOS_DIM),
+                    "qvel": _counter(_OFFSET_EGO_QVEL, _FAKE_EGO_QPOS_DIM),
+                },
+                "panda_partner": {
+                    "qpos": _counter(_OFFSET_PARTNER_QPOS, _FAKE_PANDA_PARTNER_QPOS_DIM),
+                    "qvel": _counter(_OFFSET_PARTNER_QVEL, _FAKE_PANDA_PARTNER_QPOS_DIM),
                 },
                 "fetch": {
-                    "qpos": np.zeros((1, 15), dtype=np.float32),
-                    "qvel": np.ones((1, 15), dtype=np.float32),
+                    "qpos": _counter(_OFFSET_PARTNER_QPOS, _FAKE_FETCH_QPOS_DIM),
+                    "qvel": _counter(_OFFSET_PARTNER_QVEL, _FAKE_FETCH_QPOS_DIM),
                 },
+            },
+            "extra": {
+                "cube_pose": _counter(_OFFSET_CUBE_POSE, _FAKE_CUBE_POSE_DIM),
+                "goal_pos": _counter(_OFFSET_GOAL_POS, _FAKE_GOAL_POS_DIM),
+                "tcp_pose": _counter(_OFFSET_TCP_POSE, _FAKE_TCP_POSE_DIM),
             },
         }
 
 
 class TestStage1ASStateSynthesizer:
-    """Synthesised ``state`` key for AS conditions (ADR-007 §Stage 1b AS axis)."""
+    """Synthesised widened ``state`` key for AS conditions (ADR-007 §Stage 1b Rev 12; P1.05.8)."""
 
-    def test_as_hetero_injects_state_box_with_qpos_plus_qvel_dim(self) -> None:
-        """The ego-state Box's ``shape[0]`` must equal qpos_dim + qvel_dim.
+    def test_as_hetero_injects_widened_ego_state_with_partner_and_task(self) -> None:
+        """AS-hetero ego state concatenates ego + partner + task fields.
 
-        EgoPPOTrainer.from_config derives ``obs_dim = ego_state_space.shape[0]``
-        (chamber.benchmarks.ego_ppo_trainer:608) — pinning the shape here
-        is the regression guard against the P1.04 SAPIEN-gated failure
-        rediscovering itself.
+        Post-P1.05.8 (ADR-007 §Stage 1b Rev 12 / ADR-002 §Revision
+        history 2026-05-21) the ego uid's synthesised ``state`` Box
+        widens from ``concat(ego_qpos, ego_qvel)`` (shape ``(18,)``) to
+        ``[ego_qpos, ego_qvel, partner_qpos, partner_qvel, cube_pose,
+        goal_pos, tcp_pose]``. For the AS-hetero condition the partner
+        is fetch (qpos+qvel = ``_FAKE_FETCH_QPOS_DIM * 2`` per the
+        Tier-1 fake's encoding); per-condition shape is env-emit-
+        dependent and pinned by the Tier-2 ``test_trainer_obs_dim_
+        matches_widened_state_per_condition`` test on the real SAPIEN
+        env. The partner uid's own ``state`` Box stays at
+        ``concat(qpos, qvel)`` of the partner alone — partner does not
+        see the task.
+
+        EgoPPOTrainer.from_config derives ``obs_dim =
+        ego_state_space.shape[0]`` at construction per cell, so the
+        per-condition divergence does not trip any global constant.
         """
         inner = _FakeStateDictEnv(
             condition_id="stage1_pickplace_panda_plus_fetch_ego_aht_happo_per_agent"
@@ -314,23 +418,127 @@ class TestStage1ASStateSynthesizer:
         wrap = Stage1ASStateSynthesizer(inner)  # type: ignore[arg-type]
         ego_space = wrap.observation_space["agent"]["panda_wristcam"]["state"]
         assert isinstance(ego_space, gym.spaces.Box)
-        assert ego_space.shape == (18,)  # 9 qpos + 9 qvel
+        expected_ego_dim = (
+            _FAKE_EGO_QPOS_DIM * 2
+            + _FAKE_FETCH_QPOS_DIM * 2
+            + _FAKE_CUBE_POSE_DIM
+            + _FAKE_GOAL_POS_DIM
+            + _FAKE_TCP_POSE_DIM
+        )
+        assert ego_space.shape == (expected_ego_dim,)
         assert ego_space.dtype == np.float32
+        # Partner's own state stays at concat(qpos, qvel) of fetch alone
+        # — no task fields, no cross-agent observation (ADR-009 §Decision
+        # direct-observation-of-partner-pose is asymmetric: only the ego
+        # sees the partner, not vice-versa).
         partner_space = wrap.observation_space["agent"]["fetch"]["state"]
-        assert partner_space.shape == (30,)  # 15 qpos + 15 qvel
+        assert partner_space.shape == (_FAKE_FETCH_QPOS_DIM * 2,)
 
-    def test_observation_concat_order_qpos_then_qvel(self) -> None:
-        """ManiSkill v3 obs_mode="state" concat orders qpos then qvel."""
+    def test_as_homo_injects_widened_ego_state_with_partner_and_task(self) -> None:
+        """AS-homo ego state mirrors AS-hetero with panda_partner as the partner."""
+        inner = _FakeStateDictEnv(condition_id="stage1_pickplace_panda_only_mappo_shared_param")
+        wrap = Stage1ASStateSynthesizer(inner)  # type: ignore[arg-type]
+        ego_space = wrap.observation_space["agent"]["panda_wristcam"]["state"]
+        expected_ego_dim = (
+            _FAKE_EGO_QPOS_DIM * 2
+            + _FAKE_PANDA_PARTNER_QPOS_DIM * 2
+            + _FAKE_CUBE_POSE_DIM
+            + _FAKE_GOAL_POS_DIM
+            + _FAKE_TCP_POSE_DIM
+        )
+        assert ego_space.shape == (expected_ego_dim,)
+        partner_space = wrap.observation_space["agent"]["panda_partner"]["state"]
+        assert partner_space.shape == (_FAKE_PANDA_PARTNER_QPOS_DIM * 2,)
+
+    def test_observation_concat_order_is_load_bearing(self) -> None:
+        """Concat order is pinned positionally.
+
+        Order: ``[ego_qpos, ego_qvel, partner_qpos, partner_qvel,
+        cube_pose, goal_pos, tcp_pose]``.
+
+        Load-bearing per ADR-007 §Stage 1b Rev 12 — the audit-trail
+        reproducibility of trained-checkpoint diffs across PRs and any
+        future targeted feature ablation depend on this order. The
+        deterministic-counter fake (``_OFFSET_*`` constants) makes
+        each slot's contribution readable by inspection.
+        """
         inner = _FakeStateDictEnv(
             condition_id="stage1_pickplace_panda_plus_fetch_ego_aht_happo_per_agent"
         )
         wrap = Stage1ASStateSynthesizer(inner)  # type: ignore[arg-type]
         obs = wrap.observation(_FakeStateDictEnv._sample_obs())
         state = obs["agent"]["panda_wristcam"]["state"]
-        assert state.shape == (18,)
         assert state.dtype == np.float32
-        # qpos = arange(9), qvel = arange(9, 18); concat preserves that.
-        np.testing.assert_array_equal(state, np.arange(18, dtype=np.float32))
+
+        # Slot 1: ego qpos (offset 100, length 9).
+        np.testing.assert_array_equal(
+            state[:_FAKE_EGO_QPOS_DIM],
+            _OFFSET_EGO_QPOS + np.arange(_FAKE_EGO_QPOS_DIM, dtype=np.float32),
+        )
+        cursor = _FAKE_EGO_QPOS_DIM
+        # Slot 2: ego qvel (offset 200, length 9).
+        np.testing.assert_array_equal(
+            state[cursor : cursor + _FAKE_EGO_QPOS_DIM],
+            _OFFSET_EGO_QVEL + np.arange(_FAKE_EGO_QPOS_DIM, dtype=np.float32),
+        )
+        cursor += _FAKE_EGO_QPOS_DIM
+        # Slot 3: partner (fetch) qpos (offset 300, length 15).
+        np.testing.assert_array_equal(
+            state[cursor : cursor + _FAKE_FETCH_QPOS_DIM],
+            _OFFSET_PARTNER_QPOS + np.arange(_FAKE_FETCH_QPOS_DIM, dtype=np.float32),
+        )
+        cursor += _FAKE_FETCH_QPOS_DIM
+        # Slot 4: partner (fetch) qvel (offset 400, length 15).
+        np.testing.assert_array_equal(
+            state[cursor : cursor + _FAKE_FETCH_QPOS_DIM],
+            _OFFSET_PARTNER_QVEL + np.arange(_FAKE_FETCH_QPOS_DIM, dtype=np.float32),
+        )
+        cursor += _FAKE_FETCH_QPOS_DIM
+        # Slot 5: cube_pose (offset 500, length 7).
+        np.testing.assert_array_equal(
+            state[cursor : cursor + _FAKE_CUBE_POSE_DIM],
+            _OFFSET_CUBE_POSE + np.arange(_FAKE_CUBE_POSE_DIM, dtype=np.float32),
+        )
+        cursor += _FAKE_CUBE_POSE_DIM
+        # Slot 6: goal_pos (offset 600, length 3).
+        np.testing.assert_array_equal(
+            state[cursor : cursor + _FAKE_GOAL_POS_DIM],
+            _OFFSET_GOAL_POS + np.arange(_FAKE_GOAL_POS_DIM, dtype=np.float32),
+        )
+        cursor += _FAKE_GOAL_POS_DIM
+        # Slot 7: tcp_pose (offset 700, length 7).
+        np.testing.assert_array_equal(
+            state[cursor : cursor + _FAKE_TCP_POSE_DIM],
+            _OFFSET_TCP_POSE + np.arange(_FAKE_TCP_POSE_DIM, dtype=np.float32),
+        )
+        cursor += _FAKE_TCP_POSE_DIM
+        assert cursor == state.shape[0]
+
+    def test_partner_state_excludes_task_and_ego(self) -> None:
+        """Partner's own ``state`` is ``concat(qpos, qvel)`` only — asymmetry pinned.
+
+        ADR-009 §Decision direct-observation-of-partner-pose is one-
+        way: the ego sees the partner, but the partner does not see
+        the task or the ego. A regression that symmetrised the
+        widening would silently change the ad-hoc claim.
+        """
+        inner = _FakeStateDictEnv(
+            condition_id="stage1_pickplace_panda_plus_fetch_ego_aht_happo_per_agent"
+        )
+        wrap = Stage1ASStateSynthesizer(inner)  # type: ignore[arg-type]
+        obs = wrap.observation(_FakeStateDictEnv._sample_obs())
+        partner_state = obs["agent"]["fetch"]["state"]
+        assert partner_state.shape == (_FAKE_FETCH_QPOS_DIM * 2,)
+        # First half = fetch qpos counter (offset 300), second half =
+        # fetch qvel counter (offset 400). No cube / goal / tcp slot.
+        np.testing.assert_array_equal(
+            partner_state[:_FAKE_FETCH_QPOS_DIM],
+            _OFFSET_PARTNER_QPOS + np.arange(_FAKE_FETCH_QPOS_DIM, dtype=np.float32),
+        )
+        np.testing.assert_array_equal(
+            partner_state[_FAKE_FETCH_QPOS_DIM:],
+            _OFFSET_PARTNER_QVEL + np.arange(_FAKE_FETCH_QPOS_DIM, dtype=np.float32),
+        )
 
     def test_pass_through_when_inner_env_has_no_condition_id(self) -> None:
         inner = _FakeStateDictEnv(condition_id=None)
@@ -344,13 +552,74 @@ class TestStage1ASStateSynthesizer:
         wrap = Stage1ASStateSynthesizer(inner)  # type: ignore[arg-type]
         obs = wrap.observation(_FakeStateDictEnv._sample_obs())
         # OM conditions are handled by Stage1OMChannelFilter, not this wrapper.
+        # The OM remediation lives in P1.05.6 / issue #177 (the vision-head
+        # EgoPPOTrainer extension); this short-circuit must stay verbatim.
         assert "state" not in obs["agent"]["panda_wristcam"]
 
-    def test_as_homo_also_synthesizes_state(self) -> None:
-        inner = _FakeStateDictEnv(condition_id="stage1_pickplace_panda_only_mappo_shared_param")
+    def test_loud_fail_when_extra_dict_is_missing_at_construction(self) -> None:
+        """Missing ``obs["extra"]`` Dict in the observation_space raises TypeError.
+
+        ADR-007 §Stage 1b Rev 12 loud-fail predicate — silent zero-fill
+        would resurrect the Surface 6 class of bug (the whole point of
+        widening is that the trainer sees real task signal).
+        """
+        inner = _FakeStateDictEnv(
+            condition_id="stage1_pickplace_panda_plus_fetch_ego_aht_happo_per_agent"
+        )
+        # Drop the "extra" sub-space.
+        broken_spaces = dict(inner.observation_space.spaces)
+        del broken_spaces["extra"]
+        inner.observation_space = gym.spaces.Dict(broken_spaces)
+        with pytest.raises(TypeError, match=r"Stage1ASStateSynthesizer.*'extra'"):
+            Stage1ASStateSynthesizer(inner)  # type: ignore[arg-type]
+
+    def test_loud_fail_when_cube_pose_field_is_missing_at_construction(self) -> None:
+        """Missing ``obs["extra"]["cube_pose"]`` raises TypeError naming the field."""
+        inner = _FakeStateDictEnv(
+            condition_id="stage1_pickplace_panda_plus_fetch_ego_aht_happo_per_agent"
+        )
+        extra_spaces = dict(inner.observation_space["extra"].spaces)
+        del extra_spaces["cube_pose"]
+        new_spaces = dict(inner.observation_space.spaces)
+        new_spaces["extra"] = gym.spaces.Dict(extra_spaces)
+        inner.observation_space = gym.spaces.Dict(new_spaces)
+        with pytest.raises(TypeError, match="cube_pose"):
+            Stage1ASStateSynthesizer(inner)  # type: ignore[arg-type]
+
+    def test_loud_fail_when_extra_field_has_wrong_trailing_dim(self) -> None:
+        """A task field with the wrong trailing dim raises TypeError naming the dim mismatch."""
+        inner = _FakeStateDictEnv(
+            condition_id="stage1_pickplace_panda_plus_fetch_ego_aht_happo_per_agent"
+        )
+        extra_spaces = dict(inner.observation_space["extra"].spaces)
+        # Shrink goal_pos to (1, 2) — wrong trailing dim (expected 3).
+        extra_spaces["goal_pos"] = gym.spaces.Box(-np.inf, np.inf, (1, 2), np.float32)
+        new_spaces = dict(inner.observation_space.spaces)
+        new_spaces["extra"] = gym.spaces.Dict(extra_spaces)
+        inner.observation_space = gym.spaces.Dict(new_spaces)
+        with pytest.raises(TypeError, match="goal_pos"):
+            Stage1ASStateSynthesizer(inner)  # type: ignore[arg-type]
+
+    def test_loud_fail_on_multi_env_batch_at_observation_time(self) -> None:
+        """Single-env contract: arrays with shape[0] > 1 raise TypeError.
+
+        ADR-007 §Stage 1b Rev 12 documents this as a load-bearing
+        assumption: ``ravel()`` across a leading batch dim would
+        silently mis-pack the flat state vector. Stage-1b builds with
+        ``num_envs=1`` per cell; a future multi-env build must
+        revisit the synthesiser before it ships.
+        """
+        inner = _FakeStateDictEnv(
+            condition_id="stage1_pickplace_panda_plus_fetch_ego_aht_happo_per_agent"
+        )
         wrap = Stage1ASStateSynthesizer(inner)  # type: ignore[arg-type]
-        obs = wrap.observation(_FakeStateDictEnv._sample_obs())
-        assert obs["agent"]["panda_wristcam"]["state"].shape == (18,)
+        bad_obs = _FakeStateDictEnv._sample_obs()
+        # Simulate a num_envs=2 batch on the ego's qpos.
+        bad_obs["agent"]["panda_wristcam"]["qpos"] = np.zeros(
+            (2, _FAKE_EGO_QPOS_DIM), dtype=np.float32
+        )
+        with pytest.raises(TypeError, match=r"single-env|shape"):
+            wrap.observation(bad_obs)
 
 
 # ----- Stage1OMChannelFilter (per-condition obs masking; ADR-007 §Stage 1b OM axis) -----

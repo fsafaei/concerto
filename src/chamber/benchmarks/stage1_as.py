@@ -31,9 +31,14 @@ follow-up work (Phase 1). For Phase-0, the adapter uses
 a CPU-friendly stand-in: both conditions share the MPE physics but
 diverge on the ``agent_uids`` tuple to encode the AS distinction
 (``("panda_wristcam", "panda_partner")`` vs
-``("panda_wristcam", "fetch")``). Episode success is rule-based
-(``mean_reward > _SUCCESS_THRESHOLD``); the ego is a frozen-zero
-policy (no training).
+``("panda_wristcam", "fetch")``). Episode success is
+``terminated and not truncated`` — i.e. the env's own
+:meth:`Stage1PickPlaceEnv.evaluate` predicate fired
+(``is_obj_placed & is_robot_static``). Stage-1a's MPE stand-in
+does not emit ``terminated=True`` on success, so Stage-1a success
+rates are structurally zero under this rule — correct per ADR-007
+§Stage 1a (Stage 1a is rig-validation, not gap measurement). The
+ego is a frozen-zero policy (no training).
 
 Stage-1a uses :func:`_zero_ego_action_factory` as the production
 default; the trained-ego path is Stage-1b (Phase-1, ADR-007 §Stage 1b).
@@ -90,13 +95,6 @@ _AXIS: str = "AS"
 #: meaningful trajectory. Phase-1 raises this when the real Stage-1
 #: pick-place env's natural horizon is longer.
 _MAX_STEPS_PER_EPISODE: int = 50
-
-#: Success threshold on the mean per-step reward over the episode
-#: (MPE Cooperative-Push rewards are negative; ``mean_reward >
-#: -0.30`` ≈ "agents got reasonably close to landmarks"). Phase-1
-#: success rules use the env's terminal-success flag where
-#: applicable; for Phase-0 stand-in MPE there is no terminal flag.
-_SUCCESS_THRESHOLD: float = -0.30
 
 #: Default per-condition agent-uid tuples (Phase-0 stand-in mapping
 #: of plan/07 §3 condition_id strings onto MPE-compatible 2-tuples).
@@ -392,11 +390,23 @@ def _run_one_episode(
         if terminated or truncated:
             break
     mean_reward = total_reward / max(1, n_steps)
-    # Phase-1: the real Stage-1 pick-place env exposes ``terminated=True``
-    # on success, at which point the ``or terminated`` clause becomes the
-    # dominant signal and the rule-based mean-reward fallback can be
-    # dropped (plan/07 §T5b.2 follow-up).
-    success = mean_reward > _SUCCESS_THRESHOLD or terminated
+    # ADR-007 §Stage 1b Rev 12 / P1.05.8 (closes Surface 1): the real
+    # Stage-1 pick-place env exposes ``terminated=True`` iff
+    # ``evaluate()`` returns ``is_obj_placed & is_robot_static``; that
+    # is the only honest success signal here. The pre-P1.05.8 rule
+    # (``mean_reward > -0.30 or terminated``) was a Phase-0 MPE
+    # holdover — ManiSkill's small-positive per-step rewards trivially
+    # cleared the ``> -0.30`` threshold, producing 100 % rubber-stamp
+    # passes that masked the Surface-6 obs-contract defect. Stage-1a's
+    # MPE stand-in does NOT emit ``terminated=True`` on success, so
+    # Stage-1a success rates become structurally zero under this rule;
+    # that is correct per ADR-007 §Stage 1a (Stage 1a is rig-validation,
+    # not the ≥20 pp gate). ``mean_reward`` and ``n_steps`` stay in
+    # metadata as diagnostic fields; ``terminated`` / ``truncated`` are
+    # also surfaced so post-run audits can distinguish the
+    # ``evaluate()``-fired-on-final-step case from a truncation-only
+    # episode.
+    success = bool(terminated) and not bool(truncated)
     return EpisodeResult(
         seed=seed,
         episode_idx=episode_idx,
@@ -406,6 +416,8 @@ def _run_one_episode(
             "condition": condition_id,
             "mean_reward": f"{mean_reward:.4f}",
             "n_steps": str(n_steps),
+            "terminated": str(bool(terminated)).lower(),
+            "truncated": str(bool(truncated)).lower(),
         },
     )
 
