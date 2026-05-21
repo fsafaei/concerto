@@ -116,11 +116,44 @@ A5 isolates the **interaction** between Surface 3 (partner targeting cube spawn)
 ## Sequenced next steps in this PR
 
 1. ✅ Initial commit: framing + immutable smoke evidence (this document + `spike_as_hetero_widened_FAILED.json` + `launch.log` + `7b033577fce7de7b.jsonl` + `SHA256SUMS.txt`).
-2. ⏳ Run A2 (safety disabled). Commit ablation driver + result JSON + log; append A2 §Findings paragraph here.
-3. ⏳ Run A1 (zero-action partner). Same pattern.
-4. ⏳ Run A5 IFF A1 lifts the gate. Same pattern.
-5. ⏳ Final commit: §Findings summary section here, naming the convergent fingerprint (or noting that no ablation converged).
+2. ✅ Run A2 (safety disabled). **Result: NEGATIVE — Surface 5 NOT dominant.** See §A2 Findings below.
+3. ⏳ Run A1 (zero-action partner). Surface findings.
+4. ⏳ Run A5 IFF A1 lifts the gate.
+5. ⏳ Final commit: §Findings summary section, naming the convergent fingerprint (or noting that no ablation converged).
 6. Open PR; surface to founder for remediation decision.
+
+## A2 Findings — safety filter disabled (NEGATIVE)
+
+Driver: `.local/a2_safety_disabled.py` (committed to evidence dir as `a2_safety_disabled.log`; SpikeRun at `spike_as_hetero_a2_safety_disabled.json`; per-step events at `5e2f7085688bcd65.jsonl`).
+
+```
+Condition: stage1_pickplace_panda_plus_fetch_ego_aht_happo_per_agent
+Episodes: 20
+Success rate: 0/20 = 0.0%
+n_terminated: 0; n_truncated: 0
+mean_reward: min=0.0000  max=0.0739  avg=0.0285
+Total wallclock: 8.3 min (vs 48.6 min smoke — CBF-QP overhead removed)
+```
+
+**Falsification rule from the driver:** `success_rate >= 10-20%` would fingerprint Surface 5 as dominant. Outcome: 0/20. **Surface 5 is NOT the dominant remaining defect.**
+
+The byte-identical λ signal across the 2026-05-20 and 2026-05-21 firings was a real fingerprint about *how the safety stack behaves* (λ converges to the clamp bound under the constant-velocity predictor regardless of policy), but disabling the safety filter does not lift the gate — meaning the saturating λ wasn't the binding obstacle to convergence. The ego's actor learns a similar policy with or without the safety constraint; either way, the policy plateaus in the same reward range without ever satisfying `is_obj_placed & is_robot_static`.
+
+Cross-comparison (deterministic post-training eval, 20 episodes each):
+
+| metric | post-widening smoke (safety ON) | A2 (safety OFF) | delta |
+|---|---|---|---|
+| training wallclock | 48.4 min | 8.2 min | −83 % (CBF-QP per-step overhead removed) |
+| eval success_rate | 0 / 20 | 0 / 20 | 0 |
+| eval mean_reward avg | 0.0280 | 0.0285 | +0.0005 (noise) |
+| eval mean_reward max | 0.0719 | 0.0739 | +0.0020 (noise) |
+| training rollout `last_reward` endpoint | 0.0203 | 0.0374 | +84 % (policy unconstrained, but still no termination) |
+
+The training-time `last_reward` is materially higher under A2 (the unconstrained actor can drive harder), but the eval-time `mean_reward` distribution is essentially identical to the smoke. This is the diagnostic shape of "the binding constraint is NOT in the action constraint — it is in the env's success predicate not being driven to true." The ego learns to climb the shaped reward (reach + grasp + place + static) but does not complete the 4-stage sequence within the 50-step eval horizon.
+
+**Routing implication.** Per the driver's decision rule and the brief's logic, A1 (partner heuristic) is the next ablation. A2's negative result also has independent value for ADR-004 §Open questions: the λ-saturation hypothesis flagged in the 2026-05-20 ADR-004 amendment ("the conformal overlay's ε=−0.05 design may be empirically vacuous under the constant-velocity predictor stub") is empirically vacuous in the sense that it does not affect policy convergence in this regime — but the operational λ behaviour itself (drift to clamp, no QP infeasibility, no braking fires) is consistent across firings.
+
+Cost: ~8 GPU-minutes (5× cheaper than expected because the safety-stack overhead is the bulk of the per-step cost; disabling it makes the rollout ~6× faster on RTX 2080). Total investigation compute budget so far: 48.4 + 8.2 = 56.6 GPU-minutes.
 
 ## Evidence inventory
 
