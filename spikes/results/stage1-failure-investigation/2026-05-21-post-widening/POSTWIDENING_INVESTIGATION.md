@@ -117,8 +117,8 @@ A5 isolates the **interaction** between Surface 3 (partner targeting cube spawn)
 
 1. ✅ Initial commit: framing + immutable smoke evidence (this document + `spike_as_hetero_widened_FAILED.json` + `launch.log` + `7b033577fce7de7b.jsonl` + `SHA256SUMS.txt`).
 2. ✅ Run A2 (safety disabled). **Result: NEGATIVE — Surface 5 NOT dominant.** See §A2 Findings below.
-3. ⏳ Run A1 (zero-action partner). Surface findings.
-4. ⏳ Run A5 IFF A1 lifts the gate.
+3. ✅ Run A1 (zero-action partner). **Result: NEGATIVE on success_rate AND structurally identical eval-reward distribution to the smoke.** See §A1 Findings below.
+4. ⏳ Run A5 — **promoted from conditional to RUN** to validate the no-op-partner hypothesis A1 surfaced. The original A5 conditional ("only if A1 lifts the gate") assumed A1's outcome would cleanly separate partner-as-targeting from partner-as-presence. A1's byte-identical-to-smoke eval rewards changed that interpretation; A5 with `target_xy="0.5,0.5"` is now the cheapest empirical test of whether the scripted partner is structurally a no-op against fetch (in which case Surface 3 is a phantom defect) or whether the policy is partner-insensitive at this seed/budget (a different defect).
 5. ⏳ Final commit: §Findings summary section, naming the convergent fingerprint (or noting that no ablation converged).
 6. Open PR; surface to founder for remediation decision.
 
@@ -154,6 +154,70 @@ The training-time `last_reward` is materially higher under A2 (the unconstrained
 **Routing implication.** Per the driver's decision rule and the brief's logic, A1 (partner heuristic) is the next ablation. A2's negative result also has independent value for ADR-004 §Open questions: the λ-saturation hypothesis flagged in the 2026-05-20 ADR-004 amendment ("the conformal overlay's ε=−0.05 design may be empirically vacuous under the constant-velocity predictor stub") is empirically vacuous in the sense that it does not affect policy convergence in this regime — but the operational λ behaviour itself (drift to clamp, no QP infeasibility, no braking fires) is consistent across firings.
 
 Cost: ~8 GPU-minutes (5× cheaper than expected because the safety-stack overhead is the bulk of the per-step cost; disabling it makes the rollout ~6× faster on RTX 2080). Total investigation compute budget so far: 48.4 + 8.2 = 56.6 GPU-minutes.
+
+## A1 Findings — zero-action partner at eval (NEGATIVE on success; structurally identical to smoke)
+
+Driver: `.local/a1_zero_action_partner.py` (committed as `a1_zero_action_partner.log`; SpikeRun at `spike_as_hetero_a1_zero_action_partner.json`; per-step events at `7dd889f55295b33f.jsonl`).
+
+```
+Condition: stage1_pickplace_panda_plus_fetch_ego_aht_happo_per_agent
+Episodes: 20
+Success rate: 0/20 = 0.0%
+n_terminated: 0; n_truncated: 0
+mean_reward: min=0.0000  max=0.0719  avg=0.0280
+Total wallclock: 50.5 min
+```
+
+The training-time partner is the factory's own scripted partner; only the EVAL-time partner is swapped for a `_ZeroActionPartner` (subclass of `ScriptedHeuristicPartner` for the ADR-009 black-box-policy gate; `.act()` returns `np.zeros(action_dim)` every step). Same training cfg, same training seed; only the eval inner loop's partner changes.
+
+**Falsification rule from the driver:** `success_rate >= 10-20%` would fingerprint Surface 3 as dominant. Outcome: 0/20.
+
+### The byte-identical anomaly (load-bearing diagnostic)
+
+Per-episode `mean_reward` (formatted to 4 decimal places) from the smoke (scripted partner at eval) vs A1 (zero-action partner at eval):
+
+| episode | smoke `mean_reward` | A1 `mean_reward` | smoke==A1 |
+|---|---|---|---|
+| 00 | 0.0000 | 0.0000 | yes |
+| 01 | 0.0000 | 0.0000 | yes |
+| 02 | 0.0000 | 0.0000 | yes |
+| 03 | 0.0000 | 0.0000 | yes |
+| 04 | 0.0000 | 0.0000 | yes |
+| 05 | 0.0016 | 0.0016 | yes |
+| 06 | 0.0085 | 0.0085 | yes |
+| 07 | 0.0325 | 0.0325 | yes |
+| 08 | 0.0445 | 0.0445 | yes |
+| 09 | 0.0600 | 0.0600 | yes |
+| 10 | 0.0385 | 0.0385 | yes |
+| 11 | 0.0516 | 0.0516 | yes |
+| 12 | 0.0719 | 0.0719 | yes |
+| 13 | 0.0421 | 0.0421 | yes |
+| 14 | 0.0394 | 0.0394 | yes |
+| 15 | 0.0434 | 0.0434 | yes |
+| 16 | 0.0329 | 0.0329 | yes |
+| 17 | 0.0239 | 0.0239 | yes |
+| 18 | 0.0380 | 0.0380 | yes |
+| 19 | 0.0320 | 0.0320 | yes |
+
+**Smoke and A1 produce identical per-episode reward sequences to 4 decimal places across all 20 episodes.** A2 (safety disabled) does NOT — A2's rewards diverge from the smoke starting at episode 05 (smoke 0.0016 vs A2 0.0000), confirming the eval is *sensitive* to env-state changes when something materially differs.
+
+Two competing explanations:
+
+1. **The scripted partner is structurally a no-op against the Stage-1b ManiSkill fetch.** `ScriptedHeuristicPartner._read_agent_xy` reads `obs["agent"][partner_uid]["state"][:2]` — pre-P1.05.8 that mapped to fetch's first two joint positions (NOT a Cartesian xy; mobile-base joint coordinates). Even post-widening the partner's own `state` Box stays at `concat(qpos, qvel)` (only the ego's `state` was widened to include task fields — the partner side asymmetry is documented in `chamber.envs.stage1_obs_filter` and pinned by `test_partner_state_excludes_task_and_ego`). The partner's `_compute_action` does `dx = clip(target_x - x, -1, 1); action[0] = dx; action[1] = dy; rest = 0`. With fetch's wheel joints starting near 0 and `target_xy = (0, 0)`, the partner emits ≈ zero action vectors; physics keeps wheel positions at ≈ 0; the heuristic stays at the fixed point. Empirically identical to the zero-action wrapper.
+
+2. **The trained policy is partner-insensitive at this seed/budget.** The widened ego state includes `partner_qpos + partner_qvel` (30-D for fetch). If the actor MLP's input weights for those slots are near-zero (orthogonal init + Adam under 100k frames + no informative gradient on those slots), the policy could ignore the partner channel entirely. The deterministic eval would then produce identical actions regardless of partner movement.
+
+A2's comparison (rewards diverge) rules out a third explanation ("the env doesn't apply the partner's action at all").
+
+The two explanations have **different remediation implications**:
+- Under explanation 1 (no-op partner): Surface 3 is a phantom defect. The original brief's "partner races toward cube spawn" framing was empirically wrong for fetch. Fix is to either (a) replace the scripted partner with one that actually moves the fetch base (constant-velocity drive, or one that reads Cartesian pose from `comm.pose`), or (b) accept that Stage-1b AS has a no-op partner and verify whether the AS heterogeneity gate is still measurable under that.
+- Under explanation 2 (partner-insensitive policy): the widening worked structurally but the policy didn't learn to use partner state. Fix is upstream of P1.05.8 — possibly hidden_dim too small (64 → 128/256), or training budget (100k → 500k+ to give SGD time to discover the partner channel as informative).
+
+### Routing implication — A5 promoted from conditional to RUN
+
+The brief's original conditional ("run A5 only if A1 lifts the gate") assumed A1's outcome would cleanly separate partner-as-targeting from partner-as-presence. The byte-identical-to-smoke finding inverts that assumption: A1 didn't lift the gate, but the reason might be that the partner is empirically irrelevant (explanation 1) — in which case A5 with `target_xy="0.5,0.5"` is the cheapest empirical test of the no-op hypothesis. If A5 produces byte-identical eval rewards, the scripted partner is confirmed no-op for fetch (explanation 1 wins). If A5 produces materially different eval rewards, the partner DOES move with a non-(0,0) target and the policy responds to the partner channel — pointing at explanation 2.
+
+Cost: ~50 GPU-minutes per run. Cumulative investigation compute after A1: 48.4 + 8.2 + 50.5 = 107.1 GPU-min. Adding A5: ~157 GPU-min worst case — still cheap vs the 200+ GPU-h of a "fix-and-relaunch" approach.
 
 ## Evidence inventory
 
