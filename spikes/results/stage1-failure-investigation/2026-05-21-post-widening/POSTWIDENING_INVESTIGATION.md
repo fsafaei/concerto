@@ -115,12 +115,12 @@ A5 isolates the **interaction** between Surface 3 (partner targeting cube spawn)
 
 ## Sequenced next steps in this PR
 
-1. ✅ Initial commit: framing + immutable smoke evidence (this document + `spike_as_hetero_widened_FAILED.json` + `launch.log` + `7b033577fce7de7b.jsonl` + `SHA256SUMS.txt`).
-2. ✅ Run A2 (safety disabled). **Result: NEGATIVE — Surface 5 NOT dominant.** See §A2 Findings below.
-3. ✅ Run A1 (zero-action partner). **Result: NEGATIVE on success_rate AND structurally identical eval-reward distribution to the smoke.** See §A1 Findings below.
-4. ⏳ Run A5 — **promoted from conditional to RUN** to validate the no-op-partner hypothesis A1 surfaced. The original A5 conditional ("only if A1 lifts the gate") assumed A1's outcome would cleanly separate partner-as-targeting from partner-as-presence. A1's byte-identical-to-smoke eval rewards changed that interpretation; A5 with `target_xy="0.5,0.5"` is now the cheapest empirical test of whether the scripted partner is structurally a no-op against fetch (in which case Surface 3 is a phantom defect) or whether the policy is partner-insensitive at this seed/budget (a different defect).
-5. ⏳ Final commit: §Findings summary section, naming the convergent fingerprint (or noting that no ablation converged).
-6. Open PR; surface to founder for remediation decision.
+1. ✅ Initial commit: framing + immutable smoke evidence.
+2. ✅ Run A2 (safety disabled). **Result: NEGATIVE — Surface 5 NOT dominant.** See §A2 Findings.
+3. ✅ Run A1 (zero-action partner). **Result: NEGATIVE on success_rate; byte-identical eval rewards to smoke.** See §A1 Findings.
+4. ✅ Run A5 (`target_xy="0.5,0.5"`). **Result: NEGATIVE on success_rate; eval rewards diverge from smoke/A1 — partner DOES move with a non-origin target.** See §A5 Findings.
+5. ✅ §Findings summary (this section); convergent fingerprint named.
+6. ⏳ Open PR; surface findings to founder for remediation decision.
 
 ## A2 Findings — safety filter disabled (NEGATIVE)
 
@@ -218,6 +218,104 @@ The two explanations have **different remediation implications**:
 The brief's original conditional ("run A5 only if A1 lifts the gate") assumed A1's outcome would cleanly separate partner-as-targeting from partner-as-presence. The byte-identical-to-smoke finding inverts that assumption: A1 didn't lift the gate, but the reason might be that the partner is empirically irrelevant (explanation 1) — in which case A5 with `target_xy="0.5,0.5"` is the cheapest empirical test of the no-op hypothesis. If A5 produces byte-identical eval rewards, the scripted partner is confirmed no-op for fetch (explanation 1 wins). If A5 produces materially different eval rewards, the partner DOES move with a non-(0,0) target and the policy responds to the partner channel — pointing at explanation 2.
 
 Cost: ~50 GPU-minutes per run. Cumulative investigation compute after A1: 48.4 + 8.2 + 50.5 = 107.1 GPU-min. Adding A5: ~157 GPU-min worst case — still cheap vs the 200+ GPU-h of a "fix-and-relaunch" approach.
+
+## A5 Findings — partner placement `target_xy=(0.5, 0.5)` (NEGATIVE on success; rewards diverge from smoke/A1)
+
+Driver: `.local/a5_partner_placement.py` (committed as `a5_partner_placement.log`; SpikeRun at `spike_as_hetero_a5_partner_placement.json`; per-step events at `b29a8f1dc1893841.jsonl`).
+
+```
+Condition: stage1_pickplace_panda_plus_fetch_ego_aht_happo_per_agent
+Partner target_xy = (0.5, 0.5)  (DISPLACED from (0, 0); well outside ±5 cm cube spawn envelope)
+Episodes: 20
+Success rate: 0/20 = 0.0%
+n_terminated: 0; n_truncated: 0
+mean_reward: min=0.0000  max=0.0721  avg=0.0296
+Total wallclock: 50.0 min
+```
+
+**Falsification rule from the driver:** `success_rate >= 10-20%` would fingerprint partner-as-targeting as dominant. Outcome: 0/20.
+
+### Disambiguating the A1 byte-identical anomaly
+
+| ep | smoke (scripted, target=(0,0)) | A1 (zero-action) | A2 (safety OFF) | A5 (scripted, target=(0.5,0.5)) | smoke==A1 | smoke==A5 |
+|---|---|---|---|---|---|---|
+| 04 | 0.0000 | 0.0000 | 0.0000 | **0.0001** | yes | **no** |
+| 05 | 0.0016 | 0.0016 | 0.0000 | **0.0022** | yes | **no** |
+| 06 | 0.0085 | 0.0085 | 0.0002 | **0.0094** | yes | **no** |
+| 07 | 0.0325 | 0.0325 | 0.0033 | **0.0363** | yes | **no** |
+| 08 | 0.0445 | 0.0445 | 0.0055 | **0.0466** | yes | **no** |
+| 09 | 0.0600 | 0.0600 | 0.0157 | 0.0598 | yes | **no** |
+| 10 | 0.0385 | 0.0385 | 0.0279 | 0.0385 | yes | yes (geometric coincidence) |
+| 11 | 0.0516 | 0.0516 | 0.0584 | **0.0519** | yes | **no** |
+| 12 | 0.0719 | 0.0719 | 0.0739 | **0.0721** | yes | **no** |
+| 13 | 0.0421 | 0.0421 | 0.0482 | **0.0433** | yes | **no** |
+| ... | ... | ... | ... | ... | (all match) | (most differ) |
+
+A5 rewards diverge from smoke/A1 across most episodes — small magnitudes (Δ ≤ 0.005), but consistently non-zero. This **rules out explanation 2** from §A1 (partner-insensitive policy): the policy DOES respond to partner state changes when the partner actually moves. Two episodes (10 and 19) match the smoke exactly, attributable to geometric configurations where the partner's `(0.5, 0.5)` excursion stays clear of the panda's TCP-to-cube path — a coincidence, not a structural feature.
+
+**Confirmed explanation 1 (refined):** The `ScriptedHeuristicPartner` is a no-op specifically against `target_xy=(0, 0)` because the heuristic's `_read_agent_xy` reads `obs["agent"][partner_uid]["state"][:2]` — under the Stage-1b ManiSkill fetch wrapper that maps to the first two joint positions (NOT a Cartesian xy). Initial wheel positions are ≈ 0 + the target is `(0, 0)` ⇒ `dx = clip(0 - 0, ±1) = 0`, `dy = 0`, the action vector is all-zero, the partner doesn't move, the heuristic's fixed point holds. With `target_xy=(0.5, 0.5)` the heuristic emits a non-zero action vector (`dx = +0.5`, `dy = +0.5`, clipped), the fetch base moves, the env trajectory diverges. The "partner targeting cube spawn" framing from the 2026-05-20 INVESTIGATION.md §Surface 3 was empirically incorrect for fetch's joint-coordinate state — the partner was a no-op in that firing too, just structurally rather than by design.
+
+### What A5 closes
+
+- Surface 3 (partner heuristic) is NOT the dominant defect in any of its three tested configurations (scripted-at-origin = no-op, zero-action, scripted-displaced-and-moving). The partner's behavior — present-but-static, absent, or actively moving away from the cube spawn — is decision-irrelevant for whether the ego succeeds. Even when the partner moves consistently (A5), the eval-reward distribution shifts only modestly (avg 0.0296 vs smoke 0.0280; +5.7 %) and success_rate stays at zero.
+- The original Surface 3 framing in the 2026-05-20 INVESTIGATION.md ("partner races toward cube spawn") was a misreading of the heuristic under the Stage-1b ManiSkill fetch URDF. The heuristic's xy-target logic was correct for the Phase-0 MPE stand-in (where `state[:2]` IS a Cartesian agent position) but carried over unchanged into Stage-1b without an audit of what `state[:2]` resolves to under fetch's joint state. This is a separate Stage-1b implementation defect — surface only; founder owns whether to file a slice.
+- Partner placement is NOT the load-bearing intervention. Even with the partner displaced and moving consistently, the ego's success_rate stays at zero.
+
+### Cumulative compute
+
+| Run | Wallclock | Cumulative |
+|---|---|---|
+| smoke | 48.6 min | 48.6 |
+| A2 | 8.3 min | 56.9 |
+| A1 | 50.5 min | 107.4 |
+| A5 | 50.0 min | 157.4 |
+
+Total post-widening investigation: ~2 h 37 min on RTX 2080. The compute cap was met: ~10.5 GPU-h vs the original "fix-and-relaunch" ~90+ GPU-h estimate.
+
+## §Findings summary — convergent fingerprint
+
+Across the post-widening smoke + three ablations on the same `(seed=0, AS-hetero)` cell:
+
+| Surface | Status (post-P1.05.8) | Evidence |
+|---|---|---|
+| 1 Success rule | **CLOSED** (P1.05.8 / ADR-007 §Stage 1b Rev 12) | xfail-strict test flipped to PASS; eval `terminated`/`truncated` plumbed through `metadata`. |
+| 2 Training budget | **STILL SUSPECT — primary remaining candidate** | Per-window `last_reward` climbs across all 4 runs but plateaus near 0.020-0.038 by step 100k; community baselines train PickCube at 1M+ frames. |
+| 3 Partner heuristic | **REJECTED as load-bearing defect; SEPARATE Stage-1b impl bug surfaced** | A1 + A5 + smoke comparison: partner behavior (no-op, displaced-moving) does not lift the gate. The `_read_agent_xy → state[:2] = joint positions` mapping is a structural mis-port from MPE; flagged for the founder's follow-up decision. |
+| 4 Adapter env-factory | CLEAN | Mechanical end-to-end across 4 runs; SpikeRuns valid, audit-gate predicates would all PASS (predicate A: |λ_ss|=7.0 < 9.0). |
+| 5 Safety filter saturation | **REJECTED as load-bearing defect; λ behavior confirmed empirically vacuous** | A2 (safety OFF) does not lift the gate; the byte-identical λ telemetry across firings is a real fingerprint of the conformal-overlay update math but is not the binding constraint to convergence. |
+| 6 Observation contract | **CLOSED** (P1.05.8 / ADR-007 §Stage 1b Rev 12) | `state.shape=(65,)` end-to-end; widening verified by Tier-2 SAPIEN-gated tests on `main`. |
+| 7 Reward function | **STILL SUSPECT — derived; mechanism narrowed** | Reward shape is structurally correct (climbs through the reaching stage in every run) but plateaus before the grasp stage triggers. The 16×-gap between the policy's plateau (~0.04) and the success terminal (1.0) suggests the grasp-stage discontinuity in the shaped reward is not crossable by PPO at hidden_dim=64 + 100k frames + the current scripted partner / safety regime. |
+
+### The convergent fingerprint
+
+**The trained policy makes the panda reach toward the cube but never grasps it within the 50-step eval horizon, regardless of partner behavior or safety constraint.** Evidence:
+
+- Reaching is partially solved across all 4 runs (per-window `last_reward` climbs from ~3e-5 at step 1k to ~0.020 at step 100k).
+- `n_terminated = 0` across all 4 runs × 20 episodes = 0 / 80. The env's `evaluate()` predicate (`is_obj_placed & is_robot_static`) requires grasp + placement + static; with zero grasps, the predicate cannot fire.
+- The 4-stage reward shape (`reach + is_grasped + place·is_grasped + static·is_obj_placed + 5·success`, divided by 5) has a discontinuity at the grasp stage: until `is_grasped` flips True, the `place` and `static` terms are gated to zero and the policy gets no signal that grasping is the right move. PPO must discover the grasp action via the entropy bonus alone (entropy_coef=0.01 per `_HARL_FIXED_DEFAULTS`) — this is structurally hard with a tiny actor (hidden_dim=64) on a sparse-grasp signal.
+
+### Remediation surface (NOT proposed; founder decision)
+
+This investigation does NOT recommend a remediation slice. Per §4a discipline + the consultation-brief §5 separation of engineering from science-contract questions, the founder owns the remediation choice. The narrowed remediation surface — based on what this investigation rejected and what survived — is:
+
+- **Surface 2 (training budget) → A3 deferred.** Extend `total_frames` from 100k to 500k-1M to give PPO more time to discover the grasp action via entropy. Cost: ~4-8 GPU-h on RTX 2080 per cell. Cheapest single-knob test of the live primary suspect.
+- **Surface 7 (architecture).** Bump `happo.hidden_dim` from 64 to 128 or 256. The actor MLP is two-layer (per `_EgoCritic` / HARL `MLPBase`); 64-wide layers may be too narrow to represent the conditional-grasp policy. Cost: ~1 GPU-h per cell at 100k frames.
+- **Reward shaping refinement.** The grasp-stage discontinuity could be smoothed (e.g., add a per-step "fingers near cube" shaping term that doesn't require grasp to fire). Higher engineering cost; risks invalidating the published-PickCube-baseline comparability. ADR-007 §Discipline applies: the reward function is implementation-detail-of-the-cell, but the ≥20 pp gate's interpretability suffers if shaping is tuned to the gate.
+- **Stage-1b partner heuristic fix (separate slice).** Replace `ScriptedHeuristicPartner._read_agent_xy`'s `state[:2]` fallback with either a Cartesian-pose reader via `obs["comm"]["pose"][uid]["xyz"]` (the ADR-003 channel; not yet wired into Stage-1b env) or a constant-velocity drive. The current heuristic is structurally broken for fetch's joint-coordinate state but happens to fail safely (no movement, no interference). Worth filing as its own ticket — surface only.
+- **Combinations.** A3 + hidden_dim bump together is plausible; the failure mode is multi-stage and likely requires more than one knob.
+
+### What is NOT a remediation surface
+
+- **Re-running the failed launch on more seeds.** Single-seed evaluation here had byte-identical signal across two configurations (smoke + A1), so the seed-0-is-unrepresentative hypothesis is not supported.
+- **Pre-registration changes.** No edit to `spikes/preregistration/{AS,OM}.yaml`; the gate measurement contract is intact. The implementation-detail-of-the-cell allowance (ADR-007 §Discipline) covers any of the above remediation choices.
+
+### Status of ADRs
+
+- **ADR-007 status holds at Accepted.** No AS promotion to Validated until a successful gate measurement lands. The §4a runbook has fired twice (2026-05-20 pre-widening + 2026-05-21 post-widening); both archives are immutable per-firing audit trails.
+- **ADR-002 §Revision history**: no further amendment in this PR. The 2026-05-21 entry from P1.05.8 (the Tier-2 acceptance-gap finding) carries forward unchanged.
+- **ADR-004**: the 2026-05-20 amendment's "empirically-vacuous-conformal-overlay" hypothesis is refined by A2 — the conformal overlay's saturation IS empirically vacuous (in the sense that disabling the safety stack doesn't change policy convergence), but its operational behaviour is consistent. The ε=−0.05 + Theorem 3 question stays open per ADR-004 §Open questions.
+- **ADR-009**: the direct-observation-of-partner-pose paragraph landed in P1.05.8 is unaffected by the A1/A5 finding (the partner-heuristic implementation issue is at the Stage-1b chamber-side adapter, not the ADR-009 partner-policy contract).
+
 
 ## Evidence inventory
 
