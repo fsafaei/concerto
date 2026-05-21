@@ -1,0 +1,227 @@
+Surface 7 — Reward function audit
+=================================
+Date: 2026-05-21
+Auditor: §4a gap-fill follow-up (PR #182)
+Method: B1 static analysis of the env's reward function; B2
+quantitative analysis of the archived per-rollout-window last_reward
+across all 5 seeds + per-eval-episode mean_reward across both
+conditions.
+
+Falsifiable questions:
+  Q1. Is the reward function structurally correct (no sign flip, no
+      scale bug, references the right tensor fields)?
+  Q2. Is the dense shaping signal strong enough relative to the
+      safety-filter-induced constraint pressure that the ego could
+      plausibly climb it?
+  Q3. Does the per-rollout-window mean reward show any trend over
+      100k frames, or is it flat at ~0?
+
+Verdict: SUSPECT (reward function is structurally correct; signal IS
+climbing; the question is whether intermittent-success behaviour
+explains the eval-time gap_pp = 0).
+
+
+B1 — Static analysis of the reward function
+-------------------------------------------
+File: src/chamber/envs/stage1_pickplace.py
+Method: Stage1PickPlaceEnv.compute_normalized_dense_reward (lines 918-949)
+
+Implementation (verbatim, panda-routed):
+
+  def compute_normalized_dense_reward(self, obs, action, info):
+      panda = self._panda_agent
+      tcp_to_obj_dist = torch.linalg.norm(self.cube.pose.p - panda.tcp_pose.p, axis=1)
+      reaching_reward = 1 - torch.tanh(5 * tcp_to_obj_dist)
+      reward = reaching_reward
+      is_grasped = info["is_grasped"]
+      reward = reward + is_grasped
+      obj_to_goal_dist = torch.linalg.norm(self.goal_site.pose.p - self.cube.pose.p, axis=1)
+      place_reward = 1 - torch.tanh(5 * obj_to_goal_dist)
+      reward = reward + place_reward * is_grasped
+      qvel = panda.robot.get_qvel()
+      qvel = qvel[..., :-2]  # drop the two gripper-finger DOF
+      static_reward = 1 - torch.tanh(5 * torch.linalg.norm(qvel, axis=1))
+      reward = reward + static_reward * info["is_obj_placed"]
+      reward[info["success"]] = 5
+      return reward / 5
+
+Provenance: direct port of the upstream
+mani_skill.envs.tasks.tabletop.PickCubeEnv.compute_dense_reward
+4-stage shaping (reach → grasp → place·grasp → static·placed →
+5·success), divided by 5 for normalisation.
+
+Per-component sign + scale (per step):
+  reaching_reward   ∈ [0, 1]   sign: positive; closer-to-cube → higher
+  grasp bonus       ∈ {0, 1}   sign: positive; tighten gripper → 1.0
+  place_reward      ∈ [0, 1]   sign: positive; gated by is_grasped
+  static_reward     ∈ [0, 1]   sign: positive; gated by is_obj_placed
+  success terminal  = 5        snaps reward[success] to 5 before /5
+
+Returned value range: [0, 5] before normalisation, [0, 1] after.
+No sign flip. No double-counting (each component is gated by the
+appropriate predecessor predicate). Tensor field references match
+the upstream env (cube.pose.p, panda.tcp_pose.p, goal_site.pose.p,
+panda.robot.get_qvel()). Q1 answer: STRUCTURALLY CORRECT.
+
+Differences from upstream:
+  1. Panda is routed via self._panda_agent (multi-agent rig);
+     upstream uses self.agent directly because PickCubeEnv is
+     single-agent. The accessor at chamber/envs/stage1_pickplace.py:825-834
+     returns self.agent.agents_dict["panda_wristcam"], so the panda
+     ego is graded — not the partner. Intended.
+  2. The fetch partner is graded implicitly via the static_reward
+     component (qvel of the panda only; the partner's qvel does not
+     enter the reward sum). Documented at line 933-934 ("explicit
+     fetch-side reward shaping is a P1.04 follow-up").
+
+No sign flip, no scale bug, no missing component. The function is a
+clean port of the upstream baseline.
+
+
+B2.1 — Per-eval-episode mean_reward distribution
+------------------------------------------------
+Source: spike_as_FAILED.json (200 episodes total, 100 per condition).
+Each episode's `metadata.mean_reward` is the per-step average return
+over the 50-step horizon, formatted as a 4-decimal string.
+
+Per-condition aggregates:
+  AS-homo (panda_only_mappo_shared_param):
+    n=100, min=0.0000, max=1.0000, mean=0.0265
+    mean_reward ≥ 0.5  : 1 episode
+    mean_reward ≥ 0.1  : 1 episode
+    mean_reward ≥ 0.01 : 60 episodes
+    mean_reward ≥ 0.001: 70 episodes
+    mean_reward == 0   : 18 episodes
+  AS-hetero (panda_plus_fetch_ego_aht_happo_per_agent):
+    n=100, min=0.0000, max=1.0000, mean=0.0269
+    mean_reward ≥ 0.5  : 1 episode
+    mean_reward ≥ 0.1  : 1 episode
+    mean_reward ≥ 0.01 : 45 episodes
+    mean_reward ≥ 0.001: 48 episodes
+    mean_reward == 0   : 37 episodes
+
+Interpretation:
+  * mean_reward = 1.0 in some episodes (both conditions, ~1%) IS the
+    success terminal — when reward[success] = 5 fires and the episode
+    horizon is short enough that the per-step normalised average
+    lands at 1.0. So the env DOES emit terminated=True / success=True
+    in a small fraction of eval episodes; the env contract is intact
+    end-to-end. (Independently confirms what Ablation 4 is designed
+    to verify.)
+  * Under a "terminated-only" success rule (e.g. mean_reward ≥ 0.5),
+    the AS-homo success rate would be ~1% and AS-hetero ~1% —
+    consistent with the "gap_pp = 0" headline but at a non-rubber-
+    stamp threshold. The current `mean_reward > -0.30 OR terminated`
+    rule rounds 99% non-success episodes UP to True; Surface 1's
+    DEFECT verdict is unaffected by Surface 7's findings.
+  * AS-hetero has 37 zero-reward episodes vs AS-homo's 18 — the ego
+    is roughly twice as likely to fail to make ANY reward progress
+    when the partner is a fetch base parked next to the cube vs
+    another panda. Consistent with Surface 3's "active interference"
+    finding (partner targeting cube is worse when its embodiment
+    blocks the table approach).
+
+
+B2.2 — Per-rollout-window training-time reward trend
+----------------------------------------------------
+Source: per-seed SafetyAggregator JSONLs (5 files, one per seed).
+The `rollout_update` events carry a `last_reward` field formatted as
+"tensor([X])" — the last per-step reward in the most recent rollout
+window (1024 steps).
+
+Note: `mean_reward` and `mean_episode_return` keys exist in the
+rollout_update schema but are emitted as null throughout the
+archived JSONLs. The §4 fallback case applies: per-window MEAN reward
+data isn't available, so we use `last_reward` as the closest signal.
+The implication is that the trend below is a noisier per-window
+proxy than a window-mean would be.
+
+Per-seed first-quartile vs last-quartile mean(last_reward) (proxy
+for "is the policy climbing the dense reward over training?"):
+
+  Seed 0 (run 43a0d043cb9f54ac):
+    first-quartile (steps  1024.. 24576): 0.003623
+    last-quartile  (steps 75776.. 99328): 0.058517
+    min over training: 0.000002   max: 0.150000
+    final 3 windows: 0.1254, 0.1458, 0.0952
+    delta: +16x  --> CLIMBING
+
+  Seed 1 (run e3ca669746e8f4bb):
+    first-quartile: 0.003152   last-quartile: 0.024746   delta: +7.8x
+    min: 0.000004  max: 0.025000   final 3: ~0.025 (plateau)
+    --> CLIMBING then PLATEAU
+
+  Seed 2 (run ef23e3b576f38c91):
+    first-quartile: 0.000434   last-quartile: 0.001859   delta: +4.3x
+    min: 0.000000  max: 0.035900   final 3: 0.019, 0.012, 0.004
+    --> WEAK SIGNAL (stays under 0.02 mean)
+
+  Seed 3 (run a7b549a31fbd8222):
+    first-quartile: 0.000122   last-quartile: 0.017458   delta: +143x
+    min: 0.000000  max: 0.109200   final 3: 0.032, 0.022, 0.011
+    --> CLIMBING (low base)
+
+  Seed 4 (run da40f205c78355ac):
+    first-quartile: 0.010205   last-quartile: 0.022550   delta: +2.2x
+    min: 0.000002  max: 0.101600   final 3: ~0.022 (plateau)
+    --> CLIMBING then PLATEAU
+
+Across-seed pattern: ALL 5 seeds show a positive trend from
+first-quartile to last-quartile of training. The signal magnitude
+varies (seed 2 stays under 0.02; seed 0 reaches 0.15) but the
+direction is monotonically positive at the quartile level.
+
+Q3 answer: the per-rollout-window reward IS NOT flat at zero — it
+climbs measurably during 100k frames. Q2 answer: the signal is
+strong enough to be observable above the noise floor, but stalls in
+the [0.02, 0.06] range — far short of the ~0.5+ regime where the
+policy would reliably hit the success terminal.
+
+The climbing-but-plateauing pattern is consistent with: the policy
+is learning to position the arm in regions correlated with reaching
+the cube (reaching_reward component), but cannot reliably progress
+to grasp / place / success terminals. This is the expected
+behavioural signature of Surface 6's "ego sees only qpos+qvel of its
+own arm" — without cube/goal observations the policy can statistically
+learn arm postures that correlate with success on average, but
+cannot generalise to the per-episode cube spawn location (which
+varies in a ±5cm box).
+
+
+Verdict and consequences
+------------------------
+Status: SUSPECT. The reward function is structurally correct (B1) and
+the training-time signal climbs in all 5 seeds (B2.2). What is
+absent is the "ego reliably climbs to the [0.5, 1.0] regime where
+success terminates" behaviour. The per-eval-episode max=1.0 in both
+conditions independently confirms the env contract is intact and the
+success terminal IS reachable.
+
+This is not a DEFECT in the reward function itself. It is a SUSPECT
+on the same axis as Surface 6 (the ego is climbing a shaped signal
+under impoverished input); the dominant remediation channel here is
+likely Surface 6, not Surface 7. The reward function as a contract
+needs no edit.
+
+The current `mean_reward > -0.30 OR terminated` success rule (Surface
+1 DEFECT) hides the [0.5, 1.0] regime entirely — every episode with
+any non-negative shaped reward rounds to success. Replacing the rule
+with `terminated=True` (or `mean_reward >= 0.5`) would surface an
+AS-homo success rate around 1% and AS-hetero around 1%, which is the
+actual gap_pp = 0 signal at a non-rubber-stamp threshold.
+
+Per §4a runbook discipline: NO FIX is proposed in this PR. Both the
+success-rule swap (Surface 1) and the reward-or-obs investigation
+(Surface 6/7) are remediation slices gated on consultation.
+
+
+Artifacts referenced
+--------------------
+  * src/chamber/envs/stage1_pickplace.py:902-916 — evaluate (success
+    predicate)
+  * src/chamber/envs/stage1_pickplace.py:918-949 — reward function
+  * spike_as_FAILED.json — per-episode mean_reward metadata
+  * 43a0d043cb9f54ac.jsonl, e3ca669746e8f4bb.jsonl,
+    ef23e3b576f38c91.jsonl, a7b549a31fbd8222.jsonl,
+    da40f205c78355ac.jsonl — per-seed rollout_update.last_reward
+    trends

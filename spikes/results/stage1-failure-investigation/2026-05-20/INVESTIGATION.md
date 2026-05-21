@@ -55,9 +55,23 @@ Per-condition success-rate breakdown:
 
 Bootstrap CI: `[0.00, 0.00]`. Both conditions trivially pass the success rule → no AS-axis signal.
 
-## Five-surface audit
+## Seven-surface audit (five original + two §4a gap-fill)
 
-Each rig surface gets an audit paragraph, regardless of whether the audit finds the surface clean. The point is to catch the surfaces NOT pre-surfaced in the headline analysis.
+Each rig surface gets an audit paragraph, regardless of whether the audit finds the surface clean. The point is to catch the surfaces NOT pre-surfaced in the headline analysis. Surfaces 6 and 7 were added in the founder-review gap-fill follow-up after the initial five-surface pass; see `surface_6_obs_contract_audit.txt` and `surface_7_reward_audit.txt` for the raw audit transcripts.
+
+Headline status table:
+
+| # | Surface | Status |
+|---|---|---|
+| 1 | Success rule (`stage1_as._run_one_episode`) | **DEFECT** (stale Phase-0 MPE holdover) |
+| 2 | Training hyperparameters (`stage1_pickplace.yaml`) | **SUSPECT** (likely under-budgeted) |
+| 3 | Partner heuristic (`ScriptedHeuristicPartner`) | **DEFECT** (active interference) |
+| 4 | Adapter env-factory (`stage1_as._stage1b_env_factory`) | **CLEAN** |
+| 5 | Safety filter saturation (`ExpCBFQP` + λ clamp) | **SUSPECT** (compounds with 2 + 3) |
+| 6 | Observation contract (`Stage1ASStateSynthesizer`) | **DEFECT** (ego structurally blind to task) |
+| 7 | Reward function (`Stage1PickPlaceEnv.compute_normalized_dense_reward`) | **SUSPECT** (reward fine; signal climbs but plateaus) |
+
+Surface 6 is high-prominence and dominates Surfaces 1–3 + 5 mechanically: a policy that cannot see the cube cannot be rescued by removing partner interference, disabling safety, or extending the training budget. The priority order in the §Ablation execution priority section is unchanged regardless — the consultation decides what to skip.
 
 ### Surface 1 — Success rule (`chamber.benchmarks.stage1_as._run_one_episode`)
 
@@ -130,9 +144,40 @@ This is the **operationally-correct safety behaviour** (the conformal layer is d
 
 The Stage-2-review pointer from ADR-004 §Revision history (2026-05-20) was: *"if the clamp saturates persistently the ε=-0.05 design assumption may be empirically vacuous under the constant-velocity predictor stub"*. This launch confirms persistent saturation across all 5 seeds; the assumption is confirmed empirically vacuous for the Stage-1b regime.
 
-## Four-ablation design
+### Surface 6 — Observation contract (`Stage1ASStateSynthesizer` + trainer obs reader)
 
-Each ablation tests ONE hypothesis cleanly. Total cost ~10 GPU-h (vs the 90+ GPU-h of a "fix everything + relaunch" approach). Pattern: buy information cheaply before commit.
+**Status: DEFECT (high prominence — supersedes earlier hypotheses).**
+
+Runtime audit (seed=0, post-reset, both AS conditions; full transcript in `surface_6_obs_contract_audit.txt`) shows the env populates all expected task fields, but they live in sub-trees the trainer never indexes:
+
+- `obs["extra"]["cube_pose"]` — shape `(1, 7)` — PRESENT in dict.
+- `obs["extra"]["goal_pos"]` — shape `(1, 3)` — PRESENT in dict.
+- `obs["extra"]["tcp_pose"]` — shape `(1, 7)` — PRESENT in dict.
+- `obs["agent"]["panda_partner"]` / `obs["agent"]["fetch"]` qpos+qvel — PRESENT in dict (sibling subtree to the ego's).
+
+The trainer (`chamber.benchmarks.ego_ppo_trainer._flat_state`, line 466) reads exactly one path: `obs["agent"][ego_uid]["state"]`, derived by `Stage1ASStateSynthesizer` from `concat(qpos, qvel)` of the ego robot only. `obs_dim = 18` (9 + 9). The cube, the goal, and the partner are structurally invisible to the optimiser — the ego's only input is the panda_wristcam's own arm + gripper joint positions and velocities.
+
+The §4 fallback rule fires verbatim: *"if field names are lost in the flatten, the contract is technically intact but the trainer can't address task-specific channels — surface this finding with high prominence as Surface 6 = DEFECT."* The wrapper's design contract is "synthesise the trainer's required `state` key from the env's per-uid qpos+qvel pair"; there is no contract that any task field from `obs["extra"]` flows into that state.
+
+Mechanical consequence for the four pre-existing ablations: A1 (zero-action partner), A2 (safety disabled), and A3 (5× budget) all become non-recovering remedies — no removal of partner interference, no relaxation of safety constraints, and no extension of training frames can let a policy whose only input is its own arm's qpos+qvel discover where the (randomly-spawned) cube is on each episode. A4 (oracle) is unaffected (it bypasses the policy) and in fact becomes the cleanest way to verify the env contract is intact end-to-end. The ablations remain in the §Ablation execution priority section regardless; consultation decides what to skip.
+
+### Surface 7 — Reward function (`Stage1PickPlaceEnv.compute_normalized_dense_reward`)
+
+**Status: SUSPECT (reward is structurally correct; signal climbs but plateaus).**
+
+Static analysis (`chamber/envs/stage1_pickplace.py:918-949`; full audit in `surface_7_reward_audit.txt`): direct port of the upstream `mani_skill.envs.tasks.tabletop.PickCubeEnv.compute_dense_reward` 4-stage shaping (reach → grasp → place·grasp → static·placed → 5·success), divided by 5. All four components are positive and gated by the appropriate predecessor predicate. Panda-routed via `self._panda_agent`. Returns `[0, 1]` per step. No sign flip, no scale bug, no missing component.
+
+Quantitative analysis from the archive:
+
+- **Per-eval-episode `mean_reward` (200 episodes)**: AS-homo mean 0.0265, max 1.0000; AS-hetero mean 0.0269, max 1.0000. Both conditions hit `mean_reward = 1.0` in ~1% of eval episodes — the env's success terminal IS reachable end-to-end (1.0 per step ↔ `reward[success] = 5` then `/5`). Under a `mean_reward ≥ 0.5` terminated-only proxy, AS-homo would record ~1% success and AS-hetero ~1% — the actual `gap_pp = 0` signal at a non-rubber-stamp threshold.
+- **Per-rollout-window `last_reward` trend across 100k frames (5 seeds)**: all 5 seeds show a positive trend from first-quartile to last-quartile of training. Seed 0: 0.0036 → 0.0585 (+16×). Seed 3: 0.0001 → 0.0175 (+143×). The weakest seed (seed 2): 0.0004 → 0.0019 (+4.3×). The signal IS climbing, NOT flat at zero.
+- **Per-window MEAN reward data note**: the `rollout_update` schema's `mean_reward` and `mean_episode_return` keys are emitted null throughout the archived JSONLs (§4 fallback case applies); `last_reward` is the closest available proxy, with the noisiness implication that comes from a single-step-per-window sample.
+
+Climbing-then-plateauing in the `[0.02, 0.06]` per-window range — far short of the `[0.5, 1.0]` regime where the policy would reliably hit success terminals — is the expected behavioural signature of Surface 6 (the ego is climbing a shaped signal under impoverished input). The reward function as a contract needs no edit; the dominant remediation channel is likely Surface 6, not Surface 7.
+
+## Five-ablation design
+
+Each ablation tests ONE hypothesis cleanly. Total cost ~10.5 GPU-h (vs the 90+ GPU-h of a "fix everything + relaunch" approach). Pattern: buy information cheaply before commit.
 
 ### Ablation 1 — Partner pathology (Surface 3)
 
@@ -173,6 +218,41 @@ Each ablation tests ONE hypothesis cleanly. Total cost ~10 GPU-h (vs the 90+ GPU
 **Falsification rule:** if oracle cannot trigger `terminated=True`, env-side bug in the success predicate → env redesign required.
 
 **Cost:** ~10 min (5 min static analysis + 5 min oracle run).
+
+### Ablation 5 — Surface 3 × Surface 5 interaction isolation
+
+**Hypothesis:** the *interaction* between Surface 3 (partner targets cube spawn) and Surface 5 (safety filter dominates near cube) is the load-bearing failure mode. Each in isolation might be tolerable; the compound is fatal. Ablations 1 and 2 each remove one factor; Ablation 5 removes only the spatial coupling.
+
+**Design:** change `spec.extra["target_xy"]` to a non-interfering location away from the cube spawn (e.g., `"0.5,0.5"` — corner of the workspace, well outside the cube's ±5 cm spawn region). Keep `cfg.safety.enabled = True`. Re-run 1 seed × 1 condition (AS-hetero) × 100k frames. Use terminated-only success rule.
+
+**Falsification rule:**
+- If `success_rate > 0` (with terminated-only success rule): the cube-spawn proximity of the partner is the load-bearing defect → partner placement redesign is the dominant remediation; safety stack is fine as configured.
+- If `success_rate == 0`: the safety filter has deeper issues that survive partner displacement → ε retune or clamp redesign required regardless of partner placement; remediation needs to address both Surface 3 AND Surface 5 independently.
+- If `success_rate ≈ Ablation 1` (zero-action partner): partner-as-presence is the issue, not partner-as-targeting → reconsider whether AS heterogeneity requires an *active* partner.
+
+**Cost:** ~30 min on RTX 2080.
+
+**Why this ablation matters:** Ablations 1 + 2 test each surface in isolation. Surface 3 by itself (A1 removes it) and Surface 5 by itself (A2 removes it) each have non-trivial recoverability arguments. But the PR's own analysis identifies the *interaction* as the dominant pathology — and the interaction is unmeasured by A1 + A2 alone. A1's success-rate-rise could be "partner removed → no interference"; A5's success-rate-rise distinguishes "partner is fine if placed elsewhere" from "partner is problematic regardless of placement."
+
+## Ablation execution priority
+
+Pre-committed order — cheapest first, most-expensive last. The cheapest ablations have the highest probability of converging on the root cause before expensive ones run.
+
+| Order | Ablation | Cost     | Why first/last                                                                                                                            |
+| ----- | -------- | -------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| 1     | A4       | ~10 min  | Static analysis + oracle run. Rules out env-contract bug as the dominant cause; near-zero compute.                                       |
+| 2     | A1       | ~30 min  | Strongest single-surface hypothesis (Surface 3). Removes partner entirely.                                                               |
+| 3     | A2       | ~30 min  | Second-strongest single-surface hypothesis (Surface 5). Disables safety stack.                                                           |
+| 4     | A5       | ~30 min  | Isolates the Surface 3 × Surface 5 interaction. Settles the placement-vs-presence distinction A1 alone leaves ambiguous.                  |
+| 5     | A3       | ~6-7 GPU-h | Only run if A1+A2+A4+A5 fail to converge on a single dominant cause. Most expensive; tests budget which is the structural-engineering question. |
+
+**Total compute (worst case, all run sequentially):** ~10.5 GPU-h. Total wallclock with overhead: ~12 hours on RTX 2080.
+
+**Stopping rule:** if any of A1/A2/A5 shows a clear success-rate signal (≥ some non-trivial threshold), stop and bring findings to consultation. Don't run subsequent ablations speculatively — the consultation is what decides the remediation, not the engineering layer.
+
+**Decision matrix for results interpretation:** post-ablation findings go in a follow-up commit on this branch (or a new investigation document) — the matrix is too fine-grained to pre-commit before data arrives.
+
+**Surface 6 interaction note:** Surface 6's DEFECT verdict mechanically subsumes the recovery story for A1/A2/A3 (none can rescue a policy that cannot see the cube). The ablations remain in this priority list rather than being pruned — the consultation owns the decision of whether to skip them; the PR's job is completeness, not pruning.
 
 ## What this PR does NOT do
 
