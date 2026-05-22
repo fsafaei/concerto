@@ -1,0 +1,1911 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+        <link rel="canonical" href="https://fsafaei.github.io/concerto/dev/observability/">
+      
+      
+        <link rel="prev" href="../reference/evaluation/">
+      
+      
+        <link rel="next" href="../explanation/why-aht/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+    
+    
+      
+        <title>Observability - CONCERTO</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/_mkdocstrings.css">
+    
+      <link rel="stylesheet" href="../stylesheets/logo-theme-swap.css">
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#observability-cookbook-p10511-adr-017" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="CONCERTO" class="md-header__button md-logo" aria-label="CONCERTO" data-md-component="logo">
+      
+  <img src="../assets/dark_mode.png" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            CONCERTO
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Observability
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-hidden="true"  type="radio" name="__palette" id="__palette_0">
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-hidden="true"  type="radio" name="__palette" id="__palette_1">
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/fsafaei/concerto" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href=".." class="md-tabs__link">
+        
+  
+  
+    
+  
+  Home
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../tutorials/hello-spike/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Tutorials
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../how-to/add-partner/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  How-to
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../reference/api/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Reference
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../explanation/why-aht/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Explanation
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="CONCERTO" class="md-nav__button md-logo" aria-label="CONCERTO" data-md-component="logo">
+      
+  <img src="../assets/dark_mode.png" alt="logo">
+
+    </a>
+    CONCERTO
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/fsafaei/concerto" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Tutorials
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Tutorials
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../tutorials/hello-spike/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Hello-spike
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../tutorials/stage0-smoke/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Run Stage 0 smoke
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    How-to
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    How-to
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../how-to/add-partner/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Add a new partner class
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../how-to/add-filter/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Add a new safety filter
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../how-to/run-spike/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Run a spike with a custom hypothesis
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../how-to/submit-leaderboard/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Submit a leaderboard entry
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../how-to/run-on-gpu/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Run on a GPU host
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reference
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Reference
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/api/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/adrs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ADRs
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/glossary/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Glossary
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/literature/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Literature
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/standards/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Standards
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/evaluation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Evaluation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Observability
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Observability
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#tldr" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        TL;DR
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#how-to-enable-wb-for-a-spike-run" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How to enable W&amp;B for a spike run
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#how-to-back-fill-historical-archives" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How to back-fill historical archives
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#how-to-compare-runs-with-chamber-analyze" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How to compare runs with chamber-analyze
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#how-to-inspect-a-rollout-at-per-step-granularity" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How to inspect a rollout at per-step granularity
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#how-to-embed-a-comparison-plot-in-a-pr-description" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How to embed a comparison plot in a PR description
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#json-output-schemas" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        JSON output schemas
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="JSON output schemas">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#chamber-analyze-list-runs-json" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        chamber-analyze list-runs --json
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#chamber-analyze-metrics-json" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        chamber-analyze metrics --json
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#chamber-analyze-compare-json" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        chamber-analyze compare --json
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#chamber-analyze-rollout-frames-json" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        chamber-analyze rollout-frames --json
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#what-lives-where-on-disk" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What lives where on disk
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#cross-references" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Cross-references
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Explanation
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Explanation
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../explanation/why-aht/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Why heterogeneous AHT?
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../explanation/why-maniskill/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Why fork ManiSkill v3?
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../explanation/why-conformal/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Why conformal CBFs?
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../explanation/principles/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Project principles
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../explanation/threat-model/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Threat model
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../explanation/phase0-results/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Phase 0 results
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#tldr" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        TL;DR
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#how-to-enable-wb-for-a-spike-run" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How to enable W&amp;B for a spike run
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#how-to-back-fill-historical-archives" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How to back-fill historical archives
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#how-to-compare-runs-with-chamber-analyze" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How to compare runs with chamber-analyze
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#how-to-inspect-a-rollout-at-per-step-granularity" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How to inspect a rollout at per-step granularity
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#how-to-embed-a-comparison-plot-in-a-pr-description" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How to embed a comparison plot in a PR description
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#json-output-schemas" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        JSON output schemas
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="JSON output schemas">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#chamber-analyze-list-runs-json" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        chamber-analyze list-runs --json
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#chamber-analyze-metrics-json" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        chamber-analyze metrics --json
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#chamber-analyze-compare-json" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        chamber-analyze compare --json
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#chamber-analyze-rollout-frames-json" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        chamber-analyze rollout-frames --json
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#what-lives-where-on-disk" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What lives where on disk
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#cross-references" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Cross-references
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+    <a href="https://github.com/fsafaei/concerto/edit/main/docs/observability.md" title="Edit this page" class="md-content__button md-icon" rel="edit">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 20H6V4h7v5h5v3.1l2-2V8l-6-6H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h4zm10.2-7c.1 0 .3.1.4.2l1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2m0 3.9L14.1 23H12v-2.1l6.1-6.1z"/></svg>
+    </a>
+  
+  
+
+
+<h1 id="observability-cookbook-p10511-adr-017">Observability cookbook (P1.05.11; ADR-017)</h1>
+<p>This cookbook covers the workflows P1.05.11 enables — live W&amp;B dashboards
+for the founder + JSON-first co-analysis for the agent. The design lives
+in <a href="https://github.com/fsafaei/concerto/blob/main/adr/ADR-017-observability-and-experiment-tracking.md"><code>ADR-017</code></a>;
+this document is the operator-side recipe collection.</p>
+<hr />
+<h2 id="tldr">TL;DR</h2>
+<div class="highlight"><pre><span></span><code><span class="c1"># 1. Install observability extras (imageio[ffmpeg] for rollout MP4 encoding).</span>
+uv<span class="w"> </span>sync<span class="w"> </span>--extra<span class="w"> </span>observability
+
+<span class="c1"># 2. Authenticate W&amp;B (one-time, founder-side).</span>
+wandb<span class="w"> </span>login
+
+<span class="c1"># 3. Enable the W&amp;B sink for a Stage-1b cell.</span>
+uv<span class="w"> </span>run<span class="w"> </span>chamber-spike<span class="w"> </span>train<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--config<span class="w"> </span>configs/training/ego_aht_happo/stage1_pickplace.yaml<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--override<span class="w"> </span>wandb.enabled<span class="o">=</span><span class="nb">true</span>
+
+<span class="c1"># 4. Browse the dashboard at https://wandb.ai/&lt;entity&gt;/concerto-chamber.</span>
+
+<span class="c1"># 5. Programmatic co-analysis (agent-side; works offline, no W&amp;B account).</span>
+uv<span class="w"> </span>run<span class="w"> </span>chamber-analyze<span class="w"> </span>list-runs<span class="w"> </span>--archive-root<span class="w"> </span>spikes/results/<span class="w"> </span>--json<span class="w"> </span><span class="p">|</span><span class="w"> </span>jq<span class="w"> </span>.
+</code></pre></div>
+<hr />
+<h2 id="how-to-enable-wb-for-a-spike-run">How to enable W&amp;B for a spike run</h2>
+<p>The W&amp;B sink is opt-in via <code>cfg.wandb.enabled</code>. Two ways to flip it on:</p>
+<p><strong>Per-run override (no config edit):</strong></p>
+<div class="highlight"><pre><span></span><code>uv<span class="w"> </span>run<span class="w"> </span>chamber-spike<span class="w"> </span>train<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--config<span class="w"> </span>configs/training/ego_aht_happo/stage1_pickplace.yaml<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--override<span class="w"> </span>wandb.enabled<span class="o">=</span><span class="nb">true</span>
+</code></pre></div>
+<p><strong>Persistent (edit the YAML):</strong></p>
+<div class="highlight"><pre><span></span><code><span class="c1"># configs/training/ego_aht_happo/stage1_pickplace.yaml</span>
+<span class="nt">wandb</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">enabled</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="w">  </span><span class="nt">project</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">concerto-chamber</span><span class="w">   </span><span class="c1"># ADR-017 §Decisions D2 — single project</span>
+</code></pre></div>
+<p>Degrade-to-no-op paths (each emits one <code>UserWarning</code>, never raises):</p>
+<table>
+<thead>
+<tr>
+<th>Condition</th>
+<th>Result</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>cfg.wandb.enabled=false</code></td>
+<td>Silent — JSONL-only path, no warning.</td>
+</tr>
+<tr>
+<td><code>WANDB_API_KEY</code> missing AND <code>WANDB_MODE != "offline"</code></td>
+<td>UserWarning; JSONL-only run.</td>
+</tr>
+<tr>
+<td><code>import wandb</code> fails</td>
+<td>UserWarning; JSONL-only run.</td>
+</tr>
+<tr>
+<td><code>wandb.init</code> raises</td>
+<td>UserWarning; JSONL-only run.</td>
+</tr>
+</tbody>
+</table>
+<p>The canonical record is <strong>always</strong> <code>&lt;cfg.log_dir&gt;/&lt;run_id&gt;.jsonl</code>. W&amp;B is downstream of that. If your run completed and the JSONL exists, the run is valid.</p>
+<hr />
+<h2 id="how-to-back-fill-historical-archives">How to back-fill historical archives</h2>
+<div class="highlight"><pre><span></span><code><span class="c1"># Dry-run against committed archives — show what would replay, no W&amp;B calls.</span>
+uv<span class="w"> </span>run<span class="w"> </span>python<span class="w"> </span>scripts/wandb_backfill.py<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--archive-root<span class="w"> </span>spikes/results/<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--project<span class="w"> </span>concerto-chamber<span class="w"> </span>--mode<span class="w"> </span>offline<span class="w"> </span>--dry-run
+
+<span class="c1"># Replay the three committed Stage-1 archives to W&amp;B.</span>
+uv<span class="w"> </span>run<span class="w"> </span>python<span class="w"> </span>scripts/wandb_backfill.py<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--archive-root<span class="w"> </span>spikes/results/<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--project<span class="w"> </span>concerto-chamber<span class="w"> </span>--mode<span class="w"> </span>online
+
+<span class="c1"># Also replay the four gitignored .local/ post-widening snapshots.</span>
+uv<span class="w"> </span>run<span class="w"> </span>python<span class="w"> </span>scripts/wandb_backfill.py<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--archive-root<span class="w"> </span>.local/<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--include-local<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--project<span class="w"> </span>concerto-chamber<span class="w"> </span>--mode<span class="w"> </span>online
+</code></pre></div>
+<p>Idempotent: re-running against the same archive skips existing W&amp;B runs (<code>wandb.init(id=&lt;run_id&gt;, resume="never")</code>).</p>
+<p><strong>What backfill does deliver.</strong> Replays per-cell JSONL events (training_start, safety_telemetry, rollout_update, safety_telemetry_final, training_end) + envelope-level terminal metrics (per-episode <code>success</code>, <code>mean_reward</code>, <code>constraint_violation_peak</code>, <code>fallback_fired</code>) into W&amp;B.</p>
+<p><strong>What backfill does NOT deliver.</strong> Per-step PPO health curves (policy_loss, value_loss, dist_entropy, approx_kl, clip_fraction, grad_norm) for historical archives — those scalars were never written to disk before P1.05.11. They are only available for runs going forward.</p>
+<hr />
+<h2 id="how-to-compare-runs-with-chamber-analyze">How to compare runs with <code>chamber-analyze</code></h2>
+<div class="highlight"><pre><span></span><code><span class="c1"># Enumerate runs under an archive root.</span>
+uv<span class="w"> </span>run<span class="w"> </span>chamber-analyze<span class="w"> </span>list-runs<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--archive-root<span class="w"> </span>spikes/results/stage1-failure-investigation/2026-05-20<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--json<span class="w"> </span><span class="p">|</span><span class="w"> </span>jq<span class="w"> </span>.
+
+<span class="c1"># Summary of one run.</span>
+uv<span class="w"> </span>run<span class="w"> </span>chamber-analyze<span class="w"> </span>summary<span class="w"> </span>43a0d043cb9f54ac<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--archive-root<span class="w"> </span>spikes/results/stage1-failure-investigation/2026-05-20<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--json
+
+<span class="c1"># Time-series for one metric on one run.</span>
+uv<span class="w"> </span>run<span class="w"> </span>chamber-analyze<span class="w"> </span>metrics<span class="w"> </span>43a0d043cb9f54ac<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--archive-root<span class="w"> </span>spikes/results/stage1-failure-investigation/2026-05-20<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--metric<span class="w"> </span>lambda_mean<span class="w"> </span>--namespace<span class="w"> </span>safety<span class="w"> </span>--json
+
+<span class="c1"># Side-by-side comparison across N runs.</span>
+uv<span class="w"> </span>run<span class="w"> </span>chamber-analyze<span class="w"> </span>compare<span class="w"> </span>43a0d043cb9f54ac<span class="w"> </span>e3ca669746e8f4bb<span class="w"> </span>ef23e3b576f38c91<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--archive-root<span class="w"> </span>spikes/results/stage1-failure-investigation/2026-05-20<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--metrics<span class="w"> </span>mean_reward_final,terminal_success_rate,lambda_steady_state<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--json
+</code></pre></div>
+<hr />
+<h2 id="how-to-inspect-a-rollout-at-per-step-granularity">How to inspect a rollout at per-step granularity</h2>
+<div class="highlight"><pre><span></span><code><span class="c1"># Dump every step of the recorded eval episode at step_025000.</span>
+uv<span class="w"> </span>run<span class="w"> </span>chamber-analyze<span class="w"> </span>rollout-frames<span class="w"> </span>&lt;run-id&gt;<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--archive-root<span class="w"> </span>&lt;archive_root&gt;<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--episode<span class="w"> </span><span class="m">25000</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>jq<span class="w"> </span>.
+
+<span class="c1"># Filter to a single obs/info field across all recorded steps.</span>
+uv<span class="w"> </span>run<span class="w"> </span>chamber-analyze<span class="w"> </span>rollout-frames<span class="w"> </span>&lt;run-id&gt;<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--archive-root<span class="w"> </span>&lt;archive_root&gt;<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--field<span class="w"> </span>is_grasped<span class="w"> </span><span class="p">|</span><span class="w"> </span>jq<span class="w"> </span>.
+</code></pre></div>
+<p>Per ADR-017 §Decisions D6 the per-step records live in sidecar JSONLs at <code>&lt;archive_root&gt;/rollouts/&lt;condition&gt;/step_&lt;NNNNNN&gt;.jsonl</code>, paired 1:1 with the MP4 at the same path. The MP4 is for the founder; the JSONL is for the agent.</p>
+<p>The <code>obs_summary</code> is curated (cube_pose, goal_pos, tcp_pose, ego_qpos/qvel, partner_qpos/qvel, is_grasped, gripper_width) — never the full 65-D flattened ego state. Full-obs logging is deferred (ADR-017 §Open questions).</p>
+<hr />
+<h2 id="how-to-embed-a-comparison-plot-in-a-pr-description">How to embed a comparison plot in a PR description</h2>
+<div class="highlight"><pre><span></span><code>uv<span class="w"> </span>run<span class="w"> </span>chamber-analyze<span class="w"> </span>plot<span class="w"> </span>43a0d043cb9f54ac<span class="w"> </span>e3ca669746e8f4bb<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--archive-root<span class="w"> </span>spikes/results/stage1-failure-investigation/2026-05-20<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--metric<span class="w"> </span>lambda_mean<span class="w"> </span>--namespace<span class="w"> </span>safety<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--out<span class="w"> </span>/tmp/lambda_comparison.png<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--title<span class="w"> </span><span class="s2">&quot;lambda_mean: seed 0 vs seed 1&quot;</span>
+</code></pre></div>
+<p>The PNG is matplotlib-rendered (Agg backend; headless-safe). Embed it in a markdown PR description via <code>![title](attachment-url)</code>.</p>
+<hr />
+<h2 id="json-output-schemas">JSON output schemas</h2>
+<p>Every <code>chamber-analyze</code> subcommand supports <code>--json</code>. Schemas are stable across patch versions; adding fields is allowed, removing or renaming requires a major version bump.</p>
+<h3 id="chamber-analyze-list-runs-json"><code>chamber-analyze list-runs --json</code></h3>
+<div class="highlight"><pre><span></span><code><span class="p">[</span>
+<span class="w">  </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">&quot;run_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&lt;16-hex&gt;&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;jsonl_path&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&lt;path&gt;&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;stage&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;1&quot;</span><span class="w"> </span><span class="err">|</span><span class="w"> </span><span class="s2">&quot;2&quot;</span><span class="w"> </span><span class="err">|</span><span class="w"> </span><span class="s2">&quot;3&quot;</span><span class="w"> </span><span class="err">|</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;sub_stage&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;1a&quot;</span><span class="w"> </span><span class="err">|</span><span class="w"> </span><span class="s2">&quot;1b&quot;</span><span class="w"> </span><span class="err">|</span><span class="w"> </span><span class="s2">&quot;2&quot;</span><span class="w"> </span><span class="err">|</span><span class="w"> </span><span class="s2">&quot;3&quot;</span><span class="w"> </span><span class="err">|</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;condition&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&lt;condition_id&gt;&quot;</span><span class="w"> </span><span class="err">|</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;seed&quot;</span><span class="p">:</span><span class="w"> </span><span class="err">&lt;i</span><span class="kc">nt</span><span class="err">&gt;</span><span class="w"> </span><span class="err">|</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;task&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;stage1_pickplace&quot;</span><span class="w"> </span><span class="err">|</span><span class="w"> </span><span class="err">...</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;run_kind&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;ego_aht_happo&quot;</span><span class="w"> </span><span class="err">|</span><span class="w"> </span><span class="err">...</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;git_sha&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&lt;40-hex&gt;&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;n_steps&quot;</span><span class="p">:</span><span class="w"> </span><span class="err">&lt;i</span><span class="kc">nt</span><span class="err">&gt;</span><span class="w"> </span><span class="err">|</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;terminal_success_rate&quot;</span><span class="p">:</span><span class="w"> </span><span class="err">&lt;</span><span class="kc">fl</span><span class="err">oa</span><span class="kc">t</span><span class="w"> </span><span class="err">i</span><span class="kc">n</span><span class="w"> </span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">]</span><span class="err">&gt;</span><span class="w"> </span><span class="err">|</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;mean_reward_final&quot;</span><span class="p">:</span><span class="w"> </span><span class="err">&lt;</span><span class="kc">fl</span><span class="err">oa</span><span class="kc">t</span><span class="err">&gt;</span><span class="w"> </span><span class="err">|</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;lambda_steady_state&quot;</span><span class="p">:</span><span class="w"> </span><span class="err">&lt;</span><span class="kc">fl</span><span class="err">oa</span><span class="kc">t</span><span class="err">&gt;</span><span class="w"> </span><span class="err">|</span><span class="w"> </span><span class="kc">null</span>
+<span class="w">  </span><span class="p">},</span><span class="w"> </span><span class="err">...</span>
+<span class="p">]</span>
+</code></pre></div>
+<h3 id="chamber-analyze-metrics-json"><code>chamber-analyze metrics --json</code></h3>
+<div class="highlight"><pre><span></span><code><span class="p">[</span>
+<span class="w">  </span><span class="p">{</span><span class="nt">&quot;step&quot;</span><span class="p">:</span><span class="w"> </span><span class="err">&lt;i</span><span class="kc">nt</span><span class="err">&gt;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;wall_time&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&lt;iso8601&gt;&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;value&quot;</span><span class="p">:</span><span class="w"> </span><span class="err">&lt;</span><span class="kc">fl</span><span class="err">oa</span><span class="kc">t</span><span class="err">&gt;</span><span class="p">},</span>
+<span class="w">  </span><span class="err">...</span>
+<span class="p">]</span>
+</code></pre></div>
+<h3 id="chamber-analyze-compare-json"><code>chamber-analyze compare --json</code></h3>
+<div class="highlight"><pre><span></span><code><span class="p">[</span>
+<span class="w">  </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">&quot;run_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&lt;16-hex&gt;&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;&lt;metric_1&gt;&quot;</span><span class="p">:</span><span class="w"> </span><span class="err">&lt;value&gt;</span><span class="w"> </span><span class="err">|</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;&lt;metric_2&gt;&quot;</span><span class="p">:</span><span class="w"> </span><span class="err">&lt;value&gt;</span><span class="w"> </span><span class="err">|</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span>
+<span class="w">    </span><span class="err">...</span>
+<span class="w">  </span><span class="p">},</span><span class="w"> </span><span class="err">...</span>
+<span class="p">]</span>
+</code></pre></div>
+<h3 id="chamber-analyze-rollout-frames-json"><code>chamber-analyze rollout-frames --json</code></h3>
+<p>When <code>--field</code> is unset, emits the full per-step JSONL line shape:</p>
+<div class="highlight"><pre><span></span><code><span class="p">[</span>
+<span class="w">  </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">&quot;event&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;rollout_step&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;metric_namespace&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;rollout&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;step_global&quot;</span><span class="p">:</span><span class="w"> </span><span class="err">&lt;i</span><span class="kc">nt</span><span class="err">&gt;</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;step_episode&quot;</span><span class="p">:</span><span class="w"> </span><span class="err">&lt;i</span><span class="kc">nt</span><span class="err">&gt;</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;condition&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&lt;condition&gt;&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;seed&quot;</span><span class="p">:</span><span class="w"> </span><span class="err">&lt;i</span><span class="kc">nt</span><span class="err">&gt;</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;obs_summary&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">&quot;cube_pose&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="err">...</span><span class="p">],</span><span class="w"> </span><span class="nt">&quot;goal_pos&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="err">...</span><span class="p">],</span><span class="w"> </span><span class="err">...</span><span class="p">},</span>
+<span class="w">    </span><span class="nt">&quot;action&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="err">&lt;</span><span class="kc">fl</span><span class="err">oa</span><span class="kc">t</span><span class="err">&gt;</span><span class="p">,</span><span class="w"> </span><span class="err">...</span><span class="p">],</span>
+<span class="w">    </span><span class="nt">&quot;reward&quot;</span><span class="p">:</span><span class="w"> </span><span class="err">&lt;</span><span class="kc">fl</span><span class="err">oa</span><span class="kc">t</span><span class="err">&gt;</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;terminated&quot;</span><span class="p">:</span><span class="w"> </span><span class="err">&lt;bool&gt;</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;truncated&quot;</span><span class="p">:</span><span class="w"> </span><span class="err">&lt;bool&gt;</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;info&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="err">...</span><span class="p">},</span>
+<span class="w">    </span><span class="nt">&quot;frame_index&quot;</span><span class="p">:</span><span class="w"> </span><span class="err">&lt;i</span><span class="kc">nt</span><span class="err">&gt;</span>
+<span class="w">  </span><span class="p">},</span><span class="w"> </span><span class="err">...</span>
+<span class="p">]</span>
+</code></pre></div>
+<p>With <code>--field &lt;key&gt;</code>, the rows are projected to <code>{"step_global": &lt;int&gt;, "&lt;key&gt;": &lt;value&gt;}</code>.</p>
+<hr />
+<h2 id="what-lives-where-on-disk">What lives where on disk</h2>
+<div class="highlight"><pre><span></span><code>&lt;spike_archive&gt;/
+├── &lt;run_id&gt;.jsonl                # per-cell canonical log (one per seed × condition cell)
+├── spike_*.json                  # SpikeRun envelope (ADR-016)
+├── leaderboard.json              # ADR-008 leaderboard entry
+└── rollouts/                     # per-rollout MP4 + sidecar JSONL (ADR-017 §Decisions D6)
+    └── &lt;condition&gt;/
+        ├── step_000000.mp4
+        ├── step_000000.jsonl
+        ├── step_025000.mp4
+        ├── step_025000.jsonl
+        └── ...
+</code></pre></div>
+<p><code>&lt;run_id&gt;</code> is the 16-hex SHA from <code>concerto.training.logging.compute_run_metadata(seed, run_kind, repo_root)</code>. Two reruns with identical <code>(seed, git_sha, pyproject_hash, run_kind)</code> produce the same <code>run_id</code> — the W&amp;B run name matches the JSONL filename byte-for-byte.</p>
+<hr />
+<h2 id="cross-references">Cross-references</h2>
+<ul>
+<li><a href="https://github.com/fsafaei/concerto/blob/main/adr/ADR-017-observability-and-experiment-tracking.md">ADR-017 — Observability and experiment tracking</a> — design &amp; rationale.</li>
+<li><a href="https://github.com/fsafaei/concerto/blob/main/adr/ADR-002-rl-framework.md">ADR-002 — RL framework</a> §Decisions — the structured-logging contract this slice extends.</li>
+<li><a href="https://github.com/fsafaei/concerto/blob/main/adr/ADR-016-spike-run-schema.md">ADR-016 — SpikeRun envelope schema</a> — the wire-format archive shape (NOT changed by P1.05.11).</li>
+<li><code>src/concerto/training/logging.py</code> — <code>RunContext</code>, <code>bind_run_logger</code>, <code>log_scalars</code>, <code>log_eval</code>, <code>make_wandb_run_sink</code>.</li>
+<li><code>src/chamber/observability/rollout_recorder.py</code> — <code>RolloutRecorder</code>.</li>
+<li><code>src/chamber/cli/analyze.py</code> — <code>chamber-analyze</code>.</li>
+<li><code>scripts/wandb_backfill.py</code> — backfill script.</li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.tabs", "navigation.sections", "navigation.indexes", "search.highlight", "content.code.copy", "content.action.edit"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>
