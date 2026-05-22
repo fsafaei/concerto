@@ -44,17 +44,22 @@ class _FrozenModel(BaseModel):
 
 
 class WandbConfig(_FrozenModel):
-    """W&B sink toggle + project name (ADR-002 §Decisions; plan/05 §2).
+    """W&B sink toggle + project name (ADR-002 §Decisions; ADR-017 §Decisions; plan/05 §2).
 
     Attributes:
         enabled: When ``False`` (default), :func:`bind_run_logger` is
             built without a W&B sink and only the JSONL fallback fires.
             CI runs and unit tests should leave this off.
         project: W&B project name. Used only when ``enabled`` is ``True``.
+            Default ``"concerto-chamber"`` per ADR-017 §Decisions
+            (single project across all stages; tag-based filtering for
+            ``stage:``, ``sub_stage:``, ``condition:``, ``prereg:``,
+            ``backfill:``). Pre-ADR-017 default was ``"concerto-m4b"``
+            (legacy Month-4-Phase-B); migrated 2026-05-22.
     """
 
     enabled: bool = False
-    project: str = "concerto-m4b"
+    project: str = "concerto-chamber"
 
 
 class EnvConfig(_FrozenModel):
@@ -292,6 +297,52 @@ class SafetyConfig(_FrozenModel):
         return self
 
 
+class RolloutRecorderConfig(_FrozenModel):
+    """Eval-rollout video + per-step sidecar JSONL knob (P1.05.11; ADR-017 §Decisions).
+
+    The rollout recorder captures one full eval episode every
+    ``interval_frames`` training frames, emitting two paired artefacts
+    at ``<archive_dir>/rollouts/<condition>/step_<NNNNNN>.{mp4,jsonl}``:
+    an MP4 the founder can watch and a per-step JSONL the agent can
+    parse. The per-step JSONL is a small ``obs_summary`` subset
+    (cube_pose, goal_pos, tcp_pose, ego qpos/qvel, partner qpos/qvel,
+    plus ``is_grasped`` and ``gripper_width`` from ``info`` when
+    exposed) — never the full 65-D flattened ego state — so agent-side
+    reasoning stays tractable.
+
+    Records are written to **sidecar files**, not appended to the main
+    ``<run_id>.jsonl`` stream — rollout data is bulky and tooling that
+    streams the main JSONL must not be forced to parse rollout frames
+    (ADR-017 §Schema appendix).
+
+    Attributes:
+        enabled: Master switch. ``False`` (default) skips both the
+            video and the sidecar JSONL — env construction does not
+            request ``render_mode="rgb_array"`` and the per-step
+            collection loop short-circuits. CI runs and unit tests
+            should leave this off.
+        interval_frames: Record one eval episode every K training
+            frames. Default 25_000 frames ≈ 4 recordings over a 100k
+            Stage-1b cell. Smaller values produce more granular video
+            history at proportionally higher disk + CPU cost.
+        per_step_jsonl: When ``True`` (default), emit the paired
+            per-step sidecar JSONL alongside the MP4. When ``False``,
+            emit the MP4 only. The agent-side co-analysis workflow
+            assumes the sidecar JSONL is present.
+        episodes_per_record: How many eval episodes to record at each
+            ``interval_frames`` trigger point. Default 1.
+        fps: Video frame rate for the MP4 encode. Default 20 — matches
+            ManiSkill's default ``control_freq`` for the Stage-1b
+            pick-place env.
+    """
+
+    enabled: bool = False
+    interval_frames: int = Field(default=25_000, gt=0)
+    per_step_jsonl: bool = True
+    episodes_per_record: int = Field(default=1, gt=0)
+    fps: int = Field(default=20, gt=0)
+
+
 class HAPPOHyperparams(_FrozenModel):
     """On-policy ego-AHT HAPPO hyperparameters (ADR-002 §Decisions; plan/05 §3.2).
 
@@ -350,6 +401,11 @@ class EgoAHTConfig(_FrozenModel):
             production ``mpe_cooperative_push.yaml`` pins
             ``device: cpu`` and ``stage0_smoke.yaml`` pins
             ``device: cuda``.
+        rollout_recorder: :class:`RolloutRecorderConfig` — eval-rollout
+            video + per-step sidecar JSONL knob (P1.05.11; ADR-017
+            §Decisions). Defaults to ``enabled=False`` so existing
+            YAMLs that do not declare the section keep their current
+            behaviour (no recording, no render-mode change).
     """
 
     algo: str = "ego_aht_happo"
@@ -364,6 +420,7 @@ class EgoAHTConfig(_FrozenModel):
     happo: HAPPOHyperparams = Field(default_factory=HAPPOHyperparams)
     runtime: RuntimeConfig = Field(default_factory=RuntimeConfig)
     safety: SafetyConfig = Field(default_factory=SafetyConfig)
+    rollout_recorder: RolloutRecorderConfig = Field(default_factory=RolloutRecorderConfig)
 
 
 def load_config(
@@ -418,6 +475,7 @@ __all__ = [
     "EnvConfig",
     "HAPPOHyperparams",
     "PartnerConfig",
+    "RolloutRecorderConfig",
     "RuntimeConfig",
     "SafetyConfig",
     "WandbConfig",
