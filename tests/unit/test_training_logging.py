@@ -16,20 +16,26 @@ import pytest
 if TYPE_CHECKING:
     from pathlib import Path
 
+from concerto.training.config import WandbConfig
 from concerto.training.logging import (
     GIT_SHA_UNKNOWN,
     RunContext,
     bind_run_logger,
     compute_run_metadata,
+    log_eval,
+    log_scalars,
+    make_wandb_run_sink,
 )
 
 
 class _FakeWandb:
-    """In-memory :class:`WandbSink` for offline tests (plan/05 §2)."""
+    """In-memory :class:`WandbSink` for offline tests (plan/05 §2; ADR-017 §Decisions)."""
 
     def __init__(self) -> None:
         self.calls: list[tuple[dict[str, object], int | None]] = []
         self.config: dict[str, object] = {}
+        self.tags: list[str] = []
+        self.closed: bool = False
 
     def log(self, data, *, step=None):  # type: ignore[no-untyped-def]
         # Snapshot the dict so later mutations don't bleed in.
@@ -37,6 +43,15 @@ class _FakeWandb:
 
     def set_config(self, config):  # type: ignore[no-untyped-def]
         self.config = dict(config)
+
+    def add_tags(self, tags):  # type: ignore[no-untyped-def]
+        # Idempotent: preserve order, dedupe.
+        for tag in tags:
+            if tag not in self.tags:
+                self.tags.append(tag)
+
+    def close(self):  # type: ignore[no-untyped-def]
+        self.closed = True
 
 
 @pytest.fixture
@@ -239,16 +254,187 @@ class TestWandbSink:
         assert _read_jsonl(jsonl)[0]["event"] == "event"
 
 
+class TestLogScalars:
+    """P1.05.11 / ADR-017 §Schema: namespaced scalar emission helper."""
+
+    def test_emits_event_scalar_with_namespace(self, repo_root: Path, tmp_path: Path) -> None:
+        """ADR-017 §Schema: log_scalars pins event=scalar + metric_namespace."""
+        ctx = compute_run_metadata(seed=0, run_kind="x", repo_root=repo_root)
+        jsonl = tmp_path / "run.jsonl"
+        logger = bind_run_logger(ctx, jsonl_path=jsonl)
+
+        log_scalars(logger, step=100, namespace="train", policy_loss=0.5, dist_entropy=1.2)
+
+        line = _read_jsonl(jsonl)[0]
+        assert line["event"] == "scalar"
+        assert line["metric_namespace"] == "train"
+        assert line["step"] == 100
+        assert line["policy_loss"] == 0.5
+        assert line["dist_entropy"] == 1.2
+        assert "wall_time" in line  # ISO-8601 stamp
+
+    def test_namespace_outside_allow_list_raises(self, repo_root: Path, tmp_path: Path) -> None:
+        """ADR-017 §Schema: typo in namespace fails loud — silent typos break chamber-analyze."""
+        ctx = compute_run_metadata(seed=0, run_kind="x", repo_root=repo_root)
+        logger = bind_run_logger(ctx, jsonl_path=tmp_path / "run.jsonl")
+
+        with pytest.raises(ValueError, match=r"namespace=.* not in allow-list"):
+            log_scalars(logger, step=0, namespace="trian", policy_loss=0.5)  # type: ignore[arg-type]
+
+    def test_each_namespace_in_allow_list_accepted(self, repo_root: Path, tmp_path: Path) -> None:
+        """ADR-017 §Schema: all five namespaces fire without error."""
+        ctx = compute_run_metadata(seed=0, run_kind="x", repo_root=repo_root)
+        logger = bind_run_logger(ctx, jsonl_path=tmp_path / "run.jsonl")
+
+        for ns in ("train", "eval", "safety", "hardware", "rollout"):
+            log_scalars(logger, step=0, namespace=ns, x=1.0)  # type: ignore[arg-type]
+
+    def test_wandb_sink_receives_scalar(self, repo_root: Path, tmp_path: Path) -> None:
+        """ADR-017 §Decisions: scalars flow to both JSONL and W&B sink."""
+        ctx = compute_run_metadata(seed=0, run_kind="x", repo_root=repo_root)
+        sink = _FakeWandb()
+        logger = bind_run_logger(ctx, jsonl_path=tmp_path / "run.jsonl", wandb_sink=sink)
+
+        log_scalars(logger, step=42, namespace="train", policy_loss=0.3)
+
+        assert len(sink.calls) == 1
+        data, step = sink.calls[0]
+        assert step == 42
+        assert data["policy_loss"] == 0.3
+        assert data["metric_namespace"] == "train"
+
+
+class TestLogEval:
+    """P1.05.11 / ADR-017 §Schema: eval-cell emission helper."""
+
+    def test_emits_event_eval_with_condition(self, repo_root: Path, tmp_path: Path) -> None:
+        ctx = compute_run_metadata(seed=0, run_kind="x", repo_root=repo_root)
+        jsonl = tmp_path / "run.jsonl"
+        logger = bind_run_logger(ctx, jsonl_path=jsonl)
+
+        log_eval(
+            logger,
+            step=50000,
+            condition="as-hetero",
+            success_rate=0.0,
+            mean_episode_length=50.0,
+            mean_episode_reward=0.012,
+            n_terminated=0,
+            n_truncated=5,
+        )
+
+        line = _read_jsonl(jsonl)[0]
+        assert line["event"] == "eval"
+        assert line["metric_namespace"] == "eval"
+        assert line["condition"] == "as-hetero"
+        assert line["step"] == 50000
+        assert line["success_rate"] == 0.0
+        assert line["n_terminated"] == 0
+        assert line["n_truncated"] == 5
+        assert "wall_time" in line
+
+
+class TestMakeWandbRunSink:
+    """P1.05.11 / ADR-017 §Decisions: degrade-to-no-op factory paths."""
+
+    def test_disabled_cfg_returns_none(self, repo_root: Path) -> None:
+        """ADR-017 §Decisions: cfg.enabled=false → None, silent (operator opt-out)."""
+        cfg = WandbConfig(enabled=False)
+        ctx = compute_run_metadata(seed=0, run_kind="x", repo_root=repo_root)
+        # Silent path — no warning, just None.
+        assert make_wandb_run_sink(cfg, ctx) is None
+
+    def test_missing_api_key_returns_none_with_warning(
+        self, repo_root: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """ADR-017 §Decisions: missing WANDB_API_KEY (online mode) → None + UserWarning."""
+        cfg = WandbConfig(enabled=True, project="concerto-chamber")
+        ctx = compute_run_metadata(seed=0, run_kind="x", repo_root=repo_root)
+        monkeypatch.delenv("WANDB_API_KEY", raising=False)
+        monkeypatch.delenv("WANDB_MODE", raising=False)
+
+        with pytest.warns(UserWarning, match="WANDB_API_KEY missing"):
+            result = make_wandb_run_sink(cfg, ctx)
+        assert result is None
+
+    def test_offline_mode_does_not_need_api_key(
+        self, repo_root: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """ADR-017 §Decisions: offline mode (WANDB_MODE=offline) bypasses the auth check.
+
+        We don't actually call wandb.init in this test — the sink construction is
+        verified by a fake `wandb.init` patched in via monkeypatch on the imported
+        module, but the key insight is the auth check does not short-circuit.
+        """
+        import sys
+        import types
+
+        cfg = WandbConfig(enabled=True, project="concerto-chamber")
+        ctx = compute_run_metadata(seed=0, run_kind="x", repo_root=repo_root)
+        monkeypatch.delenv("WANDB_API_KEY", raising=False)
+        monkeypatch.setenv("WANDB_MODE", "offline")
+
+        # Patch a minimal wandb module with the methods the factory calls.
+        fake_run = _FakeWandb()
+
+        def _fake_init(**kwargs: object) -> _FakeWandb:
+            del kwargs  # we only need to return the sink; args validated elsewhere
+            return fake_run
+
+        fake_wandb = types.SimpleNamespace(init=_fake_init)
+        monkeypatch.setitem(sys.modules, "wandb", fake_wandb)  # type: ignore[arg-type]
+
+        sink = make_wandb_run_sink(
+            cfg,
+            ctx,
+            tags=("stage:1", "sub_stage:1b"),
+            config_extras={"prereg_sha": "deadbeef"},
+        )
+        assert sink is not None  # offline path constructs the sink
+
+    def test_init_raise_returns_none_with_warning(
+        self,
+        repo_root: Path,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        """ADR-017 §Decisions: wandb.init(...) raising degrades gracefully → None + warning."""
+        import sys
+        import types
+
+        cfg = WandbConfig(enabled=True, project="concerto-chamber")
+        ctx = compute_run_metadata(seed=0, run_kind="x", repo_root=repo_root)
+        monkeypatch.setenv("WANDB_API_KEY", "fake")
+        monkeypatch.delenv("WANDB_MODE", raising=False)
+
+        def _raising_init(**kwargs: object) -> object:
+            del kwargs
+            raise RuntimeError("simulated wandb auth failure")
+
+        monkeypatch.setitem(
+            sys.modules,
+            "wandb",
+            types.SimpleNamespace(init=_raising_init),  # type: ignore[arg-type]
+        )
+
+        with pytest.warns(UserWarning, match="wandb.init"):
+            result = make_wandb_run_sink(cfg, ctx)
+        assert result is None
+
+
 class TestPublicSurface:
     def test_module_exports(self) -> None:
-        """The public surface includes the four symbols the trainer touches."""
+        """Public surface: pre-P1.05.11 symbols + four new ones (ADR-017)."""
         from concerto.training import logging as logging_mod
 
         for name in (
             "GIT_SHA_UNKNOWN",
+            "LogNamespace",
             "RunContext",
             "WandbSink",
             "bind_run_logger",
             "compute_run_metadata",
+            "log_eval",
+            "log_scalars",
+            "make_wandb_run_sink",
         ):
             assert hasattr(logging_mod, name)
