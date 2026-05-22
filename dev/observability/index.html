@@ -1041,6 +1041,79 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#cookbook-recipes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Cookbook recipes
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Cookbook recipes">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#cookbook-recipe-1-first-instrumented-cell-walkthrough" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Cookbook recipe 1 — First-instrumented-cell walkthrough
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#cookbook-recipe-2-comparing-two-runs-worked-2026-05-20-archive" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Cookbook recipe 2 — Comparing two runs (worked: 2026-05-20 archive)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#cookbook-recipe-3-per-step-rollout-analysis" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Cookbook recipe 3 — Per-step rollout analysis
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#cookbook-recipe-4-embedding-a-comparison-plot-in-a-pr-description" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Cookbook recipe 4 — Embedding a comparison plot in a PR description
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#how-to-guides" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How-to guides
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="How-to guides">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
   <a href="#how-to-enable-wb-for-a-spike-run" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1050,8 +1123,8 @@
   </a>
   
 </li>
-      
-        <li class="md-nav__item">
+        
+          <li class="md-nav__item">
   <a href="#how-to-back-fill-historical-archives" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1061,41 +1134,47 @@
   </a>
   
 </li>
+        
+      </ul>
+    </nav>
+  
+</li>
       
         <li class="md-nav__item">
-  <a href="#how-to-compare-runs-with-chamber-analyze" class="md-nav__link">
+  <a href="#reference" class="md-nav__link">
     <span class="md-ellipsis">
       
-        How to compare runs with chamber-analyze
+        Reference
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Reference">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#config-schema-reference" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Config schema reference
       
     </span>
   </a>
   
 </li>
-      
-        <li class="md-nav__item">
-  <a href="#how-to-inspect-a-rollout-at-per-step-granularity" class="md-nav__link">
+        
+          <li class="md-nav__item">
+  <a href="#environment-variables" class="md-nav__link">
     <span class="md-ellipsis">
       
-        How to inspect a rollout at per-step granularity
+        Environment variables
       
     </span>
   </a>
   
 </li>
-      
-        <li class="md-nav__item">
-  <a href="#how-to-embed-a-comparison-plot-in-a-pr-description" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        How to embed a comparison plot in a PR description
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
+        
+          <li class="md-nav__item">
   <a href="#json-output-schemas" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1119,10 +1198,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#chamber-analyze-metrics-json" class="md-nav__link">
+  <a href="#chamber-analyze-summary-run_id-json" class="md-nav__link">
     <span class="md-ellipsis">
       
-        chamber-analyze metrics --json
+        chamber-analyze summary &lt;run_id&gt; --json
       
     </span>
   </a>
@@ -1130,10 +1209,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#chamber-analyze-compare-json" class="md-nav__link">
+  <a href="#chamber-analyze-metrics-run_id-metric-name-json" class="md-nav__link">
     <span class="md-ellipsis">
       
-        chamber-analyze compare --json
+        chamber-analyze metrics &lt;run_id&gt; --metric &lt;name&gt; --json
       
     </span>
   </a>
@@ -1141,10 +1220,48 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#chamber-analyze-rollout-frames-json" class="md-nav__link">
+  <a href="#chamber-analyze-compare-run_id_a-run_id_b-metrics-m1m2-json" class="md-nav__link">
     <span class="md-ellipsis">
       
-        chamber-analyze rollout-frames --json
+        chamber-analyze compare &lt;run_id_a&gt; &lt;run_id_b&gt; [...] --metrics M1,M2 --json
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#chamber-analyze-plot-out-pathpng" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        chamber-analyze plot ... --out &lt;path.png&gt;
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#chamber-analyze-rollout-frames-run_id-json" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        chamber-analyze rollout-frames &lt;run_id&gt; --json
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#filesystem-layout" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Filesystem layout
       
     </span>
   </a>
@@ -1157,13 +1274,30 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#what-lives-where-on-disk" class="md-nav__link">
+  <a href="#troubleshooting" class="md-nav__link">
     <span class="md-ellipsis">
       
-        What lives where on disk
+        Troubleshooting
       
     </span>
   </a>
+  
+    <nav class="md-nav" aria-label="Troubleshooting">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#envrender-returns-none-rollout-mp4s-not-generated" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        env.render() returns None; rollout MP4s not generated
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -1473,6 +1607,79 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#cookbook-recipes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Cookbook recipes
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Cookbook recipes">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#cookbook-recipe-1-first-instrumented-cell-walkthrough" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Cookbook recipe 1 — First-instrumented-cell walkthrough
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#cookbook-recipe-2-comparing-two-runs-worked-2026-05-20-archive" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Cookbook recipe 2 — Comparing two runs (worked: 2026-05-20 archive)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#cookbook-recipe-3-per-step-rollout-analysis" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Cookbook recipe 3 — Per-step rollout analysis
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#cookbook-recipe-4-embedding-a-comparison-plot-in-a-pr-description" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Cookbook recipe 4 — Embedding a comparison plot in a PR description
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#how-to-guides" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How-to guides
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="How-to guides">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
   <a href="#how-to-enable-wb-for-a-spike-run" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1482,8 +1689,8 @@
   </a>
   
 </li>
-      
-        <li class="md-nav__item">
+        
+          <li class="md-nav__item">
   <a href="#how-to-back-fill-historical-archives" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1493,41 +1700,47 @@
   </a>
   
 </li>
+        
+      </ul>
+    </nav>
+  
+</li>
       
         <li class="md-nav__item">
-  <a href="#how-to-compare-runs-with-chamber-analyze" class="md-nav__link">
+  <a href="#reference" class="md-nav__link">
     <span class="md-ellipsis">
       
-        How to compare runs with chamber-analyze
+        Reference
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Reference">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#config-schema-reference" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Config schema reference
       
     </span>
   </a>
   
 </li>
-      
-        <li class="md-nav__item">
-  <a href="#how-to-inspect-a-rollout-at-per-step-granularity" class="md-nav__link">
+        
+          <li class="md-nav__item">
+  <a href="#environment-variables" class="md-nav__link">
     <span class="md-ellipsis">
       
-        How to inspect a rollout at per-step granularity
+        Environment variables
       
     </span>
   </a>
   
 </li>
-      
-        <li class="md-nav__item">
-  <a href="#how-to-embed-a-comparison-plot-in-a-pr-description" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        How to embed a comparison plot in a PR description
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
+        
+          <li class="md-nav__item">
   <a href="#json-output-schemas" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1551,10 +1764,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#chamber-analyze-metrics-json" class="md-nav__link">
+  <a href="#chamber-analyze-summary-run_id-json" class="md-nav__link">
     <span class="md-ellipsis">
       
-        chamber-analyze metrics --json
+        chamber-analyze summary &lt;run_id&gt; --json
       
     </span>
   </a>
@@ -1562,10 +1775,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#chamber-analyze-compare-json" class="md-nav__link">
+  <a href="#chamber-analyze-metrics-run_id-metric-name-json" class="md-nav__link">
     <span class="md-ellipsis">
       
-        chamber-analyze compare --json
+        chamber-analyze metrics &lt;run_id&gt; --metric &lt;name&gt; --json
       
     </span>
   </a>
@@ -1573,10 +1786,48 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#chamber-analyze-rollout-frames-json" class="md-nav__link">
+  <a href="#chamber-analyze-compare-run_id_a-run_id_b-metrics-m1m2-json" class="md-nav__link">
     <span class="md-ellipsis">
       
-        chamber-analyze rollout-frames --json
+        chamber-analyze compare &lt;run_id_a&gt; &lt;run_id_b&gt; [...] --metrics M1,M2 --json
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#chamber-analyze-plot-out-pathpng" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        chamber-analyze plot ... --out &lt;path.png&gt;
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#chamber-analyze-rollout-frames-run_id-json" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        chamber-analyze rollout-frames &lt;run_id&gt; --json
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#filesystem-layout" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Filesystem layout
       
     </span>
   </a>
@@ -1589,13 +1840,30 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#what-lives-where-on-disk" class="md-nav__link">
+  <a href="#troubleshooting" class="md-nav__link">
     <span class="md-ellipsis">
       
-        What lives where on disk
+        Troubleshooting
       
     </span>
   </a>
+  
+    <nav class="md-nav" aria-label="Troubleshooting">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#envrender-returns-none-rollout-mp4s-not-generated" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        env.render() returns None; rollout MP4s not generated
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -1659,7 +1927,265 @@ uv<span class="w"> </span>run<span class="w"> </span>chamber-spike<span class="w
 uv<span class="w"> </span>run<span class="w"> </span>chamber-analyze<span class="w"> </span>list-runs<span class="w"> </span>--archive-root<span class="w"> </span>spikes/results/<span class="w"> </span>--json<span class="w"> </span><span class="p">|</span><span class="w"> </span>jq<span class="w"> </span>.
 </code></pre></div>
 <hr />
-<h2 id="how-to-enable-wb-for-a-spike-run">How to enable W&amp;B for a spike run</h2>
+<h2 id="cookbook-recipes">Cookbook recipes</h2>
+<p>Worked examples with real run IDs from
+<code>spikes/results/stage1-failure-investigation/2026-05-20/</code> — the five
+post-launch Stage-1b cells (seeds 0–4) committed before P1.05.11
+landed. Pre-P1.05.11 archives carry the envelope-level events
+(<code>training_start</code>, <code>safety_telemetry</code>, <code>rollout_update</code>,
+<code>safety_telemetry_final</code>, <code>training_end</code>) but <strong>not</strong> per-step PPO
+scalars (<code>policy_loss</code>, <code>dist_entropy</code>, <code>approx_kl</code>, …) or per-step
+rollout sidecar JSONLs — those are emitted only by cells launched
+after this slice merged with <code>observability.wandb.enabled=true</code>. The
+recipes note when an example is forward-looking vs grounded in the
+committed archive.</p>
+<h3 id="cookbook-recipe-1-first-instrumented-cell-walkthrough">Cookbook recipe 1 — First-instrumented-cell walkthrough</h3>
+<p>End-to-end: edit the config, launch a Stage-1b cell with the W&amp;B sink
+on, view results in the browser, find the artefacts on disk.</p>
+<p><strong>Step 1 — Edit the config (or use a per-run override).</strong></p>
+<p>Persistent (edit
+<code>configs/training/ego_aht_happo/stage1_pickplace.yaml</code>):</p>
+<div class="highlight"><pre><span></span><code><span class="nt">wandb</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">enabled</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="w">  </span><span class="nt">project</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">concerto-chamber</span><span class="w">   </span><span class="c1"># ADR-017 §Decisions D2 — single project</span>
+<span class="nt">rollout_recorder</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">enabled</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="w">  </span><span class="nt">interval_frames</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">25000</span><span class="w">      </span><span class="c1"># record one eval episode every 25k frames</span>
+<span class="w">  </span><span class="nt">fps</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">20</span>
+</code></pre></div>
+<p>Or per-run (no config edit; useful for one-off experiments):</p>
+<div class="highlight"><pre><span></span><code>uv<span class="w"> </span>run<span class="w"> </span>chamber-spike<span class="w"> </span>train<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--config<span class="w"> </span>configs/training/ego_aht_happo/stage1_pickplace.yaml<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--override<span class="w"> </span>wandb.enabled<span class="o">=</span><span class="nb">true</span><span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--override<span class="w"> </span>rollout_recorder.enabled<span class="o">=</span><span class="nb">true</span>
+</code></pre></div>
+<p><strong>Step 2 — Launch the cell.</strong></p>
+<div class="highlight"><pre><span></span><code>make<span class="w"> </span>stage1-as<span class="w">       </span><span class="c1"># or: uv run chamber-spike train ...</span>
+</code></pre></div>
+<p>During training the canonical record is the per-cell
+<code>logs/&lt;run_id&gt;.jsonl</code>. W&amp;B receives the same events live; you can
+open the dashboard before the cell completes and watch the curves
+update.</p>
+<p><strong>Step 3 — View in W&amp;B (founder-side).</strong></p>
+<p>Browse <code>https://wandb.ai/&lt;entity&gt;/concerto-chamber</code>. The cell appears
+as a run named after its 16-hex <code>run_id</code> (derived deterministically
+from <code>(seed, git_sha, pyproject_hash, run_kind)</code>; see
+<code>concerto.training.logging.compute_run_metadata</code>). Default chart
+group is <code>train/</code> (PPO health scalars); <code>safety/</code> carries
+<code>lambda_mean/var/min/max</code>; <code>eval/</code> carries <code>success_rate</code> and
+<code>mean_episode_*</code> per eval-cell completion. The run's Overview panel
+shows the <code>wandb.config</code> fields: <code>run_id</code>, <code>seed</code>, <code>git_sha</code>,
+<code>pyproject_hash</code>, <code>run_kind</code>, <code>prereg_sha</code> (full SHA; the short-form
+also appears as a tag — see §Decisions D10).</p>
+<p><strong>Step 4 — Find artefacts on disk (agent-side).</strong></p>
+<div class="highlight"><pre><span></span><code>&lt;cfg.log_dir&gt;/                     # default ./logs/
+└── &lt;run_id&gt;.jsonl                 # canonical per-cell log
+
+&lt;spike_archive&gt;/                   # default spikes/results/&lt;spike-id&gt;/
+├── spike_as.json                  # SpikeRun envelope (ADR-016)
+├── leaderboard.json               # ADR-008 leaderboard entry
+└── rollouts/                      # paired MP4 + sidecar JSONL artefacts
+    └── as-hetero/                 # one sub-dir per condition_id
+        ├── step_025000.mp4        # founder-side: drag into W&amp;B Reports / PR
+        ├── step_025000.jsonl      # agent-side: parse with chamber-analyze
+        ├── step_050000.mp4
+        ├── step_050000.jsonl
+        └── …
+</code></pre></div>
+<p>The W&amp;B run name (16-hex <code>run_id</code>) matches the JSONL filename
+byte-for-byte. The agent's <code>chamber-analyze</code> subcommands work
+against the JSONLs alone — no W&amp;B account needed.</p>
+<h3 id="cookbook-recipe-2-comparing-two-runs-worked-2026-05-20-archive">Cookbook recipe 2 — Comparing two runs (worked: 2026-05-20 archive)</h3>
+<p>Side-by-side comparison across N runs. Worked example uses the two
+lowest-seed cells from the committed 2026-05-20 failure-investigation
+archive (<code>43a0d043cb9f54ac</code> = seed 0; <code>e3ca669746e8f4bb</code> = seed 1).
+The actual numbers reflect the pre-P1.05.8 Surface 1 rubber-stamp
+bug (every episode trivially passed under the old success rule); the
+recipe is structural — same commands work against post-merge cells
+that produce honest metrics.</p>
+<p><strong>Step 1 — List candidates.</strong></p>
+<div class="highlight"><pre><span></span><code>uv<span class="w"> </span>run<span class="w"> </span>chamber-analyze<span class="w"> </span>list-runs<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--archive-root<span class="w"> </span>spikes/results/stage1-failure-investigation/2026-05-20<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--json<span class="w"> </span><span class="p">|</span><span class="w"> </span>jq<span class="w"> </span><span class="s1">&#39;.[] | {run_id, seed, terminal_success_rate, lambda_steady_state}&#39;</span>
+</code></pre></div>
+<p>Expected:</p>
+<div class="highlight"><pre><span></span><code><span class="p">{</span><span class="nt">&quot;run_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;43a0d043cb9f54ac&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;seed&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;terminal_success_rate&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;lambda_steady_state&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">-7.0</span><span class="p">}</span>
+<span class="p">{</span><span class="nt">&quot;run_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;e3ca669746e8f4bb&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;seed&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;terminal_success_rate&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;lambda_steady_state&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">-7.0</span><span class="p">}</span>
+<span class="p">{</span><span class="nt">&quot;run_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;ef23e3b576f38c91&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;seed&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;terminal_success_rate&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;lambda_steady_state&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">-7.0</span><span class="p">}</span>
+<span class="p">{</span><span class="nt">&quot;run_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;a7b549a31fbd8222&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;seed&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;terminal_success_rate&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;lambda_steady_state&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">-7.0</span><span class="p">}</span>
+<span class="p">{</span><span class="nt">&quot;run_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;da40f205c78355ac&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;seed&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;terminal_success_rate&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;lambda_steady_state&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">-7.0</span><span class="p">}</span>
+</code></pre></div>
+<p><strong>Step 2 — Compare two cells head-to-head.</strong></p>
+<div class="highlight"><pre><span></span><code>uv<span class="w"> </span>run<span class="w"> </span>chamber-analyze<span class="w"> </span>compare<span class="w"> </span>43a0d043cb9f54ac<span class="w"> </span>e3ca669746e8f4bb<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--archive-root<span class="w"> </span>spikes/results/stage1-failure-investigation/2026-05-20<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--metrics<span class="w"> </span>mean_reward_final,terminal_success_rate,lambda_steady_state<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--json
+</code></pre></div>
+<p>Expected:</p>
+<div class="highlight"><pre><span></span><code><span class="p">[</span>
+<span class="w">  </span><span class="p">{</span><span class="nt">&quot;run_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;43a0d043cb9f54ac&quot;</span><span class="p">,</span>
+<span class="w">   </span><span class="nt">&quot;mean_reward_final&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span>
+<span class="w">   </span><span class="nt">&quot;terminal_success_rate&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">1.0</span><span class="p">,</span>
+<span class="w">   </span><span class="nt">&quot;lambda_steady_state&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">-7.0</span><span class="p">},</span>
+<span class="w">  </span><span class="p">{</span><span class="nt">&quot;run_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;e3ca669746e8f4bb&quot;</span><span class="p">,</span>
+<span class="w">   </span><span class="nt">&quot;mean_reward_final&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span>
+<span class="w">   </span><span class="nt">&quot;terminal_success_rate&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">1.0</span><span class="p">,</span>
+<span class="w">   </span><span class="nt">&quot;lambda_steady_state&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">-7.0</span><span class="p">}</span>
+<span class="p">]</span>
+</code></pre></div>
+<p><code>mean_reward_final</code> is <code>null</code> here because the 2026-05-20 archive's
+<code>rollout_update</code> events serialised the per-step reward as the string
+repr <code>"tensor([3.18e-05])"</code> rather than a numeric field — pre-P1.05.11
+type-bug, not slice-induced. Cells launched post-merge emit
+<code>mean_episode_reward</code> numerically via the new <code>event="eval"</code> lines
+and surface here as a float.</p>
+<p><strong>Step 3 — Drill into a single scalar.</strong></p>
+<div class="highlight"><pre><span></span><code>uv<span class="w"> </span>run<span class="w"> </span>chamber-analyze<span class="w"> </span>metrics<span class="w"> </span>43a0d043cb9f54ac<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--archive-root<span class="w"> </span>spikes/results/stage1-failure-investigation/2026-05-20<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--metric<span class="w"> </span>lambda_mean<span class="w"> </span>--namespace<span class="w"> </span>safety<span class="w"> </span>--json<span class="w"> </span><span class="p">|</span><span class="w"> </span>jq<span class="w"> </span><span class="s1">&#39;.[0:5]&#39;</span>
+</code></pre></div>
+<p>Expected first 5 of ~100 rollout-window stats:</p>
+<div class="highlight"><pre><span></span><code><span class="p">[</span>
+<span class="w">  </span><span class="p">{</span><span class="nt">&quot;step&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">1024</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;wall_time&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;value&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">-0.2679</span><span class="p">},</span>
+<span class="w">  </span><span class="p">{</span><span class="nt">&quot;step&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">2048</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;wall_time&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;value&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">-0.7802</span><span class="p">},</span>
+<span class="w">  </span><span class="p">{</span><span class="nt">&quot;step&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">3072</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;wall_time&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;value&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">-1.4115</span><span class="p">},</span>
+<span class="w">  </span><span class="p">{</span><span class="nt">&quot;step&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">4096</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;wall_time&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;value&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">-2.0428</span><span class="p">},</span>
+<span class="w">  </span><span class="p">{</span><span class="nt">&quot;step&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">5120</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;wall_time&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;value&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">-2.6741</span><span class="p">}</span>
+<span class="p">]</span>
+</code></pre></div>
+<p><code>wall_time</code> is <code>null</code> for pre-P1.05.11 archives; post-merge cells
+carry an ISO-8601 stamp on every emitted line.</p>
+<h3 id="cookbook-recipe-3-per-step-rollout-analysis">Cookbook recipe 3 — Per-step rollout analysis</h3>
+<p>Find the step in a recorded eval episode where a key <code>info</code> flag
+flips (e.g. <code>is_grasped</code> goes False → True), and read the
+<code>obs_summary</code> fields at that step. This recipe is <strong>forward-looking</strong>:
+the 2026-05-20 committed archive pre-dates the recorder, so the
+sidecar JSONLs at <code>&lt;archive&gt;/rollouts/&lt;condition&gt;/step_*.jsonl</code> do
+not exist there. Any cell launched post-P1.05.11 with
+<code>rollout_recorder.enabled=true</code> produces them.</p>
+<p><strong>Step 1 — Find a recorded rollout.</strong></p>
+<div class="highlight"><pre><span></span><code><span class="c1"># List the rollout sidecar JSONLs for one run&#39;s archive.</span>
+find<span class="w"> </span>&lt;archive_root&gt;/rollouts<span class="w"> </span>-name<span class="w"> </span><span class="s2">&quot;step_*.jsonl&quot;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>head
+</code></pre></div>
+<p>Expected layout:</p>
+<div class="highlight"><pre><span></span><code>&lt;archive_root&gt;/rollouts/as-hetero/step_025000.jsonl
+&lt;archive_root&gt;/rollouts/as-hetero/step_050000.jsonl
+&lt;archive_root&gt;/rollouts/as-hetero/step_075000.jsonl
+…
+</code></pre></div>
+<p><strong>Step 2 — Dump per-step records for one rollout via <code>chamber-analyze</code>.</strong></p>
+<div class="highlight"><pre><span></span><code>uv<span class="w"> </span>run<span class="w"> </span>chamber-analyze<span class="w"> </span>rollout-frames<span class="w"> </span>&lt;run_id&gt;<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--archive-root<span class="w"> </span>&lt;archive_root&gt;<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--episode<span class="w"> </span><span class="m">50000</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>jq<span class="w"> </span><span class="s1">&#39;.[0]&#39;</span>
+</code></pre></div>
+<p>Expected first record (illustrative; one line per env step):</p>
+<div class="highlight"><pre><span></span><code><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;event&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;rollout_step&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;metric_namespace&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;rollout&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;step_global&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">50000</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;step_episode&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;condition&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;as-hetero&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;seed&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;wall_time&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;2026-05-22T15:54:48.752+00:00&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;obs_summary&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">&quot;cube_pose&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="mf">0.073</span><span class="p">,</span><span class="w"> </span><span class="mf">0.000</span><span class="p">,</span><span class="w"> </span><span class="mf">0.020</span><span class="p">,</span><span class="w"> </span><span class="mf">1.000</span><span class="p">,</span><span class="w"> </span><span class="mf">0.000</span><span class="p">,</span><span class="w"> </span><span class="mf">0.000</span><span class="p">,</span><span class="w"> </span><span class="mf">0.000</span><span class="p">],</span>
+<span class="w">    </span><span class="nt">&quot;goal_pos&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="mf">0.000</span><span class="p">,</span><span class="w"> </span><span class="mf">0.100</span><span class="p">,</span><span class="w"> </span><span class="mf">0.250</span><span class="p">],</span>
+<span class="w">    </span><span class="nt">&quot;tcp_pose&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="mf">0.250</span><span class="p">,</span><span class="w"> </span><span class="mf">0.000</span><span class="p">,</span><span class="w"> </span><span class="mf">0.500</span><span class="p">,</span><span class="w"> </span><span class="mf">1.000</span><span class="p">,</span><span class="w"> </span><span class="mf">0.000</span><span class="p">,</span><span class="w"> </span><span class="mf">0.000</span><span class="p">,</span><span class="w"> </span><span class="mf">0.000</span><span class="p">],</span>
+<span class="w">    </span><span class="nt">&quot;ego_qpos&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="mf">0.000</span><span class="p">,</span><span class="w"> </span><span class="mf">-0.785</span><span class="p">,</span><span class="w"> </span><span class="mf">0.000</span><span class="p">,</span><span class="w"> </span><span class="mf">-2.356</span><span class="p">,</span><span class="w"> </span><span class="mf">0.000</span><span class="p">,</span><span class="w"> </span><span class="mf">1.571</span><span class="p">,</span><span class="w"> </span><span class="mf">0.785</span><span class="p">,</span><span class="w"> </span><span class="mf">0.040</span><span class="p">],</span>
+<span class="w">    </span><span class="nt">&quot;ego_qvel&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="mf">0.000</span><span class="p">,</span><span class="w"> </span><span class="mf">0.000</span><span class="p">,</span><span class="w"> </span><span class="mf">0.000</span><span class="p">,</span><span class="w"> </span><span class="mf">0.000</span><span class="p">,</span><span class="w"> </span><span class="mf">0.000</span><span class="p">,</span><span class="w"> </span><span class="mf">0.000</span><span class="p">,</span><span class="w"> </span><span class="mf">0.000</span><span class="p">,</span><span class="w"> </span><span class="mf">0.000</span><span class="p">],</span>
+<span class="w">    </span><span class="nt">&quot;partner_qpos&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="mf">0.350</span><span class="p">,</span><span class="w"> </span><span class="mf">0.200</span><span class="p">,</span><span class="w"> </span><span class="mf">0.000</span><span class="p">,</span><span class="w"> </span><span class="mf">0.000</span><span class="p">,</span><span class="w"> </span><span class="mf">0.500</span><span class="p">,</span><span class="w"> </span><span class="mf">0.000</span><span class="p">,</span><span class="w"> </span><span class="mf">0.000</span><span class="p">,</span><span class="w"> </span><span class="mf">0.000</span><span class="p">,</span><span class="w"> </span><span class="mf">0.000</span><span class="p">,</span><span class="w"> </span><span class="mf">0.000</span><span class="p">,</span><span class="w"> </span><span class="mf">0.000</span><span class="p">,</span><span class="w"> </span><span class="mf">0.000</span><span class="p">,</span><span class="w"> </span><span class="mf">0.000</span><span class="p">],</span>
+<span class="w">    </span><span class="nt">&quot;partner_qvel&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="mf">0.0</span><span class="p">],</span>
+<span class="w">    </span><span class="nt">&quot;is_grasped&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;gripper_width&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.080</span>
+<span class="w">  </span><span class="p">},</span>
+<span class="w">  </span><span class="nt">&quot;action&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="mf">0.10</span><span class="p">,</span><span class="w"> </span><span class="mf">0.00</span><span class="p">,</span><span class="w"> </span><span class="mf">-0.05</span><span class="p">,</span><span class="w"> </span><span class="mf">0.00</span><span class="p">,</span><span class="w"> </span><span class="mf">0.00</span><span class="p">,</span><span class="w"> </span><span class="mf">0.00</span><span class="p">,</span><span class="w"> </span><span class="mf">0.00</span><span class="p">,</span><span class="w"> </span><span class="mf">0.00</span><span class="p">],</span>
+<span class="w">  </span><span class="nt">&quot;reward&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.0</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;terminated&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;truncated&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;info&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">&quot;is_grasped&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;elapsed_steps&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">},</span>
+<span class="w">  </span><span class="nt">&quot;frame_index&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span>
+<span class="p">}</span>
+</code></pre></div>
+<p><strong>Step 3 — Find the step where <code>is_grasped</code> flips.</strong></p>
+<div class="highlight"><pre><span></span><code>uv<span class="w"> </span>run<span class="w"> </span>chamber-analyze<span class="w"> </span>rollout-frames<span class="w"> </span>&lt;run_id&gt;<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--archive-root<span class="w"> </span>&lt;archive_root&gt;<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--episode<span class="w"> </span><span class="m">50000</span><span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--field<span class="w"> </span>is_grasped<span class="w"> </span><span class="p">|</span><span class="w"> </span>jq<span class="w"> </span><span class="s1">&#39;[.[] | select(.is_grasped == true)] | .[0]&#39;</span>
+</code></pre></div>
+<p>Expected (first step where the gripper closed on the cube):</p>
+<div class="highlight"><pre><span></span><code><span class="p">{</span><span class="nt">&quot;step_global&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">50018</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;is_grasped&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">}</span>
+</code></pre></div>
+<p><strong>Step 4 — Read the surrounding <code>obs_summary</code> at that step.</strong></p>
+<div class="highlight"><pre><span></span><code>uv<span class="w"> </span>run<span class="w"> </span>chamber-analyze<span class="w"> </span>rollout-frames<span class="w"> </span>&lt;run_id&gt;<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--archive-root<span class="w"> </span>&lt;archive_root&gt;<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--episode<span class="w"> </span><span class="m">50000</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>jq<span class="w"> </span><span class="s1">&#39;.[] | select(.step_global == 50018) | .obs_summary&#39;</span>
+</code></pre></div>
+<p>Expected:</p>
+<div class="highlight"><pre><span></span><code><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;cube_pose&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="mf">0.075</span><span class="p">,</span><span class="w"> </span><span class="mf">0.001</span><span class="p">,</span><span class="w"> </span><span class="mf">0.038</span><span class="p">,</span><span class="w"> </span><span class="mf">1.000</span><span class="p">,</span><span class="w"> </span><span class="mf">0.000</span><span class="p">,</span><span class="w"> </span><span class="mf">0.000</span><span class="p">,</span><span class="w"> </span><span class="mf">0.000</span><span class="p">],</span>
+<span class="w">  </span><span class="nt">&quot;goal_pos&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="mf">0.000</span><span class="p">,</span><span class="w"> </span><span class="mf">0.100</span><span class="p">,</span><span class="w"> </span><span class="mf">0.250</span><span class="p">],</span>
+<span class="w">  </span><span class="nt">&quot;tcp_pose&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="mf">0.075</span><span class="p">,</span><span class="w"> </span><span class="mf">0.001</span><span class="p">,</span><span class="w"> </span><span class="mf">0.038</span><span class="p">,</span><span class="w"> </span><span class="mf">1.000</span><span class="p">,</span><span class="w"> </span><span class="mf">0.000</span><span class="p">,</span><span class="w"> </span><span class="mf">0.000</span><span class="p">,</span><span class="w"> </span><span class="mf">0.000</span><span class="p">],</span>
+<span class="w">  </span><span class="nt">&quot;ego_qpos&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="mf">0.103</span><span class="p">,</span><span class="w"> </span><span class="mf">-0.612</span><span class="p">,</span><span class="w"> </span><span class="mf">-0.005</span><span class="p">,</span><span class="w"> </span><span class="mf">-2.182</span><span class="p">,</span><span class="w"> </span><span class="mf">0.012</span><span class="p">,</span><span class="w"> </span><span class="mf">1.520</span><span class="p">,</span><span class="w"> </span><span class="mf">0.802</span><span class="p">,</span><span class="w"> </span><span class="mf">0.000</span><span class="p">],</span>
+<span class="w">  </span><span class="nt">&quot;ego_qvel&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="mf">0.012</span><span class="p">,</span><span class="w"> </span><span class="mf">0.041</span><span class="p">,</span><span class="w"> </span><span class="mf">0.003</span><span class="p">,</span><span class="w"> </span><span class="mf">0.022</span><span class="p">,</span><span class="w"> </span><span class="mf">0.001</span><span class="p">,</span><span class="w"> </span><span class="mf">-0.005</span><span class="p">,</span><span class="w"> </span><span class="mf">0.001</span><span class="p">,</span><span class="w"> </span><span class="mf">-2.310</span><span class="p">],</span>
+<span class="w">  </span><span class="nt">&quot;partner_qpos&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="mf">0.350</span><span class="p">,</span><span class="w"> </span><span class="mf">0.200</span><span class="p">,</span><span class="w"> </span><span class="mf">0.000</span><span class="p">,</span><span class="w"> </span><span class="mf">0.000</span><span class="p">,</span><span class="w"> </span><span class="mf">0.500</span><span class="p">,</span><span class="w"> </span><span class="mf">0.000</span><span class="p">,</span><span class="w"> </span><span class="mf">0.000</span><span class="p">,</span><span class="w"> </span><span class="mf">0.000</span><span class="p">,</span><span class="w"> </span><span class="mf">0.000</span><span class="p">,</span><span class="w"> </span><span class="mf">0.000</span><span class="p">,</span><span class="w"> </span><span class="mf">0.000</span><span class="p">,</span><span class="w"> </span><span class="mf">0.000</span><span class="p">,</span><span class="w"> </span><span class="mf">0.000</span><span class="p">],</span>
+<span class="w">  </span><span class="nt">&quot;partner_qvel&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="mf">0.0</span><span class="p">],</span>
+<span class="w">  </span><span class="nt">&quot;is_grasped&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;gripper_width&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.000</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>Note the TCP and cube poses are co-located (the gripper closed on
+the cube); <code>gripper_width</code> dropped to 0; the rapid <code>ego_qvel[7]</code>
+negative spike is the gripper-close velocity. The agent now has a
+mechanistic picture of the grasp moment without watching the MP4.</p>
+<p>The <code>obs_summary</code> carries a curated subset of fields per ADR-017
+§Decisions D6 — never the full 65-D flattened ego state. Extending
+the field set requires editing
+<code>chamber.observability.rollout_recorder._{OBS_EXTRA,AGENT_SUB,INFO}_KEYS</code>
+and rebuilding any archived rollouts.</p>
+<h3 id="cookbook-recipe-4-embedding-a-comparison-plot-in-a-pr-description">Cookbook recipe 4 — Embedding a comparison plot in a PR description</h3>
+<p>Render a multi-run scalar comparison to PNG and attach it to a GitHub
+PR description.</p>
+<p><strong>Step 1 — Generate the PNG via <code>chamber-analyze plot</code>.</strong></p>
+<div class="highlight"><pre><span></span><code>uv<span class="w"> </span>run<span class="w"> </span>chamber-analyze<span class="w"> </span>plot<span class="w"> </span>43a0d043cb9f54ac<span class="w"> </span>e3ca669746e8f4bb<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--archive-root<span class="w"> </span>spikes/results/stage1-failure-investigation/2026-05-20<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--metric<span class="w"> </span>lambda_mean<span class="w"> </span>--namespace<span class="w"> </span>safety<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--out<span class="w"> </span>/tmp/lambda_seed0_vs_seed1.png<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--title<span class="w"> </span><span class="s2">&quot;lambda_mean: seed 0 vs seed 1 (Stage-1b post-launch, 2026-05-20)&quot;</span>
+</code></pre></div>
+<p><code>plot</code> uses matplotlib's Agg backend (headless-safe; works in CI and
+on remote hosts without an X display). Output PNG is suitable for
+direct embed.</p>
+<p><strong>Step 2 — Attach to GitHub via drag-and-drop OR via <code>gh</code>.</strong></p>
+<p><em>Browser path.</em> Drag the PNG into a GitHub PR description editor; the
+editor uploads to <code>user-images.githubusercontent.com</code> and inserts
+<code>![filename.png](https://user-images.githubusercontent.com/.../filename.png)</code>
+at the cursor.</p>
+<p><em>CLI path.</em> Edit the PR body via <code>gh pr edit --body-file</code>:</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Compose the body (which references the eventual attachment URL).</span>
+cat<span class="w"> </span><span class="s">&lt;&lt;&#39;EOF&#39; &gt; /tmp/pr_body.md</span>
+<span class="s">## Lambda divergence — seed 0 vs seed 1</span>
+
+<span class="s">![lambda comparison](https://user-images.githubusercontent.com/&lt;UID&gt;/&lt;HASH&gt;-lambda_seed0_vs_seed1.png)</span>
+
+<span class="s">The two seeds&#39; λ trajectories diverge at ~25k frames; seed 0 saturates the</span>
+<span class="s">clamp by 50k while seed 1&#39;s overshoot is bounded ~6% lower.</span>
+<span class="s">EOF</span>
+
+<span class="c1"># Upload the image via GitHub&#39;s web UI (manual step), then paste the</span>
+<span class="c1"># user-images URL into the body above before:</span>
+gh<span class="w"> </span>pr<span class="w"> </span>edit<span class="w"> </span>&lt;pr-number&gt;<span class="w"> </span>--body-file<span class="w"> </span>/tmp/pr_body.md
+</code></pre></div>
+<p><strong>Step 3 — Inline the chart in a Markdown README or ADR.</strong></p>
+<p>For permanently-embedded charts (vs ephemeral PR-description images),
+commit the PNG under <code>docs/assets/</code> and reference via a relative
+path:</p>
+<div class="highlight"><pre><span></span><code>![](../assets/lambda_seed0_vs_seed1.png)
+</code></pre></div>
+<p>mkdocs renders this against the docs/ build root; GitHub's source-view
+renders it against the file's own location. Both work.</p>
+<hr />
+<h2 id="how-to-guides">How-to guides</h2>
+<h3 id="how-to-enable-wb-for-a-spike-run">How to enable W&amp;B for a spike run</h3>
 <p>The W&amp;B sink is opt-in via <code>cfg.wandb.enabled</code>. Two ways to flip it on:</p>
 <p><strong>Per-run override (no config edit):</strong></p>
 <div class="highlight"><pre><span></span><code>uv<span class="w"> </span>run<span class="w"> </span>chamber-spike<span class="w"> </span>train<span class="w"> </span><span class="se">\</span>
@@ -1672,36 +2198,9 @@ uv<span class="w"> </span>run<span class="w"> </span>chamber-analyze<span class=
 <span class="w">  </span><span class="nt">enabled</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
 <span class="w">  </span><span class="nt">project</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">concerto-chamber</span><span class="w">   </span><span class="c1"># ADR-017 §Decisions D2 — single project</span>
 </code></pre></div>
-<p>Degrade-to-no-op paths (each emits one <code>UserWarning</code>, never raises):</p>
-<table>
-<thead>
-<tr>
-<th>Condition</th>
-<th>Result</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>cfg.wandb.enabled=false</code></td>
-<td>Silent — JSONL-only path, no warning.</td>
-</tr>
-<tr>
-<td><code>WANDB_API_KEY</code> missing AND <code>WANDB_MODE != "offline"</code></td>
-<td>UserWarning; JSONL-only run.</td>
-</tr>
-<tr>
-<td><code>import wandb</code> fails</td>
-<td>UserWarning; JSONL-only run.</td>
-</tr>
-<tr>
-<td><code>wandb.init</code> raises</td>
-<td>UserWarning; JSONL-only run.</td>
-</tr>
-</tbody>
-</table>
-<p>The canonical record is <strong>always</strong> <code>&lt;cfg.log_dir&gt;/&lt;run_id&gt;.jsonl</code>. W&amp;B is downstream of that. If your run completed and the JSONL exists, the run is valid.</p>
-<hr />
-<h2 id="how-to-back-fill-historical-archives">How to back-fill historical archives</h2>
+<p>Degrade-to-no-op paths (each emits one <code>UserWarning</code>, never raises) —
+the canonical full list is documented in §Environment variables below.</p>
+<h3 id="how-to-back-fill-historical-archives">How to back-fill historical archives</h3>
 <div class="highlight"><pre><span></span><code><span class="c1"># Dry-run against committed archives — show what would replay, no W&amp;B calls.</span>
 uv<span class="w"> </span>run<span class="w"> </span>python<span class="w"> </span>scripts/wandb_backfill.py<span class="w"> </span><span class="se">\</span>
 <span class="w">    </span>--archive-root<span class="w"> </span>spikes/results/<span class="w"> </span><span class="se">\</span>
@@ -1718,95 +2217,210 @@ uv<span class="w"> </span>run<span class="w"> </span>python<span class="w"> </sp
 <span class="w">    </span>--include-local<span class="w"> </span><span class="se">\</span>
 <span class="w">    </span>--project<span class="w"> </span>concerto-chamber<span class="w"> </span>--mode<span class="w"> </span>online
 </code></pre></div>
-<p>Idempotent: re-running against the same archive skips existing W&amp;B runs (<code>wandb.init(id=&lt;run_id&gt;, resume="never")</code>).</p>
-<p><strong>What backfill does deliver.</strong> Replays per-cell JSONL events (training_start, safety_telemetry, rollout_update, safety_telemetry_final, training_end) + envelope-level terminal metrics (per-episode <code>success</code>, <code>mean_reward</code>, <code>constraint_violation_peak</code>, <code>fallback_fired</code>) into W&amp;B.</p>
-<p><strong>What backfill does NOT deliver.</strong> Per-step PPO health curves (policy_loss, value_loss, dist_entropy, approx_kl, clip_fraction, grad_norm) for historical archives — those scalars were never written to disk before P1.05.11. They are only available for runs going forward.</p>
+<p>Idempotent: re-running against the same archive skips existing W&amp;B
+runs (<code>wandb.init(id=&lt;run_id&gt;, resume="never")</code>).</p>
+<p><strong>What backfill does deliver.</strong> Replays per-cell JSONL events
+(<code>training_start</code>, <code>safety_telemetry</code>, <code>rollout_update</code>,
+<code>safety_telemetry_final</code>, <code>training_end</code>) + envelope-level terminal
+metrics (per-episode <code>success</code>, <code>mean_reward</code>,
+<code>constraint_violation_peak</code>, <code>fallback_fired</code>) into W&amp;B.</p>
+<p><strong>What backfill does NOT deliver.</strong> Per-step PPO health curves
+(<code>policy_loss</code>, <code>value_loss</code>, <code>dist_entropy</code>, <code>approx_kl</code>,
+<code>clip_fraction</code>, <code>grad_norm</code>) for historical archives — those
+scalars were never written to disk before P1.05.11. They are only
+available for runs going forward.</p>
 <hr />
-<h2 id="how-to-compare-runs-with-chamber-analyze">How to compare runs with <code>chamber-analyze</code></h2>
-<div class="highlight"><pre><span></span><code><span class="c1"># Enumerate runs under an archive root.</span>
-uv<span class="w"> </span>run<span class="w"> </span>chamber-analyze<span class="w"> </span>list-runs<span class="w"> </span><span class="se">\</span>
-<span class="w">    </span>--archive-root<span class="w"> </span>spikes/results/stage1-failure-investigation/2026-05-20<span class="w"> </span><span class="se">\</span>
-<span class="w">    </span>--json<span class="w"> </span><span class="p">|</span><span class="w"> </span>jq<span class="w"> </span>.
+<h2 id="reference">Reference</h2>
+<h3 id="config-schema-reference">Config schema reference</h3>
+<p>The two Pydantic blocks P1.05.11 adds, with every field, its default,
+and a one-line semantic. Both blocks live in
+<code>concerto.training.config</code> and round-trip through Hydra YAML.</p>
+<p><strong><code>WandbConfig</code></strong> (<code>src/concerto/training/config.py:46-69</code>):</p>
+<div class="highlight"><pre><span></span><code><span class="nt">wandb</span><span class="p">:</span>
+<span class="w">  </span><span class="c1"># Master switch. When False (default), bind_run_logger is built</span>
+<span class="w">  </span><span class="c1"># without a W&amp;B sink and only the JSONL fallback fires. CI runs</span>
+<span class="w">  </span><span class="c1"># and unit tests should leave this off.</span>
+<span class="w">  </span><span class="nt">enabled</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span>
 
-<span class="c1"># Summary of one run.</span>
-uv<span class="w"> </span>run<span class="w"> </span>chamber-analyze<span class="w"> </span>summary<span class="w"> </span>43a0d043cb9f54ac<span class="w"> </span><span class="se">\</span>
-<span class="w">    </span>--archive-root<span class="w"> </span>spikes/results/stage1-failure-investigation/2026-05-20<span class="w"> </span><span class="se">\</span>
-<span class="w">    </span>--json
-
-<span class="c1"># Time-series for one metric on one run.</span>
-uv<span class="w"> </span>run<span class="w"> </span>chamber-analyze<span class="w"> </span>metrics<span class="w"> </span>43a0d043cb9f54ac<span class="w"> </span><span class="se">\</span>
-<span class="w">    </span>--archive-root<span class="w"> </span>spikes/results/stage1-failure-investigation/2026-05-20<span class="w"> </span><span class="se">\</span>
-<span class="w">    </span>--metric<span class="w"> </span>lambda_mean<span class="w"> </span>--namespace<span class="w"> </span>safety<span class="w"> </span>--json
-
-<span class="c1"># Side-by-side comparison across N runs.</span>
-uv<span class="w"> </span>run<span class="w"> </span>chamber-analyze<span class="w"> </span>compare<span class="w"> </span>43a0d043cb9f54ac<span class="w"> </span>e3ca669746e8f4bb<span class="w"> </span>ef23e3b576f38c91<span class="w"> </span><span class="se">\</span>
-<span class="w">    </span>--archive-root<span class="w"> </span>spikes/results/stage1-failure-investigation/2026-05-20<span class="w"> </span><span class="se">\</span>
-<span class="w">    </span>--metrics<span class="w"> </span>mean_reward_final,terminal_success_rate,lambda_steady_state<span class="w"> </span><span class="se">\</span>
-<span class="w">    </span>--json
+<span class="w">  </span><span class="c1"># W&amp;B project name. Single project across all stages per</span>
+<span class="w">  </span><span class="c1"># ADR-017 §Decisions D2; tag-based filtering separates runs</span>
+<span class="w">  </span><span class="c1"># in the UI by stage:/sub_stage:/condition:/prereg:/backfill:.</span>
+<span class="w">  </span><span class="c1"># Pre-ADR-017 default was &quot;concerto-m4b&quot; (migrated 2026-05-22).</span>
+<span class="w">  </span><span class="nt">project</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">concerto-chamber</span>
 </code></pre></div>
-<hr />
-<h2 id="how-to-inspect-a-rollout-at-per-step-granularity">How to inspect a rollout at per-step granularity</h2>
-<div class="highlight"><pre><span></span><code><span class="c1"># Dump every step of the recorded eval episode at step_025000.</span>
-uv<span class="w"> </span>run<span class="w"> </span>chamber-analyze<span class="w"> </span>rollout-frames<span class="w"> </span>&lt;run-id&gt;<span class="w"> </span><span class="se">\</span>
-<span class="w">    </span>--archive-root<span class="w"> </span>&lt;archive_root&gt;<span class="w"> </span><span class="se">\</span>
-<span class="w">    </span>--episode<span class="w"> </span><span class="m">25000</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>jq<span class="w"> </span>.
+<p><strong><code>RolloutRecorderConfig</code></strong> (<code>src/concerto/training/config.py:295-339</code>):</p>
+<div class="highlight"><pre><span></span><code><span class="nt">rollout_recorder</span><span class="p">:</span>
+<span class="w">  </span><span class="c1"># Master switch. When False (default), the eval-cell loop skips</span>
+<span class="w">  </span><span class="c1"># frame capture, the env factory does not request</span>
+<span class="w">  </span><span class="c1"># render_mode=&quot;rgb_array&quot;, and finalise() short-circuits.</span>
+<span class="w">  </span><span class="nt">enabled</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span>
 
-<span class="c1"># Filter to a single obs/info field across all recorded steps.</span>
-uv<span class="w"> </span>run<span class="w"> </span>chamber-analyze<span class="w"> </span>rollout-frames<span class="w"> </span>&lt;run-id&gt;<span class="w"> </span><span class="se">\</span>
-<span class="w">    </span>--archive-root<span class="w"> </span>&lt;archive_root&gt;<span class="w"> </span><span class="se">\</span>
-<span class="w">    </span>--field<span class="w"> </span>is_grasped<span class="w"> </span><span class="p">|</span><span class="w"> </span>jq<span class="w"> </span>.
+<span class="w">  </span><span class="c1"># Record one eval episode every K training frames. Default</span>
+<span class="w">  </span><span class="c1"># 25_000 frames ≈ 4 recordings over a 100k Stage-1b cell.</span>
+<span class="w">  </span><span class="nt">interval_frames</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">25000</span>
+
+<span class="w">  </span><span class="c1"># When True (default), emit the paired per-step sidecar JSONL</span>
+<span class="w">  </span><span class="c1"># alongside the MP4. When False, MP4-only. The agent-side</span>
+<span class="w">  </span><span class="c1"># co-analysis workflow assumes per_step_jsonl=true.</span>
+<span class="w">  </span><span class="nt">per_step_jsonl</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+
+<span class="w">  </span><span class="c1"># How many eval episodes to record at each interval trigger.</span>
+<span class="w">  </span><span class="nt">episodes_per_record</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span>
+
+<span class="w">  </span><span class="c1"># Video frame rate for the MP4 encode. Default 20 matches</span>
+<span class="w">  </span><span class="c1"># ManiSkill&#39;s Stage-1b control_freq.</span>
+<span class="w">  </span><span class="nt">fps</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">20</span>
 </code></pre></div>
-<p>Per ADR-017 §Decisions D6 the per-step records live in sidecar JSONLs at <code>&lt;archive_root&gt;/rollouts/&lt;condition&gt;/step_&lt;NNNNNN&gt;.jsonl</code>, paired 1:1 with the MP4 at the same path. The MP4 is for the founder; the JSONL is for the agent.</p>
-<p>The <code>obs_summary</code> is curated (cube_pose, goal_pos, tcp_pose, ego_qpos/qvel, partner_qpos/qvel, is_grasped, gripper_width) — never the full 65-D flattened ego state. Full-obs logging is deferred (ADR-017 §Open questions).</p>
-<hr />
-<h2 id="how-to-embed-a-comparison-plot-in-a-pr-description">How to embed a comparison plot in a PR description</h2>
-<div class="highlight"><pre><span></span><code>uv<span class="w"> </span>run<span class="w"> </span>chamber-analyze<span class="w"> </span>plot<span class="w"> </span>43a0d043cb9f54ac<span class="w"> </span>e3ca669746e8f4bb<span class="w"> </span><span class="se">\</span>
-<span class="w">    </span>--archive-root<span class="w"> </span>spikes/results/stage1-failure-investigation/2026-05-20<span class="w"> </span><span class="se">\</span>
-<span class="w">    </span>--metric<span class="w"> </span>lambda_mean<span class="w"> </span>--namespace<span class="w"> </span>safety<span class="w"> </span><span class="se">\</span>
-<span class="w">    </span>--out<span class="w"> </span>/tmp/lambda_comparison.png<span class="w"> </span><span class="se">\</span>
-<span class="w">    </span>--title<span class="w"> </span><span class="s2">&quot;lambda_mean: seed 0 vs seed 1&quot;</span>
-</code></pre></div>
-<p>The PNG is matplotlib-rendered (Agg backend; headless-safe). Embed it in a markdown PR description via <code>![title](attachment-url)</code>.</p>
-<hr />
-<h2 id="json-output-schemas">JSON output schemas</h2>
-<p>Every <code>chamber-analyze</code> subcommand supports <code>--json</code>. Schemas are stable across patch versions; adding fields is allowed, removing or renaming requires a major version bump.</p>
-<h3 id="chamber-analyze-list-runs-json"><code>chamber-analyze list-runs --json</code></h3>
+<p>Both blocks are <code>_FrozenModel</code> subclasses (frozen + <code>extra="forbid"</code>)
+so YAML typos fail loud with <code>pydantic.ValidationError</code> at
+<code>load_config()</code> time.</p>
+<h3 id="environment-variables">Environment variables</h3>
+<p>P1.05.11 reads three W&amp;B environment variables. None are mandatory;
+each missing or misconfigured value resolves to a documented
+degrade-to-no-op path per ADR-017 §Decisions D4.</p>
+<table>
+<thead>
+<tr>
+<th>Env var</th>
+<th>Default</th>
+<th>Effect when set</th>
+<th>Effect when missing</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>WANDB_API_KEY</code></td>
+<td>(none)</td>
+<td>Authenticates the W&amp;B online client. Required for <code>WANDB_MODE=online</code>.</td>
+<td>If <code>cfg.wandb.enabled=true</code> AND <code>WANDB_MODE != "offline"</code>: <code>make_wandb_run_sink</code> emits a <code>UserWarning</code> and returns <code>None</code>; the run continues with JSONL only.</td>
+</tr>
+<tr>
+<td><code>WANDB_MODE</code></td>
+<td><code>online</code></td>
+<td><code>online</code> uploads to W&amp;B servers; <code>offline</code> writes to local <code>./wandb/</code> directory only; <code>disabled</code> skips both. <code>offline</code> is what the equivalence smoke + the integration test use.</td>
+<td>Defaults to <code>online</code>.</td>
+</tr>
+<tr>
+<td><code>WANDB_ENTITY</code></td>
+<td>(login default)</td>
+<td>Overrides the W&amp;B entity (user or team) the run lands under.</td>
+<td>Uses the entity tied to the active <code>wandb login</code> session.</td>
+</tr>
+</tbody>
+</table>
+<p>The complete degrade-to-no-op decision tree
+(<code>concerto.training.logging.make_wandb_run_sink</code>):</p>
+<table>
+<thead>
+<tr>
+<th>Condition</th>
+<th>Result</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>cfg.wandb.enabled=false</code></td>
+<td>Silent — JSONL-only path, no warning.</td>
+</tr>
+<tr>
+<td><code>cfg.wandb.enabled=true</code> AND <code>WANDB_API_KEY</code> missing AND <code>WANDB_MODE != "offline"</code></td>
+<td><code>UserWarning("WANDB_API_KEY missing …")</code>; JSONL-only.</td>
+</tr>
+<tr>
+<td><code>cfg.wandb.enabled=true</code> AND <code>WANDB_MODE=offline</code></td>
+<td>Constructs the sink; writes to <code>./wandb/</code> locally; no upload.</td>
+</tr>
+<tr>
+<td><code>import wandb</code> fails (ImportError)</td>
+<td><code>UserWarning("</code>import wandb<code>failed …")</code>; JSONL-only.</td>
+</tr>
+<tr>
+<td><code>wandb.init(...)</code> raises</td>
+<td><code>UserWarning("wandb.init(...) raised …")</code>; JSONL-only.</td>
+</tr>
+<tr>
+<td>All checks pass</td>
+<td>Live W&amp;B run; tags + config payload from <code>make_wandb_run_sink</code>'s arguments.</td>
+</tr>
+</tbody>
+</table>
+<p>The canonical record is <strong>always</strong> <code>&lt;cfg.log_dir&gt;/&lt;run_id&gt;.jsonl</code>.
+W&amp;B is downstream of that. If your run completed and the JSONL
+exists, the run is valid (ADR-017 §Decisions D1).</p>
+<h3 id="json-output-schemas">JSON output schemas</h3>
+<p>Every <code>chamber-analyze</code> subcommand supports <code>--json</code>. This is the
+<strong>agent-co-analysis contract</strong> (ADR-017 §Decisions D5); schemas are
+public-API-stable across patch versions. Adding fields is allowed;
+removing or renaming a field requires a major-version bump on the
+CLI. Treat the field names listed here as load-bearing.</p>
+<h4 id="chamber-analyze-list-runs-json"><code>chamber-analyze list-runs --json</code></h4>
+<p>Array of per-cell <code>_RunSummary</code> records (one per <code>&lt;run_id&gt;.jsonl</code>
+under <code>--archive-root</code>). Fields without source data in the archive
+resolve to <code>null</code> rather than being omitted so the JSON shape is
+stable across archive vintages.</p>
 <div class="highlight"><pre><span></span><code><span class="p">[</span>
 <span class="w">  </span><span class="p">{</span>
 <span class="w">    </span><span class="nt">&quot;run_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&lt;16-hex&gt;&quot;</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">&quot;jsonl_path&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&lt;path&gt;&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;jsonl_path&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&lt;absolute-path&gt;&quot;</span><span class="p">,</span>
 <span class="w">    </span><span class="nt">&quot;stage&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;1&quot;</span><span class="w"> </span><span class="err">|</span><span class="w"> </span><span class="s2">&quot;2&quot;</span><span class="w"> </span><span class="err">|</span><span class="w"> </span><span class="s2">&quot;3&quot;</span><span class="w"> </span><span class="err">|</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span>
 <span class="w">    </span><span class="nt">&quot;sub_stage&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;1a&quot;</span><span class="w"> </span><span class="err">|</span><span class="w"> </span><span class="s2">&quot;1b&quot;</span><span class="w"> </span><span class="err">|</span><span class="w"> </span><span class="s2">&quot;2&quot;</span><span class="w"> </span><span class="err">|</span><span class="w"> </span><span class="s2">&quot;3&quot;</span><span class="w"> </span><span class="err">|</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">&quot;condition&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&lt;condition_id&gt;&quot;</span><span class="w"> </span><span class="err">|</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;condition&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&lt;condition_id-or-pair&gt;&quot;</span><span class="w"> </span><span class="err">|</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span>
 <span class="w">    </span><span class="nt">&quot;seed&quot;</span><span class="p">:</span><span class="w"> </span><span class="err">&lt;i</span><span class="kc">nt</span><span class="err">&gt;</span><span class="w"> </span><span class="err">|</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">&quot;task&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;stage1_pickplace&quot;</span><span class="w"> </span><span class="err">|</span><span class="w"> </span><span class="err">...</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">&quot;run_kind&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;ego_aht_happo&quot;</span><span class="w"> </span><span class="err">|</span><span class="w"> </span><span class="err">...</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">&quot;git_sha&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&lt;40-hex&gt;&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;task&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;stage1_pickplace&quot;</span><span class="w"> </span><span class="err">|</span><span class="w"> </span><span class="s2">&quot;mpe_cooperative_push&quot;</span><span class="w"> </span><span class="err">|</span><span class="w"> </span><span class="s2">&quot;stage0_smoke&quot;</span><span class="w"> </span><span class="err">|</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;run_kind&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;ego_aht_happo&quot;</span><span class="w"> </span><span class="err">|</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;git_sha&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&lt;40-hex&gt;&quot;</span><span class="w"> </span><span class="err">|</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span>
 <span class="w">    </span><span class="nt">&quot;n_steps&quot;</span><span class="p">:</span><span class="w"> </span><span class="err">&lt;i</span><span class="kc">nt</span><span class="err">&gt;</span><span class="w"> </span><span class="err">|</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span>
 <span class="w">    </span><span class="nt">&quot;terminal_success_rate&quot;</span><span class="p">:</span><span class="w"> </span><span class="err">&lt;</span><span class="kc">fl</span><span class="err">oa</span><span class="kc">t</span><span class="w"> </span><span class="err">i</span><span class="kc">n</span><span class="w"> </span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">]</span><span class="err">&gt;</span><span class="w"> </span><span class="err">|</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span>
 <span class="w">    </span><span class="nt">&quot;mean_reward_final&quot;</span><span class="p">:</span><span class="w"> </span><span class="err">&lt;</span><span class="kc">fl</span><span class="err">oa</span><span class="kc">t</span><span class="err">&gt;</span><span class="w"> </span><span class="err">|</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span>
 <span class="w">    </span><span class="nt">&quot;lambda_steady_state&quot;</span><span class="p">:</span><span class="w"> </span><span class="err">&lt;</span><span class="kc">fl</span><span class="err">oa</span><span class="kc">t</span><span class="err">&gt;</span><span class="w"> </span><span class="err">|</span><span class="w"> </span><span class="kc">null</span>
-<span class="w">  </span><span class="p">},</span><span class="w"> </span><span class="err">...</span>
-<span class="p">]</span>
-</code></pre></div>
-<h3 id="chamber-analyze-metrics-json"><code>chamber-analyze metrics --json</code></h3>
-<div class="highlight"><pre><span></span><code><span class="p">[</span>
-<span class="w">  </span><span class="p">{</span><span class="nt">&quot;step&quot;</span><span class="p">:</span><span class="w"> </span><span class="err">&lt;i</span><span class="kc">nt</span><span class="err">&gt;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;wall_time&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&lt;iso8601&gt;&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;value&quot;</span><span class="p">:</span><span class="w"> </span><span class="err">&lt;</span><span class="kc">fl</span><span class="err">oa</span><span class="kc">t</span><span class="err">&gt;</span><span class="p">},</span>
+<span class="w">  </span><span class="p">},</span>
 <span class="w">  </span><span class="err">...</span>
 <span class="p">]</span>
 </code></pre></div>
-<h3 id="chamber-analyze-compare-json"><code>chamber-analyze compare --json</code></h3>
+<p>Sort order: by <code>seed</code> ascending, then <code>run_id</code> ascending. Stable
+across invocations against the same archive.</p>
+<h4 id="chamber-analyze-summary-run_id-json"><code>chamber-analyze summary &lt;run_id&gt; --json</code></h4>
+<p>One <code>_RunSummary</code> record (same shape as a single element of
+<code>list-runs</code>). Exit code <code>2</code> if the <code>run_id</code> is not found.</p>
+<h4 id="chamber-analyze-metrics-run_id-metric-name-json"><code>chamber-analyze metrics &lt;run_id&gt; --metric &lt;name&gt; --json</code></h4>
+<p>Array of time-series points for one metric on one run. Filtered by
+<code>--namespace</code> (one of <code>train</code>, <code>eval</code>, <code>safety</code>, <code>hardware</code>, <code>rollout</code>).</p>
+<div class="highlight"><pre><span></span><code><span class="p">[</span>
+<span class="w">  </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">&quot;step&quot;</span><span class="p">:</span><span class="w"> </span><span class="err">&lt;i</span><span class="kc">nt</span><span class="err">&gt;</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;wall_time&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&lt;iso8601-with-tz&gt;&quot;</span><span class="w"> </span><span class="err">|</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;value&quot;</span><span class="p">:</span><span class="w"> </span><span class="err">&lt;</span><span class="kc">fl</span><span class="err">oa</span><span class="kc">t</span><span class="err">&gt;</span>
+<span class="w">  </span><span class="p">},</span>
+<span class="w">  </span><span class="err">...</span>
+<span class="p">]</span>
+</code></pre></div>
+<p><code>step</code> is always present and is the global training-frame counter
+at emission. <code>wall_time</code> is <code>null</code> for pre-P1.05.11 archives.</p>
+<h4 id="chamber-analyze-compare-run_id_a-run_id_b-metrics-m1m2-json"><code>chamber-analyze compare &lt;run_id_a&gt; &lt;run_id_b&gt; [...] --metrics M1,M2 --json</code></h4>
+<p>Array of one record per requested <code>run_id</code> (in input order). Each
+record carries <code>run_id</code> plus one field per metric. Unknown
+<code>run_id</code>s are kept in the array with an <code>"error": "not_found"</code>
+field so the response shape matches the request length.</p>
 <div class="highlight"><pre><span></span><code><span class="p">[</span>
 <span class="w">  </span><span class="p">{</span>
 <span class="w">    </span><span class="nt">&quot;run_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&lt;16-hex&gt;&quot;</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">&quot;&lt;metric_1&gt;&quot;</span><span class="p">:</span><span class="w"> </span><span class="err">&lt;value&gt;</span><span class="w"> </span><span class="err">|</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">&quot;&lt;metric_2&gt;&quot;</span><span class="p">:</span><span class="w"> </span><span class="err">&lt;value&gt;</span><span class="w"> </span><span class="err">|</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;&lt;metric_1&gt;&quot;</span><span class="p">:</span><span class="w"> </span><span class="err">&lt;</span><span class="kc">nu</span><span class="err">mber&gt;</span><span class="w"> </span><span class="err">|</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;&lt;metric_2&gt;&quot;</span><span class="p">:</span><span class="w"> </span><span class="err">&lt;</span><span class="kc">nu</span><span class="err">mber&gt;</span><span class="w"> </span><span class="err">|</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span>
 <span class="w">    </span><span class="err">...</span>
-<span class="w">  </span><span class="p">},</span><span class="w"> </span><span class="err">...</span>
+<span class="w">  </span><span class="p">},</span>
+<span class="w">  </span><span class="err">...</span>
 <span class="p">]</span>
 </code></pre></div>
-<h3 id="chamber-analyze-rollout-frames-json"><code>chamber-analyze rollout-frames --json</code></h3>
-<p>When <code>--field</code> is unset, emits the full per-step JSONL line shape:</p>
+<p>Default metric set when <code>--metrics</code> is omitted:
+<code>mean_reward_final</code>, <code>terminal_success_rate</code>,
+<code>lambda_steady_state</code>.</p>
+<h4 id="chamber-analyze-plot-out-pathpng"><code>chamber-analyze plot ... --out &lt;path.png&gt;</code></h4>
+<p>Side effect only (writes the PNG to <code>--out</code>). Exits 0 on success,
+2 if matplotlib isn't installed (<code>uv sync --extra viz</code> resolves).
+No JSON output.</p>
+<h4 id="chamber-analyze-rollout-frames-run_id-json"><code>chamber-analyze rollout-frames &lt;run_id&gt; --json</code></h4>
+<p>Two output shapes depending on whether <code>--field &lt;key&gt;</code> is passed:</p>
+<p><em>Without <code>--field</code>:</em> the full per-step JSONL line:</p>
 <div class="highlight"><pre><span></span><code><span class="p">[</span>
 <span class="w">  </span><span class="p">{</span>
 <span class="w">    </span><span class="nt">&quot;event&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;rollout_step&quot;</span><span class="p">,</span>
@@ -1815,6 +2429,7 @@ uv<span class="w"> </span>run<span class="w"> </span>chamber-analyze<span class=
 <span class="w">    </span><span class="nt">&quot;step_episode&quot;</span><span class="p">:</span><span class="w"> </span><span class="err">&lt;i</span><span class="kc">nt</span><span class="err">&gt;</span><span class="p">,</span>
 <span class="w">    </span><span class="nt">&quot;condition&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&lt;condition&gt;&quot;</span><span class="p">,</span>
 <span class="w">    </span><span class="nt">&quot;seed&quot;</span><span class="p">:</span><span class="w"> </span><span class="err">&lt;i</span><span class="kc">nt</span><span class="err">&gt;</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;wall_time&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&lt;iso8601&gt;&quot;</span><span class="p">,</span>
 <span class="w">    </span><span class="nt">&quot;obs_summary&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">&quot;cube_pose&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="err">...</span><span class="p">],</span><span class="w"> </span><span class="nt">&quot;goal_pos&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="err">...</span><span class="p">],</span><span class="w"> </span><span class="err">...</span><span class="p">},</span>
 <span class="w">    </span><span class="nt">&quot;action&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="err">&lt;</span><span class="kc">fl</span><span class="err">oa</span><span class="kc">t</span><span class="err">&gt;</span><span class="p">,</span><span class="w"> </span><span class="err">...</span><span class="p">],</span>
 <span class="w">    </span><span class="nt">&quot;reward&quot;</span><span class="p">:</span><span class="w"> </span><span class="err">&lt;</span><span class="kc">fl</span><span class="err">oa</span><span class="kc">t</span><span class="err">&gt;</span><span class="p">,</span>
@@ -1822,25 +2437,108 @@ uv<span class="w"> </span>run<span class="w"> </span>chamber-analyze<span class=
 <span class="w">    </span><span class="nt">&quot;truncated&quot;</span><span class="p">:</span><span class="w"> </span><span class="err">&lt;bool&gt;</span><span class="p">,</span>
 <span class="w">    </span><span class="nt">&quot;info&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="err">...</span><span class="p">},</span>
 <span class="w">    </span><span class="nt">&quot;frame_index&quot;</span><span class="p">:</span><span class="w"> </span><span class="err">&lt;i</span><span class="kc">nt</span><span class="err">&gt;</span>
-<span class="w">  </span><span class="p">},</span><span class="w"> </span><span class="err">...</span>
+<span class="w">  </span><span class="p">},</span>
+<span class="w">  </span><span class="err">...</span>
 <span class="p">]</span>
 </code></pre></div>
-<p>With <code>--field &lt;key&gt;</code>, the rows are projected to <code>{"step_global": &lt;int&gt;, "&lt;key&gt;": &lt;value&gt;}</code>.</p>
-<hr />
-<h2 id="what-lives-where-on-disk">What lives where on disk</h2>
-<div class="highlight"><pre><span></span><code>&lt;spike_archive&gt;/
-├── &lt;run_id&gt;.jsonl                # per-cell canonical log (one per seed × condition cell)
+<p><em>With <code>--field &lt;key&gt;</code>:</em> each row projects to two fields —
+<code>step_global</code> and the requested key (looked up in
+<code>obs_summary</code> first, then <code>info</code>):</p>
+<div class="highlight"><pre><span></span><code><span class="p">[</span>
+<span class="w">  </span><span class="p">{</span><span class="nt">&quot;step_global&quot;</span><span class="p">:</span><span class="w"> </span><span class="err">&lt;i</span><span class="kc">nt</span><span class="err">&gt;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;&lt;key&gt;&quot;</span><span class="p">:</span><span class="w"> </span><span class="err">&lt;value&gt;</span><span class="w"> </span><span class="err">|</span><span class="w"> </span><span class="kc">null</span><span class="p">},</span>
+<span class="w">  </span><span class="err">...</span>
+<span class="p">]</span>
+</code></pre></div>
+<p>The lookup order (<code>obs_summary</code> then <code>info</code>) means <code>is_grasped</code>
+resolves from <code>obs_summary.is_grasped</code> when the env's per-step info
+exposes it there; if the recorder's <code>obs_summary</code> selector misses
+the key, the <code>info</code> mirror catches it.</p>
+<h3 id="filesystem-layout">Filesystem layout</h3>
+<div class="highlight"><pre><span></span><code>&lt;cfg.log_dir&gt;/
+└── &lt;run_id&gt;.jsonl                # per-cell canonical log
+
+&lt;spike_archive&gt;/                  # default spikes/results/&lt;spike-id&gt;/
+├── &lt;run_id&gt;.jsonl                # one per (seed, condition) cell
 ├── spike_*.json                  # SpikeRun envelope (ADR-016)
 ├── leaderboard.json              # ADR-008 leaderboard entry
-└── rollouts/                     # per-rollout MP4 + sidecar JSONL (ADR-017 §Decisions D6)
-    └── &lt;condition&gt;/
+└── rollouts/                     # ADR-017 §Decisions D6 sidecars
+    └── &lt;condition&gt;/              # one sub-dir per condition_id
         ├── step_000000.mp4
         ├── step_000000.jsonl
         ├── step_025000.mp4
         ├── step_025000.jsonl
         └── ...
 </code></pre></div>
-<p><code>&lt;run_id&gt;</code> is the 16-hex SHA from <code>concerto.training.logging.compute_run_metadata(seed, run_kind, repo_root)</code>. Two reruns with identical <code>(seed, git_sha, pyproject_hash, run_kind)</code> produce the same <code>run_id</code> — the W&amp;B run name matches the JSONL filename byte-for-byte.</p>
+<p><code>&lt;run_id&gt;</code> is the 16-hex SHA from
+<code>concerto.training.logging.compute_run_metadata(seed, run_kind, repo_root)</code>.
+Two reruns with identical <code>(seed, git_sha, pyproject_hash, run_kind)</code>
+produce the same <code>run_id</code> — the W&amp;B run name matches the JSONL
+filename byte-for-byte.</p>
+<hr />
+<h2 id="troubleshooting">Troubleshooting</h2>
+<h3 id="envrender-returns-none-rollout-mp4s-not-generated"><code>env.render()</code> returns <code>None</code>; rollout MP4s not generated</h3>
+<p><strong>Symptom.</strong> <code>chamber.observability.RolloutRecorder.finalise()</code> returns
+<code>(None, jsonl_path)</code> instead of <code>(mp4_path, jsonl_path)</code>. ManiSkill
+logs the warning <em>"Requested to use render device 'sapien_cuda', but
+CUDA device was not found. Falling back to 'cpu' device. Rendering
+might be disabled."</em> The per-step sidecar JSONL still emits cleanly;
+the agent-side co-analysis path is unaffected.</p>
+<p><strong>Root cause.</strong> NVIDIA driver/library version mismatch. <code>nvidia-smi</code>
+reports <em>"Failed to initialize NVML: Driver/library version
+mismatch (NVML library version: 535.x)."</em> The userspace
+<code>libnvidia-ml.so</code> upgraded but the kernel's <code>nvidia.ko</code> module did
+not — a classic post-kernel-upgrade-without-reboot state.
+<code>torch.cuda.is_available()</code> returns <code>False</code>. The SAPIEN renderer
+falls back from <code>sapien_cuda</code> to CPU and returns <code>None</code> from
+<code>render(mode="rgb_array")</code>.</p>
+<p><strong>Diagnostic steps.</strong></p>
+<div class="highlight"><pre><span></span><code>nvidia-smi<span class="w">              </span><span class="c1"># &quot;Failed to initialize NVML&quot; → driver mismatch</span>
+uv<span class="w"> </span>run<span class="w"> </span>python<span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;import torch; print(torch.cuda.is_available())&quot;</span><span class="w">   </span><span class="c1"># False</span>
+</code></pre></div>
+<p><strong>Recovery.</strong></p>
+<ol>
+<li><strong>Reboot the host.</strong> This re-syncs the kernel module against the
+   updated userspace library. <code>nvidia-smi</code> should report a healthy
+   driver/CUDA version table after restart.</li>
+<li><strong>Re-verify rendering.</strong></li>
+</ol>
+<div class="highlight"><pre><span></span><code>uv<span class="w"> </span>run<span class="w"> </span>python<span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;</span>
+<span class="s2">import numpy as np</span>
+<span class="s2">from chamber.envs.stage1_pickplace import make_stage1_pickplace_env</span>
+<span class="s2">env = make_stage1_pickplace_env(</span>
+<span class="s2">    condition_id=&#39;stage1_pickplace_panda_plus_fetch_ego_aht_happo_per_agent&#39;,</span>
+<span class="s2">    episode_length=20,</span>
+<span class="s2">    root_seed=0,</span>
+<span class="s2">    render_mode=&#39;rgb_array&#39;,</span>
+<span class="s2">)</span>
+<span class="s2">env.reset(seed=0)</span>
+<span class="s2">frame = env.render()</span>
+<span class="s2">print(type(frame).__name__, getattr(frame, &#39;shape&#39;, None))</span>
+<span class="s2">&quot;</span>
+<span class="c1"># Expect: ndarray (H, W, 3)</span>
+</code></pre></div>
+<ol>
+<li><strong>Flip the env-render xfail-strict test.</strong> The integration test at
+   <code>tests/integration/test_rollout_recorder_env_render.py</code> is marked
+   <code>@pytest.mark.xfail(strict=True)</code> for exactly this host state.
+   Run it post-reboot:</li>
+</ol>
+<div class="highlight"><pre><span></span><code>uv<span class="w"> </span>run<span class="w"> </span>pytest<span class="w"> </span>tests/integration/test_rollout_recorder_env_render.py<span class="w"> </span>--no-cov<span class="w"> </span>-v
+<span class="c1"># XPASSED → strict=True fails the run → forces marker removal.</span>
+</code></pre></div>
+<p>When the test xpasses, <strong>remove the <code>@pytest.mark.xfail</code> marker in
+   the same commit</strong> that re-runs it (lifecycle hygiene precedents:
+   ADR-004 §Revision history 2026-05-17 / P1.02 <code>Bounds.action_norm</code>;
+   ADR-002 §Revision history 2026-05-21 / P1.05.8 trainer obs
+   reader). The follow-up commit subject:
+   <code>test(observability): remove env-render xfail post-host-reboot</code>.</p>
+<p><strong>Related tracking issue.</strong>
+<a href="https://github.com/fsafaei/concerto/issues/188">#188</a> — the
+<code>sapien_gpu_available()</code> predicate is looser than what
+<code>test_draft_zoo</code>'s <code>skipif</code> actually needs (a tighter
+<code>sapien_cuda_renderer_available()</code> check would prevent the
+downstream <code>KeyError: 'state'</code> on this host state). Not slice-induced;
+filed during P1.05.11's push-gate failure review.</p>
 <hr />
 <h2 id="cross-references">Cross-references</h2>
 <ul>
@@ -1848,6 +2546,7 @@ uv<span class="w"> </span>run<span class="w"> </span>chamber-analyze<span class=
 <li><a href="https://github.com/fsafaei/concerto/blob/main/adr/ADR-002-rl-framework.md">ADR-002 — RL framework</a> §Decisions — the structured-logging contract this slice extends.</li>
 <li><a href="https://github.com/fsafaei/concerto/blob/main/adr/ADR-016-spike-run-schema.md">ADR-016 — SpikeRun envelope schema</a> — the wire-format archive shape (NOT changed by P1.05.11).</li>
 <li><code>src/concerto/training/logging.py</code> — <code>RunContext</code>, <code>bind_run_logger</code>, <code>log_scalars</code>, <code>log_eval</code>, <code>make_wandb_run_sink</code>.</li>
+<li><code>src/concerto/training/config.py</code> — <code>WandbConfig</code>, <code>RolloutRecorderConfig</code>.</li>
 <li><code>src/chamber/observability/rollout_recorder.py</code> — <code>RolloutRecorder</code>.</li>
 <li><code>src/chamber/cli/analyze.py</code> — <code>chamber-analyze</code>.</li>
 <li><code>scripts/wandb_backfill.py</code> — backfill script.</li>
