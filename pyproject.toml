@@ -90,6 +90,7 @@ concerto                = "concerto.cli:main"            # method-level entry (P
 chamber-spike           = "chamber.cli.spike:main"
 chamber-eval            = "chamber.cli.eval:main"
 chamber-render-tables   = "chamber.cli.render_tables:main"
+chamber-analyze         = "chamber.cli.analyze:main"            # P1.05.11; ADR-017
 
 [build-system]
 requires = ["hatchling"]
