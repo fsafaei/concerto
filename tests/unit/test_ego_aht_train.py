@@ -258,7 +258,10 @@ class TestTrainerFactorySeam:
         """T4b.11 + plan/05 §6 #3: factory seam receives (cfg, env=, partner=, ego_uid=)."""
         captured: dict[str, Any] = {}
 
-        def factory(cfg, *, env, partner, ego_uid):  # type: ignore[no-untyped-def]
+        def factory(cfg, *, env, partner, ego_uid, logger=None):  # type: ignore[no-untyped-def]
+            # P1.05.11 / ADR-017: TrainerFactory Protocol carries an
+            # optional ``logger`` kwarg now; capture but don't use.
+            del logger
             captured["cfg"] = cfg
             captured["env"] = env
             captured["partner"] = partner
