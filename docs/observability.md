@@ -2,7 +2,7 @@
 
 This cookbook covers the workflows P1.05.11 enables — live W&B dashboards
 for the founder + JSON-first co-analysis for the agent. The design lives
-in [`ADR-017`](../adr/ADR-017-observability-and-experiment-tracking.md);
+in [`ADR-017`](https://github.com/fsafaei/concerto/blob/main/adr/ADR-017-observability-and-experiment-tracking.md);
 this document is the operator-side recipe collection.
 
 ---
@@ -250,9 +250,9 @@ With `--field <key>`, the rows are projected to `{"step_global": <int>, "<key>":
 
 ## Cross-references
 
-- [ADR-017 — Observability and experiment tracking](../adr/ADR-017-observability-and-experiment-tracking.md) — design & rationale.
-- [ADR-002 — RL framework](../adr/ADR-002-rl-framework.md) §Decisions — the structured-logging contract this slice extends.
-- [ADR-016 — SpikeRun envelope schema](../adr/ADR-016-spike-run-schema.md) — the wire-format archive shape (NOT changed by P1.05.11).
+- [ADR-017 — Observability and experiment tracking](https://github.com/fsafaei/concerto/blob/main/adr/ADR-017-observability-and-experiment-tracking.md) — design & rationale.
+- [ADR-002 — RL framework](https://github.com/fsafaei/concerto/blob/main/adr/ADR-002-rl-framework.md) §Decisions — the structured-logging contract this slice extends.
+- [ADR-016 — SpikeRun envelope schema](https://github.com/fsafaei/concerto/blob/main/adr/ADR-016-spike-run-schema.md) — the wire-format archive shape (NOT changed by P1.05.11).
 - `src/concerto/training/logging.py` — `RunContext`, `bind_run_logger`, `log_scalars`, `log_eval`, `make_wandb_run_sink`.
 - `src/chamber/observability/rollout_recorder.py` — `RolloutRecorder`.
 - `src/chamber/cli/analyze.py` — `chamber-analyze`.
