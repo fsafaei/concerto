@@ -46,6 +46,7 @@ from concerto.training.seeding import derive_substream
 if TYPE_CHECKING:  # pragma: no cover
     from collections.abc import Callable, Mapping
 
+    import structlog
     from numpy.typing import NDArray
 
     from concerto.safety.api import Bounds, EgoOnlySafetyFilter, SafetyState
@@ -212,8 +213,19 @@ class TrainerFactory(Protocol):
         env: EnvLike,
         partner: PartnerLike,
         ego_uid: str,
+        logger: structlog.BoundLogger | None = None,
     ) -> EgoTrainer:
-        """Build a trainer (ADR-002 §Decisions; plan/05 §3.5; ADR-009 §Consequences)."""
+        """Build a trainer (ADR-002 §Decisions; ADR-017; plan/05 §3.5; ADR-009 §Consequences).
+
+        ``logger`` is the optional structlog BoundLogger from
+        :func:`concerto.training.logging.bind_run_logger` (P1.05.11 /
+        ADR-017 §Decisions). When supplied, concrete trainers like
+        :class:`chamber.benchmarks.ego_ppo_trainer.EgoPPOTrainer`
+        thread it through their constructor so PPO update scalars
+        flow through the same JSONL + W&B sinks as the driver's
+        own events. Default ``None`` preserves pre-P1.05.11 silent
+        behaviour.
+        """
         ...  # pragma: no cover
 
 
@@ -472,7 +484,18 @@ def train(  # noqa: PLR0912, PLR0915 - P1.04.5 added safety-stack integration to
             root_seed=cfg.seed,
         )
     else:
-        trainer = trainer_factory(cfg, env=env, partner=partner, ego_uid=ego_uid)
+        # P1.05.11 / ADR-017: thread the bound logger into the trainer
+        # factory so PPO update scalars flow through the same JSONL +
+        # W&B sinks as the driver's own events. Factories that do not
+        # accept ``logger`` (legacy / external) are still supported —
+        # the kwarg is optional at the Protocol level.
+        trainer = trainer_factory(
+            cfg,
+            env=env,
+            partner=partner,
+            ego_uid=ego_uid,
+            logger=logger,
+        )
 
     # P1.04.5: validate the safety-stack kwargs against cfg.safety.enabled
     # (ADR-007 §Stage 1b lifecycle contract). Intent-mismatch loud-fails:
