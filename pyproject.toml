@@ -64,6 +64,15 @@ dev = [
   "ipykernel", "ipython",
 ]
 viz = ["matplotlib>=3.9", "seaborn>=0.13.2"]
+# P1.05.11 / ADR-017 §Decisions: optional extra for the rollout recorder's
+# MP4 encode path. ``imageio`` is already a transitive dep via ManiSkill
+# (uv.lock line 1165); pinning the ``[ffmpeg]`` variant + version here
+# makes the rollout-recorder install story explicit. The recorder imports
+# lazily and degrades to JSONL-only when ``imageio`` is missing, so
+# callers who skip this extra still get the per-step rollout JSONLs.
+observability = [
+  "imageio[ffmpeg]>=2.31",
+]
 # ADR-008 / ADR-014: rliable-style performance profiles are an optional
 # render path. IQM and optimality gap are computed natively in
 # ``chamber.evaluation.bootstrap``; only performance profiles require
@@ -81,6 +90,7 @@ concerto                = "concerto.cli:main"            # method-level entry (P
 chamber-spike           = "chamber.cli.spike:main"
 chamber-eval            = "chamber.cli.eval:main"
 chamber-render-tables   = "chamber.cli.render_tables:main"
+chamber-analyze         = "chamber.cli.analyze:main"            # P1.05.11; ADR-017
 
 [build-system]
 requires = ["hatchling"]

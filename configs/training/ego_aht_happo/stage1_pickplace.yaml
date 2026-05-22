@@ -27,7 +27,11 @@ log_dir: ./logs
 
 wandb:
   enabled: false
-  project: concerto-stage1b
+  # Single W&B project across all stages per ADR-017 §Decisions; tag-
+  # based filtering (stage:, sub_stage:, condition:, prereg:, backfill:)
+  # is how the UI separates runs. Pre-ADR-017 this stage pinned
+  # `concerto-stage1b`; migrated 2026-05-22.
+  project: concerto-chamber
 
 env:
   task: stage1_pickplace

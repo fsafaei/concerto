@@ -36,6 +36,7 @@ evidence per their own §Validation criteria.
 | 014 | Safety violation reporting protocol                                | §6.3               | Phase 1    | Accepted (2026-05-13)<sup>f</sup> |
 | 015 | Tier-task scope freeze                                             | §3.3 + §7.3        | Phase 1    | RFC<sup>e</sup>              |
 | 016 | SpikeRun schema lifecycle (Stage 1a / 1b disambiguation)           | §3.4 + §3.7        | Phase 0    | Accepted (2026-05-17)<sup>b</sup> |
+| 017 | Observability and experiment tracking (W&B + chamber-analyze)      | §13 + P1.05.11     | Phase 1    | Accepted (2026-05-22)        |
 
 ### Open work flags
 

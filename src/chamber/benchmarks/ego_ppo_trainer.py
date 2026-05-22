@@ -64,6 +64,7 @@ from concerto.training.seeding import derive_substream
 if TYPE_CHECKING:  # pragma: no cover
     from collections.abc import Mapping
 
+    import structlog
     from numpy.typing import NDArray
 
     from concerto.training.config import EgoAHTConfig, HAPPOHyperparams
@@ -509,6 +510,7 @@ class EgoPPOTrainer:
         ego_act_space: gym.spaces.Box,  # type: ignore[type-arg]
         partner: PartnerLike,
         device: torch.device | None = None,
+        logger: structlog.BoundLogger | None = None,
     ) -> None:
         """Build the trainer (M4b-8a; ADR-002 §Decisions; plan/05 §3.5).
 
@@ -546,6 +548,19 @@ class EgoPPOTrainer:
                 flag from :attr:`RuntimeConfig.deterministic_torch` on
                 CPU before constructing the trainer (ADR-002 §Decisions;
                 plan/08 §4).
+            logger: Optional structlog ``BoundLogger`` from
+                :func:`concerto.training.logging.bind_run_logger`.
+                When non-``None``, every PPO update emits one
+                ``event="scalar"`` line per rollout via
+                :func:`concerto.training.logging.log_scalars` (with
+                ``metric_namespace="train"``) carrying HARL's
+                ``policy_loss``, ``dist_entropy``, ``actor_grad_norm``
+                + the trainer's locally-computed ``critic_loss``,
+                ``approx_kl``, ``clip_fraction``, ``ratio_min/max``,
+                advantage stats, and learning rate. Default ``None``
+                preserves the pre-P1.05.11 silent-trainer behaviour
+                so existing callers (tests, the non-Stage-1b paths)
+                see no change.
 
         Raises:
             ValueError: If ``partner`` exposes a torch parameter with
@@ -561,6 +576,22 @@ class EgoPPOTrainer:
         self._n_epochs = cfg.happo.n_epochs
         self._batch_size = cfg.happo.batch_size
         self._rollout_length = cfg.happo.rollout_length
+        # P1.05.11 / ADR-017: capture PPO clip + learning rate locally so
+        # ``update()`` can compute clip_fraction + emit lr per rollout.
+        # No behaviour change — these are read-only references to cfg.
+        self._clip_param: float = cfg.happo.clip_eps
+        self._learning_rate: float = cfg.happo.lr
+        # P1.05.11 / ADR-017: optional bound logger from
+        # :func:`concerto.training.logging.bind_run_logger`. ``None``
+        # (default) preserves the pre-P1.05.11 silent-trainer behaviour.
+        # The driver
+        # :func:`concerto.training.ego_aht.train` threads its bound
+        # logger here via :meth:`from_config`'s ``logger=`` kwarg.
+        self._logger: structlog.BoundLogger | None = logger
+        # P1.05.11 / ADR-017: global-step counter incremented per
+        # :meth:`observe` call (one env step). ``update()`` emits its
+        # scalar line at this step so the W&B x-axis matches frames.
+        self._global_step: int = 0
         # Seed torch's global RNG. ``derive_substream`` is the project-wide
         # P6 reproducibility entry-point; we cast its 64-bit draw down to
         # int32 because ``torch.manual_seed`` documents 64-bit input but
@@ -616,6 +647,7 @@ class EgoPPOTrainer:
         env: EnvLike,
         partner: PartnerLike,
         ego_uid: str,
+        logger: structlog.BoundLogger | None = None,
     ) -> EgoPPOTrainer:
         """Build from :class:`EgoAHTConfig` + a concrete env + the frozen partner.
 
@@ -648,6 +680,14 @@ class EgoPPOTrainer:
                 Validated by :func:`_assert_partner_is_frozen` as the
                 first construction step (ADR-009 §Consequences).
             ego_uid: The env-side uid the ego acts on.
+            logger: Optional structlog ``BoundLogger`` from
+                :func:`concerto.training.logging.bind_run_logger`.
+                P1.05.11 / ADR-017 §Decisions: when supplied, every
+                PPO update emits one namespaced ``event="scalar"``
+                line. Default ``None`` preserves the pre-P1.05.11
+                silent-trainer behaviour. Threaded through
+                :class:`~concerto.training.ego_aht.TrainerFactory` by
+                the canonical training driver.
 
         Returns:
             A constructed :class:`EgoPPOTrainer` ready for
@@ -693,6 +733,7 @@ class EgoPPOTrainer:
             ego_act_space=ego_act_space,
             partner=partner,
             device=device,
+            logger=logger,
         )
 
     def act(
@@ -826,6 +867,9 @@ class EgoPPOTrainer:
         # Clear the pre-step cache so a stray double-observe cannot
         # double-insert the same tuple.
         self._pending = None
+        # P1.05.11 / ADR-017: bump the global step counter so the next
+        # :meth:`update` emission carries the current frame index.
+        self._global_step += 1
 
     def _build_next_values(
         self,
@@ -874,7 +918,7 @@ class EgoPPOTrainer:
                 )
         return next_values
 
-    def update(self) -> None:
+    def update(self) -> None:  # noqa: PLR0915 - P1.05.11 added metric accumulation; refactor blocked by HARL.update tuple shape
         """Compute GAE; run PPO + critic updates; clear the buffer (ADR-002 §Decisions; Pardo 2017).
 
         Order of operations (Schulman 2017, lifted to ego-only / frozen-
@@ -931,6 +975,22 @@ class EgoPPOTrainer:
         n_minibatches = max(1, n_steps // self._batch_size)
         mb_size = max(1, n_steps // n_minibatches)
 
+        # P1.05.11 / ADR-017: per-update metric accumulators. Sums are
+        # mean-reduced post-loop so a single ``log_scalars`` call
+        # carries the rollout-aggregated PPO health snapshot. Captured
+        # iff a logger is bound — short-circuits the accumulation work
+        # otherwise so the silent-trainer path stays free.
+        emit_metrics = self._logger is not None
+        sum_policy_loss = 0.0
+        sum_critic_loss = 0.0
+        sum_dist_entropy = 0.0
+        sum_grad_norm = 0.0
+        sum_approx_kl = 0.0
+        sum_clip_fraction = 0.0
+        ratio_min_seen = float("inf")
+        ratio_max_seen = float("-inf")
+        n_updates = 0
+
         for _epoch in range(self._n_epochs):
             perm = self._minibatch_rng.permutation(n_steps)
             for mb in range(n_minibatches):
@@ -969,7 +1029,11 @@ class EgoPPOTrainer:
                     None,
                     mb_factor,
                 )
-                self._happo.update(sample)
+                # P1.05.11 / ADR-017: capture HARL's 4-tuple return value.
+                # Pre-P1.05.11 the trainer discarded it; commit 3 wires the
+                # values through the bound logger. ``imp_weights`` is the
+                # PPO importance ratio (exp of new-vs-old log-prob diff).
+                policy_loss, dist_entropy, actor_grad_norm, imp_weights = self._happo.update(sample)
 
                 # Critic update: simple MSE regression on returns.
                 mb_returns = torch.from_numpy(returns[mb_idx]).to(self._device).float()
@@ -979,6 +1043,62 @@ class EgoPPOTrainer:
                 self._critic_optim.zero_grad()
                 critic_loss.backward()
                 self._critic_optim.step()
+
+                if emit_metrics:
+                    # P1.05.11 / ADR-017: per-minibatch metric capture.
+                    # Locally compute approx_kl and clip_fraction; HARL
+                    # does not expose them. The torch.no_grad() guard
+                    # is defensive — these are read-only reductions
+                    # against detached tensors.
+                    with torch.no_grad():
+                        ratio = imp_weights.detach()
+                        approx_kl = float(((ratio - 1.0) ** 2).mean().item()) * 0.5
+                        clip_fraction = float(
+                            ((ratio - 1.0).abs() > self._clip_param).float().mean().item()
+                        )
+                        r_min = float(ratio.min().item())
+                        r_max = float(ratio.max().item())
+                    sum_policy_loss += float(policy_loss.detach().item())
+                    sum_critic_loss += float(critic_loss.detach().item())
+                    sum_dist_entropy += float(dist_entropy.detach().item())
+                    sum_grad_norm += float(
+                        actor_grad_norm.detach().item()
+                        if torch.is_tensor(actor_grad_norm)
+                        else actor_grad_norm
+                    )
+                    sum_approx_kl += approx_kl
+                    sum_clip_fraction += clip_fraction
+                    ratio_min_seen = min(ratio_min_seen, r_min)
+                    ratio_max_seen = max(ratio_max_seen, r_max)
+                    n_updates += 1
+
+        # P1.05.11 / ADR-017: emit one ``event="scalar"`` line per
+        # ``update()`` call with the rollout-aggregated PPO health snapshot.
+        # Skipped when no logger is bound (the existing silent path).
+        if emit_metrics and self._logger is not None and n_updates > 0:
+            # Lazy import: keeping the structlog helper out of module-top
+            # imports preserves the trainer's Tier-1 importability story
+            # (the trainer's TYPE_CHECKING block already gates structlog).
+            from concerto.training.logging import log_scalars
+
+            log_scalars(
+                self._logger,
+                step=self._global_step,
+                namespace="train",
+                policy_loss=sum_policy_loss / n_updates,
+                value_loss=sum_critic_loss / n_updates,
+                dist_entropy=sum_dist_entropy / n_updates,
+                actor_grad_norm=sum_grad_norm / n_updates,
+                approx_kl=sum_approx_kl / n_updates,
+                clip_fraction=sum_clip_fraction / n_updates,
+                ratio_min=ratio_min_seen,
+                ratio_max=ratio_max_seen,
+                advantage_mean=float(raw_advantages.mean()),
+                advantage_std=float(raw_advantages.std()),
+                value_mean=float(values.mean()),
+                value_std=float(values.std()),
+                learning_rate=self._learning_rate,
+            )
 
         # Reset rollout buffer.
         self._buf_obs.clear()

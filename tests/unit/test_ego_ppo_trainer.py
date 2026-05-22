@@ -21,7 +21,7 @@ covers the GAE math itself; this module covers the trainer's wiring.
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, cast
 
 import gymnasium as gym
 import numpy as np
@@ -433,6 +433,107 @@ class TestUpdateSurface:
         assert any(not torch.allclose(b, a) for b, a in zip(before, after, strict=True)), (
             "critic parameters did not change after MSE update"
         )
+
+
+class TestUpdateMetricEmission:
+    """P1.05.11 / ADR-017 §Decisions: PPO-update scalar emission via bound logger."""
+
+    def _build_trainer_with_fake_logger(self) -> tuple[EgoPPOTrainer, list[dict[str, object]]]:
+        """Build a trainer wired to capture every emitted ``log_scalars`` line."""
+        cfg = _tiny_cfg(seed=0, rollout_length=8)
+        env = MPECooperativePushEnv(root_seed=0)
+
+        # Capture each emitted event into a list. We inject a fake logger
+        # that mirrors structlog.BoundLogger's `info(event, **kwargs)`
+        # surface — enough for log_scalars to route through.
+        captured: list[dict[str, object]] = []
+
+        class _FakeLogger:
+            def info(self, event: str, **kwargs: object) -> None:
+                captured.append({"event": event, **kwargs})
+
+            def bind(self, **_kwargs: object) -> _FakeLogger:
+                # Structural-only — bind not exercised by log_scalars path.
+                return self
+
+        trainer = EgoPPOTrainer.from_config(
+            cfg,
+            env=env,
+            partner=_build_partner(),
+            ego_uid="ego",
+            # Structural-only — log_scalars uses just .info(...).
+            logger=cast("Any", _FakeLogger()),
+        )
+        return trainer, captured
+
+    def test_silent_when_logger_is_none(self) -> None:
+        """ADR-017 §Decisions: default logger=None preserves silent-trainer behaviour."""
+        trainer = _build_trainer(rollout_length=8)
+        env = MPECooperativePushEnv(root_seed=0)
+        partner = _build_partner()
+        _drive_one_rollout(trainer, env, partner, n_steps=8)
+        # The trainer has no _logger attribute set OR it is None.
+        assert trainer._logger is None
+        # update() must not raise; nothing to emit.
+        trainer.update()
+
+    def test_update_emits_scalar_event_with_train_namespace(self) -> None:
+        """ADR-017 §Schema: update() emits one event=scalar line per rollout."""
+        trainer, captured = self._build_trainer_with_fake_logger()
+        env = MPECooperativePushEnv(root_seed=0)
+        partner = _build_partner()
+        _drive_one_rollout(trainer, env, partner, n_steps=8)
+        trainer.update()
+
+        # Exactly one scalar emission per update() (not per minibatch).
+        scalar_events = [e for e in captured if e.get("event") == "scalar"]
+        assert len(scalar_events) == 1, f"expected exactly 1 scalar event, got {len(scalar_events)}"
+        line = scalar_events[0]
+        assert line["metric_namespace"] == "train"
+        # The step equals the global step counter (incremented per observe()).
+        assert line["step"] == 8
+
+    def test_update_emits_expected_metric_keys(self) -> None:
+        """ADR-017 §Schema: train-namespace scalar carries the full PPO-health set."""
+        trainer, captured = self._build_trainer_with_fake_logger()
+        env = MPECooperativePushEnv(root_seed=0)
+        partner = _build_partner()
+        _drive_one_rollout(trainer, env, partner, n_steps=8)
+        trainer.update()
+
+        scalar = next(e for e in captured if e.get("event") == "scalar")
+        # Every key the W&B + chamber-analyze contract expects.
+        expected_keys = {
+            "policy_loss",
+            "value_loss",
+            "dist_entropy",
+            "actor_grad_norm",
+            "approx_kl",
+            "clip_fraction",
+            "ratio_min",
+            "ratio_max",
+            "advantage_mean",
+            "advantage_std",
+            "value_mean",
+            "value_std",
+            "learning_rate",
+        }
+        missing = expected_keys - set(scalar.keys())
+        assert not missing, f"missing PPO-health keys: {sorted(missing)}"
+
+    def test_update_metrics_are_finite_floats(self) -> None:
+        """ADR-017 §Decisions: every emitted scalar is a finite float (no NaN/inf)."""
+        trainer, captured = self._build_trainer_with_fake_logger()
+        env = MPECooperativePushEnv(root_seed=0)
+        partner = _build_partner()
+        _drive_one_rollout(trainer, env, partner, n_steps=8)
+        trainer.update()
+
+        scalar = next(e for e in captured if e.get("event") == "scalar")
+        for key in ("policy_loss", "value_loss", "dist_entropy", "approx_kl", "clip_fraction"):
+            val = scalar[key]
+            assert isinstance(val, float)
+            assert np.isfinite(val), f"{key}={val!r} is not finite"
 
 
 class TestStateDict:

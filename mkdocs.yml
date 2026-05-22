@@ -64,6 +64,7 @@ nav:
       - Literature: reference/literature.md
       - Standards: reference/standards.md
       - Evaluation: reference/evaluation.md
+      - Observability: observability.md
   - Explanation:
       - Why heterogeneous AHT?: explanation/why-aht.md
       - Why fork ManiSkill v3?: explanation/why-maniskill.md
