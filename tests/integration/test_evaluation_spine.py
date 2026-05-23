@@ -398,6 +398,11 @@ def test_verify_git_tag_detects_mismatch(tmp_path: Path) -> None:
     subprocess.run(["git", "-C", str(repo), "config", "user.email", "t@t"], check=True)  # noqa: S603,S607
     subprocess.run(["git", "-C", str(repo), "config", "user.name", "t"], check=True)  # noqa: S603,S607
     subprocess.run(["git", "-C", str(repo), "config", "commit.gpgsign", "false"], check=True)  # noqa: S603,S607
+    # A host-level ``tag.gpgsign = true`` would coerce the lightweight tag below
+    # into a signed annotated tag, which requires a message and aborts with
+    # ``fatal: no tag message?``. Override per-repo so the test is independent
+    # of the contributor's global git config.
+    subprocess.run(["git", "-C", str(repo), "config", "tag.gpgsign", "false"], check=True)  # noqa: S603,S607
 
     prereg = repo / "prereg.yaml"
     _write_prereg_yaml(prereg, git_tag="prereg/v0")
