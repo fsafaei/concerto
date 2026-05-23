@@ -24,7 +24,7 @@ import pytest
 
 from chamber.benchmarks.stage1_common import TrainedPolicyFactory
 from chamber.envs.stage1_pickplace import make_stage1_pickplace_env
-from chamber.utils.device import sapien_gpu_available
+from chamber.utils.device import sapien_gpu_available, torch_cuda_available
 from concerto.training.config import (
     EgoAHTConfig,
     EnvConfig,
@@ -40,6 +40,14 @@ pytestmark = [
     pytest.mark.skipif(
         not sapien_gpu_available(),
         reason="Requires Vulkan/GPU (SAPIEN); skipped on CPU-only machines",
+    ),
+    pytest.mark.skipif(
+        not torch_cuda_available(),
+        reason=(
+            "Trainer is constructed with RuntimeConfig.device='cuda'; skipped on hosts "
+            "where torch.cuda.is_available() is False (ADR-002 §Rev 2026-05-20 cuda-major "
+            "coupling discipline; closes #198)."
+        ),
     ),
 ]
 
