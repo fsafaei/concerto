@@ -20,7 +20,28 @@
 
 algo: ego_aht_happo
 seed: 0
-total_frames: 100000
+# P1.05.9 / ADR-007 Rev 14 / ADR-002 Rev 2026-05-23 budget calibration.
+# The post-widening Stage-1b AS investigation (PR #186 / Rev 13;
+# `spikes/results/stage1-failure-investigation/2026-05-21-post-widening/
+# POSTWIDENING_INVESTIGATION.md` §Findings summary) converged on a single
+# fingerprint across the smoke + three ablations: the trained policy
+# reaches toward the cube across all 4 runs (per-window `last_reward`
+# climbs ~3e-5 → ~0.020 across 100k frames) but never grasps it within
+# the 50-step eval horizon — `n_terminated = 0 / 80` total. Surface 2
+# (training budget) and Surface 7 (architecture) survive as the narrowed
+# remediation surface; this slice bumps both knobs in coupled fashion as
+# the cheapest informative experiment under the founder's compute envelope.
+# Community ManiSkill PickCube baselines train at 1M+ frames with
+# single-robot PPO; the two-robot Stage-1b setting is structurally
+# harder so 1M is the lower bound of the investigation's
+# 500k-1M candidate range. `hidden_dim` rises from 64 → 256 to match the
+# 4× post-widening obs growth (`state.shape=(65,)` for AS-hetero per
+# Surface 6 / Rev 12 widening; MPE-vintage 64-wide MLP is calibrated for
+# low-D state and under-represents the conditional-grasp policy).
+# Implementation-detail-of-the-cell per ADR-007 §Discipline; the
+# comparison-protocol contract (prereg YAMLs / tags / condition_id
+# strings / seed list / episode budget) is unchanged.
+total_frames: 1000000
 checkpoint_every: 10000
 artifacts_root: ./artifacts
 log_dir: ./logs
@@ -77,7 +98,19 @@ happo:
   n_epochs: 4
   rollout_length: 1024
   batch_size: 256
-  hidden_dim: 64
+  # P1.05.9 / ADR-007 Rev 14: 64 → 256. The MPE-vintage 64-wide MLP was
+  # calibrated for the empirical-guarantee Phase-0 task (low-D state, low-D
+  # action, simple terminal). Stage-1b post-widening obs is 65-D (ego 18 +
+  # partner 30 + task 17) with an 8-D `pd_joint_delta_pos` action; matching
+  # the 4× obs-dim growth with 4× MLP width gives the actor + critic
+  # capacity to represent the conditional-grasp policy the per-window
+  # `last_reward` plateau evidence said h=64 cannot. Both actor (HARL HAPPO
+  # `MLPBase` hidden_sizes) and critic (`_EgoCritic`) are 2-hidden-layer
+  # MLPs of this width; total param count grows ~17K → ~165K, all comfortably
+  # under VRAM cap on RTX 2080 (SAPIEN renderer/physics dominate GPU memory,
+  # not torch tensors). See ADR-002 §Revision history 2026-05-23 for the
+  # MPE→Stage-1b calibration rationale.
+  hidden_dim: 256
 
 # GPU host (RTX 2080 / A100). plan/08 §4 GPU-determinism caveat:
 # cuDNN / cuBLAS kernels are not bit-deterministic even with the
