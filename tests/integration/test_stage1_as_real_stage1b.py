@@ -36,7 +36,7 @@ from chamber.evaluation.prereg import load_prereg
 from chamber.evaluation.results import SpikeRun
 from chamber.partners.api import PartnerSpec
 from chamber.partners.heuristic import ScriptedHeuristicPartner
-from chamber.utils.device import sapien_gpu_available
+from chamber.utils.device import sapien_gpu_available, torch_cuda_available
 from concerto.training.config import (
     EgoAHTConfig,
     EnvConfig,
@@ -52,6 +52,14 @@ pytestmark = [
     pytest.mark.skipif(
         not sapien_gpu_available(),
         reason="Stage-1b dispatch requires SAPIEN/Vulkan (the real ManiSkill pick-place env)",
+    ),
+    pytest.mark.skipif(
+        not torch_cuda_available(),
+        reason=(
+            "Trainer is constructed with RuntimeConfig.device='cuda'; skipped on hosts "
+            "where torch.cuda.is_available() is False (ADR-002 §Rev 2026-05-20 cuda-major "
+            "coupling discipline; closes #198)."
+        ),
     ),
 ]
 
