@@ -51,7 +51,7 @@ from chamber.partners.frozen_harl import (
 from chamber.partners.frozen_mappo import _MAPPOActor
 from chamber.partners.registry import load_partner
 from chamber.partners.selection import make_phase0_draft_zoo
-from chamber.utils.device import sapien_gpu_available
+from chamber.utils.device import sapien_cuda_renderer_available
 from concerto.training.checkpoints import CheckpointMetadata, save_checkpoint
 from tests.fakes import FakeMultiAgentEnv
 
@@ -264,8 +264,12 @@ class TestDraftZooFakeEnv:
 @pytest.mark.smoke
 @pytest.mark.gpu
 @pytest.mark.skipif(
-    not sapien_gpu_available(),
-    reason="Requires Vulkan/GPU (SAPIEN); skipped on CPU-only machines",
+    not sapien_cuda_renderer_available(),
+    reason=(
+        "Requires SAPIEN's CUDA renderer (the loose Vulkan/GPU gate isn't "
+        "sufficient — the Stage-0 ``panda_wristcam`` probe depends on a "
+        "functional CUDA renderer for its visual obs space; #188)"
+    ),
 )
 def test_draft_zoo_round_trip_on_real_stage0_env(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
