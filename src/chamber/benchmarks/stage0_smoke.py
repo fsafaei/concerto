@@ -40,6 +40,7 @@ from chamber.comm import (
 from chamber.envs import (
     CommShapingWrapper,
     PerAgentActionRepeatWrapper,
+    Stage0StateSynthesizer,
     TextureFilterObsWrapper,
 )
 from chamber.envs._sapien_compat import (
@@ -197,4 +198,8 @@ def make_stage0_env(*, render_mode: str | None = None) -> gym.Env:  # type: igno
         tick_period_ms=1.0,
         root_seed=0,
     )
-    return CommShapingWrapper(env, channel=channel)
+    # Outer state-synthesis wrapper makes the per-uid ``state`` Box part of
+    # ``make_stage0_env``'s public obs-space contract (ADR-001 §Validation
+    # criteria; closes #184). Mirrors the Stage-1 factory's
+    # ``Stage1ASStateSynthesizer`` placement (ADR-007 §Stage 1b Rev 12).
+    return Stage0StateSynthesizer(CommShapingWrapper(env, channel=channel))

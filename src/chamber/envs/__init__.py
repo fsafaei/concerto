@@ -11,6 +11,7 @@ from chamber.envs.comm_shaping import CommShapingWrapper
 from chamber.envs.errors import ChamberEnvCompatibilityError
 from chamber.envs.mpe_cooperative_push import MPECooperativePushEnv
 from chamber.envs.partner_meta import PartnerIdAnnotationWrapper
+from chamber.envs.stage0_state_synth import Stage0StateSynthesizer
 from chamber.envs.stage1_obs_filter import Stage1ASStateSynthesizer, Stage1OMChannelFilter
 from chamber.envs.stage1_pickplace import (
     ConditionConfig,
@@ -27,6 +28,7 @@ __all__ = [
     "MPECooperativePushEnv",
     "PartnerIdAnnotationWrapper",
     "PerAgentActionRepeatWrapper",
+    "Stage0StateSynthesizer",
     "Stage1ASStateSynthesizer",
     "Stage1OMChannelFilter",
     "TextureFilterObsWrapper",
