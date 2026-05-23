@@ -2508,6 +2508,45 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#chamber.envs.Stage0StateSynthesizer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Stage0StateSynthesizer
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Stage0StateSynthesizer">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#chamber.envs.Stage0StateSynthesizer.__init__" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        __init__
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#chamber.envs.Stage0StateSynthesizer.observation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        observation
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#chamber.envs.Stage1ASStateSynthesizer" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -7400,6 +7439,45 @@
     <span class="md-ellipsis">
       
         step
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#chamber.envs.Stage0StateSynthesizer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Stage0StateSynthesizer
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Stage0StateSynthesizer">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#chamber.envs.Stage0StateSynthesizer.__init__" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        __init__
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#chamber.envs.Stage0StateSynthesizer.observation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        observation
       
     </span>
   </a>
@@ -28475,6 +28553,369 @@ action update interval matches 1/rate within one env tick.</p>
             <span class="n">resolved</span><span class="p">[</span><span class="n">uid</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_last_action</span><span class="p">[</span><span class="n">uid</span><span class="p">]</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_counters</span><span class="p">[</span><span class="n">uid</span><span class="p">]</span> <span class="o">=</span> <span class="n">counter</span> <span class="o">-</span> <span class="mi">1</span>
     <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">step</span><span class="p">(</span><span class="n">resolved</span><span class="p">)</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+
+
+  </div>
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-class">
+
+
+
+<h2 id="chamber.envs.Stage0StateSynthesizer" class="doc doc-heading">
+            <span class="doc doc-object-name doc-class-name">Stage0StateSynthesizer</span>
+
+
+</h2>
+
+
+    <div class="doc doc-contents ">
+            <p class="doc doc-class-bases">
+              Bases: <code><span title="gymnasium.ObservationWrapper">ObservationWrapper</span></code></p>
+
+
+
+        <p>Inject per-uid <code>state</code> into Stage-0 observations (ADR-001 §Validation; #184).</p>
+<p>Stage-0 parallel to
+:class:<code>chamber.envs.stage1_obs_filter.Stage1ASStateSynthesizer</code>. For
+every uid in <code>inner.action_space</code> whose
+<code>observation_space["agent"][uid]</code> is a :class:<code>gym.spaces.Dict</code>
+without a <code>"state"</code> key, this wrapper concatenates the uid's 1-D
+Box channels (alphabetical order) into a flat <code>state</code> Box and
+injects it at every step. Uids that already expose <code>state</code> and
+non-Dict per-uid spaces are passed through unchanged.</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <ul>
+        <li class="doc-section-item field-body">
+            <b><code>env</code></b>
+              (<code><span title="gymnasium.Env">Env</span>[<span title="typing.Any">Any</span>, <span title="typing.Any">Any</span>]</code>)
+          –
+          <div class="doc-md-description">
+            <p>A multi-agent env with a Dict <code>observation_space</code> whose
+<code>"agent"</code> entry is itself a Dict keyed by uid, and whose
+<code>action_space</code> is a Dict keyed by the same uids.</p>
+          </div>
+        </li>
+    </ul>
+
+
+<p><span class="doc-section-title">Raises:</span></p>
+    <ul>
+        <li class="doc-section-item field-body">
+              <code><span title="TypeError">TypeError</span></code>
+            –
+          <div class="doc-md-description">
+            <p>If <code>observation_space</code> is not a Dict, or
+<code>observation_space["agent"]</code> is not a Dict, or
+<code>action_space</code> is not a Dict.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+              <code><a class="autorefs autorefs-internal" title="ChamberEnvCompatibilityError (chamber.envs.errors.ChamberEnvCompatibilityError)" href="#chamber.envs.errors.ChamberEnvCompatibilityError">ChamberEnvCompatibilityError</a></code>
+            –
+          <div class="doc-md-description">
+            <p>If a uid that needs synthesis has
+no 1-D Box channels available — there is nothing to
+concatenate into a flat state vector.</p>
+          </div>
+        </li>
+    </ul>
+
+
+
+
+
+
+
+
+              <details class="mkdocstrings-source">
+                <summary>Source code in <code>src/chamber/envs/stage0_state_synth.py</code></summary>
+                <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 49</span>
+<span class="normal"> 50</span>
+<span class="normal"> 51</span>
+<span class="normal"> 52</span>
+<span class="normal"> 53</span>
+<span class="normal"> 54</span>
+<span class="normal"> 55</span>
+<span class="normal"> 56</span>
+<span class="normal"> 57</span>
+<span class="normal"> 58</span>
+<span class="normal"> 59</span>
+<span class="normal"> 60</span>
+<span class="normal"> 61</span>
+<span class="normal"> 62</span>
+<span class="normal"> 63</span>
+<span class="normal"> 64</span>
+<span class="normal"> 65</span>
+<span class="normal"> 66</span>
+<span class="normal"> 67</span>
+<span class="normal"> 68</span>
+<span class="normal"> 69</span>
+<span class="normal"> 70</span>
+<span class="normal"> 71</span>
+<span class="normal"> 72</span>
+<span class="normal"> 73</span>
+<span class="normal"> 74</span>
+<span class="normal"> 75</span>
+<span class="normal"> 76</span>
+<span class="normal"> 77</span>
+<span class="normal"> 78</span>
+<span class="normal"> 79</span>
+<span class="normal"> 80</span>
+<span class="normal"> 81</span>
+<span class="normal"> 82</span>
+<span class="normal"> 83</span>
+<span class="normal"> 84</span>
+<span class="normal"> 85</span>
+<span class="normal"> 86</span>
+<span class="normal"> 87</span>
+<span class="normal"> 88</span>
+<span class="normal"> 89</span>
+<span class="normal"> 90</span>
+<span class="normal"> 91</span>
+<span class="normal"> 92</span>
+<span class="normal"> 93</span>
+<span class="normal"> 94</span>
+<span class="normal"> 95</span>
+<span class="normal"> 96</span>
+<span class="normal"> 97</span>
+<span class="normal"> 98</span>
+<span class="normal"> 99</span>
+<span class="normal">100</span>
+<span class="normal">101</span>
+<span class="normal">102</span>
+<span class="normal">103</span>
+<span class="normal">104</span>
+<span class="normal">105</span>
+<span class="normal">106</span>
+<span class="normal">107</span>
+<span class="normal">108</span>
+<span class="normal">109</span>
+<span class="normal">110</span>
+<span class="normal">111</span>
+<span class="normal">112</span>
+<span class="normal">113</span>
+<span class="normal">114</span>
+<span class="normal">115</span>
+<span class="normal">116</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">Stage0StateSynthesizer</span><span class="p">(</span><span class="n">gym</span><span class="o">.</span><span class="n">ObservationWrapper</span><span class="p">):</span>  <span class="c1"># type: ignore[type-arg]</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Inject per-uid ``state`` into Stage-0 observations (ADR-001 §Validation; #184).</span>
+
+<span class="sd">    Stage-0 parallel to</span>
+<span class="sd">    :class:`chamber.envs.stage1_obs_filter.Stage1ASStateSynthesizer`. For</span>
+<span class="sd">    every uid in ``inner.action_space`` whose</span>
+<span class="sd">    ``observation_space[&quot;agent&quot;][uid]`` is a :class:`gym.spaces.Dict`</span>
+<span class="sd">    without a ``&quot;state&quot;`` key, this wrapper concatenates the uid&#39;s 1-D</span>
+<span class="sd">    Box channels (alphabetical order) into a flat ``state`` Box and</span>
+<span class="sd">    injects it at every step. Uids that already expose ``state`` and</span>
+<span class="sd">    non-Dict per-uid spaces are passed through unchanged.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        env: A multi-agent env with a Dict ``observation_space`` whose</span>
+<span class="sd">            ``&quot;agent&quot;`` entry is itself a Dict keyed by uid, and whose</span>
+<span class="sd">            ``action_space`` is a Dict keyed by the same uids.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">        TypeError: If ``observation_space`` is not a Dict, or</span>
+<span class="sd">            ``observation_space[&quot;agent&quot;]`` is not a Dict, or</span>
+<span class="sd">            ``action_space`` is not a Dict.</span>
+<span class="sd">        ChamberEnvCompatibilityError: If a uid that needs synthesis has</span>
+<span class="sd">            no 1-D Box channels available — there is nothing to</span>
+<span class="sd">            concatenate into a flat state vector.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">env</span><span class="p">:</span> <span class="n">gym</span><span class="o">.</span><span class="n">Env</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Detect which uids need synthesis at construction (ADR-001 §Validation criteria).&quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">env</span><span class="p">)</span>
+        <span class="n">inner_obs_space</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">observation_space</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">inner_obs_space</span><span class="p">,</span> <span class="n">gym</span><span class="o">.</span><span class="n">spaces</span><span class="o">.</span><span class="n">Dict</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+                <span class="s2">&quot;Stage0StateSynthesizer requires a gym.spaces.Dict observation &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;space; got </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">inner_obs_space</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">. ADR-001 §Validation criteria.&quot;</span>
+            <span class="p">)</span>
+        <span class="n">inner_action_space</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">action_space</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">inner_action_space</span><span class="p">,</span> <span class="n">gym</span><span class="o">.</span><span class="n">spaces</span><span class="o">.</span><span class="n">Dict</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+                <span class="s2">&quot;Stage0StateSynthesizer requires a gym.spaces.Dict action space; &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;got </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">inner_action_space</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">. ADR-001 §Validation criteria.&quot;</span>
+            <span class="p">)</span>
+        <span class="n">inner_uids</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">inner_action_space</span><span class="o">.</span><span class="n">spaces</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+        <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">observation_space</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_synthesise_state_for</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_state_synthesis_keys</span><span class="p">,</span>
+        <span class="p">)</span> <span class="o">=</span> <span class="n">_build_synthesised_obs_space</span><span class="p">(</span><span class="n">inner_obs_space</span><span class="p">,</span> <span class="n">inner_uids</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">observation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">observation</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Inject synthesised ``state`` keys per uid (ADR-001 §Validation criteria).&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_synthesise_state_for</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">dict</span><span class="p">(</span><span class="n">observation</span><span class="p">)</span>
+        <span class="n">out</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">observation</span><span class="p">)</span>
+        <span class="n">agent_in</span> <span class="o">=</span> <span class="n">observation</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;agent&quot;</span><span class="p">,</span> <span class="p">{})</span>
+        <span class="n">agent_out</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">agent_in</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">uid</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_synthesise_state_for</span><span class="p">:</span>
+            <span class="n">sub_in</span> <span class="o">=</span> <span class="n">agent_in</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">uid</span><span class="p">,</span> <span class="p">{})</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">sub_in</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+                <span class="k">continue</span>
+            <span class="n">keys</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_state_synthesis_keys</span><span class="p">[</span><span class="n">uid</span><span class="p">]</span>
+            <span class="n">pieces</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">sub_in</span><span class="p">[</span><span class="n">k</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span><span class="o">.</span><span class="n">ravel</span><span class="p">()</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">keys</span><span class="p">]</span>
+            <span class="n">sub_out</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">sub_in</span><span class="p">)</span>
+            <span class="n">sub_out</span><span class="p">[</span><span class="n">_STATE_KEY</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span><span class="n">pieces</span><span class="p">)</span> <span class="k">if</span> <span class="n">pieces</span> <span class="k">else</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+            <span class="p">)</span>
+            <span class="n">agent_out</span><span class="p">[</span><span class="n">uid</span><span class="p">]</span> <span class="o">=</span> <span class="n">sub_out</span>
+        <span class="n">out</span><span class="p">[</span><span class="s2">&quot;agent&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">agent_out</span>
+        <span class="k">return</span> <span class="n">out</span>
+</code></pre></div></td></tr></table></div>
+              </details>
+
+
+
+<div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="chamber.envs.Stage0StateSynthesizer.__init__" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">__init__</span>
+
+
+</h3>
+<div class="doc-signature highlight"><pre><span></span><code><span class="nf">__init__</span><span class="p">(</span><span class="n">env</span><span class="p">:</span> <span class="n">Env</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Detect which uids need synthesis at construction (ADR-001 §Validation criteria).</p>
+
+
+            <details class="mkdocstrings-source">
+              <summary>Source code in <code>src/chamber/envs/stage0_state_synth.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">75</span>
+<span class="normal">76</span>
+<span class="normal">77</span>
+<span class="normal">78</span>
+<span class="normal">79</span>
+<span class="normal">80</span>
+<span class="normal">81</span>
+<span class="normal">82</span>
+<span class="normal">83</span>
+<span class="normal">84</span>
+<span class="normal">85</span>
+<span class="normal">86</span>
+<span class="normal">87</span>
+<span class="normal">88</span>
+<span class="normal">89</span>
+<span class="normal">90</span>
+<span class="normal">91</span>
+<span class="normal">92</span>
+<span class="normal">93</span>
+<span class="normal">94</span>
+<span class="normal">95</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">env</span><span class="p">:</span> <span class="n">gym</span><span class="o">.</span><span class="n">Env</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Detect which uids need synthesis at construction (ADR-001 §Validation criteria).&quot;&quot;&quot;</span>
+    <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">env</span><span class="p">)</span>
+    <span class="n">inner_obs_space</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">observation_space</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">inner_obs_space</span><span class="p">,</span> <span class="n">gym</span><span class="o">.</span><span class="n">spaces</span><span class="o">.</span><span class="n">Dict</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+            <span class="s2">&quot;Stage0StateSynthesizer requires a gym.spaces.Dict observation &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;space; got </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">inner_obs_space</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">. ADR-001 §Validation criteria.&quot;</span>
+        <span class="p">)</span>
+    <span class="n">inner_action_space</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">action_space</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">inner_action_space</span><span class="p">,</span> <span class="n">gym</span><span class="o">.</span><span class="n">spaces</span><span class="o">.</span><span class="n">Dict</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+            <span class="s2">&quot;Stage0StateSynthesizer requires a gym.spaces.Dict action space; &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;got </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">inner_action_space</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">. ADR-001 §Validation criteria.&quot;</span>
+        <span class="p">)</span>
+    <span class="n">inner_uids</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">inner_action_space</span><span class="o">.</span><span class="n">spaces</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+    <span class="p">(</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">observation_space</span><span class="p">,</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_synthesise_state_for</span><span class="p">,</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_state_synthesis_keys</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">=</span> <span class="n">_build_synthesised_obs_space</span><span class="p">(</span><span class="n">inner_obs_space</span><span class="p">,</span> <span class="n">inner_uids</span><span class="p">)</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="chamber.envs.Stage0StateSynthesizer.observation" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">observation</span>
+
+
+</h3>
+<div class="doc-signature highlight"><pre><span></span><code><span class="nf">observation</span><span class="p">(</span>
+    <span class="n">observation</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Inject synthesised <code>state</code> keys per uid (ADR-001 §Validation criteria).</p>
+
+
+            <details class="mkdocstrings-source">
+              <summary>Source code in <code>src/chamber/envs/stage0_state_synth.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 97</span>
+<span class="normal"> 98</span>
+<span class="normal"> 99</span>
+<span class="normal">100</span>
+<span class="normal">101</span>
+<span class="normal">102</span>
+<span class="normal">103</span>
+<span class="normal">104</span>
+<span class="normal">105</span>
+<span class="normal">106</span>
+<span class="normal">107</span>
+<span class="normal">108</span>
+<span class="normal">109</span>
+<span class="normal">110</span>
+<span class="normal">111</span>
+<span class="normal">112</span>
+<span class="normal">113</span>
+<span class="normal">114</span>
+<span class="normal">115</span>
+<span class="normal">116</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">observation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">observation</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Inject synthesised ``state`` keys per uid (ADR-001 §Validation criteria).&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_synthesise_state_for</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">dict</span><span class="p">(</span><span class="n">observation</span><span class="p">)</span>
+    <span class="n">out</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">observation</span><span class="p">)</span>
+    <span class="n">agent_in</span> <span class="o">=</span> <span class="n">observation</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;agent&quot;</span><span class="p">,</span> <span class="p">{})</span>
+    <span class="n">agent_out</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">agent_in</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">uid</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_synthesise_state_for</span><span class="p">:</span>
+        <span class="n">sub_in</span> <span class="o">=</span> <span class="n">agent_in</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">uid</span><span class="p">,</span> <span class="p">{})</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">sub_in</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+            <span class="k">continue</span>
+        <span class="n">keys</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_state_synthesis_keys</span><span class="p">[</span><span class="n">uid</span><span class="p">]</span>
+        <span class="n">pieces</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">sub_in</span><span class="p">[</span><span class="n">k</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span><span class="o">.</span><span class="n">ravel</span><span class="p">()</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">keys</span><span class="p">]</span>
+        <span class="n">sub_out</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">sub_in</span><span class="p">)</span>
+        <span class="n">sub_out</span><span class="p">[</span><span class="n">_STATE_KEY</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span><span class="n">pieces</span><span class="p">)</span> <span class="k">if</span> <span class="n">pieces</span> <span class="k">else</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="n">agent_out</span><span class="p">[</span><span class="n">uid</span><span class="p">]</span> <span class="o">=</span> <span class="n">sub_out</span>
+    <span class="n">out</span><span class="p">[</span><span class="s2">&quot;agent&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">agent_out</span>
+    <span class="k">return</span> <span class="n">out</span>
 </code></pre></div></td></tr></table></div>
             </details>
     </div>
