@@ -156,15 +156,27 @@ def _stage_zoo_artefacts(
             )
 
 
-def _zero_dict_action(uids: tuple[str, ...], action_dim: int) -> dict[str, np.ndarray]:
-    return {uid: np.zeros(action_dim, dtype=np.float32) for uid in uids}
+def _zero_dict_action(uid_action_dims: dict[str, int]) -> dict[str, np.ndarray]:
+    """Per-uid zero-action dict matching the inner env's heterogeneous action spaces (#196).
+
+    The Stage-0 rig is heterogeneous: panda_wristcam has 8-D actions,
+    fetch 13-D, allegro_hand_right 16-D (under ManiSkill v3's default
+    control mode). Building a uniform-dim zero dict caused
+    ``mani_skill.../base_controller.py:325`` to reject the non-partner
+    uids' actions when the partner uid's dim differed from the others.
+    Per-uid dims are required for the real env; for Tier-1
+    ``FakeMultiAgentEnv`` (uniform 2-D) the caller passes
+    ``{uid: _FAKE_ACTION_DIM for uid in inner_uids}`` and the result is
+    byte-equivalent to the pre-#196 uniform-dim helper.
+    """
+    return {uid: np.zeros(dim, dtype=np.float32) for uid, dim in uid_action_dims.items()}
 
 
 def _exercise_partner(
     *,
     inner_env,  # type: ignore[no-untyped-def]
     spec: PartnerSpec,
-    inner_uids: tuple[str, ...],
+    uid_action_dims: dict[str, int],
     action_dim: int,
     n_steps: int = _NUM_STEPS,
 ) -> None:
@@ -174,6 +186,18 @@ def _exercise_partner(
     :class:`PartnerIdAnnotationWrapper`, drives ``reset + step`` for
     ``n_steps``, and asserts ``obs["meta"]["partner_id"]`` matches
     ``spec.partner_id`` at every step.
+
+    Args:
+        inner_env: The multi-agent env to drive.
+        spec: The partner spec to load via the registry.
+        uid_action_dims: Per-uid action-dim map for the inner env
+            (#196 — required because Stage-0's real action spaces are
+            heterogeneous across panda_wristcam / fetch /
+            allegro_hand_right). Used to build a correctly-shaped
+            zero-action dict for the non-partner uids.
+        action_dim: The partner uid's own action dim. Asserted against
+            ``partner.act(obs).shape``.
+        n_steps: Number of step calls to drive.
     """
     partner = load_partner(spec)
     env = PartnerIdAnnotationWrapper(inner_env, partner_id=spec.partner_id)
@@ -192,7 +216,7 @@ def _exercise_partner(
         assert np.all(np.isfinite(partner_action)), (
             f"{spec.class_name!r}: non-finite action at step {step_idx}"
         )
-        action = _zero_dict_action(inner_uids, action_dim)
+        action = _zero_dict_action(uid_action_dims)
         action[partner_uid] = partner_action
         obs, _, _, _, _ = env.step(action)
         assert obs["meta"]["partner_id"] == spec.partner_id, (
@@ -208,6 +232,54 @@ def _exercise_partner(
 # ---------------------------------------------------------------------------
 # Tier-1: Fake multi-agent env (default; CPU)
 # ---------------------------------------------------------------------------
+
+
+class TestZeroDictActionHeterogeneousDims:
+    """Pin the #196 per-uid action-dim contract of ``_zero_dict_action``.
+
+    Stage-0's real action spaces are heterogeneous: panda_wristcam 8-D,
+    fetch 13-D, allegro_hand_right 16-D under ManiSkill v3's default
+    control mode. The pre-#196 helper took a single ``action_dim``
+    and applied it to every uid, which caused
+    ``mani_skill.../base_controller.py:325`` to reject the non-partner
+    uids' actions on the Tier-2 path. These tests fence the contract
+    so a future drift back to the uniform-dim shape is caught at
+    Tier-1 instead of as a cryptic ManiSkill controller assertion at
+    Tier-2.
+    """
+
+    def test_per_uid_dims_produce_correctly_shaped_zero_actions(self) -> None:
+        """Each uid's zero-action array has the dim from ``uid_action_dims``."""
+        uid_action_dims = {
+            "panda_wristcam": 8,
+            "fetch": 13,
+            "allegro_hand_right": 16,
+        }
+        action = _zero_dict_action(uid_action_dims)
+        assert action["panda_wristcam"].shape == (8,)
+        assert action["fetch"].shape == (13,)
+        assert action["allegro_hand_right"].shape == (16,)
+        for arr in action.values():
+            assert arr.dtype == np.float32
+            np.testing.assert_array_equal(arr, np.zeros_like(arr))
+
+    def test_uniform_dims_remain_byte_equivalent_to_pre_196_path(self) -> None:
+        """Tier-1 ``FakeMultiAgentEnv`` callers pass uniform 2-D dims; byte-equivalent path."""
+        inner_uids = ("panda_wristcam", "fetch", "allegro_hand_right")
+        action = _zero_dict_action(dict.fromkeys(inner_uids, _FAKE_ACTION_DIM))
+        for uid in inner_uids:
+            assert action[uid].shape == (_FAKE_ACTION_DIM,)
+            np.testing.assert_array_equal(action[uid], np.zeros(_FAKE_ACTION_DIM, dtype=np.float32))
+
+    def test_empty_dict_returns_empty_dict(self) -> None:
+        """Edge case: no uids → empty action dict (no exception)."""
+        assert _zero_dict_action({}) == {}
+
+    def test_keys_match_input_dict_exactly(self) -> None:
+        """The returned dict carries exactly the input dict's keys, no extras."""
+        uid_action_dims = {"uid_a": 3, "uid_b": 5}
+        action = _zero_dict_action(uid_action_dims)
+        assert set(action.keys()) == {"uid_a", "uid_b"}
 
 
 class TestDraftZooFakeEnv:
@@ -226,12 +298,17 @@ class TestDraftZooFakeEnv:
             action_dim=_FAKE_ACTION_DIM,
         )
         inner_uids = ("panda_wristcam", "fetch", "allegro_hand_right")
+        # FakeMultiAgentEnv exposes a uniform 2-D action space per uid;
+        # the per-uid dim map is degenerate here but #196 still requires
+        # the explicit dict so the helper's contract is uniform across
+        # Tier-1 and Tier-2.
+        uid_action_dims: dict[str, int] = dict.fromkeys(inner_uids, _FAKE_ACTION_DIM)
         for spec in zoo:
             inner = FakeMultiAgentEnv(agent_uids=inner_uids)
             _exercise_partner(
                 inner_env=inner,
                 spec=spec,
-                inner_uids=inner_uids,
+                uid_action_dims=uid_action_dims,
                 action_dim=_FAKE_ACTION_DIM,
             )
 
@@ -423,7 +500,12 @@ def test_draft_zoo_round_trip_on_real_stage0_env(
             assert action_space.shape is not None
             action_dim = int(action_space.shape[0])
             uid_shapes[uid] = (obs_dim, action_dim)
-        inner_uids = tuple(probe.action_space.spaces.keys())
+        # Per-uid action-dim map for #196 — Stage-0's real action spaces
+        # are heterogeneous (panda_wristcam 8-D / fetch 13-D /
+        # allegro_hand_right 16-D under ManiSkill v3's default control
+        # mode). Building the map alongside ``uid_shapes`` keeps the
+        # env-probe in one place.
+        uid_action_dims = {uid: dim for uid, (_obs, dim) in uid_shapes.items()}
     finally:
         probe.close()
 
@@ -465,7 +547,7 @@ def test_draft_zoo_round_trip_on_real_stage0_env(
             _exercise_partner(
                 inner_env=inner,
                 spec=patched_spec,
-                inner_uids=inner_uids,
+                uid_action_dims=uid_action_dims,
                 action_dim=action_dim,
             )
         finally:
