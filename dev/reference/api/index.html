@@ -31998,7 +31998,37 @@ initialisation fails (CPU-only host without a fallback
 <span class="normal">1251</span>
 <span class="normal">1252</span>
 <span class="normal">1253</span>
-<span class="normal">1254</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">make_stage1_pickplace_env</span><span class="p">(</span>
+<span class="normal">1254</span>
+<span class="normal">1255</span>
+<span class="normal">1256</span>
+<span class="normal">1257</span>
+<span class="normal">1258</span>
+<span class="normal">1259</span>
+<span class="normal">1260</span>
+<span class="normal">1261</span>
+<span class="normal">1262</span>
+<span class="normal">1263</span>
+<span class="normal">1264</span>
+<span class="normal">1265</span>
+<span class="normal">1266</span>
+<span class="normal">1267</span>
+<span class="normal">1268</span>
+<span class="normal">1269</span>
+<span class="normal">1270</span>
+<span class="normal">1271</span>
+<span class="normal">1272</span>
+<span class="normal">1273</span>
+<span class="normal">1274</span>
+<span class="normal">1275</span>
+<span class="normal">1276</span>
+<span class="normal">1277</span>
+<span class="normal">1278</span>
+<span class="normal">1279</span>
+<span class="normal">1280</span>
+<span class="normal">1281</span>
+<span class="normal">1282</span>
+<span class="normal">1283</span>
+<span class="normal">1284</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">make_stage1_pickplace_env</span><span class="p">(</span>
     <span class="o">*</span><span class="p">,</span>
     <span class="n">condition_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
     <span class="n">episode_length</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">DEFAULT_EPISODE_LENGTH</span><span class="p">,</span>
@@ -32152,7 +32182,6 @@ initialisation fails (CPU-only host without a fallback
             <span class="c1"># via-env-reference workaround (decision Q3 mod 3; ADR-004</span>
             <span class="c1"># §Open questions / slice P1.05.5).</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_latest_qpos</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{}</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_step_count</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
             <span class="c1"># PickCubeEnv-style task parameters; consistent with the</span>
             <span class="c1"># upstream defaults so the success / reward shaping path</span>
             <span class="c1"># behaves predictably under the multi-agent rig.</span>
@@ -32348,6 +32377,37 @@ initialisation fails (CPU-only host without a fallback
             <span class="c1"># has not yet fired after a reset. Without this primer the</span>
             <span class="c1"># closure raises the &quot;qpos not yet cached&quot; guard.</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_refresh_latest_qpos</span><span class="p">()</span>
+
+        <span class="k">def</span><span class="w"> </span><span class="nf">step</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">action</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]:</span>  <span class="c1"># type: ignore[override]  # noqa: ANN401 - ManiSkill action/obs/info are unconstrained dict-of-tensors</span>
+<span class="w">            </span><span class="sd">&quot;&quot;&quot;Enforce the ``episode_length`` time-limit truncation (ADR-007 §Stage 1b).</span>
+
+<span class="sd">            ManiSkill v3&#39;s :meth:`BaseEnv.step` hard-codes ``truncated=False``</span>
+<span class="sd">            (``mani_skill/envs/sapien_env.py`` L1069): time-limit truncation is</span>
+<span class="sd">            normally supplied by the gym ``TimeLimit`` wrapper that ``gym.make``</span>
+<span class="sd">            adds, which a *directly*-instantiated ``BaseEnv`` subclass does not</span>
+<span class="sd">            have. Without this override the env never emits ``truncated=True``,</span>
+<span class="sd">            so the training loop (:func:`concerto.training.ego_aht.train`, which</span>
+<span class="sd">            resets only on ``terminated | truncated``) never re-initialises an</span>
+<span class="sd">            episode — the cube/goal are sampled once and the GAE sees a</span>
+<span class="sd">            non-terminating MDP whose critic converges to the infinite-horizon</span>
+<span class="sd">            value ``r/(1-gamma)`` with collapsed advantages (root cause</span>
+<span class="sd">            ENV-NO-TRUNCATION; firing ``2026-05-24-p1-05-9``). We truncate when</span>
+<span class="sd">            ``BaseEnv``&#39;s own ``elapsed_steps`` property (its step counter,</span>
+<span class="sd">            incremented in ``super().step`` and reset per episode at</span>
+<span class="sd">            ``sapien_env.py`` L927) reaches ``episode_length`` — read through</span>
+<span class="sd">            the public property rather than the underlying ``_elapsed_steps``</span>
+<span class="sd">            attribute (ADR-001 wrapper-only). This is the ``BaseEnv``-subclass</span>
+<span class="sd">            analogue of</span>
+<span class="sd">            the ``_step_count &gt;= _episode_length`` time-limit the sibling envs</span>
+<span class="sd">            (:mod:`chamber.envs.mpe_cooperative_push`,</span>
+<span class="sd">            :mod:`chamber.benchmarks.stage0_smoke_adapter`) apply. Reward-,</span>
+<span class="sd">            obs-, and render-neutral: only the ``truncated`` flag changes, so</span>
+<span class="sd">            the comparison protocol and determinism contract are untouched</span>
+<span class="sd">            beyond the (intended) per-episode reset cadence.</span>
+<span class="sd">            &quot;&quot;&quot;</span>
+            <span class="n">obs</span><span class="p">,</span> <span class="n">reward</span><span class="p">,</span> <span class="n">terminated</span><span class="p">,</span> <span class="n">truncated</span><span class="p">,</span> <span class="n">info</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">step</span><span class="p">(</span><span class="n">action</span><span class="p">)</span>
+            <span class="n">truncated</span> <span class="o">=</span> <span class="n">truncated</span> <span class="o">|</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">elapsed_steps</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_episode_length</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">obs</span><span class="p">,</span> <span class="n">reward</span><span class="p">,</span> <span class="n">terminated</span><span class="p">,</span> <span class="n">truncated</span><span class="p">,</span> <span class="n">info</span>
 
         <span class="c1"># ----- Observation / reward / success (panda-routed; ADR-007 §Stage 1b) -----</span>
 
@@ -36728,7 +36788,37 @@ initialisation fails (CPU-only host without a fallback
 <span class="normal">1251</span>
 <span class="normal">1252</span>
 <span class="normal">1253</span>
-<span class="normal">1254</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">make_stage1_pickplace_env</span><span class="p">(</span>
+<span class="normal">1254</span>
+<span class="normal">1255</span>
+<span class="normal">1256</span>
+<span class="normal">1257</span>
+<span class="normal">1258</span>
+<span class="normal">1259</span>
+<span class="normal">1260</span>
+<span class="normal">1261</span>
+<span class="normal">1262</span>
+<span class="normal">1263</span>
+<span class="normal">1264</span>
+<span class="normal">1265</span>
+<span class="normal">1266</span>
+<span class="normal">1267</span>
+<span class="normal">1268</span>
+<span class="normal">1269</span>
+<span class="normal">1270</span>
+<span class="normal">1271</span>
+<span class="normal">1272</span>
+<span class="normal">1273</span>
+<span class="normal">1274</span>
+<span class="normal">1275</span>
+<span class="normal">1276</span>
+<span class="normal">1277</span>
+<span class="normal">1278</span>
+<span class="normal">1279</span>
+<span class="normal">1280</span>
+<span class="normal">1281</span>
+<span class="normal">1282</span>
+<span class="normal">1283</span>
+<span class="normal">1284</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">make_stage1_pickplace_env</span><span class="p">(</span>
     <span class="o">*</span><span class="p">,</span>
     <span class="n">condition_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
     <span class="n">episode_length</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">DEFAULT_EPISODE_LENGTH</span><span class="p">,</span>
@@ -36882,7 +36972,6 @@ initialisation fails (CPU-only host without a fallback
             <span class="c1"># via-env-reference workaround (decision Q3 mod 3; ADR-004</span>
             <span class="c1"># §Open questions / slice P1.05.5).</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_latest_qpos</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{}</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_step_count</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
             <span class="c1"># PickCubeEnv-style task parameters; consistent with the</span>
             <span class="c1"># upstream defaults so the success / reward shaping path</span>
             <span class="c1"># behaves predictably under the multi-agent rig.</span>
@@ -37078,6 +37167,37 @@ initialisation fails (CPU-only host without a fallback
             <span class="c1"># has not yet fired after a reset. Without this primer the</span>
             <span class="c1"># closure raises the &quot;qpos not yet cached&quot; guard.</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_refresh_latest_qpos</span><span class="p">()</span>
+
+        <span class="k">def</span><span class="w"> </span><span class="nf">step</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">action</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]:</span>  <span class="c1"># type: ignore[override]  # noqa: ANN401 - ManiSkill action/obs/info are unconstrained dict-of-tensors</span>
+<span class="w">            </span><span class="sd">&quot;&quot;&quot;Enforce the ``episode_length`` time-limit truncation (ADR-007 §Stage 1b).</span>
+
+<span class="sd">            ManiSkill v3&#39;s :meth:`BaseEnv.step` hard-codes ``truncated=False``</span>
+<span class="sd">            (``mani_skill/envs/sapien_env.py`` L1069): time-limit truncation is</span>
+<span class="sd">            normally supplied by the gym ``TimeLimit`` wrapper that ``gym.make``</span>
+<span class="sd">            adds, which a *directly*-instantiated ``BaseEnv`` subclass does not</span>
+<span class="sd">            have. Without this override the env never emits ``truncated=True``,</span>
+<span class="sd">            so the training loop (:func:`concerto.training.ego_aht.train`, which</span>
+<span class="sd">            resets only on ``terminated | truncated``) never re-initialises an</span>
+<span class="sd">            episode — the cube/goal are sampled once and the GAE sees a</span>
+<span class="sd">            non-terminating MDP whose critic converges to the infinite-horizon</span>
+<span class="sd">            value ``r/(1-gamma)`` with collapsed advantages (root cause</span>
+<span class="sd">            ENV-NO-TRUNCATION; firing ``2026-05-24-p1-05-9``). We truncate when</span>
+<span class="sd">            ``BaseEnv``&#39;s own ``elapsed_steps`` property (its step counter,</span>
+<span class="sd">            incremented in ``super().step`` and reset per episode at</span>
+<span class="sd">            ``sapien_env.py`` L927) reaches ``episode_length`` — read through</span>
+<span class="sd">            the public property rather than the underlying ``_elapsed_steps``</span>
+<span class="sd">            attribute (ADR-001 wrapper-only). This is the ``BaseEnv``-subclass</span>
+<span class="sd">            analogue of</span>
+<span class="sd">            the ``_step_count &gt;= _episode_length`` time-limit the sibling envs</span>
+<span class="sd">            (:mod:`chamber.envs.mpe_cooperative_push`,</span>
+<span class="sd">            :mod:`chamber.benchmarks.stage0_smoke_adapter`) apply. Reward-,</span>
+<span class="sd">            obs-, and render-neutral: only the ``truncated`` flag changes, so</span>
+<span class="sd">            the comparison protocol and determinism contract are untouched</span>
+<span class="sd">            beyond the (intended) per-episode reset cadence.</span>
+<span class="sd">            &quot;&quot;&quot;</span>
+            <span class="n">obs</span><span class="p">,</span> <span class="n">reward</span><span class="p">,</span> <span class="n">terminated</span><span class="p">,</span> <span class="n">truncated</span><span class="p">,</span> <span class="n">info</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">step</span><span class="p">(</span><span class="n">action</span><span class="p">)</span>
+            <span class="n">truncated</span> <span class="o">=</span> <span class="n">truncated</span> <span class="o">|</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">elapsed_steps</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_episode_length</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">obs</span><span class="p">,</span> <span class="n">reward</span><span class="p">,</span> <span class="n">terminated</span><span class="p">,</span> <span class="n">truncated</span><span class="p">,</span> <span class="n">info</span>
 
         <span class="c1"># ----- Observation / reward / success (panda-routed; ADR-007 §Stage 1b) -----</span>
 
