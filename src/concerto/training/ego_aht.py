@@ -82,6 +82,7 @@ def _last_action_scalar(action: Any) -> float | None:  # noqa: ANN401 - trainer 
     except Exception:
         return None
 
+
 if TYPE_CHECKING:  # pragma: no cover
     from collections.abc import Callable, Mapping
 
@@ -640,9 +641,18 @@ def train(  # noqa: PLR0912, PLR0915 - P1.04.5 added safety-stack integration to
     # command — that the pre-P1.05.11 ``last_reward``-only logging dropped.
     # Reset at every rollout-update boundary; emitted via log_scalars so the
     # chamber-analyze CLI + W&B both receive them.
-    _win = {"reward": 0.0, "n": 0, "grasp": 0.0, "place": 0.0,
-            "static": 0.0, "success": 0.0, "has_stage": False,
-            "grip_sum": 0.0, "grip_min": float("inf"), "grip_n": 0}
+    _win = {
+        "reward": 0.0,
+        "n": 0,
+        "grasp": 0.0,
+        "place": 0.0,
+        "static": 0.0,
+        "success": 0.0,
+        "has_stage": False,
+        "grip_sum": 0.0,
+        "grip_min": float("inf"),
+        "grip_n": 0,
+    }
 
     for step in range(cfg.total_frames):
         ego_action_nominal = trainer.act(obs)
@@ -814,9 +824,18 @@ def train(  # noqa: PLR0912, PLR0915 - P1.04.5 added safety-stack integration to
                 _scalars["gripper_cmd_mean"] = _win["grip_sum"] / _win["grip_n"]
                 _scalars["gripper_cmd_min"] = _win["grip_min"]
             log_scalars(logger, step=step + 1, namespace="rollout", **_scalars)
-            _win = {"reward": 0.0, "n": 0, "grasp": 0.0, "place": 0.0,
-                    "static": 0.0, "success": 0.0, "has_stage": False,
-                    "grip_sum": 0.0, "grip_min": float("inf"), "grip_n": 0}
+            _win = {
+                "reward": 0.0,
+                "n": 0,
+                "grasp": 0.0,
+                "place": 0.0,
+                "static": 0.0,
+                "success": 0.0,
+                "has_stage": False,
+                "grip_sum": 0.0,
+                "grip_min": float("inf"),
+                "grip_n": 0,
+            }
 
         if (step + 1) % cfg.checkpoint_every == 0:
             ckpt_path = _save_run_checkpoint(
