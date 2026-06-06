@@ -40,8 +40,47 @@ from typing import TYPE_CHECKING, Any, NamedTuple, Protocol, cast, runtime_check
 import numpy as np
 
 from concerto.training.checkpoints import CheckpointMetadata, save_checkpoint
-from concerto.training.logging import bind_run_logger, compute_run_metadata
+from concerto.training.logging import (
+    bind_run_logger,
+    compute_run_metadata,
+    log_scalars,
+)
 from concerto.training.seeding import derive_substream
+
+
+def _stage_flag_rate(info: Any, key: str) -> float | None:  # noqa: ANN401 - env info is an unconstrained dict-of-tensors
+    """Mean of a per-stage flag (e.g. ``is_grasped``) in the env ``info`` dict.
+
+    Returns the batch-mean as a float, or ``None`` when the key is absent
+    (e.g. the MPE stand-in env, which has no manipulation stage flags). Used
+    to surface the task-progress signals the experiment-analysis agent reads
+    (grasp / place / success rates) that pre-P1.05.11 runs discarded
+    (ADR-017 §Schema; rl-diagnostics data_artifacts.md).
+    """
+    if not isinstance(info, dict) or key not in info:
+        return None
+    val = info[key]
+    try:
+        # Duck-typed torch-tensor path (avoids a top-level torch import in
+        # this otherwise torch-free module); falls back to numpy.
+        if hasattr(val, "detach"):
+            return float(val.detach().cpu().float().mean().item())
+        return float(np.asarray(val, dtype=float).mean())
+    except Exception:
+        return None
+
+
+def _last_action_scalar(action: Any) -> float | None:  # noqa: ANN401 - trainer action is np array or tensor
+    """Last component of the ego action (the gripper command on PickPlace).
+
+    The rollout-dump diagnosis turned on exactly this signal ("does the
+    policy ever command the gripper to close?"). Returns ``None`` if the
+    action cannot be coerced. (ADR-017 §Schema; rl-diagnostics.)
+    """
+    try:
+        return float(np.asarray(action, dtype=float).reshape(-1)[-1])
+    except Exception:
+        return None
 
 if TYPE_CHECKING:  # pragma: no cover
     from collections.abc import Callable, Mapping
@@ -595,6 +634,16 @@ def train(  # noqa: PLR0912, PLR0915 - P1.04.5 added safety-stack integration to
             lambda_clamp_bound=cfg.safety.clamp_floor_ratio * _bounds.cartesian_accel_capacity,
         )
 
+    # Rollout-window task-progress accumulators (ADR-017 §Schema). These
+    # surface the high-value signals the experiment-analysis agent reads —
+    # numeric reward, per-stage grasp/place/success rates, and the gripper
+    # command — that the pre-P1.05.11 ``last_reward``-only logging dropped.
+    # Reset at every rollout-update boundary; emitted via log_scalars so the
+    # chamber-analyze CLI + W&B both receive them.
+    _win = {"reward": 0.0, "n": 0, "grasp": 0.0, "place": 0.0,
+            "static": 0.0, "success": 0.0, "has_stage": False,
+            "grip_sum": 0.0, "grip_min": float("inf"), "grip_n": 0}
+
     for step in range(cfg.total_frames):
         ego_action_nominal = trainer.act(obs)
         partner_action = partner.act(obs)
@@ -713,9 +762,25 @@ def train(  # noqa: PLR0912, PLR0915 - P1.04.5 added safety-stack integration to
         # by tracking the last act() input. Phase-0 simplification per
         # plan/05 §3.5; revisit if a future on-policy trainer needs the
         # explicit (s, a, r, s', done) tuple.
-        obs, reward, terminated, truncated, _ = env.step(action)
+        obs, reward, terminated, truncated, step_info = env.step(action)
         curve.per_step_ego_rewards.append(reward)
         episode_reward_acc += reward
+        # Accumulate task-progress + gripper signals for the rollout-window
+        # scalar emission (experiment-analysis instrumentation; ADR-017).
+        _win["reward"] += float(reward)
+        _win["n"] += 1
+        _grasp = _stage_flag_rate(step_info, "is_grasped")
+        if _grasp is not None:
+            _win["has_stage"] = True
+            _win["grasp"] += _grasp
+            _win["place"] += _stage_flag_rate(step_info, "is_obj_placed") or 0.0
+            _win["static"] += _stage_flag_rate(step_info, "is_robot_static") or 0.0
+            _win["success"] += _stage_flag_rate(step_info, "success") or 0.0
+        _grip = _last_action_scalar(ego_action_nominal)
+        if _grip is not None:
+            _win["grip_sum"] += _grip
+            _win["grip_min"] = min(_win["grip_min"], _grip)
+            _win["grip_n"] += 1
         # Pardo 2017 / issue #62: thread terminated AND truncated
         # separately. ``done`` keeps the historical episode-boundary
         # meaning (terminated OR truncated) so the loop's reset logic is
@@ -734,6 +799,24 @@ def train(  # noqa: PLR0912, PLR0915 - P1.04.5 added safety-stack integration to
                 step=step + 1,
                 last_reward=reward,
             )
+            # Namespaced task-progress scalars for W&B + chamber-analyze
+            # (numeric reward + per-stage rates + gripper command). These are
+            # the signals the experiment-analysis agent reads; pre-P1.05.11
+            # runs had only the string ``last_reward`` (ADR-017 §Schema).
+            _n = max(1, _win["n"])
+            _scalars: dict[str, float] = {"mean_reward": _win["reward"] / _n}
+            if _win["has_stage"]:
+                _scalars["grasp_rate"] = _win["grasp"] / _n
+                _scalars["place_rate"] = _win["place"] / _n
+                _scalars["static_rate"] = _win["static"] / _n
+                _scalars["success_rate"] = _win["success"] / _n
+            if _win["grip_n"]:
+                _scalars["gripper_cmd_mean"] = _win["grip_sum"] / _win["grip_n"]
+                _scalars["gripper_cmd_min"] = _win["grip_min"]
+            log_scalars(logger, step=step + 1, namespace="rollout", **_scalars)
+            _win = {"reward": 0.0, "n": 0, "grasp": 0.0, "place": 0.0,
+                    "static": 0.0, "success": 0.0, "has_stage": False,
+                    "grip_sum": 0.0, "grip_min": float("inf"), "grip_n": 0}
 
         if (step + 1) % cfg.checkpoint_every == 0:
             ckpt_path = _save_run_checkpoint(
