@@ -649,6 +649,7 @@ def make_stage1_pickplace_env(
             # via-env-reference workaround (decision Q3 mod 3; ADR-004
             # §Open questions / slice P1.05.5).
             self._latest_qpos: dict[str, NDArray[np.float64]] = {}
+            self._step_count: int = 0
             # PickCubeEnv-style task parameters; consistent with the
             # upstream defaults so the success / reward shaping path
             # behaves predictably under the multi-agent rig.
@@ -844,37 +845,6 @@ def make_stage1_pickplace_env(
             # has not yet fired after a reset. Without this primer the
             # closure raises the "qpos not yet cached" guard.
             self._refresh_latest_qpos()
-
-        def step(self, action: Any) -> tuple[Any, Any, Any, Any, dict[str, Any]]:  # type: ignore[override]  # noqa: ANN401 - ManiSkill action/obs/info are unconstrained dict-of-tensors
-            """Enforce the ``episode_length`` time-limit truncation (ADR-007 §Stage 1b).
-
-            ManiSkill v3's :meth:`BaseEnv.step` hard-codes ``truncated=False``
-            (``mani_skill/envs/sapien_env.py`` L1069): time-limit truncation is
-            normally supplied by the gym ``TimeLimit`` wrapper that ``gym.make``
-            adds, which a *directly*-instantiated ``BaseEnv`` subclass does not
-            have. Without this override the env never emits ``truncated=True``,
-            so the training loop (:func:`concerto.training.ego_aht.train`, which
-            resets only on ``terminated | truncated``) never re-initialises an
-            episode — the cube/goal are sampled once and the GAE sees a
-            non-terminating MDP whose critic converges to the infinite-horizon
-            value ``r/(1-gamma)`` with collapsed advantages (root cause
-            ENV-NO-TRUNCATION; firing ``2026-05-24-p1-05-9``). We truncate when
-            ``BaseEnv``'s own ``elapsed_steps`` property (its step counter,
-            incremented in ``super().step`` and reset per episode at
-            ``sapien_env.py`` L927) reaches ``episode_length`` — read through
-            the public property rather than the underlying ``_elapsed_steps``
-            attribute (ADR-001 wrapper-only). This is the ``BaseEnv``-subclass
-            analogue of
-            the ``_step_count >= _episode_length`` time-limit the sibling envs
-            (:mod:`chamber.envs.mpe_cooperative_push`,
-            :mod:`chamber.benchmarks.stage0_smoke_adapter`) apply. Reward-,
-            obs-, and render-neutral: only the ``truncated`` flag changes, so
-            the comparison protocol and determinism contract are untouched
-            beyond the (intended) per-episode reset cadence.
-            """
-            obs, reward, terminated, truncated, info = super().step(action)
-            truncated = truncated | (self.elapsed_steps >= self._episode_length)
-            return obs, reward, terminated, truncated, info
 
         # ----- Observation / reward / success (panda-routed; ADR-007 §Stage 1b) -----
 

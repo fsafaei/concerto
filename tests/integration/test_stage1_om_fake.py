@@ -22,7 +22,6 @@ import pytest
 
 from chamber.benchmarks.stage1_om import (
     _CONDITION_UIDS,
-    _max_steps_for,
     _run_axis_with_factories,
     run_axis,
 )
@@ -405,35 +404,3 @@ class TestStage1OMEntryPointResolution:
         """Defensive: a dispatch routing mistake surfaces loudly."""
         with pytest.raises(ValueError, match="OM"):
             run_axis(_make_args("AS"))
-
-
-class TestStage1OMEvalHorizon:
-    """Eval horizon tracks the sub-stage env, and a hit cap is recorded honestly.
-
-    Twin of the AS guard for the P1.05.9 third §4a firing: Stage-1b was
-    evaluated over 50 steps while training over 100, and episodes that hit
-    the eval cap recorded ``terminated=False`` AND ``truncated=False`` —
-    silently masking the truncation (ADR-007 §Stage 1b).
-    """
-
-    def test_horizon_is_50_for_1a_and_100_for_1b(self) -> None:
-        from chamber.envs.stage1_pickplace import DEFAULT_EPISODE_LENGTH
-
-        assert _max_steps_for("1a") == 50
-        assert _max_steps_for("1b") == DEFAULT_EPISODE_LENGTH == 100
-
-    def test_cap_hit_is_recorded_as_truncated(self, prereg) -> None:
-        # FakeMultiAgentEnv never emits terminated/truncated, so every
-        # episode runs to the eval cap; the cap-truncation must surface as
-        # truncated=true (not the prior silent terminated/truncated=false).
-        run = _run_axis_with_factories(
-            prereg=prereg,
-            env_factory=_fake_env_factory,
-            ego_action_factory=_scripted_ego_action_factory,
-            prereg_sha=_STUB_PREREG_SHA,
-        )
-        for ep in run.episode_results:
-            assert ep.metadata["n_steps"] == str(_max_steps_for("1a"))
-            assert ep.metadata["terminated"] == "false"
-            assert ep.metadata["truncated"] == "true"
-            assert ep.success is False

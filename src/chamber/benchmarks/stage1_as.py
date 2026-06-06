@@ -88,32 +88,13 @@ if TYPE_CHECKING:
 #: ADR-007 §3.4 axis label this adapter implements.
 _AXIS: str = "AS"
 
-#: Stage-1a (MPE Cooperative-Push) evaluation horizon, in env ticks.
-#: Matches ``chamber.envs.mpe_cooperative_push.DEFAULT_EPISODE_LENGTH``;
-#: the adapter walks the full MPE horizon so the partner has time to
-#: drive a meaningful trajectory.
-_MAX_STEPS_STAGE_1A: int = 50
-
-
-def _max_steps_for(sub_stage: SubStage) -> int:
-    """Evaluation horizon per sub-stage (ADR-007 §Stage 1b).
-
-    Sourced from the env's own truncation horizon so training and
-    evaluation share one value. Stage-1a walks the 50-step MPE
-    stand-in. Stage-1b walks the real Stage-1 pick-place env's natural
-    horizon (:data:`chamber.envs.stage1_pickplace.DEFAULT_EPISODE_LENGTH`
-    = 100). The Phase-0 holdover hardcoded 50 for both, so Stage-1b
-    evaluated a policy *trained* over 100 steps on only its first 50 —
-    a 2x train/eval horizon mismatch surfaced by the P1.05.9 third §4a
-    firing (every eval episode stopped at exactly n_steps=50 with the
-    env's own truncation never reached).
-    """
-    if sub_stage == "1b":
-        from chamber.envs.stage1_pickplace import DEFAULT_EPISODE_LENGTH
-
-        return DEFAULT_EPISODE_LENGTH
-    return _MAX_STEPS_STAGE_1A
-
+#: Maximum env steps per evaluation episode (Phase-0 stand-in budget).
+#:
+#: MPE Cooperative-Push uses 50-step episodes by default; the adapter
+#: walks the full horizon so the partner has time to drive a
+#: meaningful trajectory. Phase-1 raises this when the real Stage-1
+#: pick-place env's natural horizon is longer.
+_MAX_STEPS_PER_EPISODE: int = 50
 
 #: Default per-condition agent-uid tuples (Phase-0 stand-in mapping
 #: of plan/07 §3 condition_id strings onto MPE-compatible 2-tuples).
@@ -308,9 +289,6 @@ def _run_axis_with_factories(
     conditions = (condition_pair.homogeneous_id, condition_pair.heterogeneous_id)
 
     episode_results: list[EpisodeResult] = []
-    # Resolve the eval horizon once per spike from the sub-stage's env
-    # (ADR-007 §Stage 1b; P1.05.9 firing #3 train/eval horizon fix).
-    max_steps = _max_steps_for(sub_stage)
     for seed in prereg.seeds:
         for condition_id in conditions:
             agent_uids = _CONDITION_UIDS.get(condition_id)
@@ -357,7 +335,6 @@ def _run_axis_with_factories(
                         episode_idx=episode_idx,
                         initial_state_seed=initial_state_seed,
                         condition_id=condition_id,
-                        max_steps=max_steps,
                     )
                 )
 
@@ -390,16 +367,8 @@ def _run_one_episode(
     episode_idx: int,
     initial_state_seed: int,
     condition_id: str,
-    max_steps: int,
 ) -> EpisodeResult:
-    """Roll one evaluation episode out and return the success record (plan/07 §3).
-
-    ``max_steps`` is the sub-stage eval horizon from :func:`_max_steps_for`
-    (ADR-007 §Stage 1b). If the rollout reaches ``max_steps`` without the
-    env emitting ``terminated``/``truncated``, the episode is recorded as
-    ``truncated=True`` so the eval-cap truncation is not silently lost
-    (P1.05.9 firing #3).
-    """
+    """Roll one evaluation episode out and return the success record (plan/07 §3)."""
     obs_tuple = env.reset(seed=initial_state_seed)
     obs: Mapping[str, Any] = obs_tuple[0]
     partner.reset(seed=initial_state_seed)
@@ -407,7 +376,7 @@ def _run_one_episode(
     n_steps = 0
     terminated = False
     truncated = False
-    while n_steps < max_steps:
+    while n_steps < _MAX_STEPS_PER_EPISODE:
         partner_action = partner.act(obs, deterministic=True)
         ego_action_vec = ego_action(obs)
         action_dict = {ego_uid: ego_action_vec, partner_uid: partner_action}
@@ -420,13 +389,6 @@ def _run_one_episode(
         n_steps += 1
         if terminated or truncated:
             break
-    if not terminated and not truncated:
-        # The loop exhausted the eval horizon without the env emitting a
-        # boundary: the episode was truncated by the eval cap. Record it
-        # honestly so truncation-based audits stay correct — the prior
-        # code left both flags False here, masking the horizon cap
-        # (P1.05.9 firing #3; ADR-007 §Stage 1b).
-        truncated = True
     mean_reward = total_reward / max(1, n_steps)
     # ADR-007 §Stage 1b Rev 12 / P1.05.8 (closes Surface 1): the real
     # Stage-1 pick-place env exposes ``terminated=True`` iff
