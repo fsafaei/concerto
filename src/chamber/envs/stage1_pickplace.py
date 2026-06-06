@@ -710,6 +710,33 @@ def make_stage1_pickplace_env(
 
         # ----- ManiSkill v3 BaseEnv hooks -----
 
+        @property
+        def _default_human_render_camera_configs(self) -> Any:  # noqa: ANN401 - ManiSkill CameraConfig has no project type
+            """Third-person render camera for rollout visualisation (ADR-007 §Stage 1b).
+
+            The Stage-1b env subclasses :class:`BaseEnv` directly and
+            otherwise defines no human-render camera, so ``env.render()``
+            returns ``None`` and a saved checkpoint cannot be visualised.
+            This adds a single fixed third-person camera looking at the
+            table workspace so a checkpoint can be rolled out and rendered
+            to RGB frames (reach / grasp / lift inspection). Render-only:
+            it feeds neither any observation channel nor the gate contract,
+            so it does not affect determinism or the comparison protocol.
+            """
+            from mani_skill.sensors.camera import CameraConfig
+            from mani_skill.utils import sapien_utils
+
+            pose = sapien_utils.look_at(eye=[0.7, 0.7, 0.6], target=[0.0, 0.0, 0.1])
+            return CameraConfig(
+                "render_camera",
+                pose=pose,
+                width=640,
+                height=480,
+                fov=1.0,
+                near=0.01,
+                far=100.0,
+            )
+
         def _load_agent(  # type: ignore[override]
             self,
             options: dict[str, Any],
