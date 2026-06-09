@@ -30890,50 +30890,7 @@ table (delegated to :func:<code>resolve_condition</code>).</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/chamber/envs/stage1_pickplace.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">413</span>
-<span class="normal">414</span>
-<span class="normal">415</span>
-<span class="normal">416</span>
-<span class="normal">417</span>
-<span class="normal">418</span>
-<span class="normal">419</span>
-<span class="normal">420</span>
-<span class="normal">421</span>
-<span class="normal">422</span>
-<span class="normal">423</span>
-<span class="normal">424</span>
-<span class="normal">425</span>
-<span class="normal">426</span>
-<span class="normal">427</span>
-<span class="normal">428</span>
-<span class="normal">429</span>
-<span class="normal">430</span>
-<span class="normal">431</span>
-<span class="normal">432</span>
-<span class="normal">433</span>
-<span class="normal">434</span>
-<span class="normal">435</span>
-<span class="normal">436</span>
-<span class="normal">437</span>
-<span class="normal">438</span>
-<span class="normal">439</span>
-<span class="normal">440</span>
-<span class="normal">441</span>
-<span class="normal">442</span>
-<span class="normal">443</span>
-<span class="normal">444</span>
-<span class="normal">445</span>
-<span class="normal">446</span>
-<span class="normal">447</span>
-<span class="normal">448</span>
-<span class="normal">449</span>
-<span class="normal">450</span>
-<span class="normal">451</span>
-<span class="normal">452</span>
-<span class="normal">453</span>
-<span class="normal">454</span>
-<span class="normal">455</span>
-<span class="normal">456</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">456</span>
 <span class="normal">457</span>
 <span class="normal">458</span>
 <span class="normal">459</span>
@@ -30972,7 +30929,50 @@ table (delegated to :func:<code>resolve_condition</code>).</p>
 <span class="normal">492</span>
 <span class="normal">493</span>
 <span class="normal">494</span>
-<span class="normal">495</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">build_control_models_for_condition</span><span class="p">(</span>
+<span class="normal">495</span>
+<span class="normal">496</span>
+<span class="normal">497</span>
+<span class="normal">498</span>
+<span class="normal">499</span>
+<span class="normal">500</span>
+<span class="normal">501</span>
+<span class="normal">502</span>
+<span class="normal">503</span>
+<span class="normal">504</span>
+<span class="normal">505</span>
+<span class="normal">506</span>
+<span class="normal">507</span>
+<span class="normal">508</span>
+<span class="normal">509</span>
+<span class="normal">510</span>
+<span class="normal">511</span>
+<span class="normal">512</span>
+<span class="normal">513</span>
+<span class="normal">514</span>
+<span class="normal">515</span>
+<span class="normal">516</span>
+<span class="normal">517</span>
+<span class="normal">518</span>
+<span class="normal">519</span>
+<span class="normal">520</span>
+<span class="normal">521</span>
+<span class="normal">522</span>
+<span class="normal">523</span>
+<span class="normal">524</span>
+<span class="normal">525</span>
+<span class="normal">526</span>
+<span class="normal">527</span>
+<span class="normal">528</span>
+<span class="normal">529</span>
+<span class="normal">530</span>
+<span class="normal">531</span>
+<span class="normal">532</span>
+<span class="normal">533</span>
+<span class="normal">534</span>
+<span class="normal">535</span>
+<span class="normal">536</span>
+<span class="normal">537</span>
+<span class="normal">538</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">build_control_models_for_condition</span><span class="p">(</span>
     <span class="n">condition_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
     <span class="o">*</span><span class="p">,</span>
     <span class="n">jacobian_fn</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">AgentSnapshot</span><span class="p">],</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -31242,50 +31242,7 @@ initialisation fails (CPU-only host without a fallback
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/chamber/envs/stage1_pickplace.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 498</span>
-<span class="normal"> 499</span>
-<span class="normal"> 500</span>
-<span class="normal"> 501</span>
-<span class="normal"> 502</span>
-<span class="normal"> 503</span>
-<span class="normal"> 504</span>
-<span class="normal"> 505</span>
-<span class="normal"> 506</span>
-<span class="normal"> 507</span>
-<span class="normal"> 508</span>
-<span class="normal"> 509</span>
-<span class="normal"> 510</span>
-<span class="normal"> 511</span>
-<span class="normal"> 512</span>
-<span class="normal"> 513</span>
-<span class="normal"> 514</span>
-<span class="normal"> 515</span>
-<span class="normal"> 516</span>
-<span class="normal"> 517</span>
-<span class="normal"> 518</span>
-<span class="normal"> 519</span>
-<span class="normal"> 520</span>
-<span class="normal"> 521</span>
-<span class="normal"> 522</span>
-<span class="normal"> 523</span>
-<span class="normal"> 524</span>
-<span class="normal"> 525</span>
-<span class="normal"> 526</span>
-<span class="normal"> 527</span>
-<span class="normal"> 528</span>
-<span class="normal"> 529</span>
-<span class="normal"> 530</span>
-<span class="normal"> 531</span>
-<span class="normal"> 532</span>
-<span class="normal"> 533</span>
-<span class="normal"> 534</span>
-<span class="normal"> 535</span>
-<span class="normal"> 536</span>
-<span class="normal"> 537</span>
-<span class="normal"> 538</span>
-<span class="normal"> 539</span>
-<span class="normal"> 540</span>
-<span class="normal"> 541</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 541</span>
 <span class="normal"> 542</span>
 <span class="normal"> 543</span>
 <span class="normal"> 544</span>
@@ -32028,7 +31985,72 @@ initialisation fails (CPU-only host without a fallback
 <span class="normal">1281</span>
 <span class="normal">1282</span>
 <span class="normal">1283</span>
-<span class="normal">1284</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">make_stage1_pickplace_env</span><span class="p">(</span>
+<span class="normal">1284</span>
+<span class="normal">1285</span>
+<span class="normal">1286</span>
+<span class="normal">1287</span>
+<span class="normal">1288</span>
+<span class="normal">1289</span>
+<span class="normal">1290</span>
+<span class="normal">1291</span>
+<span class="normal">1292</span>
+<span class="normal">1293</span>
+<span class="normal">1294</span>
+<span class="normal">1295</span>
+<span class="normal">1296</span>
+<span class="normal">1297</span>
+<span class="normal">1298</span>
+<span class="normal">1299</span>
+<span class="normal">1300</span>
+<span class="normal">1301</span>
+<span class="normal">1302</span>
+<span class="normal">1303</span>
+<span class="normal">1304</span>
+<span class="normal">1305</span>
+<span class="normal">1306</span>
+<span class="normal">1307</span>
+<span class="normal">1308</span>
+<span class="normal">1309</span>
+<span class="normal">1310</span>
+<span class="normal">1311</span>
+<span class="normal">1312</span>
+<span class="normal">1313</span>
+<span class="normal">1314</span>
+<span class="normal">1315</span>
+<span class="normal">1316</span>
+<span class="normal">1317</span>
+<span class="normal">1318</span>
+<span class="normal">1319</span>
+<span class="normal">1320</span>
+<span class="normal">1321</span>
+<span class="normal">1322</span>
+<span class="normal">1323</span>
+<span class="normal">1324</span>
+<span class="normal">1325</span>
+<span class="normal">1326</span>
+<span class="normal">1327</span>
+<span class="normal">1328</span>
+<span class="normal">1329</span>
+<span class="normal">1330</span>
+<span class="normal">1331</span>
+<span class="normal">1332</span>
+<span class="normal">1333</span>
+<span class="normal">1334</span>
+<span class="normal">1335</span>
+<span class="normal">1336</span>
+<span class="normal">1337</span>
+<span class="normal">1338</span>
+<span class="normal">1339</span>
+<span class="normal">1340</span>
+<span class="normal">1341</span>
+<span class="normal">1342</span>
+<span class="normal">1343</span>
+<span class="normal">1344</span>
+<span class="normal">1345</span>
+<span class="normal">1346</span>
+<span class="normal">1347</span>
+<span class="normal">1348</span>
+<span class="normal">1349</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">make_stage1_pickplace_env</span><span class="p">(</span>
     <span class="o">*</span><span class="p">,</span>
     <span class="n">condition_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
     <span class="n">episode_length</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">DEFAULT_EPISODE_LENGTH</span><span class="p">,</span>
@@ -32305,6 +32327,12 @@ initialisation fails (CPU-only host without a fallback
         <span class="k">def</span><span class="w"> </span><span class="nf">_load_scene</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">options</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">            </span><span class="sd">&quot;&quot;&quot;Build the table + cube + goal site (PickCubeEnv recipe; ADR-007 §Stage 1b).&quot;&quot;&quot;</span>
             <span class="k">del</span> <span class="n">options</span>
+            <span class="c1"># NOTE: ``robot_init_qpos_noise`` is INERT for the AS robot_uids tuples —</span>
+            <span class="c1"># TableSceneBuilder.initialize() has no branch for them, so it never</span>
+            <span class="c1"># applies the noise (nor sets any robot qpos). The canonical reset pose</span>
+            <span class="c1"># is written deterministically in _initialize_episode (ADR-007 Rev 16);</span>
+            <span class="c1"># do NOT &quot;restore parity&quot; by re-adding init noise via torch.rand — route</span>
+            <span class="c1"># any future perturbation through self._rng (P6 / ADR-002).</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">table_scene</span> <span class="o">=</span> <span class="n">TableSceneBuilder</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">robot_init_qpos_noise</span><span class="o">=</span><span class="mf">0.02</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">table_scene</span><span class="o">.</span><span class="n">build</span><span class="p">()</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">cube</span> <span class="o">=</span> <span class="n">actors</span><span class="o">.</span><span class="n">build_cube</span><span class="p">(</span>
@@ -32337,6 +32365,22 @@ initialisation fails (CPU-only host without a fallback
             <span class="k">with</span> <span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">):</span>  <span class="c1"># type: ignore[attr-defined]</span>
                 <span class="n">b</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">env_idx</span><span class="p">)</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">table_scene</span><span class="o">.</span><span class="n">initialize</span><span class="p">(</span><span class="n">env_idx</span><span class="p">)</span>
+                <span class="c1"># Reset-state init (ADR-007 §Stage 1b Rev 16). The upstream</span>
+                <span class="c1"># TableSceneBuilder has no branch for the AS robot_uids tuples</span>
+                <span class="c1"># and no terminal else, so it never set these robots&#39; qpos —</span>
+                <span class="c1"># every episode otherwise started with the arm folded at zero and</span>
+                <span class="c1"># the gripper closed. Set each agent&#39;s canonical ready pose +</span>
+                <span class="c1"># open gripper here, mirroring the builder&#39;s covered branches.</span>
+                <span class="c1"># Deterministic (no init noise) so two reset(seed=K) calls stay</span>
+                <span class="c1"># byte-identical on CPU (P6 / ADR-002); a noise term, if added</span>
+                <span class="c1"># later, MUST draw from self._rng (not torch.rand, not the</span>
+                <span class="c1"># builder&#39;s _episode_rng). Base poses are owned by _load_agent.</span>
+                <span class="k">for</span> <span class="n">uid</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">robot_uids</span><span class="p">:</span>  <span class="c1"># type: ignore[union-attr]</span>
+                    <span class="n">ready</span> <span class="o">=</span> <span class="n">_READY_QPOS_BY_UID</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">uid</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">ready</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                        <span class="k">continue</span>
+                    <span class="n">qpos</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">from_numpy</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="n">ready</span><span class="p">,</span> <span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">))</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">agent</span><span class="o">.</span><span class="n">agents_dict</span><span class="p">[</span><span class="n">uid</span><span class="p">]</span><span class="o">.</span><span class="n">reset</span><span class="p">(</span><span class="n">qpos</span><span class="p">)</span>  <span class="c1"># type: ignore[attr-defined]</span>
                 <span class="c1"># Cube xy uniform in the spawn box; z at half-size so it</span>
                 <span class="c1"># rests on the table surface. Routed through the env&#39;s</span>
                 <span class="c1"># P6-harnessed RNG instead of torch.rand so two</span>
@@ -32896,37 +32940,37 @@ project anti-pattern for editing prereg YAMLs).</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/chamber/envs/stage1_pickplace.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">380</span>
-<span class="normal">381</span>
-<span class="normal">382</span>
-<span class="normal">383</span>
-<span class="normal">384</span>
-<span class="normal">385</span>
-<span class="normal">386</span>
-<span class="normal">387</span>
-<span class="normal">388</span>
-<span class="normal">389</span>
-<span class="normal">390</span>
-<span class="normal">391</span>
-<span class="normal">392</span>
-<span class="normal">393</span>
-<span class="normal">394</span>
-<span class="normal">395</span>
-<span class="normal">396</span>
-<span class="normal">397</span>
-<span class="normal">398</span>
-<span class="normal">399</span>
-<span class="normal">400</span>
-<span class="normal">401</span>
-<span class="normal">402</span>
-<span class="normal">403</span>
-<span class="normal">404</span>
-<span class="normal">405</span>
-<span class="normal">406</span>
-<span class="normal">407</span>
-<span class="normal">408</span>
-<span class="normal">409</span>
-<span class="normal">410</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">resolve_condition</span><span class="p">(</span><span class="n">condition_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ConditionConfig</span><span class="p">:</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">423</span>
+<span class="normal">424</span>
+<span class="normal">425</span>
+<span class="normal">426</span>
+<span class="normal">427</span>
+<span class="normal">428</span>
+<span class="normal">429</span>
+<span class="normal">430</span>
+<span class="normal">431</span>
+<span class="normal">432</span>
+<span class="normal">433</span>
+<span class="normal">434</span>
+<span class="normal">435</span>
+<span class="normal">436</span>
+<span class="normal">437</span>
+<span class="normal">438</span>
+<span class="normal">439</span>
+<span class="normal">440</span>
+<span class="normal">441</span>
+<span class="normal">442</span>
+<span class="normal">443</span>
+<span class="normal">444</span>
+<span class="normal">445</span>
+<span class="normal">446</span>
+<span class="normal">447</span>
+<span class="normal">448</span>
+<span class="normal">449</span>
+<span class="normal">450</span>
+<span class="normal">451</span>
+<span class="normal">452</span>
+<span class="normal">453</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">resolve_condition</span><span class="p">(</span><span class="n">condition_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ConditionConfig</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Resolve a pre-registered ``condition_id`` to its config (ADR-007 §Stage 1b).</span>
 
 <span class="sd">    Pure Tier-1 function — no SAPIEN dependency. Tier-1 tests pin the</span>
@@ -35680,50 +35724,7 @@ table (delegated to :func:<code>resolve_condition</code>).</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/chamber/envs/stage1_pickplace.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">413</span>
-<span class="normal">414</span>
-<span class="normal">415</span>
-<span class="normal">416</span>
-<span class="normal">417</span>
-<span class="normal">418</span>
-<span class="normal">419</span>
-<span class="normal">420</span>
-<span class="normal">421</span>
-<span class="normal">422</span>
-<span class="normal">423</span>
-<span class="normal">424</span>
-<span class="normal">425</span>
-<span class="normal">426</span>
-<span class="normal">427</span>
-<span class="normal">428</span>
-<span class="normal">429</span>
-<span class="normal">430</span>
-<span class="normal">431</span>
-<span class="normal">432</span>
-<span class="normal">433</span>
-<span class="normal">434</span>
-<span class="normal">435</span>
-<span class="normal">436</span>
-<span class="normal">437</span>
-<span class="normal">438</span>
-<span class="normal">439</span>
-<span class="normal">440</span>
-<span class="normal">441</span>
-<span class="normal">442</span>
-<span class="normal">443</span>
-<span class="normal">444</span>
-<span class="normal">445</span>
-<span class="normal">446</span>
-<span class="normal">447</span>
-<span class="normal">448</span>
-<span class="normal">449</span>
-<span class="normal">450</span>
-<span class="normal">451</span>
-<span class="normal">452</span>
-<span class="normal">453</span>
-<span class="normal">454</span>
-<span class="normal">455</span>
-<span class="normal">456</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">456</span>
 <span class="normal">457</span>
 <span class="normal">458</span>
 <span class="normal">459</span>
@@ -35762,7 +35763,50 @@ table (delegated to :func:<code>resolve_condition</code>).</p>
 <span class="normal">492</span>
 <span class="normal">493</span>
 <span class="normal">494</span>
-<span class="normal">495</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">build_control_models_for_condition</span><span class="p">(</span>
+<span class="normal">495</span>
+<span class="normal">496</span>
+<span class="normal">497</span>
+<span class="normal">498</span>
+<span class="normal">499</span>
+<span class="normal">500</span>
+<span class="normal">501</span>
+<span class="normal">502</span>
+<span class="normal">503</span>
+<span class="normal">504</span>
+<span class="normal">505</span>
+<span class="normal">506</span>
+<span class="normal">507</span>
+<span class="normal">508</span>
+<span class="normal">509</span>
+<span class="normal">510</span>
+<span class="normal">511</span>
+<span class="normal">512</span>
+<span class="normal">513</span>
+<span class="normal">514</span>
+<span class="normal">515</span>
+<span class="normal">516</span>
+<span class="normal">517</span>
+<span class="normal">518</span>
+<span class="normal">519</span>
+<span class="normal">520</span>
+<span class="normal">521</span>
+<span class="normal">522</span>
+<span class="normal">523</span>
+<span class="normal">524</span>
+<span class="normal">525</span>
+<span class="normal">526</span>
+<span class="normal">527</span>
+<span class="normal">528</span>
+<span class="normal">529</span>
+<span class="normal">530</span>
+<span class="normal">531</span>
+<span class="normal">532</span>
+<span class="normal">533</span>
+<span class="normal">534</span>
+<span class="normal">535</span>
+<span class="normal">536</span>
+<span class="normal">537</span>
+<span class="normal">538</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">build_control_models_for_condition</span><span class="p">(</span>
     <span class="n">condition_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
     <span class="o">*</span><span class="p">,</span>
     <span class="n">jacobian_fn</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">AgentSnapshot</span><span class="p">],</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -36032,50 +36076,7 @@ initialisation fails (CPU-only host without a fallback
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/chamber/envs/stage1_pickplace.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 498</span>
-<span class="normal"> 499</span>
-<span class="normal"> 500</span>
-<span class="normal"> 501</span>
-<span class="normal"> 502</span>
-<span class="normal"> 503</span>
-<span class="normal"> 504</span>
-<span class="normal"> 505</span>
-<span class="normal"> 506</span>
-<span class="normal"> 507</span>
-<span class="normal"> 508</span>
-<span class="normal"> 509</span>
-<span class="normal"> 510</span>
-<span class="normal"> 511</span>
-<span class="normal"> 512</span>
-<span class="normal"> 513</span>
-<span class="normal"> 514</span>
-<span class="normal"> 515</span>
-<span class="normal"> 516</span>
-<span class="normal"> 517</span>
-<span class="normal"> 518</span>
-<span class="normal"> 519</span>
-<span class="normal"> 520</span>
-<span class="normal"> 521</span>
-<span class="normal"> 522</span>
-<span class="normal"> 523</span>
-<span class="normal"> 524</span>
-<span class="normal"> 525</span>
-<span class="normal"> 526</span>
-<span class="normal"> 527</span>
-<span class="normal"> 528</span>
-<span class="normal"> 529</span>
-<span class="normal"> 530</span>
-<span class="normal"> 531</span>
-<span class="normal"> 532</span>
-<span class="normal"> 533</span>
-<span class="normal"> 534</span>
-<span class="normal"> 535</span>
-<span class="normal"> 536</span>
-<span class="normal"> 537</span>
-<span class="normal"> 538</span>
-<span class="normal"> 539</span>
-<span class="normal"> 540</span>
-<span class="normal"> 541</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 541</span>
 <span class="normal"> 542</span>
 <span class="normal"> 543</span>
 <span class="normal"> 544</span>
@@ -36818,7 +36819,72 @@ initialisation fails (CPU-only host without a fallback
 <span class="normal">1281</span>
 <span class="normal">1282</span>
 <span class="normal">1283</span>
-<span class="normal">1284</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">make_stage1_pickplace_env</span><span class="p">(</span>
+<span class="normal">1284</span>
+<span class="normal">1285</span>
+<span class="normal">1286</span>
+<span class="normal">1287</span>
+<span class="normal">1288</span>
+<span class="normal">1289</span>
+<span class="normal">1290</span>
+<span class="normal">1291</span>
+<span class="normal">1292</span>
+<span class="normal">1293</span>
+<span class="normal">1294</span>
+<span class="normal">1295</span>
+<span class="normal">1296</span>
+<span class="normal">1297</span>
+<span class="normal">1298</span>
+<span class="normal">1299</span>
+<span class="normal">1300</span>
+<span class="normal">1301</span>
+<span class="normal">1302</span>
+<span class="normal">1303</span>
+<span class="normal">1304</span>
+<span class="normal">1305</span>
+<span class="normal">1306</span>
+<span class="normal">1307</span>
+<span class="normal">1308</span>
+<span class="normal">1309</span>
+<span class="normal">1310</span>
+<span class="normal">1311</span>
+<span class="normal">1312</span>
+<span class="normal">1313</span>
+<span class="normal">1314</span>
+<span class="normal">1315</span>
+<span class="normal">1316</span>
+<span class="normal">1317</span>
+<span class="normal">1318</span>
+<span class="normal">1319</span>
+<span class="normal">1320</span>
+<span class="normal">1321</span>
+<span class="normal">1322</span>
+<span class="normal">1323</span>
+<span class="normal">1324</span>
+<span class="normal">1325</span>
+<span class="normal">1326</span>
+<span class="normal">1327</span>
+<span class="normal">1328</span>
+<span class="normal">1329</span>
+<span class="normal">1330</span>
+<span class="normal">1331</span>
+<span class="normal">1332</span>
+<span class="normal">1333</span>
+<span class="normal">1334</span>
+<span class="normal">1335</span>
+<span class="normal">1336</span>
+<span class="normal">1337</span>
+<span class="normal">1338</span>
+<span class="normal">1339</span>
+<span class="normal">1340</span>
+<span class="normal">1341</span>
+<span class="normal">1342</span>
+<span class="normal">1343</span>
+<span class="normal">1344</span>
+<span class="normal">1345</span>
+<span class="normal">1346</span>
+<span class="normal">1347</span>
+<span class="normal">1348</span>
+<span class="normal">1349</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">make_stage1_pickplace_env</span><span class="p">(</span>
     <span class="o">*</span><span class="p">,</span>
     <span class="n">condition_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
     <span class="n">episode_length</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">DEFAULT_EPISODE_LENGTH</span><span class="p">,</span>
@@ -37095,6 +37161,12 @@ initialisation fails (CPU-only host without a fallback
         <span class="k">def</span><span class="w"> </span><span class="nf">_load_scene</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">options</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">            </span><span class="sd">&quot;&quot;&quot;Build the table + cube + goal site (PickCubeEnv recipe; ADR-007 §Stage 1b).&quot;&quot;&quot;</span>
             <span class="k">del</span> <span class="n">options</span>
+            <span class="c1"># NOTE: ``robot_init_qpos_noise`` is INERT for the AS robot_uids tuples —</span>
+            <span class="c1"># TableSceneBuilder.initialize() has no branch for them, so it never</span>
+            <span class="c1"># applies the noise (nor sets any robot qpos). The canonical reset pose</span>
+            <span class="c1"># is written deterministically in _initialize_episode (ADR-007 Rev 16);</span>
+            <span class="c1"># do NOT &quot;restore parity&quot; by re-adding init noise via torch.rand — route</span>
+            <span class="c1"># any future perturbation through self._rng (P6 / ADR-002).</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">table_scene</span> <span class="o">=</span> <span class="n">TableSceneBuilder</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">robot_init_qpos_noise</span><span class="o">=</span><span class="mf">0.02</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">table_scene</span><span class="o">.</span><span class="n">build</span><span class="p">()</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">cube</span> <span class="o">=</span> <span class="n">actors</span><span class="o">.</span><span class="n">build_cube</span><span class="p">(</span>
@@ -37127,6 +37199,22 @@ initialisation fails (CPU-only host without a fallback
             <span class="k">with</span> <span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">):</span>  <span class="c1"># type: ignore[attr-defined]</span>
                 <span class="n">b</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">env_idx</span><span class="p">)</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">table_scene</span><span class="o">.</span><span class="n">initialize</span><span class="p">(</span><span class="n">env_idx</span><span class="p">)</span>
+                <span class="c1"># Reset-state init (ADR-007 §Stage 1b Rev 16). The upstream</span>
+                <span class="c1"># TableSceneBuilder has no branch for the AS robot_uids tuples</span>
+                <span class="c1"># and no terminal else, so it never set these robots&#39; qpos —</span>
+                <span class="c1"># every episode otherwise started with the arm folded at zero and</span>
+                <span class="c1"># the gripper closed. Set each agent&#39;s canonical ready pose +</span>
+                <span class="c1"># open gripper here, mirroring the builder&#39;s covered branches.</span>
+                <span class="c1"># Deterministic (no init noise) so two reset(seed=K) calls stay</span>
+                <span class="c1"># byte-identical on CPU (P6 / ADR-002); a noise term, if added</span>
+                <span class="c1"># later, MUST draw from self._rng (not torch.rand, not the</span>
+                <span class="c1"># builder&#39;s _episode_rng). Base poses are owned by _load_agent.</span>
+                <span class="k">for</span> <span class="n">uid</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">robot_uids</span><span class="p">:</span>  <span class="c1"># type: ignore[union-attr]</span>
+                    <span class="n">ready</span> <span class="o">=</span> <span class="n">_READY_QPOS_BY_UID</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">uid</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">ready</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                        <span class="k">continue</span>
+                    <span class="n">qpos</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">from_numpy</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="n">ready</span><span class="p">,</span> <span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">))</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">agent</span><span class="o">.</span><span class="n">agents_dict</span><span class="p">[</span><span class="n">uid</span><span class="p">]</span><span class="o">.</span><span class="n">reset</span><span class="p">(</span><span class="n">qpos</span><span class="p">)</span>  <span class="c1"># type: ignore[attr-defined]</span>
                 <span class="c1"># Cube xy uniform in the spawn box; z at half-size so it</span>
                 <span class="c1"># rests on the table surface. Routed through the env&#39;s</span>
                 <span class="c1"># P6-harnessed RNG instead of torch.rand so two</span>
@@ -37686,37 +37774,37 @@ project anti-pattern for editing prereg YAMLs).</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/chamber/envs/stage1_pickplace.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">380</span>
-<span class="normal">381</span>
-<span class="normal">382</span>
-<span class="normal">383</span>
-<span class="normal">384</span>
-<span class="normal">385</span>
-<span class="normal">386</span>
-<span class="normal">387</span>
-<span class="normal">388</span>
-<span class="normal">389</span>
-<span class="normal">390</span>
-<span class="normal">391</span>
-<span class="normal">392</span>
-<span class="normal">393</span>
-<span class="normal">394</span>
-<span class="normal">395</span>
-<span class="normal">396</span>
-<span class="normal">397</span>
-<span class="normal">398</span>
-<span class="normal">399</span>
-<span class="normal">400</span>
-<span class="normal">401</span>
-<span class="normal">402</span>
-<span class="normal">403</span>
-<span class="normal">404</span>
-<span class="normal">405</span>
-<span class="normal">406</span>
-<span class="normal">407</span>
-<span class="normal">408</span>
-<span class="normal">409</span>
-<span class="normal">410</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">resolve_condition</span><span class="p">(</span><span class="n">condition_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ConditionConfig</span><span class="p">:</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">423</span>
+<span class="normal">424</span>
+<span class="normal">425</span>
+<span class="normal">426</span>
+<span class="normal">427</span>
+<span class="normal">428</span>
+<span class="normal">429</span>
+<span class="normal">430</span>
+<span class="normal">431</span>
+<span class="normal">432</span>
+<span class="normal">433</span>
+<span class="normal">434</span>
+<span class="normal">435</span>
+<span class="normal">436</span>
+<span class="normal">437</span>
+<span class="normal">438</span>
+<span class="normal">439</span>
+<span class="normal">440</span>
+<span class="normal">441</span>
+<span class="normal">442</span>
+<span class="normal">443</span>
+<span class="normal">444</span>
+<span class="normal">445</span>
+<span class="normal">446</span>
+<span class="normal">447</span>
+<span class="normal">448</span>
+<span class="normal">449</span>
+<span class="normal">450</span>
+<span class="normal">451</span>
+<span class="normal">452</span>
+<span class="normal">453</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">resolve_condition</span><span class="p">(</span><span class="n">condition_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ConditionConfig</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Resolve a pre-registered ``condition_id`` to its config (ADR-007 §Stage 1b).</span>
 
 <span class="sd">    Pure Tier-1 function — no SAPIEN dependency. Tier-1 tests pin the</span>
