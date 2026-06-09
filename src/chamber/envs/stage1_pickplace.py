@@ -372,6 +372,49 @@ _AGENT_BASE_POSE_XYZ: dict[str, tuple[float, float, float]] = {
     "fetch": (+0.615, 0.0, 0.0),
 }
 
+#: Canonical per-robot ready-pose joint vectors set at every reset (ADR-007
+#: §Stage 1b Rev 16). ManiSkill v3's ``TableSceneBuilder.initialize()``
+#: (``scene_builder.py`` L67-285) is an ``if/elif`` chain over ``robot_uids``
+#: with **no branch for the AS tuples** (``("panda_wristcam","fetch")`` /
+#: ``("panda_wristcam","panda_partner")``) and **no terminal ``else``** — so it
+#: never sets their qpos, and every episode would otherwise start with the arm
+#: folded at zero and the gripper closed (``2026-06-06-missing-gripper/
+#: probe_embodiment.log`` L109: ``reset width=(0.0, [0.0, 0.0])``).
+#: :meth:`Stage1PickPlaceEnv._initialize_episode` sets these explicitly,
+#: mirroring the builder's covered ``panda_wristcam`` (L106) and ``fetch``
+#: (L143-160) branches. Panda: 7 arm joints + 2 prismatic fingers open at 0.04
+#: (gripper aperture 0.08). Only joints are set here — base poses are owned by
+#: :func:`_load_agent` via :data:`_AGENT_BASE_POSE_XYZ`.
+_PANDA_READY_QPOS: NDArray[np.float64] = np.array(
+    [0.0, np.pi / 8, 0.0, -np.pi * 5 / 8, 0.0, np.pi * 3 / 4, -np.pi / 4, 0.04, 0.04]
+)
+_FETCH_READY_QPOS: NDArray[np.float64] = np.array(
+    [
+        0.0,
+        0.0,
+        0.0,
+        0.386,
+        0.0,
+        0.0,
+        0.0,
+        -np.pi / 4,
+        0.0,
+        np.pi / 4,
+        0.0,
+        np.pi / 3,
+        0.0,
+        0.015,
+        0.015,
+    ]
+)
+
+#: Per-uid ready pose lookup (panda_partner shares the panda chain).
+_READY_QPOS_BY_UID: dict[str, NDArray[np.float64]] = {
+    "panda_wristcam": _PANDA_READY_QPOS,
+    "panda_partner": _PANDA_READY_QPOS,
+    "fetch": _FETCH_READY_QPOS,
+}
+
 #: Substream name routed through :func:`concerto.training.seeding.derive_substream`
 #: for the env's deterministic RNG (P6 reproducibility; P6 / ADR-002 determinism rule).
 _SUBSTREAM_NAME: str = "env.stage1_pickplace"
@@ -772,6 +815,12 @@ def make_stage1_pickplace_env(
         def _load_scene(self, options: dict[str, Any]) -> None:
             """Build the table + cube + goal site (PickCubeEnv recipe; ADR-007 §Stage 1b)."""
             del options
+            # NOTE: ``robot_init_qpos_noise`` is INERT for the AS robot_uids tuples —
+            # TableSceneBuilder.initialize() has no branch for them, so it never
+            # applies the noise (nor sets any robot qpos). The canonical reset pose
+            # is written deterministically in _initialize_episode (ADR-007 Rev 16);
+            # do NOT "restore parity" by re-adding init noise via torch.rand — route
+            # any future perturbation through self._rng (P6 / ADR-002).
             self.table_scene = TableSceneBuilder(self, robot_init_qpos_noise=0.02)
             self.table_scene.build()
             self.cube = actors.build_cube(
@@ -804,6 +853,22 @@ def make_stage1_pickplace_env(
             with torch.device(self.device):  # type: ignore[attr-defined]
                 b = len(env_idx)
                 self.table_scene.initialize(env_idx)
+                # Reset-state init (ADR-007 §Stage 1b Rev 16). The upstream
+                # TableSceneBuilder has no branch for the AS robot_uids tuples
+                # and no terminal else, so it never set these robots' qpos —
+                # every episode otherwise started with the arm folded at zero and
+                # the gripper closed. Set each agent's canonical ready pose +
+                # open gripper here, mirroring the builder's covered branches.
+                # Deterministic (no init noise) so two reset(seed=K) calls stay
+                # byte-identical on CPU (P6 / ADR-002); a noise term, if added
+                # later, MUST draw from self._rng (not torch.rand, not the
+                # builder's _episode_rng). Base poses are owned by _load_agent.
+                for uid in self.robot_uids:  # type: ignore[union-attr]
+                    ready = _READY_QPOS_BY_UID.get(uid)
+                    if ready is None:
+                        continue
+                    qpos = torch.from_numpy(np.tile(ready, (b, 1)).astype(np.float32))
+                    self.agent.agents_dict[uid].reset(qpos)  # type: ignore[attr-defined]
                 # Cube xy uniform in the spawn box; z at half-size so it
                 # rests on the table surface. Routed through the env's
                 # P6-harnessed RNG instead of torch.rand so two
