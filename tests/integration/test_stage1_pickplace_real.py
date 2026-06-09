@@ -119,6 +119,72 @@ class TestPerConditionConstruction:
             env.close()
 
 
+class TestResetStateInit:
+    """Robots start each episode at the canonical ready pose + open gripper (ADR-007 Rev 16).
+
+    Regression pin for the reset-state feasibility bug: ManiSkill v3's
+    ``TableSceneBuilder.initialize()`` has no branch for the AS ``robot_uids``
+    tuples and no terminal ``else``, so it never set their qpos — every episode
+    started with the ego arm folded at zero and the gripper **closed**
+    (``2026-06-06-missing-gripper/probe_embodiment.log`` L109:
+    ``reset width=(0.0, [0.0, 0.0])``). :meth:`Stage1PickPlaceEnv._initialize_episode`
+    now sets the ready pose explicitly for BOTH AS conditions.
+    """
+
+    _PANDA_READY = (0.0, np.pi / 8, 0.0, -np.pi * 5 / 8, 0.0, np.pi * 3 / 4, -np.pi / 4)
+
+    @staticmethod
+    def _qpos(env: object, uid: str) -> np.ndarray:
+        robot = env.agent.agents_dict[uid].robot  # type: ignore[attr-defined]
+        return torch.as_tensor(robot.get_qpos()).flatten().detach().cpu().numpy()
+
+    @pytest.mark.parametrize("condition_id", [_AS_HETERO, _AS_HOMO])
+    def test_ego_panda_ready_pose_and_open_gripper(self, condition_id: str) -> None:
+        env = make_stage1_pickplace_env(condition_id=condition_id, episode_length=10, root_seed=0)
+        try:
+            env.reset(seed=0)
+            q = self._qpos(env, "panda_wristcam")
+            # Gripper OPEN: the two finger DOF sum to ~0.08 (was 0.0 = closed pre-fix).
+            assert float(q[7] + q[8]) == pytest.approx(0.08, abs=1e-3), (
+                f"gripper not open: {q[7:9]}"
+            )
+            # Arm at the canonical ready pose (was all-zero pre-fix).
+            np.testing.assert_allclose(q[:7], self._PANDA_READY, atol=1e-3)
+            # AS-homo: the second panda (panda_partner) must also be set, not just the ego.
+            if condition_id == _AS_HOMO:
+                qp = self._qpos(env, "panda_partner")
+                assert float(qp[7] + qp[8]) == pytest.approx(0.08, abs=1e-3), (
+                    f"panda_partner gripper not open: {qp[7:9]}"
+                )
+                np.testing.assert_allclose(qp[:7], self._PANDA_READY, atol=1e-3)
+        finally:
+            env.close()
+
+    def test_fetch_partner_ready_pose(self) -> None:
+        env = make_stage1_pickplace_env(condition_id=_AS_HETERO, episode_length=10, root_seed=0)
+        try:
+            env.reset(seed=0)
+            q = self._qpos(env, "fetch")
+            # torso_lift joint = 0.386 in the canonical fetch pose (was 0 pre-fix).
+            assert float(q[3]) == pytest.approx(0.386, abs=1e-3), f"fetch not at ready pose: {q}"
+        finally:
+            env.close()
+
+    def test_reset_state_deterministic_under_seed(self) -> None:
+        """Same root_seed -> identical post-reset ego qpos (P6 / ADR-002)."""
+        a = make_stage1_pickplace_env(condition_id=_AS_HETERO, episode_length=10, root_seed=0)
+        b = make_stage1_pickplace_env(condition_id=_AS_HETERO, episode_length=10, root_seed=0)
+        try:
+            a.reset(seed=0)
+            b.reset(seed=0)
+            np.testing.assert_array_equal(
+                self._qpos(a, "panda_wristcam"), self._qpos(b, "panda_wristcam")
+            )
+        finally:
+            a.close()
+            b.close()
+
+
 class TestActionSpacePerUidShape:
     """Per-uid action_space shapes match URDF expectations (regression pin)."""
 
