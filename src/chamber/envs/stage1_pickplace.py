@@ -567,9 +567,20 @@ def make_stage1_pickplace_env(
         root_seed: Project root seed routed to the env's
             :func:`concerto.training.seeding.derive_substream` substream
             for P6 reproducibility (P6 / ADR-002 determinism rule).
-        num_envs: ManiSkill vectorisation count; default 1 (Stage-1b
-            paths are single-env per cell). Higher values are supported
-            but untested.
+        num_envs: ManiSkill vectorisation count; default 1 (the
+            historical single-env cell, byte-identical per ADR-002).
+            ``> 1`` (P1.05.10; ADR-007 §Stage 1b regime-alignment
+            revision) builds the GPU-parallel cell: ManiSkill selects
+            the ``physx_cuda`` sim backend, cube/goal randomisation
+            draws from per-env-index ``derive_substream`` streams (P6),
+            and the returned wrapper chain is topped with
+            :class:`chamber.envs.stage1_vector.Stage1AutoResetWrapper`
+            (per-env partial reset on done +
+            ``info["final_observation"]``). The training-time safety
+            stack is not batched in this slice — vectorised cells must
+            run with ``safety.enabled=false``
+            (:meth:`Stage1PickPlaceEnv.build_agent_snapshots` raises at
+            ``num_envs > 1``).
         render_mode: ManiSkill ``render_mode`` (``None``,
             ``"human"``, ``"rgb_array"``, etc.). ``None`` (default)
             disables rendering for the spike-runner path.
@@ -687,6 +698,26 @@ def make_stage1_pickplace_env(
             self._rng: np.random.Generator = derive_substream(
                 _SUBSTREAM_NAME, root_seed=self._root_seed
             ).default_rng()
+            # P1.05.10 (ADR-007 §Stage 1b regime-alignment; P6 / ADR-002):
+            # per-env-index cube/goal substreams for vectorised builds.
+            # Each parallel env's episode randomisation draws from its own
+            # independently-derived stream, advanced only when that env
+            # resets — so the draw sequence per env is reproducible
+            # regardless of how partial resets interleave across the
+            # batch. num_envs==1 keeps the single shared ``self._rng``
+            # (cube/goal + FT noise interleaved on one stream) so the
+            # historical 1-env path stays byte-identical on CPU.
+            self._num_envs_requested: int = int(num_envs)
+            self._env_rngs: list[np.random.Generator] = (
+                [
+                    derive_substream(
+                        f"{_SUBSTREAM_NAME}.env{i:04d}", root_seed=self._root_seed
+                    ).default_rng()
+                    for i in range(self._num_envs_requested)
+                ]
+                if self._num_envs_requested > 1
+                else []
+            )
             # Per-uid latest qpos cache for the Jacobian closure; populated
             # before each ``step``. See module docstring on the closure-
             # via-env-reference workaround (decision Q3 mod 3; ADR-004
@@ -867,17 +898,38 @@ def make_stage1_pickplace_env(
                     ready = _READY_QPOS_BY_UID.get(uid)
                     if ready is None:
                         continue
-                    qpos = torch.from_numpy(np.tile(ready, (b, 1)).astype(np.float32))
+                    qpos = torch.from_numpy(np.tile(ready, (b, 1)).astype(np.float32)).to(
+                        self.device
+                    )
                     self.agent.agents_dict[uid].reset(qpos)  # type: ignore[attr-defined]
                 # Cube xy uniform in the spawn box; z at half-size so it
                 # rests on the table surface. Routed through the env's
                 # P6-harnessed RNG instead of torch.rand so two
                 # reset(seed=K) calls reproduce byte-identical state
-                # (P6 / ADR-002 determinism rule).
-                xy_cube_np = self._rng.uniform(
-                    -self._cube_spawn_half_size, self._cube_spawn_half_size, size=(b, 2)
+                # (P6 / ADR-002 determinism rule). Vectorised builds
+                # (P1.05.10) draw each resetting env's cube/goal from its
+                # own per-env-index substream (see __init__) so partial-
+                # reset interleaving cannot perturb another env's stream.
+                env_indices: list[int] = (
+                    [int(i) for i in env_idx.detach().cpu().tolist()] if self._env_rngs else []
                 )
-                xy_cube = torch.from_numpy(np.asarray(xy_cube_np, dtype=np.float32))
+                if self._env_rngs:
+                    xy_cube_np = np.stack(
+                        [
+                            self._env_rngs[i].uniform(
+                                -self._cube_spawn_half_size, self._cube_spawn_half_size, size=2
+                            )
+                            for i in env_indices
+                        ]
+                    )
+                else:
+                    xy_cube_np = self._rng.uniform(
+                        -self._cube_spawn_half_size, self._cube_spawn_half_size, size=(b, 2)
+                    )
+                # .to(self.device): from_numpy tensors are CPU-resident;
+                # GPU-parallel builds (P1.05.10) run the scene on cuda and
+                # mixed-device arithmetic below would raise. No-op on CPU sim.
+                xy_cube = torch.from_numpy(np.asarray(xy_cube_np, dtype=np.float32)).to(self.device)
                 xyz = torch.zeros((b, 3))
                 xyz[:, 0] = xy_cube[:, 0] + self._cube_spawn_center[0]
                 xyz[:, 1] = xy_cube[:, 1] + self._cube_spawn_center[1]
@@ -890,12 +942,25 @@ def make_stage1_pickplace_env(
                 self.cube.set_pose(Pose.create_from_pq(xyz))
 
                 # Goal xy in the same envelope; z uniform in [0, max].
-                xy_goal_np = self._rng.uniform(
-                    -self._cube_spawn_half_size, self._cube_spawn_half_size, size=(b, 2)
-                )
-                z_goal_np = self._rng.uniform(0.0, self._max_goal_height, size=(b,))
-                xy_goal = torch.from_numpy(np.asarray(xy_goal_np, dtype=np.float32))
-                z_goal = torch.from_numpy(np.asarray(z_goal_np, dtype=np.float32))
+                if self._env_rngs:
+                    xy_goal_np = np.stack(
+                        [
+                            self._env_rngs[i].uniform(
+                                -self._cube_spawn_half_size, self._cube_spawn_half_size, size=2
+                            )
+                            for i in env_indices
+                        ]
+                    )
+                    z_goal_np = np.stack(
+                        [self._env_rngs[i].uniform(0.0, self._max_goal_height) for i in env_indices]
+                    )
+                else:
+                    xy_goal_np = self._rng.uniform(
+                        -self._cube_spawn_half_size, self._cube_spawn_half_size, size=(b, 2)
+                    )
+                    z_goal_np = self._rng.uniform(0.0, self._max_goal_height, size=(b,))
+                xy_goal = torch.from_numpy(np.asarray(xy_goal_np, dtype=np.float32)).to(self.device)
+                z_goal = torch.from_numpy(np.asarray(z_goal_np, dtype=np.float32)).to(self.device)
                 goal_xyz = torch.zeros((b, 3))
                 goal_xyz[:, 0] = xy_goal[:, 0] + self._cube_spawn_center[0]
                 goal_xyz[:, 1] = xy_goal[:, 1] + self._cube_spawn_center[1]
@@ -1126,6 +1191,17 @@ def make_stage1_pickplace_env(
             return self._condition_config
 
         @property
+        def num_envs_requested(self) -> int:
+            """ADR-007 §Stage 1b regime-alignment: the ``num_envs`` this env was built with.
+
+            Exposed so the vector auto-reset wrapper
+            (:class:`chamber.envs.stage1_vector.Stage1AutoResetWrapper`)
+            and the Tier-2 tests can read the requested parallelisation
+            count without reaching for ManiSkill's internal attribute.
+            """
+            return self._num_envs_requested
+
+        @property
         def ego_uid(self) -> str:
             """ADR-007 §Stage 1b: the ego uid for the active condition.
 
@@ -1265,6 +1341,26 @@ def make_stage1_pickplace_env(
                 :data:`FETCH_SAFETY_RADIUS_M` (validated at env
                 construction by :func:`_validate_safety_radii`).
             """
+            # P1.05.10 (ADR-007 §Stage 1b regime-alignment): the snapshot
+            # map is a per-pair scalar contract (AgentSnapshot is one 3-D
+            # Cartesian body per uid) consumed by the un-batched CBF-QP /
+            # conformal / braking stack. Vectorised builds have no batched
+            # safety stack in this slice — ``train()`` loud-fails when
+            # ``num_envs > 1`` and ``cfg.safety.enabled=True`` — so a
+            # multi-env call here is always a wiring bug. Raise rather
+            # than silently slicing env 0 (the pre-P1.05.10 defensive
+            # slice would have mis-reported env 0's geometry as the
+            # whole cell's).
+            if self._num_envs_requested > 1:
+                msg = (
+                    "Stage1PickPlaceEnv.build_agent_snapshots: not supported at "
+                    f"num_envs={self._num_envs_requested} — the safety-stack "
+                    "snapshot contract is single-env (ADR-004 §Decision; "
+                    "ADR-007 §Stage 1b regime-alignment revision). Run "
+                    "vectorised training with safety.enabled=false (operator "
+                    "override), or build a num_envs=1 cell for filtered runs."
+                )
+                raise RuntimeError(msg)
             snapshots: dict[str, AgentSnapshot] = {}
             for uid in self._condition_config.agent_uids:
                 agent = self.agent.agents_dict[uid]  # type: ignore[attr-defined]
@@ -1279,12 +1375,6 @@ def make_stage1_pickplace_env(
                     pos_raw.detach().cpu(),
                     dtype=np.float64,  # type: ignore[union-attr]
                 ).reshape(-1)
-                # ManiSkill emits (num_envs, 3) for each agent pose; the
-                # ravel above flattens (1, 3) -> (3,) for num_envs=1, but
-                # multi-env runs would emit (num_envs, 3) which ravels to
-                # (3*num_envs,). The Stage-1b cell construction pins
-                # num_envs=1 (factory contract); the slice is a defensive
-                # guard against future multi-env builds.
                 _cartesian_dim = 3  # ADR-004 §Decision: AgentSnapshot is 3-D Cartesian.
                 if position.shape[0] > _cartesian_dim:
                     position = position[:_cartesian_dim]
@@ -1346,7 +1436,19 @@ def make_stage1_pickplace_env(
         Stage1OMChannelFilter,
     )
 
-    return Stage1OMChannelFilter(Stage1ASStateSynthesizer(inner))
+    wrapped: gym.Env[Any, Any] = Stage1OMChannelFilter(Stage1ASStateSynthesizer(inner))
+    if num_envs > 1:
+        # P1.05.10 (ADR-007 §Stage 1b regime-alignment): vectorised
+        # builds get the chamber-side auto-reset wrapper outermost so
+        # the training loop sees standard vector semantics (per-env
+        # partial reset on done; pre-reset final obs surfaced via
+        # ``info["final_observation"]`` for the Pardo truncation
+        # bootstrap). Single-env builds keep the historical
+        # reset-from-the-loop contract byte-identically (ADR-002).
+        from chamber.envs.stage1_vector import Stage1AutoResetWrapper
+
+        wrapped = Stage1AutoResetWrapper(wrapped)
+    return wrapped
 
 
 __all__ = [

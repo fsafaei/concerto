@@ -448,12 +448,17 @@ class _PendingStep:
     single ``self._pending is not None`` check narrow all four for type
     checkers, eliminating the per-attribute defensive asserts that
     otherwise trip ruff's S101 rule.
+
+    Vectorised cells (P1.05.10; ADR-007 §Stage 1b regime-alignment
+    revision): ``obs`` / ``action`` / ``log_prob`` carry a leading
+    ``(num_envs, …)`` batch dim and ``value`` is the per-env value
+    array. The single-env layout (1-D obs, scalar value) is unchanged.
     """
 
     obs: NDArray[np.float32]
     action: NDArray[np.float32]
     log_prob: NDArray[np.float32]
-    value: float
+    value: float | NDArray[np.float32]
 
 
 def _flat_ego_obs(obs: Mapping[str, Any], ego_uid: str) -> NDArray[np.float32]:
@@ -462,9 +467,47 @@ def _flat_ego_obs(obs: Mapping[str, Any], ego_uid: str) -> NDArray[np.float32]:
     The CONCERTO env contract (plan/04 §3.4 + plan/01 §3) keys observations
     as ``obs["agent"][uid]["state"]`` so the M2 comm + M3 safety wrappers
     drop in unchanged. HARL's MLPBase, however, expects a flat
-    ``(batch, obs_dim)`` ndarray; this helper bridges the two.
+    ``(batch, obs_dim)`` ndarray; this helper bridges the two. Vectorised
+    cells (P1.05.10) emit ``state`` as ``(num_envs, obs_dim)`` — passed
+    through with the batch dim intact. Torch tensors (ManiSkill GPU obs)
+    are detached to numpy.
     """
-    return np.asarray(obs["agent"][ego_uid]["state"], dtype=np.float32)
+    state = obs["agent"][ego_uid]["state"]
+    if hasattr(state, "detach"):
+        state = state.detach().cpu().numpy()
+    return np.asarray(state, dtype=np.float32)
+
+
+def _to_float_vec(value: Any, n: int) -> NDArray[np.float32]:  # noqa: ANN401 - scalar / ndarray / torch tensor
+    """Coerce a per-step reward to a ``(n,)`` float32 vector (P1.05.10; ADR-007 §Stage 1b)."""
+    if hasattr(value, "detach"):
+        value = value.detach().cpu().numpy()
+    return np.asarray(value, dtype=np.float32).reshape(n)
+
+
+def _to_bool_vec(value: Any, n: int) -> NDArray[np.bool_]:  # noqa: ANN401 - scalar / ndarray / torch tensor
+    """Coerce a done/truncated flag to a ``(n,)`` bool vector (P1.05.10; ADR-007 §Stage 1b)."""
+    if hasattr(value, "detach"):
+        value = value.detach().cpu().numpy()
+    arr = np.asarray(value)
+    if arr.ndim == 0:
+        arr = np.full(n, bool(arr))
+    return arr.reshape(n).astype(bool)
+
+
+def _per_env_box(space: gym.spaces.Box) -> gym.spaces.Box:  # type: ignore[type-arg]
+    """Strip a leading batch dim off a ManiSkill batched Box (P1.05.10; ADR-007 §Stage 1b).
+
+    Vectorised ManiSkill envs expose batched ``(num_envs, dim)`` spaces;
+    HARL's HAPPO + the critic are sized per env. Returns the input
+    unchanged when it is already 1-D (the single-env path — no object
+    churn, byte-identical construction).
+    """
+    if space.shape is None or len(space.shape) <= 1:
+        return space
+    low = np.asarray(space.low)[0]
+    high = np.asarray(space.high)[0]
+    return gym.spaces.Box(low=low, high=high, shape=(int(space.shape[-1]),), dtype=np.float32)
 
 
 class EgoPPOTrainer:
@@ -615,24 +658,27 @@ class EgoPPOTrainer:
         self._critic = _EgoCritic(obs_dim=obs_dim, hidden_dim=cfg.happo.hidden_dim).to(self._device)
         self._critic_optim = torch.optim.Adam(self._critic.parameters(), lr=cfg.happo.lr)
 
-        # Rollout buffer (cleared after each update).
+        # Rollout buffer (cleared after each update). Single-env cells
+        # buffer scalars per step; vectorised cells (P1.05.10; ADR-007
+        # §Stage 1b regime-alignment) buffer per-env vectors per step —
+        # :meth:`update` branches on the buffered layout.
         self._buf_obs: list[NDArray[np.float32]] = []
         self._buf_actions: list[NDArray[np.float32]] = []
         self._buf_log_probs: list[NDArray[np.float32]] = []
-        self._buf_values: list[float] = []
-        self._buf_rewards: list[float] = []
+        self._buf_values: list[float | NDArray[np.float32]] = []
+        self._buf_rewards: list[float | NDArray[np.float32]] = []
         # ADR-002 §Decisions + Pardo 2017 / issue #62: terminated and
         # truncated are stored *separately* so :meth:`update` can build a
         # per-step bootstrap target. Treating truncation as termination
         # zeros V(s_next) at every time-limit boundary, biasing advantages
         # and slowing learning 2-3x on time-limit-only envs.
-        self._buf_terminated: list[bool] = []
-        self._buf_truncated: list[bool] = []
+        self._buf_terminated: list[bool | NDArray[np.bool_]] = []
+        self._buf_truncated: list[bool | NDArray[np.bool_]] = []
         # V(s_truncated_final) computed via the critic at observe time
         # when a truncation occurs. Indexed parallel to the buffer; unused
         # at non-truncation steps but populated with 0.0 so the array
         # shapes stay aligned.
-        self._buf_truncation_bootstraps: list[float] = []
+        self._buf_truncation_bootstraps: list[float | NDArray[np.float32]] = []
         # Pre-step cache (filled by :meth:`act`, consumed by :meth:`observe`).
         self._pending: _PendingStep | None = None
         # Last next-obs (cached by :meth:`observe`) for the critic
@@ -719,6 +765,12 @@ class EgoPPOTrainer:
                 f"env.action_space[{ego_uid!r}] to be a gym.spaces.Box; "
                 f"got {type(ego_act_space).__name__}."
             )
+        # P1.05.10 (ADR-007 §Stage 1b regime-alignment): vectorised
+        # ManiSkill envs expose batched (num_envs, dim) spaces; the
+        # actor/critic are sized per env. _per_env_box is the identity
+        # for the historical 1-D spaces.
+        ego_state_space = _per_env_box(ego_state_space)
+        ego_act_space = _per_env_box(ego_act_space)
         device = _resolve_device(cfg.runtime.device)
         if device.type == "cpu" and cfg.runtime.deterministic_torch:
             # CPU determinism is the project's P6 contract (plan/08 §4).
@@ -763,6 +815,29 @@ class EgoPPOTrainer:
             to be packed into the env's dict-action.
         """
         flat = _flat_ego_obs(obs, self._ego_uid)
+        if flat.ndim == 2:  # noqa: PLR2004 - rank-2 is the vectorised (num_envs, obs_dim) layout
+            # P1.05.10 (ADR-007 §Stage 1b regime-alignment): vectorised
+            # path — one HARL forward over the whole (num_envs, obs_dim)
+            # batch; the action / log-prob / value keep the batch dim
+            # so :meth:`observe` can buffer per-env rows.
+            n = flat.shape[0]
+            rnn_states_b = np.zeros(
+                (n, self._harl_args["recurrent_n"], self._harl_args["hidden_sizes"][-1]),
+                dtype=np.float32,
+            )
+            masks_b = np.ones((n, 1), dtype=np.float32)
+            with torch.no_grad():
+                action_t, log_prob_t, _ = self._happo.get_actions(
+                    flat, rnn_states_b, masks_b, None, deterministic
+                )
+                value_t = self._critic(torch.from_numpy(flat).to(self._device))
+            action_b = action_t.detach().cpu().numpy().astype(np.float32)
+            log_prob_b = log_prob_t.detach().cpu().numpy().astype(np.float32)
+            value_b = value_t.detach().cpu().numpy().reshape(-1).astype(np.float32)
+            self._pending = _PendingStep(
+                obs=flat, action=action_b, log_prob=log_prob_b, value=value_b
+            )
+            return action_b
         # HARL expects shape ``(batch, obs_dim)`` and a positional
         # ``(rnn_states, masks)`` even when the policy is feedforward.
         # rnn_states is ignored downstream (use_recurrent_policy=False);
@@ -789,10 +864,11 @@ class EgoPPOTrainer:
     def observe(
         self,
         obs: Mapping[str, Any],
-        reward: float,
-        done: bool,
+        reward: Any,  # noqa: ANN401 - scalar float (single-env) or (num_envs,) array/tensor (vectorised; P1.05.10)
+        done: Any,  # noqa: ANN401 - scalar bool or (num_envs,) array/tensor
         *,
-        truncated: bool = False,
+        truncated: Any = False,  # noqa: ANN401 - scalar bool or (num_envs,) array/tensor
+        final_obs: Mapping[str, Any] | None = None,
     ) -> None:
         """Buffer ``(pending, reward, terminated, truncated)`` (ADR-002 §Decisions; Pardo 2017).
 
@@ -829,12 +905,29 @@ class EgoPPOTrainer:
                 callers that don't yet distinguish truncation from
                 termination see the historical "treat as terminal"
                 semantics.
+            final_obs: Vectorised cells only (P1.05.10; ADR-007
+                §Stage 1b regime-alignment): the *pre-reset* batched
+                obs of this step, surfaced by
+                :class:`chamber.envs.stage1_vector.Stage1AutoResetWrapper`
+                via ``info["final_observation"]``. Required whenever
+                any env truncated this step — the auto-reset wrapper
+                has already replaced ``obs`` with the new episode's
+                reset obs, so the Pardo truncation bootstrap
+                ``V(s_truncated_final)`` must be computed against
+                ``final_obs`` instead. Ignored on the single-env path
+                (the loop's act-then-observe-then-reset ordering means
+                ``obs`` *is* the final obs there).
         """
         pending = self._pending
         if pending is None:
             # No prior :meth:`act` — defensive no-op so the trainer can
             # safely ignore a stray ``observe`` (eg. a pre-rollout
             # bookkeeping call).
+            return
+        if pending.action.ndim == 2:  # noqa: PLR2004 - rank-2 is the vectorised layout
+            self._observe_vectorised(
+                obs, reward, done, truncated=truncated, final_obs=final_obs, pending=pending
+            )
             return
         terminated = bool(done) and not bool(truncated)
         truncated_b = bool(truncated)
@@ -870,6 +963,71 @@ class EgoPPOTrainer:
         # P1.05.11 / ADR-017: bump the global step counter so the next
         # :meth:`update` emission carries the current frame index.
         self._global_step += 1
+
+    def _observe_vectorised(
+        self,
+        obs: Mapping[str, Any],
+        reward: Any,  # noqa: ANN401 - (num_envs,) array/tensor
+        done: Any,  # noqa: ANN401 - (num_envs,) array/tensor
+        *,
+        truncated: Any,  # noqa: ANN401 - (num_envs,) array/tensor
+        final_obs: Mapping[str, Any] | None,
+        pending: _PendingStep,
+    ) -> None:
+        """Buffer one batched step (P1.05.10; ADR-007 §Stage 1b regime-alignment; Pardo 2017).
+
+        The vectorised analogue of the single-env :meth:`observe` body:
+        per-env rows are buffered with the batch dim intact (stacked to
+        ``(T, num_envs, …)`` at :meth:`update` time), and the Pardo
+        truncation bootstrap is computed against ``final_obs`` (the
+        pre-reset obs from
+        :class:`chamber.envs.stage1_vector.Stage1AutoResetWrapper`)
+        for exactly the envs that truncated without terminating.
+        """
+        n = pending.action.shape[0]
+        reward_arr = _to_float_vec(reward, n)
+        done_arr = _to_bool_vec(done, n)
+        trunc_arr = _to_bool_vec(truncated, n)
+        terminated_arr = done_arr & ~trunc_arr
+        self._buf_obs.append(pending.obs)
+        self._buf_actions.append(pending.action)
+        self._buf_log_probs.append(pending.log_prob)
+        self._buf_values.append(np.asarray(pending.value, dtype=np.float32))  # type: ignore[arg-type]
+        self._buf_rewards.append(reward_arr)  # type: ignore[arg-type]
+        self._buf_terminated.append(terminated_arr)  # type: ignore[arg-type]
+        self._buf_truncated.append(trunc_arr)  # type: ignore[arg-type]
+        bootstraps = np.zeros(n, dtype=np.float32)
+        trunc_only = trunc_arr & ~terminated_arr
+        if bool(trunc_only.any()):
+            if final_obs is None:
+                msg = (
+                    "EgoPPOTrainer._observe_vectorised: a truncation boundary "
+                    "occurred but no final_obs was supplied. Vectorised cells "
+                    "must surface the pre-reset obs via "
+                    "info['final_observation'] (Stage1AutoResetWrapper) so the "
+                    "Pardo truncation bootstrap is computed against the actual "
+                    "terminal obs, not the new episode's reset obs "
+                    "(issue #62; ADR-007 §Stage 1b regime-alignment)."
+                )
+                raise ValueError(msg)
+            final_flat = _flat_ego_obs(final_obs, self._ego_uid)
+            idx = np.nonzero(trunc_only)[0]
+            with torch.no_grad():
+                v_trunc = (
+                    self._critic(torch.from_numpy(final_flat[idx]).to(self._device))
+                    .detach()
+                    .cpu()
+                    .numpy()
+                    .reshape(-1)
+                )
+            bootstraps[idx] = v_trunc.astype(np.float32)
+        self._buf_truncation_bootstraps.append(bootstraps)  # type: ignore[arg-type]
+        # Post-step obs (for done envs this is the auto-reset obs — only
+        # consumed as the rollout-tail bootstrap for *non-boundary* tail
+        # envs, where it is the genuine next obs).
+        self._last_next_obs = _flat_ego_obs(obs, self._ego_uid)
+        self._pending = None
+        self._global_step += n
 
     def _build_next_values(
         self,
@@ -918,6 +1076,47 @@ class EgoPPOTrainer:
                 )
         return next_values
 
+    def _build_next_values_vectorised(
+        self,
+        values: NDArray[np.float32],
+        terminated: NDArray[np.bool_],
+        truncated: NDArray[np.bool_],
+        truncation_bootstraps: NDArray[np.float32],
+    ) -> NDArray[np.float32]:
+        """Per-(step, env) GAE bootstrap targets (P1.05.10; Pardo 2017 §4; issue #62).
+
+        The ``(T, N)`` analogue of :meth:`_build_next_values`: mid-rollout
+        non-boundary entries use ``values[t + 1, e]``; terminations
+        bootstrap ``0``; truncations use the per-env
+        ``V(s_truncated_final)`` captured at observe time from
+        ``final_obs``. The rollout-tail row applies the same three-way
+        rule, with one batched critic call over the remembered
+        ``(N, obs_dim)`` next obs as the non-boundary tail bootstrap.
+        """
+        n_steps, n_envs = values.shape
+        next_values = np.zeros((n_steps, n_envs), dtype=np.float32)
+        if n_steps > 1:
+            next_values[:-1] = values[1:]
+            next_values[:-1][truncated[:-1]] = truncation_bootstraps[:-1][truncated[:-1]]
+            next_values[:-1][terminated[:-1]] = 0.0
+        last_t = n_steps - 1
+        if self._last_next_obs is None:
+            tail = np.zeros(n_envs, dtype=np.float32)
+        else:
+            with torch.no_grad():
+                tail = (
+                    self._critic(torch.from_numpy(self._last_next_obs).to(self._device))
+                    .detach()
+                    .cpu()
+                    .numpy()
+                    .reshape(-1)
+                    .astype(np.float32)
+                )
+        next_values[last_t] = tail
+        next_values[last_t][truncated[last_t]] = truncation_bootstraps[last_t][truncated[last_t]]
+        next_values[last_t][terminated[last_t]] = 0.0
+        return next_values
+
     def update(self) -> None:  # noqa: PLR0915 - P1.05.11 added metric accumulation; refactor blocked by HARL.update tuple shape
         """Compute GAE; run PPO + critic updates; clear the buffer (ADR-002 §Decisions; Pardo 2017).
 
@@ -949,27 +1148,72 @@ class EgoPPOTrainer:
         if not self._buf_rewards:
             return
 
-        rewards = np.asarray(self._buf_rewards, dtype=np.float32)
-        values = np.asarray(self._buf_values, dtype=np.float32)
-        terminated = np.asarray(self._buf_terminated, dtype=np.bool_)
-        truncated = np.asarray(self._buf_truncated, dtype=np.bool_)
-        truncation_bootstraps = np.asarray(self._buf_truncation_bootstraps, dtype=np.float32)
-        next_values = self._build_next_values(values, terminated, truncated, truncation_bootstraps)
-        episode_boundaries = terminated | truncated
-        raw_advantages = compute_gae(
-            rewards,
-            values,
-            next_values,
-            episode_boundaries,
-            gamma=self._gamma,
-            gae_lambda=self._gae_lambda,
-        )
-        returns = (raw_advantages + values).astype(np.float32)
-        norm_advantages = normalize_advantages(raw_advantages)
+        vectorised = np.ndim(self._buf_rewards[0]) == 1
+        if vectorised:
+            # P1.05.10 (ADR-007 §Stage 1b regime-alignment): batched
+            # rollout. Stack to (T, N, …), run GAE independently per env
+            # column through the SAME module-level compute_gae the
+            # property test pins (USES_MODULE_GAE stays honest), then
+            # flatten to (T*N, …) for the minibatch sweep.
+            rewards_tn = np.stack(self._buf_rewards).astype(np.float32)  # (T, N)
+            values_tn = np.stack(self._buf_values).astype(np.float32)
+            terminated_tn = np.stack(self._buf_terminated).astype(np.bool_)
+            truncated_tn = np.stack(self._buf_truncated).astype(np.bool_)
+            bootstraps_tn = np.stack(self._buf_truncation_bootstraps).astype(np.float32)
+            next_values_tn = self._build_next_values_vectorised(
+                values_tn, terminated_tn, truncated_tn, bootstraps_tn
+            )
+            boundaries_tn = terminated_tn | truncated_tn
+            n_envs = rewards_tn.shape[1]
+            raw_adv_tn = np.stack(
+                [
+                    compute_gae(
+                        rewards_tn[:, e],
+                        values_tn[:, e],
+                        next_values_tn[:, e],
+                        boundaries_tn[:, e],
+                        gamma=self._gamma,
+                        gae_lambda=self._gae_lambda,
+                    )
+                    for e in range(n_envs)
+                ],
+                axis=1,
+            )
+            returns_tn = (raw_adv_tn + values_tn).astype(np.float32)
+            rewards = rewards_tn.reshape(-1)
+            values = values_tn.reshape(-1)
+            raw_advantages = raw_adv_tn.reshape(-1)
+            returns = returns_tn.reshape(-1)
+            norm_advantages = normalize_advantages(raw_advantages)
+            obs_arr = np.stack(self._buf_obs).astype(np.float32).reshape(-1, self._obs_dim)
+            actions_arr = np.stack(self._buf_actions).astype(np.float32).reshape(-1, self._act_dim)
+            log_probs_arr = (
+                np.stack(self._buf_log_probs).astype(np.float32).reshape(obs_arr.shape[0], -1)
+            )
+        else:
+            rewards = np.asarray(self._buf_rewards, dtype=np.float32)
+            values = np.asarray(self._buf_values, dtype=np.float32)
+            terminated = np.asarray(self._buf_terminated, dtype=np.bool_)
+            truncated = np.asarray(self._buf_truncated, dtype=np.bool_)
+            truncation_bootstraps = np.asarray(self._buf_truncation_bootstraps, dtype=np.float32)
+            next_values = self._build_next_values(
+                values, terminated, truncated, truncation_bootstraps
+            )
+            episode_boundaries = terminated | truncated
+            raw_advantages = compute_gae(
+                rewards,
+                values,
+                next_values,
+                episode_boundaries,
+                gamma=self._gamma,
+                gae_lambda=self._gae_lambda,
+            )
+            returns = (raw_advantages + values).astype(np.float32)
+            norm_advantages = normalize_advantages(raw_advantages)
 
-        obs_arr = np.stack(self._buf_obs).astype(np.float32)
-        actions_arr = np.stack(self._buf_actions).astype(np.float32)
-        log_probs_arr = np.stack(self._buf_log_probs).astype(np.float32)
+            obs_arr = np.stack(self._buf_obs).astype(np.float32)
+            actions_arr = np.stack(self._buf_actions).astype(np.float32)
+            log_probs_arr = np.stack(self._buf_log_probs).astype(np.float32)
 
         n_steps = rewards.shape[0]
         n_minibatches = max(1, n_steps // self._batch_size)

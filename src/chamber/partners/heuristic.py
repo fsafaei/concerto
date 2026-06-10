@@ -140,6 +140,19 @@ class ScriptedHeuristicPartner(PartnerBase):
             remaining components are zero.
         """
         del deterministic
+        batched_xy = self._read_agent_xy_batched(obs)
+        if batched_xy is not None:
+            # P1.05.10 (ADR-007 §Stage 1b regime-alignment): vectorised
+            # cells emit per-uid state as (num_envs, dim); the heuristic
+            # returns (num_envs, action_dim) so the batched env step
+            # receives one planar-reach command per env. The policy per
+            # env is identical to the single-env path.
+            tx, ty = self._target_xy
+            n = batched_xy.shape[0]
+            action_b = np.zeros((n, self._action_dim), dtype=np.float32)
+            action_b[:, 0] = np.clip(tx - batched_xy[:, 0], -_ACTION_CLIP, _ACTION_CLIP)
+            action_b[:, 1] = np.clip(ty - batched_xy[:, 1], -_ACTION_CLIP, _ACTION_CLIP)
+            return action_b
         x, y = self._read_agent_xy(obs)
         tx, ty = self._target_xy
         dx = float(np.clip(tx - x, -_ACTION_CLIP, _ACTION_CLIP))
@@ -148,6 +161,35 @@ class ScriptedHeuristicPartner(PartnerBase):
         action[0] = dx
         action[1] = dy
         return action
+
+    def _read_agent_xy_batched(self, obs: Mapping[str, object]) -> NDArray[np.floating] | None:
+        """Return the partner's planar xy as ``(num_envs, 2)``, or ``None`` (ADR-007 §Stage 1b).
+
+        P1.05.10: detects the vectorised-cell obs layout — a 2-D
+        ``obs["agent"][uid]["state"]`` of shape ``(num_envs, dim)``
+        with ``num_envs > 1`` — and returns its first two columns.
+        Returns ``None`` for the single-env layout (1-D state or
+        ``shape[0] == 1`` is still routed through the historical
+        scalar path so pre-P1.05.10 behaviour is byte-identical).
+        Torch tensors are accepted (ManiSkill GPU obs) and moved to
+        numpy.
+        """
+        agent = obs.get("agent")
+        if not isinstance(agent, Mapping) or self._uid not in agent:
+            return None
+        entry = agent[self._uid]
+        if not isinstance(entry, Mapping):
+            return None
+        state = entry.get("state")
+        if state is None:
+            return None
+        if hasattr(state, "detach"):
+            state = state.detach().cpu().numpy()  # type: ignore[union-attr]
+        if not isinstance(state, np.ndarray):
+            return None
+        if state.ndim == 2 and state.shape[0] > 1 and state.shape[1] >= _XY_DIMS:  # noqa: PLR2004 - rank-2 is the (batch, dim) layout
+            return state[:, :_XY_DIMS].astype(np.float64)
+        return None
 
     def _read_agent_xy(self, obs: Mapping[str, object]) -> tuple[float, float]:
         """Extract the partner's planar xy from ``obs`` (ADR-003 §Decision).

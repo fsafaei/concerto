@@ -204,10 +204,11 @@ class EgoTrainer(Protocol):
     def observe(
         self,
         obs: Mapping[str, Any],
-        reward: float,
-        done: bool,
+        reward: Any,  # noqa: ANN401 - scalar float (single-env) or per-env vector (vectorised; P1.05.10)
+        done: Any,  # noqa: ANN401 - scalar bool or per-env vector
         *,
-        truncated: bool = False,
+        truncated: Any = False,  # noqa: ANN401 - scalar bool or per-env vector
+        final_obs: Mapping[str, Any] | None = None,
     ) -> None:
         """Record a (s, a, r, s', done, truncated) tuple (ADR-002 §Decisions; Pardo 2017).
 
@@ -218,6 +219,13 @@ class EgoTrainer(Protocol):
         GAE target correctly (see :func:`chamber.benchmarks.ego_ppo_trainer.compute_gae`
         and project issue #62 for the root-cause writeup). Default
         ``truncated=False`` keeps legacy callers' behavior unchanged.
+
+        Vectorised cells (P1.05.10; ADR-007 §Stage 1b regime-alignment
+        revision): ``reward`` / ``done`` / ``truncated`` arrive as
+        per-env vectors and ``final_obs`` carries the pre-reset batched
+        obs from the chamber-side auto-reset wrapper whenever any env
+        ended its episode this step (the Pardo bootstrap target).
+        Single-env callers never pass ``final_obs``.
         """
         ...  # pragma: no cover
 
@@ -373,13 +381,14 @@ class RandomEgoTrainer:
     def observe(
         self,
         obs: Mapping[str, Any],
-        reward: float,
-        done: bool,
+        reward: Any,  # noqa: ANN401 - scalar or per-env vector (P1.05.10); see EgoTrainer.observe
+        done: Any,  # noqa: ANN401 - scalar or per-env vector
         *,
-        truncated: bool = False,
+        truncated: Any = False,  # noqa: ANN401 - scalar or per-env vector
+        final_obs: Mapping[str, Any] | None = None,
     ) -> None:
         """No-op (ADR-002 §Decisions): reference trainer has no rollout buffer."""
-        del obs, reward, done, truncated
+        del obs, reward, done, truncated, final_obs
 
     def update(self) -> None:
         """No-op (ADR-002 §Decisions): reference trainer has no learnable params."""
@@ -564,6 +573,22 @@ def train(  # noqa: PLR0912, PLR0915 - P1.04.5 added safety-stack integration to
             "wiring is an operator-intent mismatch."
         )
         raise ValueError(msg)
+    # P1.05.10 (ADR-007 §Stage 1b regime-alignment revision): the
+    # vector/safety conflict is checked BEFORE the kwargs-completeness
+    # check — at num_envs > 1 the safety posture is invalid regardless
+    # of how the kwargs were wired, and the more specific error must
+    # win so the operator reaches for the documented override.
+    _num_envs: int = int(getattr(cfg.env, "num_envs", 1))
+    if _num_envs > 1 and cfg.safety.enabled:
+        msg = (
+            f"train(): cfg.env.num_envs={_num_envs} with cfg.safety.enabled=True "
+            "is not supported — the training-time safety stack is single-env "
+            "(ADR-004 §Decision snapshot contract; ADR-007 §Stage 1b "
+            "regime-alignment revision). Run vectorised cells with the "
+            "operator override safety.enabled=false, or num_envs=1 for "
+            "filtered runs."
+        )
+        raise ValueError(msg)
     if cfg.safety.enabled and not _safety_kwargs_passed:
         msg = (
             "train(): cfg.safety.enabled is True but the safety-stack kwargs "
@@ -653,6 +678,39 @@ def train(  # noqa: PLR0912, PLR0915 - P1.04.5 added safety-stack integration to
         "grip_min": float("inf"),
         "grip_n": 0,
     }
+
+    if _num_envs > 1:
+        # P1.05.10 (ADR-007 §Stage 1b regime-alignment revision): the
+        # vectorised rollout loop. The env is the chamber-side
+        # auto-reset wrapper chain (per-env partial reset on done;
+        # pre-reset obs in info["final_observation"]), so this loop
+        # never calls env.reset() mid-run — per-episode cube/goal
+        # randomisation comes from the env's per-env-index
+        # derive_substream streams (P6 / ADR-002). The per-update
+        # batch is num_envs x cfg.happo.rollout_length transitions;
+        # JSONL `step` fields stay frame-denominated so per-window
+        # events remain comparable with single-env runs.
+        _train_vectorised_loop(
+            cfg=cfg,
+            env=env,
+            partner=partner,
+            trainer=trainer,
+            curve=curve,
+            logger=logger,
+            ctx_run_id=ctx.run_id,
+            git_sha=ctx.git_sha,
+            pyproject_hash=ctx.pyproject_hash,
+            obs=obs,
+            ego_uid=ego_uid,
+            partner_uid=partner_uid,
+            num_envs=_num_envs,
+        )
+        logger.info(
+            "training_end",
+            n_episodes=len(curve.per_episode_ego_rewards),
+            n_checkpoints=len(curve.checkpoint_paths),
+        )
+        return TrainingResult(curve=curve, trainer=trainer)
 
     for step in range(cfg.total_frames):
         ego_action_nominal = trainer.act(obs)
@@ -898,6 +956,181 @@ def train(  # noqa: PLR0912, PLR0915 - P1.04.5 added safety-stack integration to
         n_checkpoints=len(curve.checkpoint_paths),
     )
     return TrainingResult(curve=curve, trainer=trainer)
+
+
+def _to_numpy_vec(value: Any, n: int, dtype: type) -> NDArray[Any]:  # noqa: ANN401 - scalar / ndarray / torch tensor
+    """Coerce a batched env-step output to a ``(n,)`` numpy vector (P1.05.10; ADR-007 §Stage 1b)."""
+    if hasattr(value, "detach"):
+        value = value.detach().cpu().numpy()
+    arr = np.asarray(value)
+    if arr.ndim == 0:
+        arr = np.full(n, arr[()])
+    return arr.reshape(n).astype(dtype)
+
+
+def _train_vectorised_loop(  # noqa: PLR0915 - the vectorised rollout mirrors train()'s scalar body; the parameter set is the shared run state threaded explicitly rather than via a mutable holder object
+    *,
+    cfg: EgoAHTConfig,
+    env: EnvLike,
+    partner: PartnerLike,
+    trainer: EgoTrainer,
+    curve: RewardCurve,
+    logger: structlog.BoundLogger,
+    ctx_run_id: str,
+    git_sha: str,
+    pyproject_hash: str,
+    obs: Mapping[str, Any],
+    ego_uid: str,
+    partner_uid: str,
+    num_envs: int,
+) -> None:
+    """Batched rollout loop for vectorised cells (P1.05.10; ADR-007 §Stage 1b regime-alignment).
+
+    The vector analogue of :func:`train`'s scalar loop:
+
+    - one ``trainer.act`` / ``partner.act`` / ``env.step`` per
+      iteration covers ``num_envs`` transitions (frames);
+    - episode boundaries are per-env — the auto-reset wrapper
+      (:class:`chamber.envs.stage1_vector.Stage1AutoResetWrapper` on
+      the Stage-1b cell) has already reset done envs by the time the
+      step returns, and the pre-reset obs travels to the trainer via
+      ``final_obs`` for the Pardo truncation bootstrap (issue #62);
+    - ``trainer.update()`` fires every ``cfg.happo.rollout_length``
+      iterations, i.e. on a per-update batch of
+      ``num_envs x rollout_length`` transitions;
+    - checkpoints fire on ``cfg.checkpoint_every`` *frame* boundaries
+      (bucketed, since frames advance ``num_envs`` at a time);
+    - the rollout-window JSONL scalars stay per-transition means and
+      ``step`` fields stay frame-denominated, so per-window events
+      remain directly comparable with single-env runs (ADR-017
+      §Schema).
+
+    ``curve.per_step_ego_rewards`` records the per-iteration batch-mean
+    reward (one entry per env tick, averaged over envs);
+    ``curve.per_episode_ego_rewards`` records every completed per-env
+    episode in completion order. The partner is reset once by
+    :func:`train` before this loop and never again — the Stage-1b
+    vectorised cell targets the stateless scripted-heuristic partner
+    (ADR-009 §Decision); stateful frozen partners would need a
+    batched reset contract that this slice does not ship.
+
+    Safety stack: structurally unreachable here — :func:`train`
+    loud-fails on ``num_envs > 1`` with ``cfg.safety.enabled=True``
+    (ADR-007 §Stage 1b regime-alignment revision; the operator
+    override ``safety.enabled=false`` is the vectorised-cell posture).
+    """
+    iterations = cfg.total_frames // num_envs
+    episode_acc = np.zeros(num_envs, dtype=np.float64)
+    frames_done = 0
+    ckpt_bucket = 0
+    _win = {
+        "reward": 0.0,
+        "n": 0,
+        "grasp": 0.0,
+        "place": 0.0,
+        "static": 0.0,
+        "success": 0.0,
+        "has_stage": False,
+        "grip_sum": 0.0,
+        "grip_min": float("inf"),
+        "grip_n": 0,
+    }
+    for it in range(iterations):
+        ego_actions = trainer.act(obs)
+        partner_actions = partner.act(obs)
+        action = {ego_uid: ego_actions, partner_uid: partner_actions}
+        obs, reward, terminated, truncated, step_info = env.step(action)  # type: ignore[arg-type]
+        reward_vec = _to_numpy_vec(reward, num_envs, np.float64)
+        terminated_vec = _to_numpy_vec(terminated, num_envs, np.bool_)
+        truncated_vec = _to_numpy_vec(truncated, num_envs, np.bool_)
+        done_vec = terminated_vec | truncated_vec
+        frames_done += num_envs
+
+        mean_reward = float(reward_vec.mean())
+        curve.per_step_ego_rewards.append(mean_reward)
+        _win["reward"] += mean_reward
+        _win["n"] += 1
+        _grasp = _stage_flag_rate(step_info, "is_grasped")
+        if _grasp is not None:
+            _win["has_stage"] = True
+            _win["grasp"] += _grasp
+            _win["place"] += _stage_flag_rate(step_info, "is_obj_placed") or 0.0
+            _win["static"] += _stage_flag_rate(step_info, "is_robot_static") or 0.0
+            _win["success"] += _stage_flag_rate(step_info, "success") or 0.0
+        try:
+            grip_col = np.asarray(ego_actions, dtype=float)[..., -1]
+            _win["grip_sum"] += float(grip_col.mean())
+            _win["grip_min"] = min(_win["grip_min"], float(grip_col.min()))
+            _win["grip_n"] += 1
+        except (TypeError, ValueError):
+            pass
+
+        final_obs = step_info.get("final_observation") if isinstance(step_info, dict) else None
+        trainer.observe(
+            obs,
+            reward_vec,
+            done_vec,
+            truncated=truncated_vec,
+            final_obs=cast("Mapping[str, Any] | None", final_obs),
+        )
+
+        episode_acc += reward_vec
+        if bool(done_vec.any()):
+            for e in np.nonzero(done_vec)[0]:
+                curve.per_episode_ego_rewards.append(float(episode_acc[e]))
+            episode_acc[done_vec] = 0.0
+
+        if (it + 1) % cfg.happo.rollout_length == 0:
+            trainer.update()
+            logger.info(
+                "rollout_update",
+                step=frames_done,
+                last_reward=mean_reward,
+            )
+            _n = max(1, _win["n"])
+            _scalars: dict[str, float] = {"mean_reward": _win["reward"] / _n}
+            if _win["has_stage"]:
+                _scalars["grasp_rate"] = _win["grasp"] / _n
+                _scalars["place_rate"] = _win["place"] / _n
+                _scalars["static_rate"] = _win["static"] / _n
+                _scalars["success_rate"] = _win["success"] / _n
+            if _win["grip_n"]:
+                _scalars["gripper_cmd_mean"] = _win["grip_sum"] / _win["grip_n"]
+                _scalars["gripper_cmd_min"] = _win["grip_min"]
+            log_scalars(logger, step=frames_done, namespace="rollout", **_scalars)
+            _win = {
+                "reward": 0.0,
+                "n": 0,
+                "grasp": 0.0,
+                "place": 0.0,
+                "static": 0.0,
+                "success": 0.0,
+                "has_stage": False,
+                "grip_sum": 0.0,
+                "grip_min": float("inf"),
+                "grip_n": 0,
+            }
+
+        new_bucket = frames_done // cfg.checkpoint_every
+        if new_bucket > ckpt_bucket:
+            ckpt_bucket = new_bucket
+            ckpt_path = _save_run_checkpoint(
+                cfg=cfg,
+                ctx_run_id=ctx_run_id,
+                seed=cfg.seed,
+                step=frames_done,
+                git_sha=git_sha,
+                pyproject_hash=pyproject_hash,
+                state_dict=trainer.state_dict(),
+            )
+            curve.checkpoint_paths.append(ckpt_path)
+            logger.info("checkpoint_saved", step=frames_done, path=str(ckpt_path))
+
+    # Tail-end in-progress episodes — one entry per env so the curve
+    # has full coverage (mirrors the scalar loop's episode_in_progress
+    # sentinel).
+    for e in range(num_envs):
+        curve.per_episode_ego_rewards.append(float(episode_acc[e]))
 
 
 def _save_run_checkpoint(
