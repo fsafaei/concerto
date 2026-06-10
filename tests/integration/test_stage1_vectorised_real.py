@@ -140,7 +140,67 @@ print(json.dumps({"cubes": cubes.tolist()}))
 """
 
 
+_DISPATCH_ORDER_PROBE = r"""
+import json
+from pathlib import Path
+
+import numpy as np
+
+from chamber.benchmarks.stage1_common import TrainedPolicyFactory
+from concerto.training.config import load_config
+
+CID = "stage1_pickplace_panda_plus_fetch_ego_aht_happo_per_agent"
+cfg = load_config(
+    config_path=Path("configs/training/ego_aht_happo/stage1_pickplace.yaml"),
+    overrides=[
+        "env.num_envs=16",
+        "total_frames=512",
+        "checkpoint_every=512",
+        "happo.rollout_length=16",
+        "happo.batch_size=256",
+        "safety.enabled=false",
+        "artifacts_root=/tmp/dispatch_order_probe/artifacts",
+        "log_dir=/tmp/dispatch_order_probe/logs",
+    ],
+)
+# PRODUCTION ADAPTER ORDER (the issue #215 regression surface):
+# 1. factory constructed first (the adapter evaluates the
+#    ego_action_factory argument before its cells loop) — this is
+#    where GPU PhysX must get enabled;
+factory = TrainedPolicyFactory(cfg=cfg)
+# 2. per-cell CPU-sim eval env built BEFORE the factory call;
+from chamber.envs.stage1_pickplace import make_stage1_pickplace_env
+
+eval_env = make_stage1_pickplace_env(
+    condition_id=CID, episode_length=10, root_seed=0, num_envs=1
+)
+# 3. factory invoked with the eval env — trains at num_envs=16 on
+#    physx_cuda inside run_training (pre-fix: fatal here).
+act = factory(eval_env, seed=0)
+obs, _ = eval_env.reset(seed=0)
+for _ in range(10):
+    obs, _r, _t, _tr, _i = eval_env.step(
+        {"panda_wristcam": act(obs), "fetch": np.zeros(13, dtype=np.float32)}
+    )
+eval_env.close()
+print(json.dumps({"dispatch_order_ok": True}))
+"""
+
+
 class TestVectorisedConstruction:
+    def test_production_dispatch_order_at_num_envs_gt_1(self) -> None:
+        """Issue #215 regression net: eval-env-before-factory-call composes at N>1.
+
+        Replicates the spike adapter's exact per-cell ordering
+        (factory constructed first, CPU-sim eval env second, factory
+        invoked third — training the vectorised cell inside) in a
+        fresh subprocess. Pre-fix this died at the training-env build
+        with "GPU PhysX can only be enabled once"; the fix enables GPU
+        PhysX at factory construction (ADR-007 §Stage 1b Rev 17).
+        """
+        out = _run_probe(_DISPATCH_ORDER_PROBE)
+        assert out["dispatch_order_ok"] is True
+
     def test_batched_shapes_autoreset_and_snapshot_guard(self) -> None:
         """One GPU build covers shapes, horizon auto-reset, and the safety guard."""
         out = _run_probe(_STRUCTURAL_PROBE)

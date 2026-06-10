@@ -33,6 +33,7 @@ without a new ADR.
 
 from __future__ import annotations
 
+import hashlib
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, NamedTuple, Protocol, cast, runtime_checkable
@@ -508,6 +509,20 @@ def train(  # noqa: PLR0912, PLR0915 - P1.04.5 added safety-stack integration to
         rollouts wrap).
     """
     repo_root = repo_root or Path.cwd()
+    # RUNID-COLLISION fix (issue #214; ADR-002 §Revision history
+    # 2026-06-10): fold the config into the run_id so same-seed
+    # same-commit cells differing only in regime knobs (gamma, num_envs,
+    # frames, …) cannot collide. model_dump_json() is
+    # field-definition-ordered and therefore byte-stable for equal
+    # configs (Pydantic v2). Operator-side sink fields are EXCLUDED —
+    # artifacts_root / log_dir / wandb are where outputs land, not what
+    # the run computes, and two same-seed runs that differ only in
+    # scratch dirs must keep one identity (the P6 byte-identity test
+    # pins exactly that). The fingerprint also rides ``extra`` so
+    # every JSONL line carries it for archive-side disambiguation.
+    config_fingerprint = hashlib.sha256(
+        cfg.model_dump_json(exclude={"artifacts_root", "log_dir", "wandb"}).encode("utf-8")
+    ).hexdigest()[:16]
     ctx = compute_run_metadata(
         seed=cfg.seed,
         run_kind=cfg.algo,
@@ -515,7 +530,9 @@ def train(  # noqa: PLR0912, PLR0915 - P1.04.5 added safety-stack integration to
         extra={
             "task": cfg.env.task,
             "partner_class": cfg.partner.class_name,
+            "config_hash": config_fingerprint,
         },
+        config_fingerprint=config_fingerprint,
     )
     jsonl_path = cfg.log_dir / f"{ctx.run_id}.jsonl"
     logger = bind_run_logger(ctx, jsonl_path=jsonl_path)
@@ -1023,6 +1040,7 @@ def _train_vectorised_loop(  # noqa: PLR0915 - the vectorised rollout mirrors tr
     episode_acc = np.zeros(num_envs, dtype=np.float64)
     frames_done = 0
     ckpt_bucket = 0
+    last_ckpt_frames = 0
     _win = {
         "reward": 0.0,
         "n": 0,
@@ -1114,6 +1132,7 @@ def _train_vectorised_loop(  # noqa: PLR0915 - the vectorised rollout mirrors tr
         new_bucket = frames_done // cfg.checkpoint_every
         if new_bucket > ckpt_bucket:
             ckpt_bucket = new_bucket
+            last_ckpt_frames = frames_done
             ckpt_path = _save_run_checkpoint(
                 cfg=cfg,
                 ctx_run_id=ctx_run_id,
@@ -1125,6 +1144,26 @@ def _train_vectorised_loop(  # noqa: PLR0915 - the vectorised rollout mirrors tr
             )
             curve.checkpoint_paths.append(ckpt_path)
             logger.info("checkpoint_saved", step=frames_done, path=str(ckpt_path))
+
+    # Terminal checkpoint flush (issue #215 rider W1): frames advance
+    # num_envs at a time, so when total_frames is not hit exactly the
+    # final bucket never fires and the last archived checkpoint trails
+    # the final policy by up to checkpoint_every frames (observed:
+    # 19.0M vs 19,999,744 at N=1024 / 20M). The in-memory trainer is
+    # what gets evaluated, but archive reproducibility of the *final*
+    # policy wants the terminal state on disk too.
+    if frames_done > 0 and last_ckpt_frames != frames_done:
+        ckpt_path = _save_run_checkpoint(
+            cfg=cfg,
+            ctx_run_id=ctx_run_id,
+            seed=cfg.seed,
+            step=frames_done,
+            git_sha=git_sha,
+            pyproject_hash=pyproject_hash,
+            state_dict=trainer.state_dict(),
+        )
+        curve.checkpoint_paths.append(ckpt_path)
+        logger.info("checkpoint_saved", step=frames_done, path=str(ckpt_path))
 
     # Tail-end in-progress episodes — one entry per env so the curve
     # has full coverage (mirrors the scalar loop's episode_in_progress
