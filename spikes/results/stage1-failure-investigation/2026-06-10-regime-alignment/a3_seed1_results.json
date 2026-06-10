@@ -1,0 +1,245 @@
+{
+  "arm": "A3 (regime-alignment; PRESTATEMENT 2026-06-10; not a gate result)",
+  "branch": "feat/stage1b-vectorised-cell",
+  "git_sha": "a1820ce5b47987e1aea75b8b038542c0f4175087",
+  "seed": 1,
+  "gamma": 0.99,
+  "num_envs": 1,
+  "frames": 1000000,
+  "rollout_length": 1024,
+  "batch_size": 256,
+  "safety_enabled_training": false,
+  "signature_this_run": {
+    "run_id": "796c17607a66261a",
+    "n_train_scalars": 976,
+    "value_mean_late": 22.121619987487794,
+    "value_mean_final": 20.933731079101562,
+    "advantage_std_late": 3.097580270767212,
+    "advantage_std_final": 2.5797016620635986,
+    "dist_entropy_final": 3.9003959596157074,
+    "grasp_rate_max": 0.6201171875,
+    "grasp_rate_windows_nonzero": 944,
+    "grasp_rate_n_windows": 976,
+    "place_rate_max": 0.09765625,
+    "place_rate_windows_nonzero": 181,
+    "success_rate_max": 0.0009765625,
+    "n_episodes_in_run": 10024,
+    "train_wall_clock_s": 6061.2
+  },
+  "eval_episodes": 30,
+  "eval_ever_grasped_count": 30,
+  "eval_ever_placed_count": 1,
+  "eval_ever_success_count": 1,
+  "eval_rows": [
+    {
+      "episode": 0,
+      "ever_grasped": true,
+      "ever_placed": false,
+      "ever_success": false,
+      "n_steps": 100
+    },
+    {
+      "episode": 1,
+      "ever_grasped": true,
+      "ever_placed": false,
+      "ever_success": false,
+      "n_steps": 100
+    },
+    {
+      "episode": 2,
+      "ever_grasped": true,
+      "ever_placed": true,
+      "ever_success": true,
+      "n_steps": 53
+    },
+    {
+      "episode": 3,
+      "ever_grasped": true,
+      "ever_placed": false,
+      "ever_success": false,
+      "n_steps": 100
+    },
+    {
+      "episode": 4,
+      "ever_grasped": true,
+      "ever_placed": false,
+      "ever_success": false,
+      "n_steps": 100
+    },
+    {
+      "episode": 5,
+      "ever_grasped": true,
+      "ever_placed": false,
+      "ever_success": false,
+      "n_steps": 100
+    },
+    {
+      "episode": 6,
+      "ever_grasped": true,
+      "ever_placed": false,
+      "ever_success": false,
+      "n_steps": 100
+    },
+    {
+      "episode": 7,
+      "ever_grasped": true,
+      "ever_placed": false,
+      "ever_success": false,
+      "n_steps": 100
+    },
+    {
+      "episode": 8,
+      "ever_grasped": true,
+      "ever_placed": false,
+      "ever_success": false,
+      "n_steps": 100
+    },
+    {
+      "episode": 9,
+      "ever_grasped": true,
+      "ever_placed": false,
+      "ever_success": false,
+      "n_steps": 100
+    },
+    {
+      "episode": 10,
+      "ever_grasped": true,
+      "ever_placed": false,
+      "ever_success": false,
+      "n_steps": 100
+    },
+    {
+      "episode": 11,
+      "ever_grasped": true,
+      "ever_placed": false,
+      "ever_success": false,
+      "n_steps": 100
+    },
+    {
+      "episode": 12,
+      "ever_grasped": true,
+      "ever_placed": false,
+      "ever_success": false,
+      "n_steps": 100
+    },
+    {
+      "episode": 13,
+      "ever_grasped": true,
+      "ever_placed": false,
+      "ever_success": false,
+      "n_steps": 100
+    },
+    {
+      "episode": 14,
+      "ever_grasped": true,
+      "ever_placed": false,
+      "ever_success": false,
+      "n_steps": 100
+    },
+    {
+      "episode": 15,
+      "ever_grasped": true,
+      "ever_placed": false,
+      "ever_success": false,
+      "n_steps": 100
+    },
+    {
+      "episode": 16,
+      "ever_grasped": true,
+      "ever_placed": false,
+      "ever_success": false,
+      "n_steps": 100
+    },
+    {
+      "episode": 17,
+      "ever_grasped": true,
+      "ever_placed": false,
+      "ever_success": false,
+      "n_steps": 100
+    },
+    {
+      "episode": 18,
+      "ever_grasped": true,
+      "ever_placed": false,
+      "ever_success": false,
+      "n_steps": 100
+    },
+    {
+      "episode": 19,
+      "ever_grasped": true,
+      "ever_placed": false,
+      "ever_success": false,
+      "n_steps": 100
+    },
+    {
+      "episode": 20,
+      "ever_grasped": true,
+      "ever_placed": false,
+      "ever_success": false,
+      "n_steps": 100
+    },
+    {
+      "episode": 21,
+      "ever_grasped": true,
+      "ever_placed": false,
+      "ever_success": false,
+      "n_steps": 100
+    },
+    {
+      "episode": 22,
+      "ever_grasped": true,
+      "ever_placed": false,
+      "ever_success": false,
+      "n_steps": 100
+    },
+    {
+      "episode": 23,
+      "ever_grasped": true,
+      "ever_placed": false,
+      "ever_success": false,
+      "n_steps": 100
+    },
+    {
+      "episode": 24,
+      "ever_grasped": true,
+      "ever_placed": false,
+      "ever_success": false,
+      "n_steps": 100
+    },
+    {
+      "episode": 25,
+      "ever_grasped": true,
+      "ever_placed": false,
+      "ever_success": false,
+      "n_steps": 100
+    },
+    {
+      "episode": 26,
+      "ever_grasped": true,
+      "ever_placed": false,
+      "ever_success": false,
+      "n_steps": 100
+    },
+    {
+      "episode": 27,
+      "ever_grasped": true,
+      "ever_placed": false,
+      "ever_success": false,
+      "n_steps": 100
+    },
+    {
+      "episode": 28,
+      "ever_grasped": true,
+      "ever_placed": false,
+      "ever_success": false,
+      "n_steps": 100
+    },
+    {
+      "episode": 29,
+      "ever_grasped": true,
+      "ever_placed": false,
+      "ever_success": false,
+      "n_steps": 100
+    }
+  ]
+}
