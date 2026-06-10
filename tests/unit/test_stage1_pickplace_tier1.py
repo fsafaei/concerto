@@ -600,26 +600,73 @@ class TestStage1ASStateSynthesizer:
         with pytest.raises(TypeError, match="goal_pos"):
             Stage1ASStateSynthesizer(inner)  # type: ignore[arg-type]
 
-    def test_loud_fail_on_multi_env_batch_at_observation_time(self) -> None:
-        """Single-env contract: arrays with shape[0] > 1 raise TypeError.
+    def test_loud_fail_on_inconsistent_batch_dims_at_observation_time(self) -> None:
+        """Mixed leading batch dims across concat inputs raise TypeError.
 
-        ADR-007 §Stage 1b Rev 12 documents this as a load-bearing
-        assumption: ``ravel()`` across a leading batch dim would
-        silently mis-pack the flat state vector. Stage-1b builds with
-        ``num_envs=1`` per cell; a future multi-env build must
-        revisit the synthesiser before it ships.
+        P1.05.10 (ADR-007 §Stage 1b regime-alignment revision) extends
+        the Rev 12 single-env contract to consistent ``(num_envs, dim)``
+        batches; what stays loud-fail is an *inconsistent* batch — one
+        field batched at ``num_envs > 1`` while its siblings are not —
+        which indicates a wiring bug, not a broadcastable case.
         """
         inner = _FakeStateDictEnv(
             condition_id="stage1_pickplace_panda_plus_fetch_ego_aht_happo_per_agent"
         )
         wrap = Stage1ASStateSynthesizer(inner)  # type: ignore[arg-type]
         bad_obs = _FakeStateDictEnv._sample_obs()
-        # Simulate a num_envs=2 batch on the ego's qpos.
+        # Simulate a num_envs=2 batch on the ego's qpos ONLY (siblings
+        # stay single-env): inconsistent — must raise.
         bad_obs["agent"]["panda_wristcam"]["qpos"] = np.zeros(
             (2, _FAKE_EGO_QPOS_DIM), dtype=np.float32
         )
-        with pytest.raises(TypeError, match=r"single-env|shape"):
+        with pytest.raises(TypeError, match=r"batch dims|inconsistent"):
             wrap.observation(bad_obs)
+
+    def test_consistent_batch_emits_batched_state(self) -> None:
+        """A consistent ``(num_envs, dim)`` batch synthesises ``(num_envs, state_dim)``.
+
+        P1.05.10 (ADR-007 §Stage 1b regime-alignment revision): the
+        vectorised cell's obs path. Per-row content must equal the
+        widened concat of that env's row (positional contract of
+        Rev 12, applied per env).
+        """
+        inner = _FakeStateDictEnv(
+            condition_id="stage1_pickplace_panda_plus_fetch_ego_aht_happo_per_agent"
+        )
+        wrap = Stage1ASStateSynthesizer(inner)  # type: ignore[arg-type]
+        n = 3
+        obs = _FakeStateDictEnv._sample_obs()
+
+        def _batch(arr: np.ndarray, scale: float) -> np.ndarray:  # type: ignore[type-arg]
+            base = np.asarray(arr, dtype=np.float32).reshape(1, -1)
+            return np.concatenate([base * (i + 1) * scale for i in range(n)], axis=0)
+
+        for uid in ("panda_wristcam", "fetch"):
+            for key in ("qpos", "qvel"):
+                obs["agent"][uid][key] = _batch(obs["agent"][uid][key], 1.0)
+        for key in ("cube_pose", "goal_pos", "tcp_pose"):
+            obs["extra"][key] = _batch(obs["extra"][key], 1.0)
+        out = wrap.observation(obs)
+        ego_state = out["agent"]["panda_wristcam"]["state"]
+        partner_state = out["agent"]["fetch"]["state"]
+        assert ego_state.ndim == 2
+        assert ego_state.shape[0] == n
+        assert partner_state.shape[0] == n
+        # Row-wise positional contract: row i equals the flat concat of
+        # row i's fields in the Rev 12 order.
+        for i in range(n):
+            expected = np.concatenate(
+                [
+                    np.asarray(obs["agent"]["panda_wristcam"]["qpos"][i]).ravel(),
+                    np.asarray(obs["agent"]["panda_wristcam"]["qvel"][i]).ravel(),
+                    np.asarray(obs["agent"]["fetch"]["qpos"][i]).ravel(),
+                    np.asarray(obs["agent"]["fetch"]["qvel"][i]).ravel(),
+                    np.asarray(obs["extra"]["cube_pose"][i]).ravel(),
+                    np.asarray(obs["extra"]["goal_pos"][i]).ravel(),
+                    np.asarray(obs["extra"]["tcp_pose"][i]).ravel(),
+                ]
+            ).astype(np.float32)
+            np.testing.assert_allclose(ego_state[i], expected)
 
 
 # ----- Stage1OMChannelFilter (per-condition obs masking; ADR-007 §Stage 1b OM axis) -----

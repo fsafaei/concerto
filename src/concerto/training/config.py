@@ -86,12 +86,26 @@ class EnvConfig(_FrozenModel):
             overrides per ``(seed, condition)`` cell via
             ``model_copy``. ``None`` for non-Stage-1b tasks (MPE,
             Stage-0) — pre-P1.04 cfgs work unchanged.
+        num_envs: Training-cell parallelisation count (P1.05.10;
+            ADR-007 §Stage 1b regime-alignment revision). ``1``
+            (default) preserves the historical single-env loop
+            byte-identically (ADR-002). ``> 1`` builds the env
+            vectorised (ManiSkill GPU sim) and switches
+            :func:`concerto.training.ego_aht.train` to the batched
+            rollout path; the per-update batch becomes
+            ``num_envs x happo.rollout_length`` transitions.
+            Implementation-detail-of-the-cell per the ADR-007 Rev 15
+            precedent — the prereg condition_ids / seed list / gate
+            criteria are untouched. The training-time safety stack is
+            not batched in this slice: ``num_envs > 1`` with
+            ``safety.enabled=True`` loud-fails in ``train()``.
     """
 
     task: str
     episode_length: int = Field(default=50, gt=0)
     agent_uids: tuple[str, str] = ("ego", "partner")
     condition_id: str | None = None
+    num_envs: int = Field(default=1, ge=1)
 
     @field_validator("agent_uids", mode="before")
     @classmethod

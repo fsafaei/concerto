@@ -144,6 +144,12 @@ def build_env(env_cfg: EnvConfig, *, root_seed: int) -> EnvLike:
                 condition_id=env_cfg.condition_id,
                 episode_length=env_cfg.episode_length,
                 root_seed=root_seed,
+                # P1.05.10 (ADR-007 §Stage 1b regime-alignment): the
+                # training-cell parallelisation count. 1 (default)
+                # preserves the historical single-env cell; > 1 builds
+                # the GPU-parallel cell (ManiSkill physx_cuda) with the
+                # chamber-side auto-reset wrapper outermost.
+                num_envs=env_cfg.num_envs,
             ),
         )
     raise ValueError(

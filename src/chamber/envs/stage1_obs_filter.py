@@ -100,13 +100,15 @@ This keeps downstream policy networks oblivious to which modalities a
 given uid actually receives at runtime — only the *values* change
 across conditions, not the *shapes*.
 
-Single-env contract. Stage-1b builds the env with ``num_envs=1`` per
-``(seed, condition)`` cell (see
-:func:`chamber.envs.stage1_pickplace.make_stage1_pickplace_env`); the
-synthesiser's concat helpers assert this contract at runtime via
-:func:`_to_1d_float32`. Multi-env builds are not supported at this
-layer — they would silently mis-pack the leading batch dim into the
-flat state vector.
+Batch contract (P1.05.10; ADR-007 §Stage 1b regime-alignment revision).
+Single-env builds (``num_envs=1``) emit the historical flat 1-D
+``state`` vector byte-identically to pre-P1.05.10 (ADR-002). Vectorised
+builds (``num_envs > 1``) emit ``state`` as ``(num_envs, state_dim)``
+— the concat helpers coerce every per-uid / task-extra field to
+``(batch, dim)``, loud-fail on inconsistent batch dims, and concat
+along the trailing axis. The synthesised ``state`` Box mirrors the
+inner space's batching; consumers read the per-env dim via
+``shape[-1]``.
 
 Quaternion sign-flip caveat. ``cube_pose`` and ``tcp_pose`` carry
 quaternion entries (``qw, qx, qy, qz``). SAPIEN does not pin a
@@ -169,16 +171,15 @@ _AS_TASK_EXTRA_FIELDS: tuple[tuple[str, int], ...] = (
 )
 
 
-def _to_1d_float32(arr: Any, *, source: str) -> np.ndarray:  # type: ignore[type-arg]  # noqa: ANN401 - inputs are torch.Tensor or np.ndarray depending on env source
-    """Coerce ``arr`` to a 1-D float32 ndarray (ADR-007 §Stage 1b Rev 12).
+def _to_2d_float32(arr: Any, *, source: str) -> np.ndarray:  # type: ignore[type-arg]  # noqa: ANN401 - inputs are torch.Tensor or np.ndarray depending on env source
+    """Coerce ``arr`` to a ``(batch, dim)`` float32 ndarray (ADR-007 §Stage 1b Rev 12).
 
     Handles both torch tensors (real SAPIEN env, ``obs_mode="state_dict"``
     emits torch tensors when the device is CUDA/CPU torch) and numpy
-    arrays (Tier-1 fakes). Pins the Stage-1b single-env contract: any
-    leading batch dim must be 1 or absent. Multi-env builds
-    (``num_envs > 1``) are not supported at the synthesiser layer
-    because ``ravel()`` across a leading batch dim would silently
-    mis-pack the flat state vector.
+    arrays (Tier-1 fakes). 1-D inputs become ``(1, dim)``; 2-D inputs
+    pass through with their leading batch dim intact (P1.05.10:
+    vectorised ``num_envs > 1`` builds emit ``(num_envs, dim)``);
+    higher-rank inputs are rejected loudly.
 
     Args:
         arr: Input array-like (torch.Tensor or np.ndarray).
@@ -186,10 +187,11 @@ def _to_1d_float32(arr: Any, *, source: str) -> np.ndarray:  # type: ignore[type
             TypeError message; e.g. ``"obs['agent'][ego_uid]['qpos']"``).
 
     Returns:
-        Flat 1-D ``np.ndarray`` of dtype ``float32``.
+        ``(batch, dim)`` ``np.ndarray`` of dtype ``float32``.
 
     Raises:
-        TypeError: If ``arr`` has a leading batch dim with size > 1.
+        TypeError: If ``arr`` has rank > 2 (the per-uid qpos / qvel /
+            task-extra fields are 1-D per env by contract).
     """
     try:
         import torch
@@ -202,32 +204,62 @@ def _to_1d_float32(arr: Any, *, source: str) -> np.ndarray:  # type: ignore[type
         # the rare host that ships without it.
         pass
     arr_np = np.asarray(arr)
-    if arr_np.ndim > 1 and arr_np.shape[0] != 1:
+    if arr_np.ndim > 2:  # noqa: PLR2004 - rank-2 is the (batch, dim) contract, not a magic number
         msg = (
             f"Stage1ASStateSynthesizer: {source} has shape {arr_np.shape}; "
-            "expected a 1-D array or a single-env batch (shape[0]==1). "
-            "Multi-env builds (num_envs>1) are not supported at the synthesiser "
-            "layer — they would silently mis-pack the leading batch dim into "
-            "the flat state vector. See ADR-007 §Stage 1b Rev 12."
+            "expected a 1-D per-env vector or a (num_envs, dim) batch. "
+            "Rank > 2 would silently mis-pack the state vector. "
+            "See ADR-007 §Stage 1b Rev 12 (+ the P1.05.10 batched extension)."
         )
         raise TypeError(msg)
-    return arr_np.ravel().astype(np.float32)
+    if arr_np.ndim == 1:
+        arr_np = arr_np.reshape(1, -1)
+    return arr_np.astype(np.float32)
+
+
+def _batched_concat(parts: list[np.ndarray], *, sources: list[str]) -> np.ndarray:  # type: ignore[type-arg]
+    """Concat ``(batch, dim_i)`` parts along the trailing axis (ADR-007 §Stage 1b Rev 12).
+
+    All parts must share the same leading batch dim (P1.05.10: mixed
+    batch dims across the per-uid / task-extra fields indicate a
+    wiring bug, not a broadcastable case — loud-fail naming the
+    offenders). Returns 1-D (the historical single-env flat state,
+    byte-identical to the pre-P1.05.10 ``ravel`` path) when the batch
+    dim is 1, else ``(batch, sum_dims)``.
+    """
+    batch_dims = {int(p.shape[0]) for p in parts}
+    if len(batch_dims) != 1:
+        shaped = ", ".join(f"{s}={p.shape}" for s, p in zip(sources, parts, strict=True))
+        msg = (
+            "Stage1ASStateSynthesizer: inconsistent leading batch dims across "
+            f"state-concat inputs ({shaped}). All per-uid and task-extra fields "
+            "must share the env's num_envs batch. See ADR-007 §Stage 1b Rev 12 "
+            "(+ the P1.05.10 batched extension)."
+        )
+        raise TypeError(msg)
+    out = np.concatenate(parts, axis=-1)
+    if out.shape[0] == 1:
+        return out.ravel()
+    return out
 
 
 def _flat_state_concat(qpos: Any, qvel: Any) -> np.ndarray:  # type: ignore[type-arg]  # noqa: ANN401 - inputs are torch.Tensor or np.ndarray depending on env source
-    """Concat ``qpos`` + ``qvel`` into a 1-D float32 ndarray (per-uid state).
+    """Concat ``qpos`` + ``qvel`` into the per-uid ``state`` (ADR-007 §Stage 1b Rev 12).
 
     Used for non-ego (partner) ``state`` entries. ManiSkill v3
     ``obs_mode="state"`` flattens with the order ``concat(qpos, qvel)``;
     mirrored here so anyone running the underlying env with the flat
-    ``obs_mode`` would see the same shape. The ego's widened ``state``
-    uses :func:`_flat_widened_state_concat` instead.
+    ``obs_mode`` would see the same shape. 1-D (flat) for single-env
+    builds — byte-identical to the pre-P1.05.10 path — and
+    ``(num_envs, dim)`` for vectorised builds. The ego's widened
+    ``state`` uses :func:`_flat_widened_state_concat` instead.
     """
-    return np.concatenate(
+    return _batched_concat(
         [
-            _to_1d_float32(qpos, source="qpos"),
-            _to_1d_float32(qvel, source="qvel"),
-        ]
+            _to_2d_float32(qpos, source="qpos"),
+            _to_2d_float32(qvel, source="qvel"),
+        ],
+        sources=["qpos", "qvel"],
     )
 
 
@@ -245,18 +277,30 @@ def _flat_widened_state_concat(
     Order: ``[ego_qpos, ego_qvel, partner_qpos, partner_qvel,
     cube_pose, goal_pos, tcp_pose]``. Load-bearing — see the
     module docstring + the positional regression test in
-    ``tests/unit/test_stage1_pickplace_tier1.py``.
+    ``tests/unit/test_stage1_pickplace_tier1.py``. 1-D for single-env
+    builds (byte-identical to pre-P1.05.10); ``(num_envs, dim)`` for
+    vectorised builds.
     """
-    return np.concatenate(
+    sources = [
+        "ego.qpos",
+        "ego.qvel",
+        "partner.qpos",
+        "partner.qvel",
+        "extra.cube_pose",
+        "extra.goal_pos",
+        "extra.tcp_pose",
+    ]
+    return _batched_concat(
         [
-            _to_1d_float32(ego_qpos, source="ego.qpos"),
-            _to_1d_float32(ego_qvel, source="ego.qvel"),
-            _to_1d_float32(partner_qpos, source="partner.qpos"),
-            _to_1d_float32(partner_qvel, source="partner.qvel"),
-            _to_1d_float32(cube_pose, source="extra.cube_pose"),
-            _to_1d_float32(goal_pos, source="extra.goal_pos"),
-            _to_1d_float32(tcp_pose, source="extra.tcp_pose"),
-        ]
+            _to_2d_float32(ego_qpos, source="ego.qpos"),
+            _to_2d_float32(ego_qvel, source="ego.qvel"),
+            _to_2d_float32(partner_qpos, source="partner.qpos"),
+            _to_2d_float32(partner_qvel, source="partner.qvel"),
+            _to_2d_float32(cube_pose, source="extra.cube_pose"),
+            _to_2d_float32(goal_pos, source="extra.goal_pos"),
+            _to_2d_float32(tcp_pose, source="extra.tcp_pose"),
+        ],
+        sources=sources,
     )
 
 
@@ -380,11 +424,27 @@ class Stage1ASStateSynthesizer(gym.ObservationWrapper):  # type: ignore[type-arg
                     if uid == self._ego_uid:
                         state_dim = ego_state_dim
                     else:
-                        state_dim = int(np.prod(qpos.shape)) + int(np.prod(qvel.shape))
+                        state_dim = int(qpos.shape[-1]) + int(qvel.shape[-1])
+                    # P1.05.10: mirror the inner space's batching. A
+                    # vectorised build's qpos Box is (num_envs, dof) with
+                    # num_envs > 1 — the synthesised state Box is then
+                    # (num_envs, state_dim) so space and runtime obs
+                    # agree. Single-env builds — including the (1, dof)
+                    # squeezed-batch layout ManiSkill emits at
+                    # num_envs=1 — keep the historical flat (state_dim,)
+                    # Box (the runtime concat ravels the batch-1 case to
+                    # 1-D too). Consumers read the per-env dim via
+                    # shape[-1] (see EgoPPOTrainer.from_config).
+                    qpos_shape = qpos.shape if qpos.shape is not None else (state_dim,)
+                    state_shape = (
+                        (int(qpos_shape[0]), state_dim)
+                        if len(qpos_shape) > 1 and int(qpos_shape[0]) > 1
+                        else (state_dim,)
+                    )
                     state_box = gym.spaces.Box(
                         low=-np.inf,
                         high=np.inf,
-                        shape=(state_dim,),
+                        shape=state_shape,
                         dtype=np.float32,
                     )
                     augmented = dict(sub.spaces)
@@ -508,7 +568,9 @@ def _resolve_qpos_qvel_dims(agent: gym.spaces.Dict, *, uid: str, role: str) -> t
             "Box-typed 'qpos' / 'qvel' entries. See ADR-007 §Stage 1b Rev 12."
         )
         raise TypeError(msg)
-    return int(np.prod(qpos.shape)), int(np.prod(qvel.shape))
+    # Trailing-dim semantics (P1.05.10): per-env dof for both the flat
+    # (dof,) single-env space and the (num_envs, dof) vectorised space.
+    return int(qpos.shape[-1]), int(qvel.shape[-1])
 
 
 def _validate_and_sum_task_extras(inner: gym.spaces.Dict) -> int:
