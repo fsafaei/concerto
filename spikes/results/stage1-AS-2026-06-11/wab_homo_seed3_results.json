@@ -1,0 +1,200 @@
+{
+  "cell": "wab_homo_seed3",
+  "run_id": "720cfc441827871f",
+  "checkpoint": "artifacts/artifacts/720cfc441827871f_step19999744.pt",
+  "cold30_grasped": 30,
+  "cold30_placed": 30,
+  "cold30_success": 1,
+  "placed_steps": 2305,
+  "static_steps": 1,
+  "static_and_placed": 1,
+  "p_static_given_placed": 0.0004338394793926247,
+  "p_placed_given_static": 1.0,
+  "hold_qvel": {
+    "median": 0.529320240020752,
+    "p10": 0.4403456449508667,
+    "frac_below_0.2": 0.0004338394793926247
+  },
+  "eval_rows": [
+    {
+      "episode": 0,
+      "ever_grasped": true,
+      "ever_placed": true,
+      "ever_success": false
+    },
+    {
+      "episode": 1,
+      "ever_grasped": true,
+      "ever_placed": true,
+      "ever_success": false
+    },
+    {
+      "episode": 2,
+      "ever_grasped": true,
+      "ever_placed": true,
+      "ever_success": false
+    },
+    {
+      "episode": 3,
+      "ever_grasped": true,
+      "ever_placed": true,
+      "ever_success": false
+    },
+    {
+      "episode": 4,
+      "ever_grasped": true,
+      "ever_placed": true,
+      "ever_success": false
+    },
+    {
+      "episode": 5,
+      "ever_grasped": true,
+      "ever_placed": true,
+      "ever_success": false
+    },
+    {
+      "episode": 6,
+      "ever_grasped": true,
+      "ever_placed": true,
+      "ever_success": false
+    },
+    {
+      "episode": 7,
+      "ever_grasped": true,
+      "ever_placed": true,
+      "ever_success": false
+    },
+    {
+      "episode": 8,
+      "ever_grasped": true,
+      "ever_placed": true,
+      "ever_success": false
+    },
+    {
+      "episode": 9,
+      "ever_grasped": true,
+      "ever_placed": true,
+      "ever_success": false
+    },
+    {
+      "episode": 10,
+      "ever_grasped": true,
+      "ever_placed": true,
+      "ever_success": false
+    },
+    {
+      "episode": 11,
+      "ever_grasped": true,
+      "ever_placed": true,
+      "ever_success": false
+    },
+    {
+      "episode": 12,
+      "ever_grasped": true,
+      "ever_placed": true,
+      "ever_success": false
+    },
+    {
+      "episode": 13,
+      "ever_grasped": true,
+      "ever_placed": true,
+      "ever_success": false
+    },
+    {
+      "episode": 14,
+      "ever_grasped": true,
+      "ever_placed": true,
+      "ever_success": false
+    },
+    {
+      "episode": 15,
+      "ever_grasped": true,
+      "ever_placed": true,
+      "ever_success": false
+    },
+    {
+      "episode": 16,
+      "ever_grasped": true,
+      "ever_placed": true,
+      "ever_success": false
+    },
+    {
+      "episode": 17,
+      "ever_grasped": true,
+      "ever_placed": true,
+      "ever_success": false
+    },
+    {
+      "episode": 18,
+      "ever_grasped": true,
+      "ever_placed": true,
+      "ever_success": false
+    },
+    {
+      "episode": 19,
+      "ever_grasped": true,
+      "ever_placed": true,
+      "ever_success": true
+    },
+    {
+      "episode": 20,
+      "ever_grasped": true,
+      "ever_placed": true,
+      "ever_success": false
+    },
+    {
+      "episode": 21,
+      "ever_grasped": true,
+      "ever_placed": true,
+      "ever_success": false
+    },
+    {
+      "episode": 22,
+      "ever_grasped": true,
+      "ever_placed": true,
+      "ever_success": false
+    },
+    {
+      "episode": 23,
+      "ever_grasped": true,
+      "ever_placed": true,
+      "ever_success": false
+    },
+    {
+      "episode": 24,
+      "ever_grasped": true,
+      "ever_placed": true,
+      "ever_success": false
+    },
+    {
+      "episode": 25,
+      "ever_grasped": true,
+      "ever_placed": true,
+      "ever_success": false
+    },
+    {
+      "episode": 26,
+      "ever_grasped": true,
+      "ever_placed": true,
+      "ever_success": false
+    },
+    {
+      "episode": 27,
+      "ever_grasped": true,
+      "ever_placed": true,
+      "ever_success": false
+    },
+    {
+      "episode": 28,
+      "ever_grasped": true,
+      "ever_placed": true,
+      "ever_success": false
+    },
+    {
+      "episode": 29,
+      "ever_grasped": true,
+      "ever_placed": true,
+      "ever_success": false
+    }
+  ]
+}
