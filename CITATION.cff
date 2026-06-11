@@ -14,7 +14,7 @@ authors:
     given-names: Farhad
     email: cooperative.physical.ai@gmail.com
     orcid: ""
-version: 0.6.0
+version: 0.7.0
 date-released: "2026-05-17"
 license: Apache-2.0
 repository-code: "https://github.com/fsafaei/concerto"
