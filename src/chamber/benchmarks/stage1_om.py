@@ -47,9 +47,20 @@ across conditions — the regression PR #119 review would have caught
 the *identical*-SpikeRun symptom this fix closes (the previous Phase-0
 scaffold's tuple-collision defect). The agent-uids tuple itself is
 unchanged across conditions (``("panda_wristcam", "fetch")``) because
-OM does not change the agent count. Episode success is rule-based
-(``mean_reward > _SUCCESS_THRESHOLD``); the ego is a frozen-zero
-policy (no training).
+OM does not change the agent count. Episode success is
+``terminated and not truncated`` — the env's own
+:meth:`Stage1PickPlaceEnv.evaluate` predicate
+(``is_obj_placed & is_robot_static``). Stage-1a's MPE stand-in does
+not emit ``terminated=True`` on success, so Stage-1a success rates
+are structurally zero under this rule — correct per ADR-007 §Stage 1a
+(Stage 1a is rig-validation, not gap measurement). The ego is a
+frozen-zero policy (no training).
+
+The pre-P1.05.8 rule ``mean_reward > -0.30 or terminated`` was a
+Phase-0 MPE holdover that trivially cleared on Stage-1b's small-
+positive ManiSkill PickCube reward signal, producing 100 %
+rubber-stamp passes that masked the Surface-6 obs-contract defect;
+ADR-007 §Stage 1b Rev 12 / P1.05.8 dropped it.
 
 The divergence under Stage 1a is a *measurement artefact* of the MPE
 proxy — it is not the AS/OM gap ADR-007 §Validation criteria
@@ -100,7 +111,7 @@ from chamber.benchmarks.stage1_common import (
 )
 from chamber.envs.mpe_cooperative_push import MPECooperativePushEnv
 from chamber.evaluation.prereg import PreregistrationSpec, load_prereg, verify_git_tag
-from chamber.evaluation.results import EpisodeResult, SpikeRun
+from chamber.evaluation.results import EpisodeResult, SpikeRun, SubStage
 from chamber.partners.api import PartnerSpec
 from chamber.partners.heuristic import ScriptedHeuristicPartner
 from concerto.training.seeding import derive_substream
@@ -116,18 +127,30 @@ if TYPE_CHECKING:
 #: ADR-007 §3.4 axis label this adapter implements.
 _AXIS: str = "OM"
 
-#: Maximum env steps per evaluation episode (Phase-0 stand-in budget).
-#:
-#: MPE Cooperative-Push uses 50-step episodes by default; mirrors the
-#: AS adapter's choice. Phase-1 raises this when the real Stage-1
-#: pick-place env's natural horizon is longer.
-_MAX_STEPS_PER_EPISODE: int = 50
+#: Stage-1a (MPE Cooperative-Push) evaluation horizon, in env ticks.
+#: Matches ``chamber.envs.mpe_cooperative_push.DEFAULT_EPISODE_LENGTH``;
+#: mirrors the AS adapter's choice.
+_MAX_STEPS_STAGE_1A: int = 50
 
-#: Success threshold on the mean per-step reward over the episode.
-#: Same value as :mod:`chamber.benchmarks.stage1_as` because both
-#: adapters share the same Phase-0 MPE stand-in env; the AS
-#: docstring carries the threshold rationale.
-_SUCCESS_THRESHOLD: float = -0.30
+
+def _max_steps_for(sub_stage: SubStage) -> int:
+    """Evaluation horizon per sub-stage (ADR-007 §Stage 1b).
+
+    Twin of the AS adapter's resolver. Sourced from the env's own
+    truncation horizon so training and evaluation share one value.
+    Stage-1a walks the 50-step MPE stand-in; Stage-1b walks the real
+    Stage-1 pick-place env's natural horizon
+    (:data:`chamber.envs.stage1_pickplace.DEFAULT_EPISODE_LENGTH` = 100).
+    The Phase-0 holdover hardcoded 50 for both, so Stage-1b evaluated a
+    policy *trained* over 100 steps on only its first 50 — the 2x
+    train/eval horizon mismatch surfaced by the P1.05.9 third §4a firing.
+    """
+    if sub_stage == "1b":
+        from chamber.envs.stage1_pickplace import DEFAULT_EPISODE_LENGTH
+
+        return DEFAULT_EPISODE_LENGTH
+    return _MAX_STEPS_STAGE_1A
+
 
 #: Default per-condition agent-uid tuples. Per plan/07 §3 OM uses the
 #: same panda + fetch agent pair across BOTH conditions — the OM
@@ -267,6 +290,16 @@ class _ObsChannelFilterEnv(gym.Env):  # type: ignore[type-arg]
 #: ``spikes/preregistration/`` set.
 _PREREG_RELATIVE_PATH: Path = Path("spikes") / "preregistration" / "OM.yaml"
 
+#: Canonical Stage-1b config path (P1.05; ADR-007 §Stage 1b). Twin of
+#: the path in :mod:`chamber.benchmarks.stage1_as`; both axes share
+#: the single ``configs/training/ego_aht_happo/stage1_pickplace.yaml``
+#: because the env + trainer config is the same across AS / OM (only
+#: the obs builder differs, and that's keyed by the env's
+#: ``condition_id`` at the chamber-side ``build_env`` dispatch).
+_STAGE1B_CONFIG_PATH: Path = (
+    Path("configs") / "training" / "ego_aht_happo" / "stage1_pickplace.yaml"
+)
+
 
 def run_axis(args: argparse.Namespace) -> SpikeRun:
     """Run the Stage-1 OM spike end-to-end (T5b.2; ADR-007 §Implementation staging).
@@ -309,12 +342,37 @@ def run_axis(args: argparse.Namespace) -> SpikeRun:
     # in ``tests/integration/test_stage1_om_real.py`` is the
     # regression pin.
     prereg_sha = verify_git_tag(spec, prereg_path, repo_path=Path.cwd())
-    return _run_axis_with_factories(
-        prereg=spec,
-        prereg_sha=prereg_sha,
-        env_factory=_default_env_factory,
-        ego_action_factory=_zero_ego_action_factory,
+
+    sub_stage = getattr(args, "sub_stage", "1a")
+    if sub_stage == "1a":
+        return _run_axis_with_factories(
+            prereg=spec,
+            prereg_sha=prereg_sha,
+            env_factory=_default_env_factory,
+            ego_action_factory=_zero_ego_action_factory,
+            sub_stage="1a",
+        )
+    if sub_stage == "1b":
+        # P1.05: science-evaluation dispatch (mirror of stage1_as).
+        from chamber.benchmarks.stage1_common import (
+            TrainedPolicyFactory,
+        )
+        from concerto.training.config import load_config
+
+        cfg = load_config(config_path=_STAGE1B_CONFIG_PATH)
+        return _run_axis_with_factories(
+            prereg=spec,
+            prereg_sha=prereg_sha,
+            env_factory=_stage1b_env_factory,
+            ego_action_factory=TrainedPolicyFactory(cfg=cfg),
+            sub_stage="1b",
+        )
+    msg = (
+        f"stage1_om.run_axis: unknown sub_stage {sub_stage!r}. "
+        "Valid: '1a' (Phase-0 MPE stand-in) or '1b' (Phase-1 real "
+        "ManiSkill v3 obs-modality factory + trained-ego factory)."
     )
+    raise ValueError(msg)
 
 
 def _load_canonical_prereg() -> tuple[PreregistrationSpec, Path]:
@@ -344,6 +402,7 @@ def _run_axis_with_factories(
     prereg_sha: str,
     env_factory: EnvFactory,
     ego_action_factory: EgoActionFactory,
+    sub_stage: SubStage = "1a",
 ) -> SpikeRun:
     """Drive the spike with injectable env + ego factories (T5b.2; plan/07 §3).
 
@@ -376,6 +435,10 @@ def _run_axis_with_factories(
             :class:`~chamber.benchmarks.stage1_common.EgoActionFactory`
             Protocol. Stage-1a production default is
             :func:`~chamber.benchmarks.stage1_common._zero_ego_action_factory`.
+        sub_stage: Sub-stage label stamped on the returned
+            :attr:`SpikeRun.sub_stage` (ADR-016 §Decision). Stage-1a
+            callers pass ``"1a"``; Stage-1b callers pass ``"1b"``
+            (P1.05 dispatch).
 
     Returns:
         The aggregated :class:`SpikeRun`.
@@ -384,6 +447,9 @@ def _run_axis_with_factories(
     conditions = (condition_pair.homogeneous_id, condition_pair.heterogeneous_id)
 
     episode_results: list[EpisodeResult] = []
+    # Resolve the eval horizon once per spike from the sub-stage's env
+    # (ADR-007 §Stage 1b; P1.05.9 firing #3 train/eval horizon fix).
+    max_steps = _max_steps_for(sub_stage)
     for seed in prereg.seeds:
         for condition_id in conditions:
             agent_uids = _CONDITION_UIDS.get(condition_id)
@@ -405,9 +471,17 @@ def _run_axis_with_factories(
             # the cell (ADR-007 §Stage 1b).
             env = env_factory(condition_id, agent_uids, seed)
             ego_action = ego_action_factory(env, seed)
+            # Stage-1b OM: both conditions share ("panda_wristcam",
+            # "fetch") and the fetch partner's action_dim is 13. Stage-1a
+            # keeps the Phase-0 default 2-D.
+            partner_action_dim = _resolve_partner_action_dim(
+                env, partner_uid=partner_uid, sub_stage=sub_stage
+            )
             for episode_idx in range(prereg.episodes_per_seed):
                 initial_state_seed = _derive_episode_seed(seed=seed, episode_idx=episode_idx)
-                partner = _make_scripted_partner(partner_uid=partner_uid)
+                partner = _make_scripted_partner(
+                    partner_uid=partner_uid, action_dim=partner_action_dim
+                )
                 episode_results.append(
                     _run_one_episode(
                         env=env,
@@ -419,6 +493,7 @@ def _run_axis_with_factories(
                         episode_idx=episode_idx,
                         initial_state_seed=initial_state_seed,
                         condition_id=condition_id,
+                        max_steps=max_steps,
                     )
                 )
 
@@ -427,14 +502,10 @@ def _run_axis_with_factories(
         prereg_sha=prereg_sha,
         git_tag=prereg.git_tag,
         axis=_AXIS,
-        # ADR-007 §Stage 1a + ADR-016 §Decision: the OM adapter ships
-        # against the Phase-0 MPE stand-in (no real ≥20 pp gate
-        # measurement). The Stage-1b adapter (Phase 1, real ManiSkill
-        # obs-modality factory) will stamp ``sub_stage="1b"`` at the
-        # same construction site once it lands. The summarizer routes
-        # off this field directly (no metadata-dict fallback per
-        # ADR-016).
-        sub_stage="1a",
+        # P1.05 (ADR-007 §Stage 1a/§Stage 1b + ADR-016 §Decision):
+        # parametric. Stage-1a callers pass "1a"; the Stage-1b dispatch
+        # (chamber-spike run --axis OM --sub-stage 1b) passes "1b".
+        sub_stage=sub_stage,
         condition_pair=condition_pair,
         seeds=list(prereg.seeds),
         episode_results=episode_results,
@@ -452,8 +523,16 @@ def _run_one_episode(
     episode_idx: int,
     initial_state_seed: int,
     condition_id: str,
+    max_steps: int,
 ) -> EpisodeResult:
-    """Roll one evaluation episode out and return the success record (plan/07 §3)."""
+    """Roll one evaluation episode out and return the success record (plan/07 §3).
+
+    ``max_steps`` is the sub-stage eval horizon from :func:`_max_steps_for`
+    (ADR-007 §Stage 1b). If the rollout reaches ``max_steps`` without the
+    env emitting ``terminated``/``truncated``, the episode is recorded as
+    ``truncated=True`` so the eval-cap truncation is not silently lost
+    (P1.05.9 firing #3).
+    """
     obs_tuple = env.reset(seed=initial_state_seed)
     obs: Mapping[str, Any] = obs_tuple[0]
     partner.reset(seed=initial_state_seed)
@@ -461,7 +540,7 @@ def _run_one_episode(
     n_steps = 0
     terminated = False
     truncated = False
-    while n_steps < _MAX_STEPS_PER_EPISODE:
+    while n_steps < max_steps:
         partner_action = partner.act(obs, deterministic=True)
         ego_action_vec = ego_action(obs)
         action_dict = {ego_uid: ego_action_vec, partner_uid: partner_action}
@@ -474,12 +553,24 @@ def _run_one_episode(
         n_steps += 1
         if terminated or truncated:
             break
+    if not terminated and not truncated:
+        # The loop exhausted the eval horizon without the env emitting a
+        # boundary: the episode was truncated by the eval cap. Record it
+        # honestly so truncation-based audits stay correct — the prior
+        # code left both flags False here, masking the horizon cap
+        # (P1.05.9 firing #3; ADR-007 §Stage 1b).
+        truncated = True
     mean_reward = total_reward / max(1, n_steps)
-    # Phase-1: the real Stage-1 pick-place env exposes ``terminated=True``
-    # on success, at which point the ``or terminated`` clause becomes the
-    # dominant signal and the rule-based mean-reward fallback can be
-    # dropped (plan/07 §T5b.2 follow-up).
-    success = mean_reward > _SUCCESS_THRESHOLD or terminated
+    # ADR-007 §Stage 1b Rev 12 / P1.05.8 (closes Surface 1; twin of
+    # the AS-adapter fix): the real Stage-1 pick-place env exposes
+    # ``terminated=True`` iff ``evaluate()`` returns
+    # ``is_obj_placed & is_robot_static``. The pre-P1.05.8 rule
+    # (``mean_reward > -0.30 or terminated``) was a Phase-0 MPE
+    # holdover and produced rubber-stamp passes against ManiSkill's
+    # small-positive reward signal. Stage-1a's MPE stand-in does not
+    # emit ``terminated=True`` on success — Stage-1a success rates
+    # are structurally zero, correct per ADR-007 §Stage 1a.
+    success = bool(terminated) and not bool(truncated)
     return EpisodeResult(
         seed=seed,
         episode_idx=episode_idx,
@@ -489,6 +580,8 @@ def _run_one_episode(
             "condition": condition_id,
             "mean_reward": f"{mean_reward:.4f}",
             "n_steps": str(n_steps),
+            "terminated": str(bool(terminated)).lower(),
+            "truncated": str(bool(truncated)).lower(),
         },
     )
 
@@ -532,14 +625,81 @@ def _default_env_factory(
     return _ObsChannelFilterEnv(inner, channel_indices=channels)
 
 
-def _make_scripted_partner(*, partner_uid: str) -> ScriptedHeuristicPartner:
-    """Construct the scripted-heuristic partner with the right uid (plan/04 §3.4)."""
+def _stage1b_env_factory(
+    condition_id: str, agent_uids: tuple[str, str], root_seed: int
+) -> gym.Env[Any, Any]:
+    """Build the per-condition Stage-1b OM env (P1.05; ADR-007 §Stage 1b).
+
+    Twin of :func:`chamber.benchmarks.stage1_as._stage1b_env_factory` —
+    routes through
+    :func:`chamber.envs.stage1_pickplace.make_stage1_pickplace_env`.
+    The env's own ``_CONDITION_TABLE`` selects the OM-homo / OM-hetero
+    obs builder (vision-only vs vision + force-torque + proprio); the
+    Phase-0 ``_ObsChannelFilterEnv`` wrapper is intentionally NOT
+    applied to the Stage-1b env — the obs-modality factory inside the
+    real ManiSkill env supplies the actual signal.
+    """
+    from chamber.envs.stage1_pickplace import (
+        _CONDITION_TABLE,
+        make_stage1_pickplace_env,
+    )
+
+    expected_uids = _CONDITION_TABLE[condition_id].agent_uids
+    if expected_uids != agent_uids:
+        msg = (
+            f"_stage1b_env_factory: condition_id {condition_id!r} env-side "
+            f"agent_uids {expected_uids} != adapter-side {agent_uids}. "
+            "The two _CONDITION_UIDS tables have drifted; the env-side "
+            "table in chamber.envs.stage1_pickplace is canonical "
+            "(ADR-007 §Discipline)."
+        )
+        raise ValueError(msg)
+    return make_stage1_pickplace_env(condition_id=condition_id, root_seed=root_seed)
+
+
+def _resolve_partner_action_dim(
+    env: gym.Env[Any, Any],
+    *,
+    partner_uid: str,
+    sub_stage: SubStage,
+) -> int:
+    """Resolve the scripted partner's action dim (P1.05; ADR-007 §Stage 1b).
+
+    Twin of :func:`chamber.benchmarks.stage1_as._resolve_partner_action_dim`.
+    Stage-1a returns the Phase-0 default 2-D; Stage-1b reads
+    ``env.action_space.spaces[partner_uid].shape[0]``.
+    """
+    if sub_stage == "1a":
+        return 2
+    action_space = env.action_space
+    if not isinstance(action_space, gym.spaces.Dict):
+        return 2
+    sub = action_space.spaces.get(partner_uid)
+    if sub is None or not isinstance(sub, gym.spaces.Box):
+        return 2
+    if sub.shape is None:
+        return 2
+    return int(sub.shape[0])
+
+
+def _make_scripted_partner(*, partner_uid: str, action_dim: int = 2) -> ScriptedHeuristicPartner:
+    """Construct the scripted-heuristic partner with the right uid (plan/04 §3.4).
+
+    Stage-1a keeps the Phase-0 default ``action_dim=2`` (MPE stand-in).
+    Stage-1b passes the resolved per-condition action dim so the
+    scripted partner's act() returns a correctly-sized vector that the
+    ManiSkill v3 step boundary accepts.
+    """
     spec = PartnerSpec(
         class_name="scripted_heuristic",
         seed=0,
         checkpoint_step=None,
         weights_uri=None,
-        extra={"uid": partner_uid, "target_xy": "0.0,0.0", "action_dim": "2"},
+        extra={
+            "uid": partner_uid,
+            "target_xy": "0.0,0.0",
+            "action_dim": str(action_dim),
+        },
     )
     return ScriptedHeuristicPartner(spec)
 

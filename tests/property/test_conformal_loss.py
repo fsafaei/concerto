@@ -30,6 +30,7 @@ space so the invariant holds beyond the hand-picked points.
 from __future__ import annotations
 
 import numpy as np
+import pytest
 from hypothesis import HealthCheck, given, settings
 from hypothesis import strategies as st
 
@@ -50,7 +51,7 @@ def _snap(x: float, y: float, vx: float, vy: float, r: float = 0.2) -> AgentSnap
     )
 
 
-_ALPHA_PAIR = 4.0  # 2 * action_norm for action_norm=2.0
+_ALPHA_PAIR = 4.0  # 2 * cartesian_accel_capacity for capacity=2.0
 _GAMMA = 2.0
 
 
@@ -72,8 +73,9 @@ def test_predicted_safe_actual_unsafe_tightens_lambda(
     and dominates a small ``eps``, so ``(eps - l_k) < 0`` and ``lambda``
     moves down (tighter).
     """
+    pair_key = ("a", "b")
     state = SafetyState(
-        lambda_=np.array([1.0], dtype=np.float64),
+        lambda_={pair_key: 1.0},
         epsilon=epsilon,
         eta=eta,
     )
@@ -82,9 +84,9 @@ def test_predicted_safe_actual_unsafe_tightens_lambda(
         np.array([actual_h], dtype=np.float64),
     )
     assert loss[0] > 0.0
-    lambda_before = float(state.lambda_[0])
-    update_lambda(state, loss, in_warmup=False)
-    delta = float(state.lambda_[0]) - lambda_before
+    lambda_before = state.lambda_[pair_key]
+    update_lambda(state, {pair_key: float(loss[0])}, in_warmup=False)
+    delta = state.lambda_[pair_key] - lambda_before
     # eps - l_k is strictly negative for these inputs (pred-actual > 0.1
     # by construction and |epsilon| <= 0.1), so the update is strictly
     # downward.
@@ -112,16 +114,17 @@ def test_predicted_unsafe_actual_safe_yields_zero_loss(pred_h: float, actual_h: 
     assert loss.shape == (1,)
     assert loss[0] == 0.0
 
+    pair_key = ("a", "b")
     state = SafetyState(
-        lambda_=np.array([0.7], dtype=np.float64),
+        lambda_={pair_key: 0.7},
         epsilon=0.05,
         eta=0.1,
     )
-    update_lambda(state, loss, in_warmup=False)
+    update_lambda(state, {pair_key: float(loss[0])}, in_warmup=False)
     # With l_k = 0 the update is purely eta * eps; no false tightening
     # contribution from the predictor's pessimism.
     expected = 0.7 + 0.1 * 0.05
-    assert state.lambda_[0] == np.float64(expected)
+    assert state.lambda_[pair_key] == pytest.approx(expected)
 
 
 @settings(max_examples=20, deadline=None, suppress_health_check=[HealthCheck.too_slow])
@@ -169,9 +172,10 @@ def test_actual_violation_with_no_prediction_gap_does_not_tighten_lambda(
         alpha_pair=_ALPHA_PAIR,
         gamma=_GAMMA,
     )
-    assert gap.shape == (1,)
+    pair_key = ("a", "b")
+    assert len(gap) == 1
     # Predictor perfectly tracks reality ⇒ zero prediction-gap loss.
-    assert gap[0] == 0.0
+    assert gap[pair_key] == 0.0
 
     # And the situation is genuinely an "actual constraint violation":
     # the geometric overlap (separation < D_s) means the corresponding
@@ -180,14 +184,14 @@ def test_actual_violation_with_no_prediction_gap_does_not_tighten_lambda(
     assert separation < safety_distance + 1e-9 or closing_speed > 0.0
 
     state = SafetyState(
-        lambda_=np.array([0.5], dtype=np.float64),
+        lambda_={pair_key: 0.5},
         epsilon=0.05,
         eta=0.1,
     )
     update_lambda(state, gap, in_warmup=False)
     # λ shifts purely by eta * eps (the steady-state drift), unaffected
     # by the per-step constraint violation.
-    np.testing.assert_allclose(state.lambda_, [0.5 + 0.1 * 0.05])
+    assert state.lambda_[pair_key] == pytest.approx(0.5 + 0.1 * 0.05)
 
 
 def test_compute_prediction_gap_for_pairs_three_agent_shape() -> None:
@@ -201,8 +205,7 @@ def test_compute_prediction_gap_for_pairs_three_agent_shape() -> None:
     gap = compute_prediction_gap_for_pairs(
         snaps_now, snaps_predicted, alpha_pair=_ALPHA_PAIR, gamma=_GAMMA
     )
-    assert gap.shape == (3,)
-    np.testing.assert_array_equal(gap, np.zeros(3, dtype=np.float64))
+    assert gap == {("a", "b"): 0.0, ("a", "c"): 0.0, ("b", "c"): 0.0}
 
 
 def test_compute_prediction_gap_for_pairs_accepts_distinct_key_orders() -> None:
@@ -223,13 +226,12 @@ def test_compute_prediction_gap_for_pairs_accepts_distinct_key_orders() -> None:
     gap = compute_prediction_gap_for_pairs(
         snaps_now, snaps_predicted, alpha_pair=_ALPHA_PAIR, gamma=_GAMMA
     )
-    assert gap.shape == (1,)
+    assert len(gap) == 1
+    assert ("a", "b") in gap
 
 
 def test_compute_prediction_gap_for_pairs_rejects_key_set_mismatch() -> None:
     """Missing uid in one of the two dicts still raises (only ordering is tolerated)."""
-    import pytest
-
     snaps_now = {
         "a": _snap(0.0, 0.0, 0.0, 0.0),
         "b": _snap(2.0, 0.0, 0.0, 0.0),

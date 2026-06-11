@@ -25,10 +25,11 @@ classifiers = [
 # Runtime deps. Each entry is justified by an ADR or a tooling decision.
 dependencies = [
   "numpy>=1.26,<2.2",
-  "torch>=2.8,<2.9",                 # ADR-002 PyTorch; >=2.8 closes GHSA-53q9-r3pm-6pq6, GHSA-887c-mr87-cxwp, GHSA-3749-ghw9-m3mg
+  "torch>=2.9,<3.0",                 # ADR-002 PyTorch; >=2.8 closes GHSA-53q9-r3pm-6pq6, GHSA-887c-mr87-cxwp, GHSA-3749-ghw9-m3mg; >=2.9 closes PYSEC-2025-203/204/206 (availability-only AV:N C:N I:N A:H/L). Pinned to the cu128 wheel index on Linux via [tool.uv.sources] below — torch 2.12+ defaults to cu130 which is incompatible with NVIDIA driver 535.x (CUDA 12.x runtime). Cuda-major coupling discipline pinned in ADR-002 §Revision history (2026-05-20).
   "gymnasium>=1.3.0,<2.0",             # standard env API
   "mani-skill==3.0.1",               # ADR-001; git commit a4a4f92 pinned in uv.lock
   "sapien>=3.0,<4.0",                # ADR-005 (transitive but pinned for clarity)
+  "pytorch_kinematics>=0.7,<1.0",    # ADR-007 §Stage 1b (P1.03); promoted from transitive (via mani-skill) so the Stage1PickPlaceEnv Jacobian provider has a load-bearing direct dep. Same library ManiSkill's own IK uses; pinning <1.0 locks the API surface against the semver-breaking 1.x bump.
   "warp-lang>=1.13.0,<2.0",             # ADR-005 soft-body
   "cvxpy>=1.8.2,<2.0",                 # ADR-004 CBF-QP solver
   "qpsolvers[clarabel,osqp]>=4.0",   # fallback CBF-QP solver matrix
@@ -39,16 +40,14 @@ dependencies = [
   "rich>=15.0.0",                      # CLI rendering
   "structlog>=24.1",                 # structured logs
   "wandb>=0.17,<1.0",                # experiment tracking
-  # NOTE: HARL is intentionally *not* a runtime dependency. PyPI rejects
-  # any wheel METADATA that carries a `git+URL` direct reference (`Can't
-  # have direct dependency`, HTTP 400 from pypi.org/legacy/). HARL lives
-  # in the `[dependency-groups].train` group below — installed by
-  # `uv sync --group train` from a source checkout, not by `pip install
-  # concerto-multirobot`. The Phase-1 follow-up that restores a
-  # single-command training install is tracked in
-  # https://github.com/fsafaei/concerto/issues/132 (publish `harl-aht`
-  # to PyPI). See ADR-002 §Decisions and §Revision history (2026-05-16
-  # train-group scoping) for the design rationale.
+  # ADR-002 §Decisions + §Revision-history (2026-05-19): HARL is consumed
+  # as the published `harl-aht` PyPI distribution (the CONCERTO ego-AHT
+  # fork of PKU-MARL/HARL — see fsafaei/harl-fork#1). The earlier
+  # `[dependency-groups].train` workaround for #131 (git+URL pin in a
+  # PEP 735 group, kept out of wheel METADATA) was superseded by #132
+  # once harl-aht v0.1.0 shipped to TestPyPI. The `harl` import path is
+  # preserved (distribution name is `harl-aht`, import path is `harl`).
+  "harl-aht>=0.1.0,<0.2.0",
 ]
 
 # Rendered on the PyPI project page and checked by
@@ -74,6 +73,15 @@ dev = [
   "ipykernel", "ipython",
 ]
 viz = ["matplotlib>=3.9", "seaborn>=0.13.2"]
+# P1.05.11 / ADR-017 §Decisions: optional extra for the rollout recorder's
+# MP4 encode path. ``imageio`` is already a transitive dep via ManiSkill
+# (uv.lock line 1165); pinning the ``[ffmpeg]`` variant + version here
+# makes the rollout-recorder install story explicit. The recorder imports
+# lazily and degrades to JSONL-only when ``imageio`` is missing, so
+# callers who skip this extra still get the per-step rollout JSONLs.
+observability = [
+  "imageio[ffmpeg]>=2.31",
+]
 # ADR-008 / ADR-014: rliable-style performance profiles are an optional
 # render path. IQM and optimality gap are computed natively in
 # ``chamber.evaluation.bootstrap``; only performance profiles require
@@ -91,6 +99,7 @@ concerto                = "concerto.cli:main"            # method-level entry (P
 chamber-spike           = "chamber.cli.spike:main"
 chamber-eval            = "chamber.cli.eval:main"
 chamber-render-tables   = "chamber.cli.render_tables:main"
+chamber-analyze         = "chamber.cli.analyze:main"            # P1.05.11; ADR-017
 
 [build-system]
 requires = ["hatchling"]
@@ -109,19 +118,34 @@ dev = [
   "pytest-benchmark>=4.0", "hypothesis>=6.108",
   "pip-licenses>=4.0", "cyclonedx-bom>=4.0",
 ]
-# ADR-002 §Decisions + §Revision-history (2026-05-16): HARL is scoped to
-# a PEP 735 dependency group rather than a runtime dependency because
-# PyPI rejects wheel METADATA containing `git+URL` direct references.
-# Dependency groups are uv-only and are NOT shipped in METADATA — the
-# wheel uploads cleanly while source-checkout users get HARL via
-# `uv sync --group train`. The Phase-1 follow-up (publish `harl-aht` to
-# PyPI, then move it back to `[project.optional-dependencies].train` or
-# `[project].dependencies`) is tracked in #132. The pin is by 40-char
-# SHA: the fork lives at fsafaei/harl-fork; v0.1.0-aht layers the
-# CONCERTO AHT-wrapper patch (EgoAHTHAPPO + Hydra runner + env adapter)
-# on top of v0.0.0-vendored.
-train = [
-  "harl @ git+https://github.com/fsafaei/harl-fork.git@56436e4da9453cf124b2b814e0d270db58859dd9",  # T4b.7 v0.1.0-aht
+
+# harl-aht ships to TestPyPI for the v0.x release line (mirrors
+# concerto-multirobot's own TestPyPI-for-v0.x policy in the release
+# workflow). Promote to real PyPI at v1.x; this block goes away
+# when the source registry is the default index.
+[[tool.uv.index]]
+name = "test-pypi"
+url = "https://test.pypi.org/simple/"
+explicit = true   # only packages explicitly routed to this index resolve here
+
+# ADR-002 §Revision history (2026-05-20): pin torch to PyTorch's
+# cu128 wheel index on Linux. From torch 2.12 onwards the PyPI
+# default wheel ships cu130, which requires NVIDIA driver >=580
+# (CUDA toolkit 13.x runtime). The project's RTX 2080 box ships
+# driver 535.x — incompatible with cu130. Pinning at the wheel-
+# index level (rather than the version specifier) lets us bump
+# torch within the cu128 series without dragging in the cu130-
+# default-wheel breakage. Mac / Windows hosts still resolve torch
+# via the PyPI default (CPU on Mac, no platform mismatch).
+[[tool.uv.index]]
+name = "pytorch-cu128"
+url = "https://download.pytorch.org/whl/cu128"
+explicit = true   # only torch (and torch-aligned cuda nvidia-* wheels) resolve here
+
+[tool.uv.sources]
+harl-aht = { index = "test-pypi" }
+torch = [
+    { index = "pytorch-cu128", marker = "sys_platform == 'linux'" },
 ]
 
 [tool.pytest.ini_options]

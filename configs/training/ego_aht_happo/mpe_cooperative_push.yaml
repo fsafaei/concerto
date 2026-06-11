@@ -17,7 +17,9 @@ log_dir: ./logs
 
 wandb:
   enabled: false
-  project: concerto-m4b
+  # Single W&B project per ADR-017 §Decisions (tag-based filtering).
+  # Pre-ADR-017 default `concerto-m4b`; migrated 2026-05-22.
+  project: concerto-chamber
 
 env:
   task: mpe_cooperative_push

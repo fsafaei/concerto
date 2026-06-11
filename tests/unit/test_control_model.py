@@ -33,7 +33,17 @@ def _state(dim: int = 2) -> AgentSnapshot:
 
 
 def _bounds(action_norm: float = 2.0) -> Bounds:
-    return Bounds(action_norm=action_norm, action_rate=0.5, comm_latency_ms=1.0, force_limit=20.0)
+    # Conservative pattern from the post-P1.02 Bounds docstring:
+    # `cartesian_accel_capacity = action_linf_component` collapses the
+    # L-inf envelope and the L2 cap onto the same single-knob value for
+    # test fixtures. Production deployments pick the two independently.
+    return Bounds(
+        action_linf_component=action_norm,
+        cartesian_accel_capacity=action_norm,
+        action_rate=0.5,
+        comm_latency_ms=1.0,
+        force_limit=20.0,
+    )
 
 
 def test_double_integrator_action_to_cartesian_accel_is_identity() -> None:
@@ -58,7 +68,7 @@ def test_double_integrator_round_trip_is_identity_for_random_actions() -> None:
         np.testing.assert_allclose(action_back, action)
 
 
-def test_double_integrator_max_cartesian_accel_returns_bounds_action_norm() -> None:
+def test_double_integrator_max_cartesian_accel_returns_cartesian_accel_capacity() -> None:
     model = DoubleIntegratorControlModel(uid="a", action_dim=2)
     assert model.max_cartesian_accel(_bounds(action_norm=3.5)) == pytest.approx(3.5)
 

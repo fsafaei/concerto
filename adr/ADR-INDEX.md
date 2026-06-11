@@ -36,6 +36,7 @@ evidence per their own §Validation criteria.
 | 014 | Safety violation reporting protocol                                | §6.3               | Phase 1    | Accepted (2026-05-13)<sup>f</sup> |
 | 015 | Tier-task scope freeze                                             | §3.3 + §7.3        | Phase 1    | RFC<sup>e</sup>              |
 | 016 | SpikeRun schema lifecycle (Stage 1a / 1b disambiguation)           | §3.4 + §3.7        | Phase 0    | Accepted (2026-05-17)<sup>b</sup> |
+| 017 | Observability and experiment tracking (W&B + chamber-analyze)      | §13 + P1.05.11     | Phase 1    | Accepted (2026-05-22)        |
 
 ### Open work flags
 
@@ -52,6 +53,14 @@ error is deferred alongside the per-step bound (external-review P0-4,
 2026-05-16). See
 [ADR-004 §Open questions](ADR-004-safety-filter.md#open-questions-deferred-to-a-later-adr)
 and [ADR-006 §Open questions](ADR-006-partner-policy-assumptions.md#open-questions-deferred-to-a-later-adr).
+**Closed by P1.02 (2026-05-17):** the `Bounds.action_norm` semantic
+inconsistency named in the 2026-05-16 external-review (P1-3) is
+resolved by splitting `Bounds` into `action_linf_component` +
+`cartesian_accel_capacity`, and the `JacobianEmergencyController`
+`NotImplementedError` placeholder named in ADR-004 §Risks #1 is
+replaced with a real damped-pseudoinverse implementation. See
+[ADR-004 §Revision history 2026-05-17](ADR-004-safety-filter.md#revision-history)
+for both. Per-step bound and `lambda_safe` derivation remain open.
 
 <sup>b</sup> The staged Phase-0 spike protocol (Stage 1: AS + OM;
 Stage 2: CR + CM; Stage 3: PF + SA) is committed but the spikes have

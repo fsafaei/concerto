@@ -1,0 +1,179 @@
+#!/usr/bin/env bash
+# Stage-1b AS axis audit-gate hook (ADR-007 §Stage 1b; P1.04.5).
+#
+# This script evaluates the audit-gate predicates A + B against a
+# completed Stage-1b training cell's safety_telemetry_final JSONL
+# event. The launcher that produces the JSONL is
+# scripts/repro/stage1_as_stage1b.sh (P1.05); this audit hook runs
+# after that and can also be re-run standalone on any historical
+# JSONL.
+#
+# Audit-gate predicates (ADR-007 §Stage 1b implementation-details
+# Rev 10 — symmetric saturation; closes issue #178):
+#
+#   Predicate A (saturation guard, both directions, always evaluated):
+#     |λ_steady_state| <  0.9 × cartesian_accel_capacity   → exit 0
+#     |λ_steady_state| >= 0.9 × cartesian_accel_capacity   → exit 8
+#
+#   Predicate B (adaptation invariant, conditional on |λ_mean| > 1e-6):
+#     λ adapted away from 0 AND λ_var > 1e-12              → exit 0
+#     λ adapted away from 0 AND λ_var <= 1e-12             → exit 9 (λ stuck)
+#     λ stayed at 0 (vacuously OK)                         → exit 0
+#
+# Why absolute value (#178): the project's Phase-0 conformal-slack
+# regime pins `DEFAULT_EPSILON = -0.05` (ADR-004 §Decision) to bias λ
+# negative for "tighter constraints during contact-rich manipulation".
+# With a well-calibrated predictor (loss_avg ≈ 0) the drift is
+# `-eta × |eps|` per step ≈ -5e-4. Over the 100k-frame Stage-1b cell
+# budget the extrapolated λ_ss ≈ -49, well past the negative
+# saturation boundary. The original Rev 7 predicate A checked only
+# the positive direction (`λ_ss >= 0.9 × cap`); negative saturation
+# would silently bypass the audit-gate and push the QP rhs to demand
+# ~49 m/s² relative acceleration (vs the 2× cap envelope of 20 m/s²),
+# forcing infeasibility on most cells. Rev 10 closes that asymmetry.
+#
+# Predicate B captures the underlying invariant rather than codifying
+# condition-specific expectations — capturing "if λ moved, it should
+# have varied" is robust to per-cell asymmetries (AS-homo will likely
+# fire the filter substantively; AS-hetero / OM-* may stay at λ ≈ 0
+# vacuously). The cell-aware variant would have been the same class of
+# foot-gun ADR-016 §Decision closed via the typed sub_stage field.
+# The `|λ_mean| > 1e-6` adaptation trigger is also absolute-value so
+# the negative-eps regime is detected symmetrically.
+#
+# Safety-disabled path:
+#   When the JSONL summary records safety_enabled=false (operator
+#   override via `cfg.safety.enabled=false`), both predicates are
+#   skipped and the gate emits a non-failing "safety disabled by
+#   operator override; gate skipped" message. Exit 0.
+#
+# Usage:
+#   bash scripts/repro/stage1_as_stage1b_audit_gate.sh <path/to/run.jsonl>
+#
+# Exit codes:
+#   0  — gate passed (or safety disabled).
+#   8  — λ saturated against cartesian_accel_capacity (predicate A).
+#   9  — λ adapted but stuck (predicate B; λ_mean > ε but λ_var ≈ 0).
+#   2  — usage error (missing argument or non-existent JSONL).
+#   3  — JSONL malformed (no safety_telemetry_final event found).
+
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
+cd "${REPO_ROOT}"
+
+JSONL_PATH="${1:-}"
+if [[ -z "${JSONL_PATH}" ]]; then
+    echo "Usage: bash scripts/repro/stage1_as_stage1b_audit_gate.sh <path/to/run.jsonl>" >&2
+    exit 2
+fi
+if [[ ! -f "${JSONL_PATH}" ]]; then
+    echo "stage1_as_stage1b_audit_gate: JSONL not found: ${JSONL_PATH}" >&2
+    exit 2
+fi
+
+# Read the final-summary event (last line that matches event="safety_telemetry_final").
+# The training loop emits exactly one such event per cell at end-of-training.
+FINAL_SUMMARY="$(jq -c 'select(.event == "safety_telemetry_final")' "${JSONL_PATH}" | tail -n 1)"
+if [[ -z "${FINAL_SUMMARY}" ]]; then
+    echo "stage1_as_stage1b_audit_gate: no safety_telemetry_final event in ${JSONL_PATH}" >&2
+    echo "  (cfg.safety.enabled may have been false during the run, OR the run" >&2
+    echo "   crashed before completion. Inspect the JSONL for training_end events" >&2
+    echo "   and re-run if necessary.)" >&2
+    exit 3
+fi
+
+# Safety-disabled path: emit non-failing message and exit 0.
+SAFETY_ENABLED="$(jq -r '.safety_enabled' <<<"${FINAL_SUMMARY}")"
+if [[ "${SAFETY_ENABLED}" == "false" ]]; then
+    echo "stage1_as_stage1b_audit_gate: safety disabled by operator override (cfg.safety.enabled=false); gate skipped."
+    exit 0
+fi
+
+# Extract predicate inputs.
+LAMBDA_STEADY_STATE="$(jq -r '.lambda_steady_state' <<<"${FINAL_SUMMARY}")"
+LAMBDA_MEAN="$(jq -r '.lambda_mean' <<<"${FINAL_SUMMARY}")"
+LAMBDA_VAR="$(jq -r '.lambda_var' <<<"${FINAL_SUMMARY}")"
+CAPACITY="$(jq -r '.cartesian_accel_capacity' <<<"${FINAL_SUMMARY}")"
+SATURATION_THRESHOLD="$(jq -r '.saturation_threshold' <<<"${FINAL_SUMMARY}")"
+# P1.05.7 / #180: clamp bound surfaces the clamp-saturated regime so
+# predicate B distinguishes it from genuine "adapted but stuck". Pre-
+# P1.05.7 JSONL emits this as null; jq -r yields the string "null".
+LAMBDA_CLAMP_BOUND="$(jq -r '.lambda_clamp_bound // empty' <<<"${FINAL_SUMMARY}")"
+
+# Predicate A: |λ_steady_state| < saturation_threshold * cartesian_accel_capacity?
+# Use awk for the float comparison (bash arithmetic is integer-only; jq
+# arithmetic compiles but its boolean → bash translation is awkward).
+# The absolute-value form (issue #178) catches both positive saturation
+# (Theorem 3 standard regime, eps>0) and negative saturation (project's
+# Phase-0 eps=-0.05 regime where λ drifts negative).
+THRESHOLD_VALUE="$(awk -v t="${SATURATION_THRESHOLD}" -v c="${CAPACITY}" 'BEGIN { printf "%.6f", t * c }')"
+if awk -v l="${LAMBDA_STEADY_STATE}" -v t="${THRESHOLD_VALUE}" \
+    'BEGIN { abs_l = (l < 0) ? -l : l; exit !(abs_l >= t) }'; then
+    echo "stage1_as_stage1b_audit_gate: FAIL predicate A (saturation guard, symmetric)" >&2
+    echo "  |λ_steady_state|=|${LAMBDA_STEADY_STATE}| >= threshold=${THRESHOLD_VALUE}" >&2
+    echo "  (saturation_threshold=${SATURATION_THRESHOLD} × cartesian_accel_capacity=${CAPACITY})" >&2
+    echo "  λ saturated against the cell's bounds; the QP is running" >&2
+    echo "  without safety margin. ADR-007 §Stage 1b: saturating cells" >&2
+    echo "  force slice P1.05.5 (AgentSnapshot.qpos extension) to launch" >&2
+    echo "  mandatorily before Stage 2. (#178: negative drift under" >&2
+    echo "  eps<0 regime trips this symmetric check at production scale.)" >&2
+    exit 8
+fi
+
+# Predicate B: adaptation-conditional. Only fires when |λ| moved away
+# from zero (|λ_mean| > 1e-6). The vacuous case (λ stayed at 0) passes.
+# Absolute-value form mirrors predicate A's symmetric treatment under
+# the eps<0 regime — λ drifting negatively is still "adapted".
+#
+# P1.05.7 / #180 clamp-saturation branch: when |λ_mean - signed_bound|
+# is within 1e-6 of the clamp boundary, the cell is in the clamp-
+# saturated regime — λ_var == 0 is OPERATIONALLY CORRECT (every per-
+# pair λ pinned at ±bound by the symmetric clamp). Pass with a note;
+# distinct from "adapted but stuck" (λ_mean some non-boundary value
+# with var=0, indicating a degenerate update).
+if awk -v m="${LAMBDA_MEAN}" 'BEGIN { abs_m = (m < 0) ? -m : m; exit !(abs_m > 1e-6) }'; then
+    # λ adapted away from zero; assert it also varied.
+    if awk -v v="${LAMBDA_VAR}" 'BEGIN { exit !(v <= 1e-12) }'; then
+        # Check clamp-saturation branch first (#180).
+        clamp_saturated=0
+        if [[ -n "${LAMBDA_CLAMP_BOUND}" ]] && [[ "${LAMBDA_CLAMP_BOUND}" != "null" ]]; then
+            # signed_bound has the same sign as λ_mean.
+            if awk -v m="${LAMBDA_MEAN}" -v b="${LAMBDA_CLAMP_BOUND}" \
+                'BEGIN { signed_b = (m < 0) ? -b : b; d = m - signed_b; abs_d = (d < 0) ? -d : d; exit !(abs_d < 1e-6) }'; then
+                clamp_saturated=1
+            fi
+        fi
+        if [[ "${clamp_saturated}" == "1" ]]; then
+            echo "stage1_as_stage1b_audit_gate: PASS predicate B (clamp-saturated; #180)."
+            echo "  λ_mean=${LAMBDA_MEAN} ≈ signed_clamp_bound=±${LAMBDA_CLAMP_BOUND}"
+            echo "  λ_var=${LAMBDA_VAR} (zero by design — every per-pair λ pinned" >&2
+            echo "  at the symmetric clamp boundary). The conformal mechanism is" >&2
+            echo "  subordinated to the clamp this cell; the safety stack is" >&2
+            echo "  running with the in-loop operating envelope. Diagnostic note:" >&2
+            echo "  predictor loss is effectively zero throughout the rollout —" >&2
+            echo "  if this surface persists across Stage-1b axes the conformal" >&2
+            echo "  layer's adaptation premise (ADR-004 §Decision) deserves" >&2
+            echo "  review at Stage-2 entry." >&2
+        else
+            echo "stage1_as_stage1b_audit_gate: FAIL predicate B (λ adapted but stuck)" >&2
+            echo "  |λ_mean|=|${LAMBDA_MEAN}| > 1e-6 (adapted away from 0) but" >&2
+            echo "  λ_var=${LAMBDA_VAR} <= 1e-12 (didn't vary). The conformal" >&2
+            echo "  slack overlay converged to a non-zero constant — the" >&2
+            echo "  filter is firing but the learning signal is degenerate." >&2
+            echo "  Likely cause: predictor or env state-noise too low to" >&2
+            echo "  drive update_lambda_from_predictor's loss vector." >&2
+            if [[ -n "${LAMBDA_CLAMP_BOUND}" ]] && [[ "${LAMBDA_CLAMP_BOUND}" != "null" ]]; then
+                echo "  Note: clamp_bound=${LAMBDA_CLAMP_BOUND} present but λ_mean is" >&2
+                echo "  not at the boundary — degenerate update, not clamp saturation." >&2
+            fi
+            exit 9
+        fi
+    fi
+fi
+
+echo "stage1_as_stage1b_audit_gate: PASS audit gate (predicates A + B)."
+echo "  λ_steady_state=${LAMBDA_STEADY_STATE} (threshold=${THRESHOLD_VALUE})"
+echo "  λ_mean=${LAMBDA_MEAN}, λ_var=${LAMBDA_VAR}"
+exit 0

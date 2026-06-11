@@ -20,20 +20,19 @@ Thank you for your interest in contributing.
 git clone https://github.com/concerto-org/concerto.git
 cd concerto
 pip install uv
-uv sync --group dev --group train
+uv sync --group dev
 pre-commit install --install-hooks
 ```
 
-`--group train` pulls the
-[HARL fork](https://github.com/fsafaei/harl-fork) used by
-`chamber.benchmarks.ego_ppo_trainer` and
-`chamber.partners.frozen_harl`. It is *not* part of the runtime
-dependencies because PyPI rejects wheel `METADATA` containing
-`git+URL` direct references; see ADR-002 §Revision-history
-(2026-05-16) and [#131](https://github.com/fsafaei/concerto/issues/131)
-for the design rationale, and
+HARL (used by `chamber.benchmarks.ego_ppo_trainer` and
+`chamber.partners.frozen_harl`) ships as the `harl-aht` PyPI
+distribution — the CONCERTO fork at
+[`fsafaei/harl-fork`](https://github.com/fsafaei/harl-fork), published
+to TestPyPI under OIDC trusted publishing. It is pulled automatically
+as a runtime dependency, so no extra install step is required. See
+ADR-002 §Revision-history (2026-05-19) and
 [#132](https://github.com/fsafaei/concerto/issues/132) for the
-Phase-1 follow-up that publishes the fork to PyPI.
+supersession of the prior `[dependency-groups].train` workaround.
 
 ## Workflow
 

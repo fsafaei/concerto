@@ -101,11 +101,15 @@ def _sample_report() -> ThreeTableReport:
 
 
 def test_schema_version_pinned() -> None:
-    """Schema bumped to 2 for the ADR-014 ``max_slack`` / ``slack_l2`` columns
-    (external-review P0-3, 2026-05-16). Bumping this further is a breaking
-    change and requires a new ADR amendment.
+    """Schema bumped to 3 for the ``FilterInfo["lambda"]`` ndarray-to-dict
+    promotion (issue #144, 2026-05-19). The ConditionRow / GapRow JSON
+    fields are unchanged; v2 three-table payloads round-trip under v3
+    without modification (the dict-pair-keying change is on the
+    runtime FilterInfo channel, not on the report wire format).
+    Bumping further is a breaking change and requires a new ADR
+    amendment.
     """
-    assert SCHEMA_VERSION == 2
+    assert SCHEMA_VERSION == 3
 
 
 def test_round_trip_json_to_dataclass(tmp_path: Path) -> None:

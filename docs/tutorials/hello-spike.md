@@ -59,7 +59,8 @@ cfg = load_config(
         "log_dir=./hello_spike_logs",
     ],
 )
-curve = run_training(cfg, repo_root=repo_root)
+result = run_training(cfg, repo_root=repo_root)
+curve = result.curve  # result is a TrainingResult NamedTuple (curve + trainer)
 
 print(f"run_id={curve.run_id}")
 print(f"steps={len(curve.per_step_ego_rewards)}")

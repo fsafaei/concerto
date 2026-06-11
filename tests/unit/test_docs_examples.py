@@ -31,6 +31,7 @@ def test_why_conformal_walkthrough_example() -> None:
         DoubleIntegratorControlModel,
         FloatArray,
         SafetyState,
+        make_lambda_dict,
     )
     from concerto.safety.braking import maybe_brake
     from concerto.safety.cbf_qp import AgentSnapshot, ExpCBFQP
@@ -38,13 +39,14 @@ def test_why_conformal_walkthrough_example() -> None:
 
     dt = 0.05
     bounds = Bounds(
-        action_norm=5.0,
+        action_linf_component=5.0,
+        cartesian_accel_capacity=5.0,
         action_rate=0.5,
         comm_latency_ms=1.0,
         force_limit=20.0,
     )
     state = SafetyState(
-        lambda_=np.zeros(1, dtype=np.float64),
+        lambda_=make_lambda_dict(("a", "b")),
         epsilon=-0.05,
         eta=0.01,
     )
@@ -111,16 +113,19 @@ def test_why_conformal_walkthrough_example() -> None:
             state,
             snaps_now=agents,
             snaps_prev=agents_prev,
-            alpha_pair=2.0 * bounds.action_norm,
+            alpha_pair=2.0 * bounds.cartesian_accel_capacity,
             gamma=2.0,
             dt=dt,
             in_warmup=False,
         )
         # --- END: code block from docs/explanation/why-conformal.md ---
-        # The two telemetry handles must be live arrays of the right
-        # shape so the doc's claim about them is checked here.
+        # The two telemetry handles must be live so the doc's claim
+        # about them is checked here. ``per_step_violation`` stays as
+        # an ndarray indexed by canonical pair-iteration order;
+        # ``prediction_gap`` is a LambdaDict keyed by canonical
+        # UID-pair tuples (issue #144).
         assert per_step_violation.shape == (1,)
-        assert prediction_gap.shape == (1,)
+        assert prediction_gap == {("a", "b"): prediction_gap[("a", "b")]}
 
     # The example runs without exception; verify the safe action is
     # well-shaped and finite so a reader can trust the doc's claim
@@ -236,7 +241,8 @@ def test_hello_spike_tutorial_code_block(tmp_path) -> None:  # type: ignore[no-u
             f"log_dir={tmp_path / 'hello_spike_logs'}",
         ],
     )
-    curve = run_training(cfg, repo_root=repo_root)
+    result = run_training(cfg, repo_root=repo_root)
+    curve = result.curve  # result is a TrainingResult NamedTuple (curve + trainer)
     # --- END ---
 
     # The published example must produce a usable RewardCurve. Verify the

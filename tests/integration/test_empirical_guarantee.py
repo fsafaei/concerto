@@ -75,7 +75,7 @@ def test_empirical_guarantee_holds_on_100k_frames(tmp_path: Path) -> None:
     )
 
     t0 = time.perf_counter()
-    curve = run_training(cfg, repo_root=repo_root)
+    curve = run_training(cfg, repo_root=repo_root).curve
     elapsed = time.perf_counter() - t0
 
     assert elapsed < _MAX_WALLCLOCK_SECONDS, (

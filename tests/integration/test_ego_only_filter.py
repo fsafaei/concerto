@@ -31,6 +31,7 @@ from concerto.safety.api import (
     DoubleIntegratorControlModel,
     FloatArray,
     SafetyState,
+    make_lambda_dict,
 )
 from concerto.safety.cbf_qp import AgentSnapshot, ExpCBFQP
 from concerto.safety.conformal import constant_velocity_predict
@@ -68,12 +69,13 @@ class _FourDArmLikeModel:
         return out
 
     def max_cartesian_accel(self, bounds: Bounds) -> float:
-        return float(bounds.action_norm)
+        return float(bounds.cartesian_accel_capacity)
 
 
 def _bounds(action_norm: float = 5.0) -> Bounds:
     return Bounds(
-        action_norm=action_norm,
+        action_linf_component=action_norm,
+        cartesian_accel_capacity=action_norm,
         action_rate=0.5,
         comm_latency_ms=1.0,
         force_limit=20.0,
@@ -109,7 +111,7 @@ def test_ego_only_safe_action_shape_matches_ego_action_dim() -> None:
     raw_safe, _ = cbf.filter(
         proposed_action=np.zeros(4, dtype=np.float64),
         obs={"agent_states": snaps, "meta": {"partner_id": None}},
-        state=SafetyState(lambda_=np.zeros(1, dtype=np.float64)),
+        state=SafetyState(lambda_=make_lambda_dict(("ego", "partner"))),
         bounds=_bounds(),
         ego_uid="ego",
         partner_predicted_states={"partner": constant_velocity_predict(snaps["partner"], 0.05)},
@@ -128,14 +130,14 @@ def test_ego_only_constraint_violation_has_one_entry_per_partner() -> None:
     _, info = cbf.filter(
         proposed_action=np.zeros(4, dtype=np.float64),
         obs={"agent_states": snaps, "meta": {"partner_id": None}},
-        state=SafetyState(lambda_=np.zeros(1, dtype=np.float64)),
+        state=SafetyState(lambda_=make_lambda_dict(("ego", "partner"))),
         bounds=_bounds(),
         ego_uid="ego",
         partner_predicted_states={"partner": constant_velocity_predict(snaps["partner"], 0.05)},
         dt=0.05,
     )
     assert info["constraint_violation"].shape == (1,)
-    assert info["lambda"].shape == (1,)
+    assert len(info["lambda"]) == 1
     assert info["prediction_gap_loss"] is None
     assert info["fallback_fired"] is False
 
@@ -158,14 +160,14 @@ def test_ego_only_partner_disturbance_enters_via_rhs_not_variable() -> None:
         Phase-1 will replace the constant-velocity stub; this synthesises
         a small non-zero predicted accel by gently scaling the partner's
         velocity over a 0.05 s lookahead. Kept small (Δv/dt ≈ 1 m/s², well
-        below the 5 m/s² action_norm) so the QP stays feasible while still
+        below the 5 m/s² action_linf_component) so the QP stays feasible while still
         producing a measurably different safe ego action vs the baseline
         — the contract the test pins.
 
         Calibration note: under the corrected ``(v_pred - v_now) / dt``
         formula at ``dt=0.05``, a 1.5x scaling (the pre-fix value) yields
         ``|Δv|/dt = 0.5 / 0.05 = 10 m/s²`` which exceeds the 5 m/s²
-        ``action_norm`` and renders the QP infeasible. The 1.05x value
+        ``action_linf_component`` and renders the QP infeasible. The 1.05x value
         keeps the synthetic accel in the feasible regime while leaving
         the baseline-vs-shifted divergence loud enough for
         ``not np.allclose`` to fire reliably. The contract being pinned
@@ -183,13 +185,13 @@ def test_ego_only_partner_disturbance_enters_via_rhs_not_variable() -> None:
     # configurations — otherwise the QP trivially returns u_hat and the
     # baseline / shifted outputs would agree regardless of contract.
     proposed = np.array([5.0, 0.0, 0.0, 0.0], dtype=np.float64)
-    state = SafetyState(lambda_=np.zeros(1, dtype=np.float64))
+    state = SafetyState(lambda_=make_lambda_dict(("ego", "partner")))
     bounds = _bounds()
 
     raw_baseline, _ = cbf.filter(
         proposed_action=proposed,
         obs={"agent_states": snaps, "meta": {"partner_id": None}},
-        state=SafetyState(lambda_=np.zeros(1, dtype=np.float64)),
+        state=SafetyState(lambda_=make_lambda_dict(("ego", "partner"))),
         bounds=bounds,
         ego_uid="ego",
         partner_predicted_states={
@@ -222,8 +224,11 @@ def test_ego_only_lambda_shape_is_partner_count() -> None:
     """state.lambda_ shape must equal the number of partners (one row per pair)."""
     cbf = ExpCBFQP.ego_only(control_models=_models())
     snaps = _snaps_head_on()
-    state_wrong = SafetyState(lambda_=np.zeros(2, dtype=np.float64))  # one partner; expect (1,)
-    with pytest.raises(ValueError, match="lambda_ shape"):
+    # Wrong key set: state carries an extra pair for a partner that's not
+    # in the snapshot. Issue #144 promoted the shape check to a key-set
+    # check; the loud-fail message is now "key set mismatch".
+    state_wrong = SafetyState(lambda_={("ego", "partner"): 0.0, ("ego", "ghost"): 0.0})
+    with pytest.raises(ValueError, match="key set"):
         cbf.filter(
             proposed_action=np.zeros(4, dtype=np.float64),
             obs={"agent_states": snaps, "meta": {"partner_id": None}},
@@ -253,7 +258,7 @@ def test_ego_only_smoke_50_step_rollout_no_collision() -> None:
     v_ego = np.array([1.0, 0.0], dtype=np.float64)
     p_partner = np.array([2.0, 0.0], dtype=np.float64)
     v_partner = np.array([-1.0, 0.0], dtype=np.float64)
-    state = SafetyState(lambda_=np.zeros(1, dtype=np.float64))
+    state = SafetyState(lambda_=make_lambda_dict(("ego", "partner")))
 
     min_distance = float("inf")
     for _ in range(n_steps):
@@ -337,7 +342,7 @@ def test_ego_only_three_agents_one_ego_two_partners() -> None:
     raw_safe, info = cbf.filter(
         proposed_action=np.zeros(4, dtype=np.float64),
         obs={"agent_states": snaps, "meta": {"partner_id": None}},
-        state=SafetyState(lambda_=np.zeros(2, dtype=np.float64)),
+        state=SafetyState(lambda_={("ego", "p1"): 0.0, ("ego", "p2"): 0.0}),
         bounds=_bounds(),
         ego_uid="ego",
         partner_predicted_states={
@@ -349,4 +354,4 @@ def test_ego_only_three_agents_one_ego_two_partners() -> None:
     safe = cast("FloatArray", raw_safe)
     assert safe.shape == (4,)
     assert info["constraint_violation"].shape == (2,)
-    assert info["lambda"].shape == (2,)
+    assert len(info["lambda"]) == 2

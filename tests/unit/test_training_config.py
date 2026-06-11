@@ -19,6 +19,7 @@ from concerto.training.config import (
     EnvConfig,
     HAPPOHyperparams,
     PartnerConfig,
+    RolloutRecorderConfig,
     WandbConfig,
     load_config,
 )
@@ -33,10 +34,15 @@ def _minimal_env() -> EnvConfig:
 
 class TestWandbConfig:
     def test_defaults(self) -> None:
-        """plan/05 §2: W&B is opt-in; default disabled (CI / unit tests)."""
+        """plan/05 §2: W&B is opt-in; default disabled (CI / unit tests).
+
+        Default project name is ``"concerto-chamber"`` per ADR-017
+        §Decisions (single project across all stages; tag-based
+        filtering). Pre-ADR-017 default was ``"concerto-m4b"``.
+        """
         cfg = WandbConfig()
         assert cfg.enabled is False
-        assert cfg.project == "concerto-m4b"
+        assert cfg.project == "concerto-chamber"
 
     def test_enabled_round_trip(self) -> None:
         cfg = WandbConfig(enabled=True, project="prod-runs")
@@ -245,6 +251,48 @@ class TestRuntimeConfig:
         assert cfg.runtime.device == "auto"
 
 
+class TestRolloutRecorderConfig:
+    """P1.05.11 / ADR-017 §Decisions: eval-rollout recorder knob."""
+
+    def test_defaults(self) -> None:
+        """ADR-017 §Decisions: recorder is opt-in; default disabled."""
+        cfg = RolloutRecorderConfig()
+        assert cfg.enabled is False
+        assert cfg.interval_frames == 25_000
+        assert cfg.per_step_jsonl is True
+        assert cfg.episodes_per_record == 1
+        assert cfg.fps == 20
+
+    def test_interval_frames_must_be_positive(self) -> None:
+        with pytest.raises(ValidationError):
+            RolloutRecorderConfig(interval_frames=0)
+
+    def test_episodes_per_record_must_be_positive(self) -> None:
+        with pytest.raises(ValidationError):
+            RolloutRecorderConfig(episodes_per_record=0)
+
+    def test_fps_must_be_positive(self) -> None:
+        with pytest.raises(ValidationError):
+            RolloutRecorderConfig(fps=0)
+
+    def test_frozen(self) -> None:
+        """ADR-002 §Decisions: config is immutable."""
+        cfg = RolloutRecorderConfig()
+        with pytest.raises(ValidationError):
+            cfg.enabled = True  # type: ignore[misc]
+
+    def test_extra_field_forbidden(self) -> None:
+        """ADR-002 §Decisions: extra='forbid' so YAML typos fail loud."""
+        with pytest.raises(ValidationError):
+            RolloutRecorderConfig.model_validate({"enabled": True, "typo_key": 1})
+
+    def test_ego_aht_config_has_default_recorder(self) -> None:
+        """ADR-017 §Decisions: EgoAHTConfig.rollout_recorder is auto-populated when omitted."""
+        cfg = EgoAHTConfig(env=_minimal_env())
+        assert isinstance(cfg.rollout_recorder, RolloutRecorderConfig)
+        assert cfg.rollout_recorder.enabled is False
+
+
 class TestPublicSurface:
     def test_module_exports(self) -> None:
         from concerto.training import config as cfg_mod
@@ -254,6 +302,7 @@ class TestPublicSurface:
             "EnvConfig",
             "HAPPOHyperparams",
             "PartnerConfig",
+            "RolloutRecorderConfig",
             "RuntimeConfig",
             "WandbConfig",
             "load_config",

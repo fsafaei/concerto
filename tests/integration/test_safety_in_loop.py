@@ -48,7 +48,8 @@ from concerto.safety.reporting import (
 
 def _bounds(action_norm: float = 5.0) -> Bounds:
     return Bounds(
-        action_norm=action_norm,
+        action_linf_component=action_norm,
+        cartesian_accel_capacity=action_norm,
         action_rate=0.5,
         comm_latency_ms=1.0,
         force_limit=20.0,
@@ -118,7 +119,7 @@ def test_full_safety_stack_runs_100_steps_without_crash() -> None:  # noqa: PLR0
     )
     bounds = _bounds(action_norm=5.0)
     state = SafetyState(
-        lambda_=np.zeros(1, dtype=np.float64),
+        lambda_={("a", "b"): 0.0},
         epsilon=-0.05,
         eta=0.01,
     )
@@ -133,7 +134,7 @@ def test_full_safety_stack_runs_100_steps_without_crash() -> None:  # noqa: PLR0
     fallback_fires = 0
     qp_calls = 0
     snaps_prev: dict[str, AgentSnapshot] | None = None
-    alpha_pair_cbf = 2.0 * bounds.action_norm
+    alpha_pair_cbf = 2.0 * bounds.cartesian_accel_capacity
 
     for k in range(n_steps):
         snaps = {
@@ -260,8 +261,8 @@ def test_full_safety_stack_runs_100_steps_without_crash() -> None:  # noqa: PLR0
         table_3=(
             GapRow(
                 condition="gt/Learn",
-                lambda_mean=float(np.mean(state.lambda_)),
-                lambda_var=float(np.var(state.lambda_)),
+                lambda_mean=float(np.mean(list(state.lambda_.values()))),
+                lambda_var=float(np.var(list(state.lambda_.values()))),
                 oracle_lambda_mean=0.0,
             ),
         ),

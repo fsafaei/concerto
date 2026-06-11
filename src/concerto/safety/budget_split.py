@@ -51,8 +51,9 @@ class BudgetSplitStrategy(Protocol):
 
         Args:
             alpha_i: Strictly positive actuator capacity for agent ``i``
-                (typically maximum acceleration, ADR-006 §Decision
-                ``Bounds.action_norm``).
+                (typically maximum Cartesian acceleration, sourced from
+                ``model.max_cartesian_accel(bounds)`` which post-P1.02
+                reads ``bounds.cartesian_accel_capacity``).
             alpha_j: Strictly positive actuator capacity for agent ``j``.
 
         Returns:
@@ -94,8 +95,8 @@ class ProportionalBudgetSplit:
         if alpha_i <= 0.0 or alpha_j <= 0.0:
             msg = (
                 f"Both capacities must be > 0; got alpha_i={alpha_i}, "
-                f"alpha_j={alpha_j} (Bounds.action_norm is strictly positive "
-                "per ADR-006 §Decision)."
+                f"alpha_j={alpha_j} (Bounds.cartesian_accel_capacity is "
+                "strictly positive per ADR-006 §Decision)."
             )
             raise ValueError(msg)
         total = alpha_i + alpha_j

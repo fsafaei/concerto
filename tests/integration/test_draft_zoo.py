@@ -37,6 +37,7 @@ What the test pins (plan/04 §6 #1 + #4):
 
 from __future__ import annotations
 
+from dataclasses import replace
 from typing import TYPE_CHECKING
 
 import numpy as np
@@ -51,7 +52,7 @@ from chamber.partners.frozen_harl import (
 from chamber.partners.frozen_mappo import _MAPPOActor
 from chamber.partners.registry import load_partner
 from chamber.partners.selection import make_phase0_draft_zoo
-from chamber.utils.device import sapien_gpu_available
+from chamber.utils.device import sapien_cuda_renderer_available
 from concerto.training.checkpoints import CheckpointMetadata, save_checkpoint
 from tests.fakes import FakeMultiAgentEnv
 
@@ -155,15 +156,27 @@ def _stage_zoo_artefacts(
             )
 
 
-def _zero_dict_action(uids: tuple[str, ...], action_dim: int) -> dict[str, np.ndarray]:
-    return {uid: np.zeros(action_dim, dtype=np.float32) for uid in uids}
+def _zero_dict_action(uid_action_dims: dict[str, int]) -> dict[str, np.ndarray]:
+    """Per-uid zero-action dict matching the inner env's heterogeneous action spaces (#196).
+
+    The Stage-0 rig is heterogeneous: panda_wristcam has 8-D actions,
+    fetch 13-D, allegro_hand_right 16-D (under ManiSkill v3's default
+    control mode). Building a uniform-dim zero dict caused
+    ``mani_skill.../base_controller.py:325`` to reject the non-partner
+    uids' actions when the partner uid's dim differed from the others.
+    Per-uid dims are required for the real env; for Tier-1
+    ``FakeMultiAgentEnv`` (uniform 2-D) the caller passes
+    ``{uid: _FAKE_ACTION_DIM for uid in inner_uids}`` and the result is
+    byte-equivalent to the pre-#196 uniform-dim helper.
+    """
+    return {uid: np.zeros(dim, dtype=np.float32) for uid, dim in uid_action_dims.items()}
 
 
 def _exercise_partner(
     *,
     inner_env,  # type: ignore[no-untyped-def]
     spec: PartnerSpec,
-    inner_uids: tuple[str, ...],
+    uid_action_dims: dict[str, int],
     action_dim: int,
     n_steps: int = _NUM_STEPS,
 ) -> None:
@@ -173,6 +186,18 @@ def _exercise_partner(
     :class:`PartnerIdAnnotationWrapper`, drives ``reset + step`` for
     ``n_steps``, and asserts ``obs["meta"]["partner_id"]`` matches
     ``spec.partner_id`` at every step.
+
+    Args:
+        inner_env: The multi-agent env to drive.
+        spec: The partner spec to load via the registry.
+        uid_action_dims: Per-uid action-dim map for the inner env
+            (#196 — required because Stage-0's real action spaces are
+            heterogeneous across panda_wristcam / fetch /
+            allegro_hand_right). Used to build a correctly-shaped
+            zero-action dict for the non-partner uids.
+        action_dim: The partner uid's own action dim. Asserted against
+            ``partner.act(obs).shape``.
+        n_steps: Number of step calls to drive.
     """
     partner = load_partner(spec)
     env = PartnerIdAnnotationWrapper(inner_env, partner_id=spec.partner_id)
@@ -191,7 +216,7 @@ def _exercise_partner(
         assert np.all(np.isfinite(partner_action)), (
             f"{spec.class_name!r}: non-finite action at step {step_idx}"
         )
-        action = _zero_dict_action(inner_uids, action_dim)
+        action = _zero_dict_action(uid_action_dims)
         action[partner_uid] = partner_action
         obs, _, _, _, _ = env.step(action)
         assert obs["meta"]["partner_id"] == spec.partner_id, (
@@ -207,6 +232,54 @@ def _exercise_partner(
 # ---------------------------------------------------------------------------
 # Tier-1: Fake multi-agent env (default; CPU)
 # ---------------------------------------------------------------------------
+
+
+class TestZeroDictActionHeterogeneousDims:
+    """Pin the #196 per-uid action-dim contract of ``_zero_dict_action``.
+
+    Stage-0's real action spaces are heterogeneous: panda_wristcam 8-D,
+    fetch 13-D, allegro_hand_right 16-D under ManiSkill v3's default
+    control mode. The pre-#196 helper took a single ``action_dim``
+    and applied it to every uid, which caused
+    ``mani_skill.../base_controller.py:325`` to reject the non-partner
+    uids' actions on the Tier-2 path. These tests fence the contract
+    so a future drift back to the uniform-dim shape is caught at
+    Tier-1 instead of as a cryptic ManiSkill controller assertion at
+    Tier-2.
+    """
+
+    def test_per_uid_dims_produce_correctly_shaped_zero_actions(self) -> None:
+        """Each uid's zero-action array has the dim from ``uid_action_dims``."""
+        uid_action_dims = {
+            "panda_wristcam": 8,
+            "fetch": 13,
+            "allegro_hand_right": 16,
+        }
+        action = _zero_dict_action(uid_action_dims)
+        assert action["panda_wristcam"].shape == (8,)
+        assert action["fetch"].shape == (13,)
+        assert action["allegro_hand_right"].shape == (16,)
+        for arr in action.values():
+            assert arr.dtype == np.float32
+            np.testing.assert_array_equal(arr, np.zeros_like(arr))
+
+    def test_uniform_dims_remain_byte_equivalent_to_pre_196_path(self) -> None:
+        """Tier-1 ``FakeMultiAgentEnv`` callers pass uniform 2-D dims; byte-equivalent path."""
+        inner_uids = ("panda_wristcam", "fetch", "allegro_hand_right")
+        action = _zero_dict_action(dict.fromkeys(inner_uids, _FAKE_ACTION_DIM))
+        for uid in inner_uids:
+            assert action[uid].shape == (_FAKE_ACTION_DIM,)
+            np.testing.assert_array_equal(action[uid], np.zeros(_FAKE_ACTION_DIM, dtype=np.float32))
+
+    def test_empty_dict_returns_empty_dict(self) -> None:
+        """Edge case: no uids → empty action dict (no exception)."""
+        assert _zero_dict_action({}) == {}
+
+    def test_keys_match_input_dict_exactly(self) -> None:
+        """The returned dict carries exactly the input dict's keys, no extras."""
+        uid_action_dims = {"uid_a": 3, "uid_b": 5}
+        action = _zero_dict_action(uid_action_dims)
+        assert set(action.keys()) == {"uid_a", "uid_b"}
 
 
 class TestDraftZooFakeEnv:
@@ -225,12 +298,17 @@ class TestDraftZooFakeEnv:
             action_dim=_FAKE_ACTION_DIM,
         )
         inner_uids = ("panda_wristcam", "fetch", "allegro_hand_right")
+        # FakeMultiAgentEnv exposes a uniform 2-D action space per uid;
+        # the per-uid dim map is degenerate here but #196 still requires
+        # the explicit dict so the helper's contract is uniform across
+        # Tier-1 and Tier-2.
+        uid_action_dims: dict[str, int] = dict.fromkeys(inner_uids, _FAKE_ACTION_DIM)
         for spec in zoo:
             inner = FakeMultiAgentEnv(agent_uids=inner_uids)
             _exercise_partner(
                 inner_env=inner,
                 spec=spec,
-                inner_uids=inner_uids,
+                uid_action_dims=uid_action_dims,
                 action_dim=_FAKE_ACTION_DIM,
             )
 
@@ -256,16 +334,104 @@ class TestDraftZooFakeEnv:
         assert len(seen_ids) == 3
 
 
+class TestOverrideActionDimForScriptedHeuristic:
+    """Pin the #194 override helper used by the Tier-2 round-trip.
+
+    The helper is the engineering-only workaround for the
+    canonical-zoo / real-env action-dim mismatch; the assertions
+    below verify it (a) rewrites the scripted_heuristic spec, (b)
+    leaves other specs untouched, and (c) preserves all other
+    ``extra`` fields. If the #187 remediation lands the Option-B
+    ``load_partner`` env-derivation API, this helper retires and
+    these tests retire with it.
+    """
+
+    def _make_zoo_specs(self) -> list[PartnerSpec]:
+        return list(make_phase0_draft_zoo())
+
+    def test_overrides_scripted_heuristic_action_dim(self) -> None:
+        """``extra["action_dim"]`` is rewritten to the override value for scripted_heuristic."""
+        zoo = self._make_zoo_specs()
+        scripted = next(s for s in zoo if s.class_name == "scripted_heuristic")
+        assert scripted.extra["action_dim"] == "2"  # canonical-zoo invariant pin
+        overridden = _override_action_dim_for_scripted_heuristic(scripted, action_dim=13)
+        assert overridden.extra["action_dim"] == "13"
+
+    def test_preserves_other_extra_fields(self) -> None:
+        """Override only touches ``action_dim``; ``uid`` / ``target_xy`` / ``task`` flow through."""
+        zoo = self._make_zoo_specs()
+        scripted = next(s for s in zoo if s.class_name == "scripted_heuristic")
+        overridden = _override_action_dim_for_scripted_heuristic(scripted, action_dim=13)
+        for key in ("uid", "target_xy", "task"):
+            assert overridden.extra[key] == scripted.extra[key]
+        # PartnerSpec.partner_id is derived from spec identity; verify
+        # we have not mutated any field the registry keys off.
+        assert overridden.class_name == scripted.class_name
+        assert overridden.seed == scripted.seed
+        assert overridden.checkpoint_step == scripted.checkpoint_step
+        assert overridden.weights_uri == scripted.weights_uri
+
+    def test_non_scripted_heuristic_specs_pass_through_unchanged(self) -> None:
+        """Frozen-RL specs (mappo / harl) carry no ``action_dim`` knob; override is a no-op."""
+        zoo = self._make_zoo_specs()
+        for spec in zoo:
+            if spec.class_name == "scripted_heuristic":
+                continue
+            overridden = _override_action_dim_for_scripted_heuristic(spec, action_dim=13)
+            assert overridden is spec  # identity preserved for non-scripted specs
+
+    def test_override_does_not_mutate_input_spec(self) -> None:
+        """``PartnerSpec`` is ``frozen=True``; the override returns a new instance."""
+        zoo = self._make_zoo_specs()
+        scripted = next(s for s in zoo if s.class_name == "scripted_heuristic")
+        original_extra = dict(scripted.extra)
+        overridden = _override_action_dim_for_scripted_heuristic(scripted, action_dim=13)
+        assert scripted.extra == original_extra  # input untouched
+        assert overridden is not scripted  # fresh instance
+
+
 # ---------------------------------------------------------------------------
 # Tier-2: real Stage-0 env (GPU-gated)
 # ---------------------------------------------------------------------------
 
 
+def _override_action_dim_for_scripted_heuristic(
+    spec: PartnerSpec, *, action_dim: int
+) -> PartnerSpec:
+    """Return a copy of ``spec`` with ``extra["action_dim"]`` rewritten (#194).
+
+    Local helper, intentionally not promoted to a shared utility — the
+    correct long-term home for the env→partner action-dim derivation is
+    inside ``load_partner`` (#194 Option B), which depends on the #187
+    science decision about the scripted heuristic's planar-reach
+    semantics. Keeping the override visible at the test call site flags
+    it as a workaround rather than implying we've already chosen the
+    Option-B API.
+
+    Args:
+        spec: A draft-zoo spec; for the ``scripted_heuristic`` row the
+            ``extra["action_dim"]`` field is overwritten.
+        action_dim: Probe-derived value from
+            ``env.action_space.spaces[partner_uid].shape[0]``.
+
+    Returns:
+        A new :class:`PartnerSpec` (``PartnerSpec`` is ``frozen=True``);
+        non-scripted_heuristic specs are returned unchanged.
+    """
+    if spec.class_name != "scripted_heuristic":
+        return spec
+    return replace(spec, extra={**spec.extra, "action_dim": str(action_dim)})
+
+
 @pytest.mark.smoke
 @pytest.mark.gpu
 @pytest.mark.skipif(
-    not sapien_gpu_available(),
-    reason="Requires Vulkan/GPU (SAPIEN); skipped on CPU-only machines",
+    not sapien_cuda_renderer_available(),
+    reason=(
+        "Requires SAPIEN's CUDA renderer (the loose Vulkan/GPU gate isn't "
+        "sufficient — the Stage-0 ``panda_wristcam`` probe depends on a "
+        "functional CUDA renderer for its visual obs space; #188)"
+    ),
 )
 def test_draft_zoo_round_trip_on_real_stage0_env(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
@@ -277,6 +443,35 @@ def test_draft_zoo_round_trip_on_real_stage0_env(
     checkpoints are sized to the real env's ``obs["agent"][uid]["state"]``
     and ``action_space[uid]`` shapes (probed by instantiating the env
     once before staging the .pt files).
+
+    **scripted_heuristic action_dim override (#194 — engineering invariant).**
+    :func:`chamber.partners.selection.make_phase0_draft_zoo` ships the
+    ``scripted_heuristic`` row with ``extra["action_dim"]="2"`` so it
+    matches the Tier-1 :class:`tests.fakes.FakeMultiAgentEnv` per-uid
+    action shape ``(2,)``. The real Stage-0 ``fetch`` URDF under
+    ManiSkill v3's default control mode exposes a 13-D action space,
+    so the canonical spec is shape-wrong here. This test patches the
+    spec via :func:`_override_action_dim_for_scripted_heuristic` to
+    rewrite ``extra["action_dim"]`` to the probe-derived value before
+    calling ``load_partner``. The canonical zoo stays unchanged
+    (Tier-1 continues to use its 2-D fake-env contract).
+
+    **What the override does NOT address (#187 — open science question).**
+    Even with the action-dim shape corrected, the heuristic still writes
+    ``action[0]/action[1] = clipped xy delta toward target_xy`` and zeros
+    the remaining components. For fetch's ManiSkill-v3 action layout,
+    components 0/1 are wheel commands rather than Cartesian velocities,
+    so the resulting partner motion is the joint-vs-Cartesian mis-port
+    documented in #187. The Stage-2 CM axis needs that mis-port resolved
+    (the partner must emit Cartesian pose for the comm channel to
+    mediate meaningfully) but the M4 gate this test pins is purely the
+    shape + round-trip contract. The shape fix is engineering-only; the
+    semantics fix is gated on #187's founder remediation call.
+
+    **Retirement path.** If #187 lands the Option-B API
+    (``load_partner`` derives ``action_dim`` from an injected env
+    handle, plus a comm-channel pose reader for the heuristic), this
+    override and its helper can be deleted in the same commit.
     """
     import gymnasium as gym
 
@@ -305,7 +500,12 @@ def test_draft_zoo_round_trip_on_real_stage0_env(
             assert action_space.shape is not None
             action_dim = int(action_space.shape[0])
             uid_shapes[uid] = (obs_dim, action_dim)
-        inner_uids = tuple(probe.action_space.spaces.keys())
+        # Per-uid action-dim map for #196 — Stage-0's real action spaces
+        # are heterogeneous (panda_wristcam 8-D / fetch 13-D /
+        # allegro_hand_right 16-D under ManiSkill v3's default control
+        # mode). Building the map alongside ``uid_shapes`` keeps the
+        # env-probe in one place.
+        uid_action_dims = {uid: dim for uid, (_obs, dim) in uid_shapes.items()}
     finally:
         probe.close()
 
@@ -338,12 +538,16 @@ def test_draft_zoo_round_trip_on_real_stage0_env(
     for spec in zoo:
         uid = spec.extra["uid"]
         _obs_dim, action_dim = uid_shapes[uid]
+        # #194 engineering override: patch the canonical
+        # scripted_heuristic action_dim to match the real env. See the
+        # function docstring above for the #187 retirement path.
+        patched_spec = _override_action_dim_for_scripted_heuristic(spec, action_dim=action_dim)
         inner = make_stage0_env()
         try:
             _exercise_partner(
                 inner_env=inner,
-                spec=spec,
-                inner_uids=inner_uids,
+                spec=patched_spec,
+                uid_action_dims=uid_action_dims,
                 action_dim=action_dim,
             )
         finally:

@@ -6,14 +6,12 @@
         stage1-as stage1-om
 
 install:
-	# ADR-002 §Revision-history 2026-05-16 / #131: --group train pulls HARL
-	# via the PEP 735 dependency group. Source-checkout developers get the
-	# full test surface (including test_partner_frozen_harl and the lazy-
-	# import contract test); pip-install consumers of the wheel get only
-	# the safety stack and benchmark wrappers, since wheel METADATA cannot
-	# ship git+URL direct references. Phase-1 follow-up tracked in #132
-	# (publish harl-aht to PyPI).
-	uv sync --all-extras --group dev --group train
+	# HARL ships as the `harl-aht` PyPI distribution (ADR-002
+	# §Revision-history 2026-05-19, supersedes the 2026-05-16
+	# `[dependency-groups].train` workaround per #132). It resolves
+	# automatically as a runtime dependency, so no `--group train`
+	# step is required.
+	uv sync --all-extras --group dev
 
 test:
 	uv run pytest

@@ -1,0 +1,194 @@
+# SPDX-License-Identifier: Apache-2.0
+# Hydra config for Stage-1b science-evaluation training runs (P1.04;
+# ADR-007 §Stage 1b; plan/07 §T5b.2).
+#
+# Mirrors mpe_cooperative_push.yaml's shape; substitutes the Stage-1b
+# real-env target (chamber.envs.stage1_pickplace.Stage1PickPlaceEnv) and
+# the GPU-side determinism caveat (plan/08 §4).
+#
+# Per ADR-007 §Discipline + ADR-007 §Stage 1b: this yaml is consumed by
+# the chamber.benchmarks.stage1_common.TrainedPolicyFactory at the
+# Stage-1b spike dispatch; the factory overrides ``seed``,
+# ``env.agent_uids``, ``env.condition_id``, and ``partner.extra.uid`` /
+# ``partner.extra.action_dim`` per ``(seed, condition)`` cell so the
+# four pre-registered condition_id strings (spikes/preregistration/
+# {AS,OM}.yaml; git tags prereg-stage1-{AS,OM}-2026-05-15) all train
+# against the right env build. The yaml's defaults pin AS-hetero
+# (panda + fetch) as the "no-override-applied" target.
+#
+# Validates against concerto.training.config.EgoAHTConfig.
+
+algo: ego_aht_happo
+seed: 0
+# P1.05.9 / ADR-007 Rev 14 / ADR-002 Rev 2026-05-23 budget calibration.
+# The post-widening Stage-1b AS investigation (PR #186 / Rev 13;
+# `spikes/results/stage1-failure-investigation/2026-05-21-post-widening/
+# POSTWIDENING_INVESTIGATION.md` §Findings summary) converged on a single
+# fingerprint across the smoke + three ablations: the trained policy
+# reaches toward the cube across all 4 runs (per-window `last_reward`
+# climbs ~3e-5 → ~0.020 across 100k frames) but never grasps it within
+# the 50-step eval horizon — `n_terminated = 0 / 80` total. Surface 2
+# (training budget) and Surface 7 (architecture) survive as the narrowed
+# remediation surface; this slice bumps both knobs in coupled fashion as
+# the cheapest informative experiment under the founder's compute envelope.
+# Community ManiSkill PickCube baselines train at 1M+ frames with
+# single-robot PPO; the two-robot Stage-1b setting is structurally
+# harder so 1M is the lower bound of the investigation's
+# 500k-1M candidate range. `hidden_dim` rises from 64 → 256 to match the
+# 4× post-widening obs growth (`state.shape=(65,)` for AS-hetero per
+# Surface 6 / Rev 12 widening; MPE-vintage 64-wide MLP is calibrated for
+# low-D state and under-represents the conditional-grasp policy).
+# Implementation-detail-of-the-cell per ADR-007 §Discipline; the
+# comparison-protocol contract (prereg YAMLs / tags / condition_id
+# strings / seed list / episode budget) is unchanged.
+total_frames: 1000000
+checkpoint_every: 10000
+artifacts_root: ./artifacts
+log_dir: ./logs
+
+wandb:
+  enabled: false
+  # Single W&B project across all stages per ADR-017 §Decisions; tag-
+  # based filtering (stage:, sub_stage:, condition:, prereg:, backfill:)
+  # is how the UI separates runs. Pre-ADR-017 this stage pinned
+  # `concerto-stage1b`; migrated 2026-05-22.
+  project: concerto-chamber
+
+env:
+  task: stage1_pickplace
+  # 100-step horizon matches the Stage-1b compute budget pinned in
+  # chamber.envs.stage1_pickplace.DEFAULT_EPISODE_LENGTH (ADR-007 §Stage
+  # 1b). Longer than the MPE empirical-guarantee config (50) because
+  # the cooperative pick-place takes more steps to terminate; shorter
+  # than the upstream PickCubeEnv default (50) was intentionally
+  # bumped to accommodate the two-robot handoff (see P1.03 env module
+  # docstring for the budget rationale).
+  episode_length: 100
+  # AS-hetero default tuple — panda + fetch. The TrainedPolicyFactory
+  # overrides per-call from env.partner_uid (panda_partner for AS-homo;
+  # fetch for AS-hetero / OM-*).
+  agent_uids: [panda_wristcam, fetch]
+  # Default condition_id (AS-hetero); the factory overrides per cell
+  # from env.condition_id. Required because OM-homo / OM-hetero share
+  # the agent_uids tuple — the condition_id is the explicit
+  # disambiguator chamber.benchmarks.training_runner.build_env reads.
+  condition_id: stage1_pickplace_panda_plus_fetch_ego_aht_happo_per_agent
+  # P1.05.10 / ADR-007 §Stage 1b regime-alignment revision: training-cell
+  # parallelisation count. 1 (default) is the historical single-env cell,
+  # byte-identical per ADR-002. > 1 builds the ManiSkill GPU-parallel cell
+  # (physx_cuda; per-env derive_substream cube/goal streams; chamber-side
+  # auto-reset wrapper) and the per-update batch becomes
+  # num_envs x happo.rollout_length transitions. The training-time safety
+  # stack is not batched in this slice: num_envs > 1 REQUIRES the operator
+  # override +safety.enabled=false (train() loud-fails otherwise; the
+  # audit gate records "safety disabled by operator" per the contract
+  # below). Implementation-detail-of-the-cell per the Rev 15 precedent —
+  # prereg condition_ids / seed list / gate criteria untouched; both AS
+  # conditions must train under identical regime settings in anything
+  # gate-facing.
+  num_envs: 1
+
+# Frozen partner: ScriptedHeuristicPartner targeting the cube's spawn
+# region. The factory overrides extra.uid and extra.action_dim per
+# condition based on the eval env's action_space.spaces[partner_uid]
+# shape (8-D for panda_partner; 13-D for fetch).
+partner:
+  class_name: scripted_heuristic
+  seed: 0
+  checkpoint_step: null
+  weights_uri: null
+  extra:
+    uid: fetch
+    target_xy: "0.0,0.0"
+    # AS-hetero default; overridden per-cell to 8 (panda_partner) or
+    # 13 (fetch) by TrainedPolicyFactory from env.action_space.
+    action_dim: "13"
+
+happo:
+  lr: 3.0e-4
+  gamma: 0.99
+  gae_lambda: 0.95
+  clip_eps: 0.2
+  n_epochs: 4
+  rollout_length: 1024
+  batch_size: 256
+  # P1.05.9 / ADR-007 Rev 14: 64 → 256. The MPE-vintage 64-wide MLP was
+  # calibrated for the empirical-guarantee Phase-0 task (low-D state, low-D
+  # action, simple terminal). Stage-1b post-widening obs is 65-D (ego 18 +
+  # partner 30 + task 17) with an 8-D `pd_joint_delta_pos` action; matching
+  # the 4× obs-dim growth with 4× MLP width gives the actor + critic
+  # capacity to represent the conditional-grasp policy the per-window
+  # `last_reward` plateau evidence said h=64 cannot. Both actor (HARL HAPPO
+  # `MLPBase` hidden_sizes) and critic (`_EgoCritic`) are 2-hidden-layer
+  # MLPs of this width; total param count grows ~17K → ~165K, all comfortably
+  # under VRAM cap on RTX 2080 (SAPIEN renderer/physics dominate GPU memory,
+  # not torch tensors). See ADR-002 §Revision history 2026-05-23 for the
+  # MPE→Stage-1b calibration rationale.
+  hidden_dim: 256
+
+# GPU host (RTX 2080 / A100). plan/08 §4 GPU-determinism caveat:
+# cuDNN / cuBLAS kernels are not bit-deterministic even with the
+# deterministic flag; ADR-007 §Stage 1b accepts 95%-CI overlap as the
+# determinism contract on GPU rather than byte-identical.
+runtime:
+  device: cuda
+  deterministic_torch: false
+
+# Safety-stack wiring (P1.04.5; ADR-007 §Stage 1b implementation-details
+# Rev 7). When enabled=true, the training rollout wraps the trainer's
+# nominal ego action via the CBF-QP outer filter; per-step state.lambda_
+# is captured via concerto.training.safety_telemetry.SafetyAggregator
+# and flushed to the JSONL as `safety_telemetry` (per rollout-update)
+# + `safety_telemetry_final` (per cell) events. The audit-gate hook in
+# scripts/repro/stage1_{as,om}_stage1b.sh consumes the final event;
+# predicates A (saturation) + B (adaptation-conditional λ-var) gate
+# the cell.
+#
+# Operator override: `safety.enabled=false` (Hydra `+safety.enabled=false`)
+# disables the filter — the cell trains unfiltered and the audit-gate
+# emits a non-failing "safety disabled by operator" record. Use for
+# budget triage or comparative baselines.
+#
+# saturation_threshold=0.9 leaves a 10% margin for the predicate A
+# saturation guard (λ_steady_state >= 0.9 × cartesian_accel_capacity
+# trips exit 8). cbf_gamma=5.0 matches DEFAULT_CBF_GAMMA.
+# predictor_kind=constant_velocity is the Phase-1 default per ADR-004
+# §Decision; AoI-conditioned variants are Phase-2.
+safety:
+  enabled: true
+  saturation_threshold: 0.9
+  cbf_gamma: 5.0
+  lambda_safe: 0.0
+  n_warmup_steps: 50
+  predictor_kind: constant_velocity
+  # P1.04.6 / ADR-007 §Stage 1b Rev 8: per-step braking-fallback TTC
+  # threshold in seconds. concerto.safety.braking.maybe_brake fires
+  # when the smallest pairwise time-to-collision drops below this.
+  # 100 ms matches concerto.safety.braking.DEFAULT_TAU_BRAKE and
+  # plan/03 §2 Decision row "Braking fallback trigger".
+  tau_brake: 0.100
+  # P1.05.7 / issue #180: symmetric clamp on conformal slack lambda.
+  # Each per-pair lambda is clamped to
+  # ±clamp_floor_ratio × cartesian_accel_capacity per step. Without
+  # the clamp the eps=-0.05 regime drifts unboundedly negative
+  # (P1.05 100k-frame probe measured lambda_ss ≈ -49.76, well past
+  # the audit-gate boundary of ±9.0). At cap=10 m/s², the clamp
+  # engages at ±7.0 and the audit gate (saturation_threshold=0.9)
+  # trips at ±9.0 — a 2.0 m/s² buffer between in-loop clamping
+  # (operational) and audit-gate tripping (diagnostic).
+  # MUST satisfy clamp_floor_ratio < saturation_threshold; the
+  # SafetyConfig @model_validator loud-fails otherwise.
+  clamp_floor_ratio: 0.7
+
+# P1.05.11 / ADR-007 §Stage 1b Rev 18: potential-based settle term in the
+# TRAINING cell only (Ng-Harada-Russell form, F = gamma*Phi(s') - Phi(s),
+# Phi = -alpha * min(max-arm-|qvel|, cap) * 1[is_obj_placed]). Default
+# settle_alpha: 0 disables the wrapper entirely - byte-identical
+# pre-existing behaviour (ADR-002). The canonical env reward and
+# evaluate() are untouched; all evaluation measures unshaped success.
+# Anything gate-facing trains BOTH AS conditions with the identical
+# transform and alpha (Rev 18 condition-symmetry clause). The 2026-06-11
+# PBRS-settle pre-statement pre-states alpha in {0.1, 0.5}, cap 0.7.
+shaping:
+  settle_alpha: 0.0
+  settle_qvel_cap: 0.7

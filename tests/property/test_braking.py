@@ -27,7 +27,8 @@ from concerto.safety.cbf_qp import AgentSnapshot
 
 def _bounds(action_norm: float = 5.0) -> Bounds:
     return Bounds(
-        action_norm=action_norm,
+        action_linf_component=action_norm,
+        cartesian_accel_capacity=action_norm,
         action_rate=0.5,
         comm_latency_ms=1.0,
         force_limit=20.0,
@@ -117,15 +118,15 @@ def test_maybe_brake_fires_under_catastrophic_state() -> None:
     override, fired = maybe_brake(proposed, snaps, bounds=bounds)
     assert fired is True
     assert override is not None
-    # Magnitude is bounds.action_norm in opposite directions on the
+    # Magnitude is bounds.cartesian_accel_capacity in opposite directions on the
     # line between centres (push-apart).
-    assert np.linalg.norm(override["a"]) == pytest.approx(bounds.action_norm)
-    assert np.linalg.norm(override["b"]) == pytest.approx(bounds.action_norm)
+    assert np.linalg.norm(override["a"]) == pytest.approx(bounds.cartesian_accel_capacity)
+    assert np.linalg.norm(override["b"]) == pytest.approx(bounds.cartesian_accel_capacity)
     # Push apart: a's override has negative x (a is to the left of b),
     # b's has positive x. n_hat = (Dp / |Dp|) where Dp = p_a - p_b.
     n_hat_x = (-0.05 - 0.5) / abs(-0.05 - 0.5)  # = -1
-    np.testing.assert_allclose(override["a"], [bounds.action_norm * n_hat_x, 0.0])
-    np.testing.assert_allclose(override["b"], [-bounds.action_norm * n_hat_x, 0.0])
+    np.testing.assert_allclose(override["a"], [bounds.cartesian_accel_capacity * n_hat_x, 0.0])
+    np.testing.assert_allclose(override["b"], [-bounds.cartesian_accel_capacity * n_hat_x, 0.0])
 
 
 def test_maybe_brake_silent_when_separating_at_close_range() -> None:
@@ -174,8 +175,8 @@ def test_maybe_brake_handles_coincident_centres_without_nan() -> None:
     assert override is not None
     assert not np.any(np.isnan(override["a"]))
     assert not np.any(np.isnan(override["b"]))
-    np.testing.assert_allclose(override["a"], [bounds.action_norm, 0.0])
-    np.testing.assert_allclose(override["b"], [-bounds.action_norm, 0.0])
+    np.testing.assert_allclose(override["a"], [bounds.cartesian_accel_capacity, 0.0])
+    np.testing.assert_allclose(override["b"], [-bounds.cartesian_accel_capacity, 0.0])
 
 
 def test_maybe_brake_three_agents_only_offending_pair_overrides() -> None:

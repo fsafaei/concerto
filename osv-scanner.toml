@@ -38,3 +38,162 @@ torch 2.5.1 advisory (CVSS 4.8, medium). Same ADR-002 ``<2.6`` range
 gates the patched release; cleared in the Phase-1 upgrade alongside
 PYSEC-2025-41.
 """
+
+# ----- 2026-05-20 batch: OSV-Scanner daily refresh surfaced advisories
+# ----- on torch 2.8.0 / joblib 1.5.3 / markdown 3.10.2. Three classes:
+# -----   (a) torch advisories with upstream fix in 2.9.0+ but blocked
+# -----       by the cu12-vs-cu13 wheel-default coupling (torch 2.9+
+# -----       wheels default to cuda 13, breaking the RTX 2080 dev box
+# -----       on cuda 12.x driver). Deferred to the cu12-wheel-index
+# -----       pinning follow-up PR; ignoreUntil = 2026-12-31.
+# -----   (b) torch advisories without an upstream fix yet. Concerto's
+# -----       attack-surface analysis: all listed advisories require
+# -----       local access (AV:L) and target torch APIs the project does
+# -----       not exercise in production (jit, profiler, pt2 loader,
+# -----       flatbuffer module). No remote-exploitation vector.
+# -----   (c) joblib + markdown: no upstream patched version available.
+# -----       joblib's NumpyArrayWrapper.read_array is upstream-disputed
+# -----       (only used during caching of trusted content); concerto's
+# -----       checkpoint pipeline routes through torch.save / torch.load
+# -----       (see concerto.training.checkpoints) and does not invoke
+# -----       joblib for partner / ego weights. markdown is a docs-only
+# -----       transitive (via mkdocs) — the DoS vector requires
+# -----       attacker-controlled Markdown input, which the project's
+# -----       docs build does not exercise.
+
+[[IgnoredVulns]]
+id = "PYSEC-2025-189"
+ignoreUntil = 2026-12-31
+reason = """
+torch 2.8.0+ profiler memory-corruption (``torch.ops.profiler._call_end_callbacks_on_jit_fut``;
+CVSS 3.1 7.5 HIGH AV:N AC:H). No upstream patched version as of
+2026-05-20. Concerto does not use the torch profiler (no
+``torch.profiler.profile`` call anywhere in src/); the attack vector
+requires invoking the profiler with adversarial JIT-future arguments
+which is not part of any code path. Re-evaluate when a fix ships.
+"""
+
+[[IgnoredVulns]]
+id = "PYSEC-2025-190"
+ignoreUntil = 2026-12-31
+reason = """
+torch 2.8.0+ low-severity local advisory (CVSS 4.0 AV:L AC:H PR:L).
+No upstream patched version as of 2026-05-20. Affects an API surface
+concerto does not exercise; requires local access. Re-evaluate when a
+fix ships.
+"""
+
+[[IgnoredVulns]]
+id = "PYSEC-2025-192"
+ignoreUntil = 2026-12-31
+reason = """
+torch 2.8.0+ memory corruption in ``torch.nn.utils.rnn.pad_packed_sequence``
+(CVSS 4.0 AV:L). Concerto's RL stack does not consume RNN
+sequence-padding utilities (the actor / critic heads in
+``chamber.benchmarks.ego_ppo_trainer`` are MLPs over a flat Box state).
+No upstream patched version as of 2026-05-20.
+"""
+
+[[IgnoredVulns]]
+id = "PYSEC-2025-193"
+ignoreUntil = 2026-12-31
+reason = """
+torch 2.8.0+ low-severity local advisory (CVSS 4.0 AV:L AC:L PR:L).
+No upstream patched version as of 2026-05-20. Affects an API surface
+concerto does not exercise; requires local access. Re-evaluate when a
+fix ships.
+"""
+
+[[IgnoredVulns]]
+id = "PYSEC-2025-194"
+ignoreUntil = 2026-12-31
+reason = """
+torch 2.8.0+ low-severity local advisory (CVSS 4.0 AV:L AC:L PR:L).
+Companion to PYSEC-2025-193 (same class of local-access torch API
+foot-gun). No upstream patched version as of 2026-05-20.
+"""
+
+[[IgnoredVulns]]
+id = "PYSEC-2025-195"
+ignoreUntil = 2026-12-31
+reason = """
+torch 2.8.0+ low-severity local advisory (CVSS 4.0 AV:L AC:L PR:L).
+Companion to PYSEC-2025-193 / 194. No upstream patched version as of
+2026-05-20.
+"""
+
+[[IgnoredVulns]]
+id = "PYSEC-2025-196"
+ignoreUntil = 2026-12-31
+reason = """
+torch 2.8.0+ memory corruption in ``torch.jit.jit_module_from_flatbuffer``
+(CVSS 3.1 5.5 AV:L). Concerto does not export trained policies via
+flatbuffer / TorchScript (the project uses ``torch.save`` /
+``torch.load`` pickle paths only — see
+``concerto.training.checkpoints``). No upstream patched version as of
+2026-05-20.
+"""
+
+[[IgnoredVulns]]
+id = "PYSEC-2025-197"
+ignoreUntil = 2026-12-31
+reason = """
+torch 2.8.0+ low-severity local-access advisory (CVSS 4.0 AV:L).
+Companion to the PYSEC-2025-192/196 class of local torch API issues.
+No upstream patched version as of 2026-05-20.
+"""
+
+# PYSEC-2025-203 / -204 / -206 cleared by the cu128 wheel-pin PR
+# (torch 2.11.0+cu128; fix lands in torch 2.9.0+). Entries removed
+# 2026-05-20 alongside the [[tool.uv.index]] block in pyproject.toml.
+
+[[IgnoredVulns]]
+id = "PYSEC-2025-210"
+ignoreUntil = 2026-12-31
+reason = """
+torch profiler DoS via missing ``profiler.stop()``
+(CVSS 3.1 3.3 LOW AV:L). Concerto does not use the torch profiler;
+no concerto code path can trigger the DoS. No upstream patched version
+as of 2026-05-20.
+"""
+
+[[IgnoredVulns]]
+id = "PYSEC-2026-139"
+ignoreUntil = 2026-12-31
+reason = """
+torch 2.10.0+ PT2 loading-handler deserialisation
+(CVSS 3.1 7.8 HIGH AV:L C:H I:H A:H). Local-access attack vector; the
+project does not load untrusted PT2 packages (checkpoint loads are
+gated by SHA-256 sidecars + the ``concerto.training.checkpoints``
+payload-first / sidecar-second contract). No upstream patched
+version as of 2026-05-20. Re-evaluate when the upstream PR (referenced
+in the advisory text) ships.
+"""
+
+[[IgnoredVulns]]
+id = "PYSEC-2024-277"
+ignoreUntil = 2026-12-31
+reason = """
+joblib NumpyArrayWrapper.read_array deserialisation
+(CVSS 3.1 7.5 HIGH AV:N AC:H). **Upstream-disputed**: per the OSV
+advisory text, ``NumpyArrayWrapper is only used during caching of
+trusted content``. Concerto's checkpoint pipeline routes through
+``torch.save`` / ``torch.load`` (see
+``concerto.training.checkpoints``); joblib is a transitive dep via
+scikit-learn and is not invoked for partner / ego-weight serialisation.
+No upstream patched version as of 2026-05-20; joblib 1.5.3 is current
+latest.
+"""
+
+[[IgnoredVulns]]
+id = "PYSEC-2026-89"
+ignoreUntil = 2026-12-31
+reason = """
+markdown 3.8+ HTMLParser AssertionError DoS
+(CVSS 3.1 7.5 HIGH AV:N C:N I:N A:H). Affects applications that
+process attacker-controlled Markdown. Concerto only consumes markdown
+via mkdocs (docs-build path); the docs corpus is repo-controlled
+(no attacker-controlled input). No upstream patched version as of
+2026-05-20; markdown 3.10.2 is current latest. Re-evaluate when a
+patched release ships.
+"""

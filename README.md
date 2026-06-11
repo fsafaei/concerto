@@ -87,7 +87,7 @@ contract, preregistered spikes, byte-identical CPU determinism via
 ```bash
 git clone https://github.com/fsafaei/concerto.git
 cd concerto
-pip install uv && uv sync --group dev --group train
+pip install uv && uv sync --group dev
 
 # Smoke test the rig (ADR-001 acceptance criterion).
 uv run pytest -m smoke -x -v
@@ -288,11 +288,54 @@ src/
     ├── evaluation/#   HRS, pre-registration, leaderboard renderer
     └── benchmarks/#   Stage-0/1/2/3 spike runners
 
-adr/               # 15 Architecture Decision Records (the design rationale)
+adr/               # 17 Architecture Decision Records (the design rationale)
 docs/              # Diátaxis: tutorials / how-to / reference / explanation
 tests/             # unit / property / integration / smoke / reproduction
 spikes/            # pre-registration YAMLs + result archives
 ```
+
+---
+
+## Observability
+
+W&B (online dashboards) + a read-only CLI (`chamber-analyze`) for
+programmatic comparison + per-step rollout sidecar JSONLs paired with
+MP4 videos.
+
+The W&B sink is **opt-in**; the canonical record is always the per-cell
+`<run_id>.jsonl`. Runs without W&B auth still complete with valid records
+([ADR-017](adr/ADR-017-observability-and-experiment-tracking.md)).
+
+```bash
+# Install optional extras (imageio[ffmpeg] for MP4 encoding).
+uv sync --extra observability
+
+# Authenticate once (founder-side).
+wandb login
+
+# Enable for a Stage-1b cell.
+uv run chamber-spike train \
+    --config configs/training/ego_aht_happo/stage1_pickplace.yaml \
+    --override wandb.enabled=true
+```
+
+Agent-side co-analysis (works offline, no W&B account):
+
+```bash
+# Enumerate runs; --json output for programmatic consumption.
+uv run chamber-analyze list-runs --archive-root spikes/results/ --json | jq .
+
+# Side-by-side comparison across N runs.
+uv run chamber-analyze compare <run_id_a> <run_id_b> \
+    --archive-root spikes/results/<archive>/ \
+    --metrics mean_reward_final,terminal_success_rate,lambda_steady_state --json
+
+# Per-step rollout dump (the agent's view of an MP4).
+uv run chamber-analyze rollout-frames <run-id> \
+    --archive-root spikes/results/<archive>/ --episode 25000 --field is_grasped
+```
+
+Full cookbook: [`docs/observability.md`](docs/observability.md).
 
 ---
 

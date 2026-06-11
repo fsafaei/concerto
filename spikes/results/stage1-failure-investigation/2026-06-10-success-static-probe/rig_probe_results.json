@@ -1,0 +1,21 @@
+{
+ "ego_articulation_is_distinct": true,
+ "ego_dof": 9,
+ "class": "PandaWristCam",
+ "is_static_method_owner": "Panda.is_static",
+ "static_at_rest": true,
+ "static_under_partner_motion": true,
+ "partner_qvel_max_during": 3.145862340927124,
+ "static_under_ego_arm_motion": false,
+ "ego_arm_qvel_max_during": 0.667840838432312,
+ "gripper_only_finger_qvel": 0.18485601246356964,
+ "gripper_only_arm_qvel": 1.330975010205293e-07,
+ "static_under_gripper_only": true,
+ "evaluate_keys": [
+  "is_grasped",
+  "is_obj_placed",
+  "is_robot_static",
+  "success"
+ ],
+ "evaluate_static_matches_method": true
+}

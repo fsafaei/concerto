@@ -41,15 +41,19 @@ from concerto.safety.cbf_qp import AgentSnapshot, ExpCBFQP
 
 def _bounds(action_norm: float = 2.0) -> Bounds:
     return Bounds(
-        action_norm=action_norm,
+        action_linf_component=action_norm,
+        cartesian_accel_capacity=action_norm,
         action_rate=0.5,
         comm_latency_ms=1.0,
         force_limit=20.0,
     )
 
 
-def _state(n_pairs: int) -> SafetyState:
-    return SafetyState(lambda_=np.zeros(n_pairs, dtype=np.float64))
+def _state(uids: tuple[str, ...]) -> SafetyState:
+    """Build a fresh SafetyState with zero-initialised lambda over the canonical pair set."""
+    from concerto.safety.api import make_lambda_dict
+
+    return SafetyState(lambda_=make_lambda_dict(uids))
 
 
 def _snap(x: float, y: float, vx: float, vy: float, r: float = 0.2) -> AgentSnapshot:
@@ -84,7 +88,7 @@ def test_well_separated_agents_pass_through_proposed_action() -> None:
     raw_safe, info = cbf.filter(
         proposed_action=proposed,
         obs={"agent_states": snaps, "meta": {"partner_id": None}},
-        state=_state(1),
+        state=_state(("a", "b")),
         bounds=_bounds(),
     )
     safe = cast("dict[str, FloatArray]", raw_safe)
@@ -116,7 +120,7 @@ def test_head_on_collision_avoidance_wang_ames_egerstedt_crossing() -> None:
 
     cbf = _centralized(("a", "b"), gamma=2.0)
     bounds = _bounds(action_norm=a_max)
-    state = _state(1)
+    state = _state(("a", "b"))
 
     min_distance = float("inf")
     for _ in range(n_steps):
@@ -168,13 +172,13 @@ def test_lambda_relaxes_constraint_brings_safe_action_closer_to_proposal() -> No
     raw_safe_zero, _ = cbf.filter(
         proposed_action=proposed,
         obs={"agent_states": snaps, "meta": {"partner_id": None}},
-        state=_state(1),
+        state=_state(("a", "b")),
         bounds=bounds,
     )
     raw_safe_relaxed, _ = cbf.filter(
         proposed_action=proposed,
         obs={"agent_states": snaps, "meta": {"partner_id": None}},
-        state=SafetyState(lambda_=np.array([2.0], dtype=np.float64)),
+        state=SafetyState(lambda_={("a", "b"): 2.0}),
         bounds=bounds,
     )
     safe_zero = cast("dict[str, FloatArray]", raw_safe_zero)
@@ -209,7 +213,7 @@ def test_constraint_violation_is_clamped_nonnegative_per_pair_gap() -> None:
     _, info = _centralized(("a", "b")).filter(
         proposed_action=proposed,
         obs={"agent_states": snaps},
-        state=_state(1),
+        state=_state(("a", "b")),
         bounds=_bounds(action_norm=5.0),
     )
     assert info["constraint_violation"].shape == (1,)
@@ -218,14 +222,17 @@ def test_constraint_violation_is_clamped_nonnegative_per_pair_gap() -> None:
     assert info["prediction_gap_loss"] is None
 
 
-def test_filter_rejects_lambda_shape_mismatch() -> None:
+def test_filter_rejects_lambda_key_set_mismatch() -> None:
     snaps = {"a": _snap(0.0, 0.0, 0.0, 0.0), "b": _snap(10.0, 0.0, 0.0, 0.0)}
     proposed = {
         "a": np.zeros(2, dtype=np.float64),
         "b": np.zeros(2, dtype=np.float64),
     }
-    state_wrong = SafetyState(lambda_=np.zeros(5, dtype=np.float64))  # 1 pair; expected shape (1,).
-    with pytest.raises(ValueError, match="lambda_ shape"):
+    # Wrong key set: state carries a pair for an absent agent. Issue #144
+    # promoted the prior shape check to a key-set check; the message
+    # is now "key set mismatch".
+    state_wrong = SafetyState(lambda_={("a", "b"): 0.0, ("a", "ghost"): 0.0})
+    with pytest.raises(ValueError, match="key set"):
         _centralized(("a", "b")).filter(
             proposed_action=proposed,
             obs={"agent_states": snaps},
@@ -243,7 +250,7 @@ def test_filter_rejects_missing_agent_states() -> None:
         _centralized(("a", "b")).filter(
             proposed_action=proposed,
             obs={},
-            state=_state(1),
+            state=_state(("a", "b")),
             bounds=_bounds(),
         )
 
@@ -269,7 +276,7 @@ def test_qp_cannot_worsen_when_zero_is_feasible(seed: int) -> None:
     raw_safe, _ = _centralized(("a", "b")).filter(
         proposed_action=proposed,
         obs={"agent_states": snaps},
-        state=_state(1),
+        state=_state(("a", "b")),
         bounds=_bounds(action_norm=2.0),
     )
     safe = cast("dict[str, FloatArray]", raw_safe)
@@ -291,7 +298,7 @@ def test_three_agents_no_collision_under_random_drift() -> None:
         "c": np.zeros(2, dtype=np.float64),
     }
     cbf = _centralized(("a", "b", "c"), gamma=2.0)
-    state = _state(3)
+    state = _state(("a", "b", "c"))
     raw_safe, info = cbf.filter(
         proposed_action=proposed,
         obs={"agent_states": snaps},
@@ -300,7 +307,7 @@ def test_three_agents_no_collision_under_random_drift() -> None:
     )
     safe = cast("dict[str, FloatArray]", raw_safe)
     assert set(safe.keys()) == {"a", "b", "c"}
-    assert info["lambda"].shape == (3,)
+    assert len(info["lambda"]) == 3
     assert info["constraint_violation"].shape == (3,)
     assert info["prediction_gap_loss"] is None
 
@@ -312,7 +319,7 @@ def test_centralized_requires_dict_action() -> None:
         _centralized(("a", "b")).filter(
             proposed_action=np.zeros(4, dtype=np.float64),  # type: ignore[arg-type]
             obs={"agent_states": snaps},
-            state=_state(1),
+            state=_state(("a", "b")),
             bounds=_bounds(),
         )
 
@@ -337,14 +344,14 @@ def test_ego_only_requires_ego_uid_and_partner_predicted_states() -> None:
         cbf.filter(
             proposed_action=np.zeros(2, dtype=np.float64),  # pyright: ignore[reportArgumentType]
             obs={"agent_states": snaps},
-            state=_state(1),
+            state=_state(("a", "b")),
             bounds=_bounds(),
         )
     with pytest.raises(ValueError, match="partner_predicted_states"):
         cbf.filter(
             proposed_action=np.zeros(2, dtype=np.float64),  # pyright: ignore[reportArgumentType]
             obs={"agent_states": snaps},
-            state=_state(1),
+            state=_state(("a", "b")),
             bounds=_bounds(),
             ego_uid="a",
         )
@@ -352,7 +359,7 @@ def test_ego_only_requires_ego_uid_and_partner_predicted_states() -> None:
         cbf.filter(  # pyright: ignore[reportCallIssue]
             proposed_action=np.zeros(2, dtype=np.float64),
             obs={"agent_states": snaps},
-            state=_state(1),
+            state=_state(("a", "b")),
             bounds=_bounds(),
             ego_uid="a",
             partner_predicted_states={"b": snaps["b"]},
@@ -361,7 +368,7 @@ def test_ego_only_requires_ego_uid_and_partner_predicted_states() -> None:
         cbf.filter(
             proposed_action=np.zeros(2, dtype=np.float64),
             obs={"agent_states": snaps},
-            state=_state(1),
+            state=_state(("a", "b")),
             bounds=_bounds(),
             ego_uid="a",
             partner_predicted_states={"b": snaps["b"]},
@@ -375,7 +382,7 @@ def test_ego_only_requires_ego_uid_and_partner_predicted_states() -> None:
             cbf.filter(
                 proposed_action=np.zeros(2, dtype=np.float64),
                 obs={"agent_states": snaps},
-                state=_state(1),
+                state=_state(("a", "b")),
                 bounds=_bounds(),
                 ego_uid="a",
                 partner_predicted_states={"b": snaps["b"]},
@@ -392,7 +399,7 @@ def test_shared_control_requires_partner_action_bound() -> None:
         cbf.filter(
             proposed_action=proposed,
             obs={"agent_states": snaps},
-            state=_state(1),
+            state=_state(("a", "b")),
             bounds=_bounds(),
             ego_uid="a",
         )

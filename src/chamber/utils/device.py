@@ -19,6 +19,15 @@ def sapien_gpu_available() -> bool:
     function is used to gate Tier-2 smoke tests and to report device
     status at session start.  Returns False on any exception (ImportError,
     RuntimeError from missing Vulkan, or anything else).
+
+    Note (#188): this predicate returns True on hosts where SAPIEN
+    imports and constructs a BaseEnv successfully **even when SAPIEN's
+    CUDA renderer is unavailable** — e.g. an nvidia driver/library
+    version mismatch where ManiSkill silently falls back to the CPU
+    renderer (logged as ``"Falling back to 'cpu' device. Rendering
+    might be disabled"``).  Tests whose true precondition is a
+    functional CUDA renderer (visual observations, image-mode envs)
+    must additionally gate on :func:`sapien_cuda_renderer_available`.
     """
     try:
         import mani_skill.envs  # noqa: F401
@@ -47,6 +56,33 @@ def sapien_gpu_available() -> bool:
         return False
 
 
+def sapien_cuda_renderer_available() -> bool:
+    """Return True iff SAPIEN's CUDA render device is functional (#188).
+
+    Strictly tighter than :func:`sapien_gpu_available`.  ManiSkill v3's
+    backend resolver (``mani_skill.envs.utils.system.backend``) attempts
+    ``sapien.Device("cuda")`` and catches the ``RuntimeError: failed to
+    find device "cuda"`` raised on hosts with an nvidia driver/library
+    version mismatch, then silently falls back to the CPU renderer.
+    The fallback degrades visual obs spaces (e.g. the ``panda_wristcam``
+    rig drops its per-uid ``state`` key) and breaks tests whose true
+    precondition is a working CUDA renderer (``test_draft_zoo``'s M4
+    gate; any image-mode Stage-1 OM test).
+
+    This predicate reproduces ManiSkill's CUDA-device probe in isolation
+    so tests can gate on the exact failure mode without paying the cost
+    of constructing a full env.  Returns False on any exception
+    (ImportError, the documented RuntimeError, or anything else).
+    """
+    try:
+        import sapien
+
+        sapien.Device("cuda")
+        return True
+    except Exception:
+        return False
+
+
 def torch_device() -> str:
     """Return the best available PyTorch device string.
 
@@ -66,17 +102,66 @@ def torch_device() -> str:
     return "cpu"
 
 
+def torch_cuda_available() -> bool:
+    """Return True iff :func:`torch.cuda.is_available` returns True (#198).
+
+    Strictly tighter than :func:`sapien_gpu_available`: on hosts where
+    SAPIEN's Vulkan probe succeeds but torch's CUDA stack is broken
+    (e.g. an nvidia kernel-module / userspace NVML version mismatch
+    pending a reboot after a driver upgrade; or a driver below the
+    cu128 minimum for native CUDA 12.8 support on consumer hardware,
+    per ADR-002 §Rev 2026-05-20 cuda-major coupling discipline),
+    Tier-2 tests that construct an :class:`EgoPPOTrainer` with
+    ``RuntimeConfig.device='cuda'`` need this tighter gate to skip
+    cleanly instead of failing at trainer construction with the
+    ``device='cuda' requested but torch.cuda.is_available() is False``
+    :class:`RuntimeError` raised by
+    :func:`chamber.benchmarks.ego_ppo_trainer._resolve_device`.
+
+    Returns ``False`` on any exception (``ImportError`` if torch isn't
+    installed; any internal torch warning + return-False path on a
+    driver/library mismatch is collapsed to ``False`` so callers see a
+    bool, not a ``UserWarning``).
+    """
+    try:
+        import torch
+
+        return bool(torch.cuda.is_available())
+    except Exception:
+        return False
+
+
 def device_report() -> str:
     """Return a one-line human-readable device status for logs and CI output.
 
     ADR-001 §Risks: surfaces which hardware tier is active so that skipped
-    Tier-2 tests are unambiguous in CI and local output.
+    Tier-2 tests are unambiguous in CI and local output.  Reports the
+    loose SAPIEN/Vulkan gate, the tighter SAPIEN/CUDA-renderer gate
+    (#188), and the torch.cuda gate (#198) so the three failure modes
+    a Tier-2 test can hit are all visible at session start instead of
+    surfacing later as a trainer-construction RuntimeError or an
+    obs-space KeyError.
 
-    Example outputs::
+    Example outputs (line-wrapped here for the docstring; the live
+    output is a single line)::
 
-        Hardware — SAPIEN/Vulkan: available   | PyTorch device: cuda
-        Hardware — SAPIEN/Vulkan: unavailable | PyTorch device: cpu
+        Hardware — SAPIEN/Vulkan: available   |
+          SAPIEN/CUDA renderer: available   |
+          torch.cuda: available   | PyTorch device: cuda
+        Hardware — SAPIEN/Vulkan: available   |
+          SAPIEN/CUDA renderer: unavailable |
+          torch.cuda: unavailable | PyTorch device: cpu
+        Hardware — SAPIEN/Vulkan: unavailable |
+          SAPIEN/CUDA renderer: unavailable |
+          torch.cuda: unavailable | PyTorch device: cpu
     """
     sapien = "available  " if sapien_gpu_available() else "unavailable"
+    cuda_renderer = "available  " if sapien_cuda_renderer_available() else "unavailable"
+    torch_cuda = "available  " if torch_cuda_available() else "unavailable"
     pytorch = torch_device()
-    return f"Hardware — SAPIEN/Vulkan: {sapien} | PyTorch device: {pytorch}"
+    return (
+        f"Hardware — SAPIEN/Vulkan: {sapien} | "
+        f"SAPIEN/CUDA renderer: {cuda_renderer} | "
+        f"torch.cuda: {torch_cuda} | "
+        f"PyTorch device: {pytorch}"
+    )

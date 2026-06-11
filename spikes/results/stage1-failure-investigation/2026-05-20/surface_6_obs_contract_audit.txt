@@ -1,0 +1,157 @@
+Surface 6 — Observation contract audit
+======================================
+Date: 2026-05-21
+Auditor: §4a gap-fill follow-up (PR #182)
+Method: runtime env.reset(seed=0) inspection via the exact factory the
+spike runtime uses (chamber.benchmarks.stage1_as._stage1b_env_factory).
+
+Falsifiable questions:
+  Q1. Is the cube pose present in the ego's obs dict?
+  Q2. Is the goal/target pose present?
+  Q3. Is the partner's pose / tcp_pose / link state present from the
+      ego's perspective?
+
+Verdict: DEFECT (PARTIAL → DEFECT-high-prominence per the §4 fallback rule).
+
+Summary of the structural pathology
+-----------------------------------
+All three task-relevant fields are PRESENT in the env's observation
+dict — but they live in sub-trees the trainer's obs reader never
+indexes. The ego policy receives only 18 floats per step
+(``concat(qpos, qvel)`` of the panda_wristcam arm — 9 + 9 = 18). The
+cube, goal, and partner are structurally invisible to the optimiser.
+
+Wrapper chain (both AS conditions):
+  Stage1OMChannelFilter(Stage1ASStateSynthesizer(Stage1PickPlaceEnv))
+
+The Stage1OMChannelFilter is pass-through for AS conditions
+(``_filter_active = False`` because condition_id is not in
+``_FILTERED_CONDITIONS = {"stage1_pickplace_vision_only"}``;
+src/chamber/envs/stage1_obs_filter.py:83, 287).
+
+The Stage1ASStateSynthesizer ADDS a ``state`` key under each
+``obs["agent"][uid]`` sub-dict, holding
+``concat(qpos, qvel).ravel().astype(float32)`` of THAT uid's robot
+state only (src/chamber/envs/stage1_obs_filter.py:179-196, 221-244).
+It does not move, copy, or reference any field from ``obs["extra"]``.
+
+The trainer (EgoPPOTrainer) reads exactly one path:
+  src/chamber/benchmarks/ego_ppo_trainer.py:466
+    return np.asarray(obs["agent"][ego_uid]["state"], dtype=np.float32)
+  src/chamber/benchmarks/ego_ppo_trainer.py:667
+    ego_state_space = env_obs_space["agent"][ego_uid]["state"]
+    ...
+    obs_dim = int(ego_obs_space.shape[0])  # -> 18 for panda_wristcam
+
+So obs_dim = 18 across both AS conditions; the actor/critic see only
+the ego's own arm+gripper joint positions and velocities.
+
+Runtime obs-tree dump (seed=0, post-reset, batched num_envs=1)
+==============================================================
+
+=== AS-homo: stage1_pickplace_panda_only_mappo_shared_param ===
+    agent_uids = ('panda_wristcam', 'panda_partner')
+    inner obs_mode = 'state_dict'  (per _CONDITION_TABLE)
+    ego_uid = 'panda_wristcam'   partner_uid = 'panda_partner'
+
+  obs['agent'] dict (keys=['panda_wristcam', 'panda_partner'])
+  obs['agent']['panda_wristcam'] dict (keys=['qpos', 'qvel', 'state'])
+    qpos  shape=(1, 9)  dtype=torch.float32
+    qvel  shape=(1, 9)  dtype=torch.float32
+    state shape=(18,)   dtype=float32      <-- trainer reads THIS only
+  obs['agent']['panda_partner'] dict (keys=['qpos', 'qvel', 'state'])
+    qpos  shape=(1, 9)  dtype=torch.float32  <-- partner state PRESENT
+    qvel  shape=(1, 9)  dtype=torch.float32      but invisible to ego policy
+    state shape=(18,)   dtype=float32            (sibling subtree)
+  obs['extra'] dict (keys=['tcp_pose', 'goal_pos', 'cube_pose',
+                           'cube_to_tcp_pos', 'cube_to_goal_pos',
+                           'force_torque'])
+    tcp_pose         shape=(1, 7)  dtype=torch.float32
+    goal_pos         shape=(1, 3)  dtype=torch.float32  <-- goal PRESENT,
+    cube_pose        shape=(1, 7)  dtype=torch.float32      cube PRESENT,
+    cube_to_tcp_pos  shape=(1, 3)  dtype=torch.float32      cube-to-goal
+    cube_to_goal_pos shape=(1, 3)  dtype=torch.float32      PRESENT,
+    force_torque     shape=(1, 6)  dtype=float32            all invisible
+                                                            to ego policy
+
+=== AS-hetero: stage1_pickplace_panda_plus_fetch_ego_aht_happo_per_agent ===
+    agent_uids = ('panda_wristcam', 'fetch')
+    inner obs_mode = 'state_dict'
+    ego_uid = 'panda_wristcam'   partner_uid = 'fetch'
+
+  obs['agent'] dict (keys=['panda_wristcam', 'fetch'])
+  obs['agent']['panda_wristcam'] dict (keys=['qpos', 'qvel', 'state'])
+    qpos  shape=(1, 9)   dtype=torch.float32
+    qvel  shape=(1, 9)   dtype=torch.float32
+    state shape=(18,)    dtype=float32      <-- trainer reads THIS only
+                                                 (identical to AS-homo
+                                                 ego shape, by design)
+  obs['agent']['fetch'] dict (keys=['qpos', 'qvel', 'state'])
+    qpos  shape=(1, 15)  dtype=torch.float32  <-- fetch partner state
+    qvel  shape=(1, 15)  dtype=torch.float32      PRESENT but invisible
+    state shape=(30,)    dtype=float32             (sibling subtree)
+  obs['extra'] dict (same six task fields as AS-homo, same shapes)
+
+Answers to the three falsifiable questions
+------------------------------------------
+Q1. Is cube pose present in the ego's obs?
+    PRESENT in the dict at obs["extra"]["cube_pose"] (shape (1, 7) =
+    xyz + wxyz quaternion). NOT in obs["agent"]["panda_wristcam"]["state"]
+    (the only path the trainer reads). Operationally INVISIBLE.
+
+Q2. Is goal pose present in the ego's obs?
+    PRESENT at obs["extra"]["goal_pos"] (shape (1, 3) = xyz). NOT in
+    the trainer-readable state. Operationally INVISIBLE.
+
+Q3. Is partner pose / tcp / link state present from the ego's
+    perspective?
+    Partner qpos/qvel is PRESENT under obs["agent"][partner_uid] —
+    sibling subtree to the ego's. Panda TCP pose for the EGO is
+    PRESENT at obs["extra"]["tcp_pose"]. Neither is on the trainer's
+    read path; both INVISIBLE.
+
+Verdict and consequences
+------------------------
+Status: DEFECT (high prominence). The §4 fallback rule fires
+verbatim: "the contract is technically intact but the trainer can't
+address task-specific channels — surface this finding with high
+prominence as Surface 6 = DEFECT."
+
+The contract was implemented at the env layer (Stage1PickPlaceEnv
+populates the full PickCubeEnv-style extras dict at
+chamber/envs/stage1_pickplace.py:836-872) and consumed at the wrapper
+layer (Stage1ASStateSynthesizer at
+chamber/envs/stage1_obs_filter.py:179-196), but the wrapper's
+contract is "synthesise the trainer's required ``state`` key from the
+env's qpos+qvel pair" — there is no contract that any task field
+flows into that state. The trainer's MLPBase consumes obs_dim=18
+floats per step from a 7-DOF arm + 2 gripper-finger uid.
+
+This finding subsumes (or at minimum dominates) all four pre-existing
+ablations:
+
+  * A1 (zero-action partner): removing partner interference cannot
+    rescue a policy that cannot see the cube.
+  * A2 (safety disabled): removing safety constraint pressure cannot
+    rescue a policy that cannot see the cube.
+  * A3 (5x budget): no number of frames will let a policy whose only
+    input is its own arm's qpos+qvel discover where the (randomly-
+    spawned) cube is on each episode.
+  * A4 (oracle): the oracle test is unaffected — it bypasses the
+    policy entirely. A4 remains valid; in fact it becomes the
+    cleanest way to verify the env contract is intact end-to-end.
+
+Per §4a runbook discipline: NO FIX is proposed in this PR. The fix is
+a remediation slice gated on the senior-advisor consultation. The
+obvious remediation (add cube/goal/partner pose to the synthesised
+state vector) is two ADRs deep — touches ADR-007 §Stage 1b obs-mode
+spec and the AS axis's "what is the ego trying to discriminate"
+question. Consultation decides.
+
+Artifacts referenced
+--------------------
+  * src/chamber/envs/stage1_pickplace.py:836-872  — _get_obs_extra
+  * src/chamber/envs/stage1_obs_filter.py:179-196 — AS state synthesis
+  * src/chamber/envs/stage1_obs_filter.py:221-244 — _flat_state_concat
+  * src/chamber/benchmarks/ego_ppo_trainer.py:466 — trainer obs reader
+  * src/chamber/benchmarks/ego_ppo_trainer.py:667 — obs_dim derivation

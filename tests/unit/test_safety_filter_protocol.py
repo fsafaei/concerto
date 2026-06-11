@@ -107,7 +107,7 @@ def test_runtime_checkable_rejects_class_missing_filter() -> None:
 
 def test_ego_only_filter_returns_array_shape_matching_ego_action_dim() -> None:
     """Smoke check that the typed constructor's runtime behaviour matches the EGO_ONLY contract."""
-    from concerto.safety.api import Bounds, SafetyState
+    from concerto.safety.api import Bounds, SafetyState, make_lambda_dict
     from concerto.safety.cbf_qp import AgentSnapshot
 
     cbf = ExpCBFQP.ego_only(control_models=_models())
@@ -126,8 +126,14 @@ def test_ego_only_filter_returns_array_shape_matching_ego_action_dim() -> None:
     safe, info = cbf.filter(
         np.zeros(2, dtype=np.float64),
         {"agent_states": snaps, "meta": {"partner_id": None}},
-        SafetyState(lambda_=np.zeros(1, dtype=np.float64)),
-        Bounds(action_norm=2.0, action_rate=0.5, comm_latency_ms=1.0, force_limit=20.0),
+        SafetyState(lambda_=make_lambda_dict(("ego", "partner"))),
+        Bounds(
+            action_linf_component=2.0,
+            cartesian_accel_capacity=2.0,
+            action_rate=0.5,
+            comm_latency_ms=1.0,
+            force_limit=20.0,
+        ),
         ego_uid="ego",
         partner_predicted_states={"partner": snaps["partner"]},
         dt=0.05,
