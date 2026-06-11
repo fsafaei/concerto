@@ -126,6 +126,47 @@ class TestComputeRunMetadata:
         )
         assert ctx.extra == {"task": "stage0_smoke", "partner": "scripted_heuristic"}
 
+    def test_run_id_changes_with_config_fingerprint(self, repo_root: Path) -> None:
+        """RUNID-COLLISION fix (issue #214; ADR-002 §Revision history 2026-06-10).
+
+        Same-seed same-commit runs differing only in config must get
+        distinct run_ids — the 2026-06-10 regime-alignment chain's A1/A2
+        seed-0 cells (differing only in gamma) collided without this.
+        """
+        a = compute_run_metadata(
+            seed=0, run_kind="x", repo_root=repo_root, config_fingerprint="aaaa"
+        )
+        b = compute_run_metadata(
+            seed=0, run_kind="x", repo_root=repo_root, config_fingerprint="bbbb"
+        )
+        assert a.run_id != b.run_id
+
+    def test_run_id_stable_for_same_config_fingerprint(self, repo_root: Path) -> None:
+        """P6-adjacent: identical (seed, commit, kind, config) → identical run_id."""
+        a = compute_run_metadata(
+            seed=0, run_kind="x", repo_root=repo_root, config_fingerprint="aaaa"
+        )
+        b = compute_run_metadata(
+            seed=0, run_kind="x", repo_root=repo_root, config_fingerprint="aaaa"
+        )
+        assert a.run_id == b.run_id
+
+    def test_none_fingerprint_preserves_legacy_run_id(self, repo_root: Path) -> None:
+        """ADR-002 §Revision history 2026-06-10: ``None`` keeps the legacy hash material.
+
+        Config-less callers' historical run_ids must remain reproducible
+        — the fingerprint is folded in only when supplied.
+        """
+        legacy = compute_run_metadata(seed=3, run_kind="zoo_seed", repo_root=repo_root)
+        explicit_none = compute_run_metadata(
+            seed=3, run_kind="zoo_seed", repo_root=repo_root, config_fingerprint=None
+        )
+        fingerprinted = compute_run_metadata(
+            seed=3, run_kind="zoo_seed", repo_root=repo_root, config_fingerprint="cccc"
+        )
+        assert legacy.run_id == explicit_none.run_id
+        assert legacy.run_id != fingerprinted.run_id
+
     def test_run_context_is_frozen(self) -> None:
         """Immutability: bound logger context cannot drift mid-run."""
         import dataclasses

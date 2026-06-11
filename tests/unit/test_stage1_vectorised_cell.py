@@ -258,6 +258,28 @@ class TestVectorisedTrainLoop:
         assert len(result.curve.per_step_ego_rewards) == 16
         assert len(result.curve.checkpoint_paths) == 2
 
+    def test_terminal_checkpoint_flushed_when_frames_stop_short(self, tmp_path: Any) -> None:
+        """Issue #215 rider W1: the final policy lands on disk even off-bucket.
+
+        total_frames=70 at num_envs=4 → 17 iterations → frames_done=68,
+        which never reaches a fresh checkpoint_every=32 bucket beyond 64
+        — pre-fix the archive's last checkpoint trailed the final policy
+        (observed 19.0M vs 19,999,744 at N=1024/20M). The loop must
+        flush a terminal checkpoint at frames_done when the last bucket
+        save was earlier: buckets at 32 and 64, plus the terminal 68 →
+        3 checkpoints. The exact-divisible case (sibling cadence test:
+        64/32 → 2) must NOT gain a duplicate terminal save.
+        """
+        cfg = _vector_cfg(tmp_path, total_frames=70, rollout_length=4, checkpoint_every=32)
+        result = train(
+            cfg,
+            env=_FakeVectorEnv(),  # type: ignore[arg-type]
+            partner=_build_partner(),
+            trainer_factory=_factory_of(_RecordingTrainer()),
+        )
+        assert len(result.curve.checkpoint_paths) == 3
+        assert result.curve.checkpoint_paths[-1].name.endswith("step68.pt")
+
     def test_single_env_path_does_not_enter_vector_loop(self, tmp_path: Any) -> None:
         """num_envs=1 keeps the historical scalar loop (ADR-002 byte-identity guard).
 

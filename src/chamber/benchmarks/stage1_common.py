@@ -186,6 +186,64 @@ def _zero_ego_action_factory(
     return _act
 
 
+def _ensure_gpu_physx_enabled(*, num_envs: int) -> None:
+    """Enable SAPIEN GPU PhysX before any per-cell env exists (#215; ADR-007 §Stage 1b Rev 17).
+
+    GPU PhysX can only be enabled **before any other PhysX use in the
+    process**; once a CPU-PhysX scene exists, a vectorised
+    (``physx_cuda``) Stage-1b training env can never be built in that
+    process. The Stage-1b spike adapter builds the per-cell (CPU-sim)
+    eval env *before* invoking the ego-action factory, so the only safe
+    point to enable GPU PhysX is factory construction — which the
+    adapter evaluates before its cells loop. With GPU PhysX enabled
+    first, CPU-sim and GPU-sim envs compose in either order (validated
+    empirically in ``tests/integration/test_stage1_vectorised_real.py``'s
+    dispatch probe). Idempotent: a process where GPU PhysX is already
+    enabled is a no-op.
+
+    Lazy imports keep the module Tier-1-import-safe on Vulkan-less
+    hosts (ADR-001); the loud-fail names the once-per-process
+    constraint so an operator hitting it in a pytest session (whose GPU
+    gate builds a CPU probe env at collection) reaches for subprocess
+    isolation rather than a retry.
+
+    Args:
+        num_envs: The vectorisation count being requested — used only
+            for the error message.
+
+    Raises:
+        ChamberEnvCompatibilityError: If SAPIEN is unavailable or GPU
+            PhysX cannot be enabled in this process.
+    """
+    from chamber.envs.errors import (
+        ChamberEnvCompatibilityError,
+    )
+
+    try:
+        import sapien.physx
+    except ImportError as exc:
+        msg = (
+            f"TrainedPolicyFactory: cfg.env.num_envs={num_envs} requires SAPIEN "
+            "GPU PhysX, but sapien is not importable in this venv. Install per "
+            "pyproject.toml; see ADR-001 §Risks."
+        )
+        raise ChamberEnvCompatibilityError(msg) from exc
+    if sapien.physx.is_gpu_enabled():
+        return
+    try:
+        sapien.physx.enable_gpu()
+    except RuntimeError as exc:
+        msg = (
+            f"TrainedPolicyFactory: cfg.env.num_envs={num_envs} requires SAPIEN "
+            "GPU PhysX, which can only be enabled before any other PhysX use in "
+            f"the process — and enabling it failed: {exc}. A CPU-PhysX scene "
+            "(e.g. a prior env build, or a pytest session's GPU-gate probe) has "
+            "already run here. Run the vectorised cell in a fresh process "
+            "(one cell per process; see ADR-007 §Stage 1b Rev 17 and issue #215)."
+        )
+        raise ChamberEnvCompatibilityError(msg) from exc
+
+
 class TrainedPolicyFactory:
     """Phase-1 :class:`EgoActionFactory` — wires the ego-AHT training loop per cell.
 
@@ -290,13 +348,35 @@ class TrainedPolicyFactory:
     def __init__(self, *, cfg: EgoAHTConfig) -> None:
         """Build the factory; capture the base config.
 
+        Vectorised cells (``cfg.env.num_envs > 1``; ADR-007 §Stage 1b
+        Rev 17): SAPIEN GPU PhysX is enabled eagerly here, at factory
+        construction — which the spike adapters evaluate *before* any
+        per-cell env build — because GPU PhysX can only be enabled
+        before any other PhysX use in the process, and the adapter's
+        per-cell ordering builds the (CPU-sim) eval env before invoking
+        this factory (issue #215; the gate-readiness note's blocker B1).
+        With GPU PhysX enabled first, both the CPU-sim eval env and the
+        ``physx_cuda`` training env compose in either order. Single-env
+        configs are untouched (no SAPIEN import, no side effect).
+
         Args:
             cfg: Validated :class:`~concerto.training.config.EgoAHTConfig`
                 — the Stage-1b config (typically loaded from
                 ``configs/training/ego_aht_happo/stage1_pickplace.yaml``).
                 The original instance is never mutated; per-call
                 overrides are applied via ``model_copy``.
+
+        Raises:
+            ChamberEnvCompatibilityError: If ``cfg.env.num_envs > 1``
+                and GPU PhysX cannot be enabled (CUDA/SAPIEN missing,
+                or the process has already used CPU PhysX — e.g. a
+                pytest session whose GPU gate built a probe env;
+                vectorised cells then need a fresh process, exactly as
+                ``tests/integration/test_stage1_vectorised_real.py``
+                isolates them).
         """
+        if cfg.env.num_envs > 1:
+            _ensure_gpu_physx_enabled(num_envs=cfg.env.num_envs)
         self._cfg = cfg
 
     def __call__(

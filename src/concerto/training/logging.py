@@ -165,13 +165,25 @@ def compute_run_metadata(
     run_kind: str,
     repo_root: Path,
     extra: Mapping[str, str] | None = None,
+    config_fingerprint: str | None = None,
 ) -> RunContext:
     """Build :class:`RunContext` with auto-detected git/pyproject hashes (ADR-002; plan/05 §2).
 
     The ``run_id`` is the first 16 hex chars of the SHA-256 of
-    ``(seed, git_sha, pyproject_hash, run_kind)``, matching the
-    16-hex-char convention used for ``PartnerSpec.partner_id`` (plan/04
-    §3.1) so artefact filenames are uniform across the project.
+    ``(seed, git_sha, pyproject_hash, run_kind)`` — plus
+    ``config_fingerprint`` when supplied — matching the 16-hex-char
+    convention used for ``PartnerSpec.partner_id`` (plan/04 §3.1) so
+    artefact filenames are uniform across the project.
+
+    RUNID-COLLISION fix (issue #214; ADR-002 §Revision history
+    2026-06-10): without the config in the hash material, same-seed
+    runs at the same commit collide — observed in the 2026-06-10
+    regime-alignment chain, where cells differing only in regime knobs
+    (gamma, num_envs, frames) reproduced each other's run_ids and their
+    plain ``{run_id}.jsonl`` archive copies overwrote. Callers that own
+    a run config (the training loop) pass its fingerprint; ``None``
+    preserves the legacy hash material byte-for-byte so config-less
+    callers' historical run_ids remain reproducible.
 
     Args:
         seed: Root seed; passed to
@@ -180,13 +192,25 @@ def compute_run_metadata(
         repo_root: Working-tree directory to query for ``git_sha`` and
             ``pyproject.toml``.
         extra: Optional string-string metadata attached to every line.
+        config_fingerprint: Optional stable hash of the run's config
+            (the training loop passes the SHA-256 of the Pydantic
+            ``model_dump_json()`` excluding the operator-side sink
+            fields ``artifacts_root`` / ``log_dir`` / ``wandb`` —
+            output destinations are not run semantics, and the P6
+            byte-identity test pins that two same-seed runs in
+            different scratch dirs share one identity; see
+            :func:`concerto.training.ego_aht.train`). Folded into the
+            run_id material when not ``None``.
 
     Returns:
         A frozen :class:`RunContext` ready to bind via :func:`bind_run_logger`.
     """
     git_sha = _detect_git_sha(repo_root)
     pyproject_hash = _compute_pyproject_hash(repo_root / "pyproject.toml")
-    material = repr((seed, git_sha, pyproject_hash, run_kind))
+    if config_fingerprint is None:
+        material = repr((seed, git_sha, pyproject_hash, run_kind))
+    else:
+        material = repr((seed, git_sha, pyproject_hash, run_kind, config_fingerprint))
     run_id = hashlib.sha256(material.encode("utf-8")).hexdigest()[:16]
     return RunContext(
         run_id=run_id,
