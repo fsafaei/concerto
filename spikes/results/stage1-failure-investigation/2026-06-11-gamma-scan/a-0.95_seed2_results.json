@@ -1,0 +1,218 @@
+{
+  "arm": "A-0.95 (gamma-scan; PRESTATEMENT 2026-06-11; not a gate result)",
+  "git_sha": "b5d15da64c2b75671fbc525413acc168f862730c",
+  "seed": 2,
+  "gamma": 0.95,
+  "num_envs": 1024,
+  "frames": 20000000,
+  "safety_enabled_training": false,
+  "signature_this_run": {
+    "run_id": "d2e32c689de38930",
+    "n_train_scalars": 610,
+    "value_mean_final": 8.637801170349121,
+    "advantage_std_final": 0.46776527166366577,
+    "dist_entropy_final": 3.6534084379673004,
+    "grasp_rate_max": 0.914215087890625,
+    "place_rate_max": 0.014495849609375,
+    "success_rate_max": 0.000396728515625,
+    "static_rate_overall_mean": 0.0325621558017418,
+    "static_rate_last50_mean": 0.01255126953125,
+    "n_episodes_in_run": 201142,
+    "train_wall_clock_s": 1917.8
+  },
+  "eval_episodes": 30,
+  "eval_ever_grasped_count": 30,
+  "eval_ever_placed_count": 2,
+  "eval_ever_success_count": 1,
+  "eval_placed_steps": 101,
+  "eval_static_and_placed_steps": 1,
+  "eval_p_static_given_placed": 0.009900990099009901,
+  "eval_hold_qvel_in_placed": {
+    "median": 0.4871266782283783,
+    "p10": 0.2673887610435486,
+    "min": 0.16600245237350464,
+    "frac_below_threshold": 0.009900990099009901
+  },
+  "eval_rows": [
+    {
+      "episode": 0,
+      "ever_grasped": true,
+      "ever_placed": false,
+      "ever_success": false
+    },
+    {
+      "episode": 1,
+      "ever_grasped": true,
+      "ever_placed": false,
+      "ever_success": false
+    },
+    {
+      "episode": 2,
+      "ever_grasped": true,
+      "ever_placed": false,
+      "ever_success": false
+    },
+    {
+      "episode": 3,
+      "ever_grasped": true,
+      "ever_placed": false,
+      "ever_success": false
+    },
+    {
+      "episode": 4,
+      "ever_grasped": true,
+      "ever_placed": false,
+      "ever_success": false
+    },
+    {
+      "episode": 5,
+      "ever_grasped": true,
+      "ever_placed": false,
+      "ever_success": false
+    },
+    {
+      "episode": 6,
+      "ever_grasped": true,
+      "ever_placed": false,
+      "ever_success": false
+    },
+    {
+      "episode": 7,
+      "ever_grasped": true,
+      "ever_placed": false,
+      "ever_success": false
+    },
+    {
+      "episode": 8,
+      "ever_grasped": true,
+      "ever_placed": false,
+      "ever_success": false
+    },
+    {
+      "episode": 9,
+      "ever_grasped": true,
+      "ever_placed": false,
+      "ever_success": false
+    },
+    {
+      "episode": 10,
+      "ever_grasped": true,
+      "ever_placed": false,
+      "ever_success": false
+    },
+    {
+      "episode": 11,
+      "ever_grasped": true,
+      "ever_placed": true,
+      "ever_success": false
+    },
+    {
+      "episode": 12,
+      "ever_grasped": true,
+      "ever_placed": false,
+      "ever_success": false
+    },
+    {
+      "episode": 13,
+      "ever_grasped": true,
+      "ever_placed": false,
+      "ever_success": false
+    },
+    {
+      "episode": 14,
+      "ever_grasped": true,
+      "ever_placed": false,
+      "ever_success": false
+    },
+    {
+      "episode": 15,
+      "ever_grasped": true,
+      "ever_placed": false,
+      "ever_success": false
+    },
+    {
+      "episode": 16,
+      "ever_grasped": true,
+      "ever_placed": false,
+      "ever_success": false
+    },
+    {
+      "episode": 17,
+      "ever_grasped": true,
+      "ever_placed": false,
+      "ever_success": false
+    },
+    {
+      "episode": 18,
+      "ever_grasped": true,
+      "ever_placed": false,
+      "ever_success": false
+    },
+    {
+      "episode": 19,
+      "ever_grasped": true,
+      "ever_placed": false,
+      "ever_success": false
+    },
+    {
+      "episode": 20,
+      "ever_grasped": true,
+      "ever_placed": false,
+      "ever_success": false
+    },
+    {
+      "episode": 21,
+      "ever_grasped": true,
+      "ever_placed": true,
+      "ever_success": true
+    },
+    {
+      "episode": 22,
+      "ever_grasped": true,
+      "ever_placed": false,
+      "ever_success": false
+    },
+    {
+      "episode": 23,
+      "ever_grasped": true,
+      "ever_placed": false,
+      "ever_success": false
+    },
+    {
+      "episode": 24,
+      "ever_grasped": true,
+      "ever_placed": false,
+      "ever_success": false
+    },
+    {
+      "episode": 25,
+      "ever_grasped": true,
+      "ever_placed": false,
+      "ever_success": false
+    },
+    {
+      "episode": 26,
+      "ever_grasped": true,
+      "ever_placed": false,
+      "ever_success": false
+    },
+    {
+      "episode": 27,
+      "ever_grasped": true,
+      "ever_placed": false,
+      "ever_success": false
+    },
+    {
+      "episode": 28,
+      "ever_grasped": true,
+      "ever_placed": false,
+      "ever_success": false
+    },
+    {
+      "episode": 29,
+      "ever_grasped": true,
+      "ever_placed": false,
+      "ever_success": false
+    }
+  ]
+}
