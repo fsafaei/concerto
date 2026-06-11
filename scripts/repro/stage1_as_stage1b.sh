@@ -13,6 +13,12 @@
 #     (`chamber.utils.device.sapien_gpu_available()`).
 #   - `uv sync --group train` has been run (harl-aht on PyPI per #173).
 #   - The repo is on a commit >= PR 5a merge.
+#   - OPERATIONAL: no repository mutations (checkouts, merges, pulls,
+#     rebases) in this working tree while the chain is live. The run
+#     loads code + config once at process start, but per-cell
+#     provenance stamps re-read `git rev-parse HEAD` (issue #227) and
+#     HEAD movement mid-run skews the audit trail - observed in the
+#     2026-06-11 AS gate archive (four sha stamps across one launch).
 #
 # Wall-time on RTX 2080: ~25-40 GPU-h.
 # Wall-time on cloud A100 (rental): ~5-8 GPU-h (~$6-10 on Lambda Labs
