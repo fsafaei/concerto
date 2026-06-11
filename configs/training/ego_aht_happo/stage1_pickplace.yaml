@@ -179,3 +179,16 @@ safety:
   # MUST satisfy clamp_floor_ratio < saturation_threshold; the
   # SafetyConfig @model_validator loud-fails otherwise.
   clamp_floor_ratio: 0.7
+
+# P1.05.11 / ADR-007 §Stage 1b Rev 18: potential-based settle term in the
+# TRAINING cell only (Ng-Harada-Russell form, F = gamma*Phi(s') - Phi(s),
+# Phi = -alpha * min(max-arm-|qvel|, cap) * 1[is_obj_placed]). Default
+# settle_alpha: 0 disables the wrapper entirely - byte-identical
+# pre-existing behaviour (ADR-002). The canonical env reward and
+# evaluate() are untouched; all evaluation measures unshaped success.
+# Anything gate-facing trains BOTH AS conditions with the identical
+# transform and alpha (Rev 18 condition-symmetry clause). The 2026-06-11
+# PBRS-settle pre-statement pre-states alpha in {0.1, 0.5}, cap 0.7.
+shaping:
+  settle_alpha: 0.0
+  settle_qvel_cap: 0.7
