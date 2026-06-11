@@ -1,7 +1,7 @@
 .PHONY: install test lint typecheck format docs docs-build \
         verify-licences verify-no-ai-mentions verify-coverage-floors \
         verify-changelog-completeness \
-        sbom smoke verify \
+        sbom smoke verify release-preflight \
         empirical-guarantee zoo-seed-gpu zoo-seed-pull zoo-seed-verify \
         stage1-as stage1-om
 
@@ -62,6 +62,21 @@ verify-coverage-floors:
 
 sbom:
 	uv run cyclonedx-py environment -o sbom.spdx.json
+
+# Pre-upload gate for a PyPI / TestPyPI release; mirrors the build job in
+# .github/workflows/release.yml. Builds fresh artefacts, validates the
+# long-description render (twine) and the release metadata contract, and
+# checks every runtime dep resolves from production PyPI (a TestPyPI-only
+# dep would break `pip install concerto-multirobot` for end users).
+# twine runs ephemerally via uvx — it stays out of the project
+# dependency tree (its transitive docutils trips the ADR-012 licence
+# gate, and a release tool has no business in the wheel's environment).
+# twine >=6.1 is the floor that understands Metadata-Version 2.4.
+release-preflight:
+	rm -rf dist
+	uv build
+	uvx --from 'twine>=6.1' twine check --strict dist/*
+	uv run python scripts/check_dist_metadata.py --check-resolvable
 
 smoke:
 	uv run pytest -m smoke -x -v

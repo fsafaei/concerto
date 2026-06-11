@@ -94,16 +94,16 @@ uv run pytest -m smoke -x -v
 ```
 
 > **Install groups.** `--group dev` pulls the developer toolchain (ruff,
-> pyright, pytest); `--group train` pulls the
-> [HARL fork](https://github.com/fsafaei/harl-fork) used by the ego-AHT
-> training loop. PyPI rejects wheel `METADATA` containing `git+URL`
-> direct references, so HARL is intentionally *not* part of the runtime
-> deps — installing `concerto-multirobot` from PyPI gives you the
-> safety stack and the benchmark wrappers but **not** the trainer
-> (omit `--group train` if you only want the safety stack /
-> evaluation paths). Phase-1 follow-up to publish a PyPI release of the
-> HARL fork is tracked in
-> [#132](https://github.com/fsafaei/concerto/issues/132).
+> pyright, pytest). HARL ships as the `harl-aht` distribution (the
+> CONCERTO fork at [`fsafaei/harl-fork`](https://github.com/fsafaei/harl-fork);
+> see ADR-002 §Revision-history 2026-05-19 and
+> [#132](https://github.com/fsafaei/concerto/issues/132)) and is pulled
+> automatically as a runtime dependency, so the ego-AHT trainer +
+> frozen-HARL partner work out of the box from a source checkout — no
+> separate train-group install needed. The `concerto-multirobot`
+> distribution ships to [TestPyPI](https://test.pypi.org/project/concerto-multirobot/)
+> for the 0.x line; the production-PyPI debut is staged in the Release
+> workflow.
 
 Compose a factory-floor channel (URLLC-anchored degradation profile
 from ADR-006) and round-trip a packet through `encode` &rarr; `decode`:

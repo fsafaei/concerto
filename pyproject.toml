@@ -13,7 +13,7 @@ keywords = [
   "conformal-prediction", "heterogeneous-marl", "robotics-benchmark",
 ]
 classifiers = [
-  "Development Status :: 3 - Alpha",
+  "Development Status :: 4 - Beta",
   "Intended Audience :: Science/Research",
   "License :: OSI Approved :: Apache Software License",
   "Programming Language :: Python :: 3",
@@ -50,6 +50,15 @@ dependencies = [
   # to PyPI). See ADR-002 §Decisions and §Revision history (2026-05-16
   # train-group scoping) for the design rationale.
 ]
+
+# Rendered on the PyPI project page and checked by
+# scripts/check_dist_metadata.py before any upload (release.yml).
+[project.urls]
+Homepage = "https://github.com/fsafaei/concerto"
+Documentation = "https://fsafaei.github.io/concerto/"
+Repository = "https://github.com/fsafaei/concerto"
+Issues = "https://github.com/fsafaei/concerto/issues"
+Changelog = "https://github.com/fsafaei/concerto/blob/main/CHANGELOG.md"
 
 [project.optional-dependencies]
 docs = [
