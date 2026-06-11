@@ -1,0 +1,82 @@
+{
+  "smoke": "AS-homo path at the gate regime (N=1024, gamma=0.8, alpha=0.5, 1M frames) - SMOKE, not evidence",
+  "condition_id": "stage1_pickplace_panda_only_mappo_shared_param",
+  "partner_action_dim_resolved": 8,
+  "run_id": "893b2374481bab7f",
+  "config_hash_distinct_vintage": true,
+  "train_wall_clock_min": 1.4,
+  "n_train_scalar_windows": 30,
+  "n_rollout_windows": 30,
+  "final_train_health": {
+    "value_mean": 0.7674448490142822,
+    "advantage_std": 0.168220654129982,
+    "dist_entropy": 3.3151837289333344
+  },
+  "eval_10ep": {
+    "grasped": 0,
+    "placed": 0,
+    "success": 0
+  },
+  "eval_rows": [
+    {
+      "episode": 0,
+      "ever_grasped": false,
+      "ever_placed": false,
+      "ever_success": false
+    },
+    {
+      "episode": 1,
+      "ever_grasped": false,
+      "ever_placed": false,
+      "ever_success": false
+    },
+    {
+      "episode": 2,
+      "ever_grasped": false,
+      "ever_placed": false,
+      "ever_success": false
+    },
+    {
+      "episode": 3,
+      "ever_grasped": false,
+      "ever_placed": false,
+      "ever_success": false
+    },
+    {
+      "episode": 4,
+      "ever_grasped": false,
+      "ever_placed": false,
+      "ever_success": false
+    },
+    {
+      "episode": 5,
+      "ever_grasped": false,
+      "ever_placed": false,
+      "ever_success": false
+    },
+    {
+      "episode": 6,
+      "ever_grasped": false,
+      "ever_placed": false,
+      "ever_success": false
+    },
+    {
+      "episode": 7,
+      "ever_grasped": false,
+      "ever_placed": false,
+      "ever_success": false
+    },
+    {
+      "episode": 8,
+      "ever_grasped": false,
+      "ever_placed": false,
+      "ever_success": false
+    },
+    {
+      "episode": 9,
+      "ever_grasped": false,
+      "ever_placed": false,
+      "ever_success": false
+    }
+  ]
+}
