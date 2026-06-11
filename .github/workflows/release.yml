@@ -118,7 +118,12 @@ jobs:
   # TestPyPI upload — the pre-release smoke check ahead of the
   # production publish below. OIDC trusted publishing; no API token.
   # The TestPyPI-side trusted-publisher mapping for this repo +
-  # workflow has no environment attached.
+  # workflow has no environment attached. --check-url makes re-fires
+  # idempotent: files already on the index that are byte-identical
+  # (hatchling builds are reproducible) are skipped instead of failing
+  # the run. A metadata respin of an already-published version still
+  # needs publish_testpypi=false — its rebuilt files differ, and the
+  # index rejects filename reuse.
   publish-testpypi:
     runs-on: ubuntu-latest
     needs: [release-please, build]
@@ -135,7 +140,7 @@ jobs:
           name: dist
           path: dist
       - uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b  # v8.1.0
-      - run: uv publish --publish-url https://test.pypi.org/legacy/ --trusted-publishing always
+      - run: uv publish --publish-url https://test.pypi.org/legacy/ --check-url https://test.pypi.org/simple/ --trusted-publishing always
 
   # Production-PyPI publish. Gated on the TestPyPI smoke check (unless
   # that was explicitly skipped for a version that already exists on
@@ -164,4 +169,7 @@ jobs:
           name: dist
           path: dist
       - uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b  # v8.1.0
-      - run: uv publish --trusted-publishing always
+      # --check-url lets a re-dispatch after a transient failure skip
+      # files the index already holds instead of erroring on the
+      # duplicate upload.
+      - run: uv publish --check-url https://pypi.org/simple/ --trusted-publishing always
