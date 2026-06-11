@@ -1,0 +1,148 @@
+Unknown attribute "D" in /robot[@name='panda']/joint[@name='panda_joint1']/dynamics
+Unknown attribute "K" in /robot[@name='panda']/joint[@name='panda_joint1']/dynamics
+Unknown attribute "mu_coulomb" in /robot[@name='panda']/joint[@name='panda_joint1']/dynamics
+Unknown attribute "mu_viscous" in /robot[@name='panda']/joint[@name='panda_joint1']/dynamics
+Unknown attribute "D" in /robot[@name='panda']/joint[@name='panda_joint2']/dynamics
+Unknown attribute "K" in /robot[@name='panda']/joint[@name='panda_joint2']/dynamics
+Unknown attribute "mu_coulomb" in /robot[@name='panda']/joint[@name='panda_joint2']/dynamics
+Unknown attribute "mu_viscous" in /robot[@name='panda']/joint[@name='panda_joint2']/dynamics
+Unknown attribute "D" in /robot[@name='panda']/joint[@name='panda_joint3']/dynamics
+Unknown attribute "K" in /robot[@name='panda']/joint[@name='panda_joint3']/dynamics
+Unknown attribute "mu_coulomb" in /robot[@name='panda']/joint[@name='panda_joint3']/dynamics
+Unknown attribute "mu_viscous" in /robot[@name='panda']/joint[@name='panda_joint3']/dynamics
+Unknown attribute "D" in /robot[@name='panda']/joint[@name='panda_joint4']/dynamics
+Unknown attribute "K" in /robot[@name='panda']/joint[@name='panda_joint4']/dynamics
+Unknown attribute "mu_coulomb" in /robot[@name='panda']/joint[@name='panda_joint4']/dynamics
+Unknown attribute "mu_viscous" in /robot[@name='panda']/joint[@name='panda_joint4']/dynamics
+Unknown attribute "D" in /robot[@name='panda']/joint[@name='panda_joint5']/dynamics
+Unknown attribute "K" in /robot[@name='panda']/joint[@name='panda_joint5']/dynamics
+Unknown attribute "mu_coulomb" in /robot[@name='panda']/joint[@name='panda_joint5']/dynamics
+Unknown attribute "mu_viscous" in /robot[@name='panda']/joint[@name='panda_joint5']/dynamics
+Unknown attribute "D" in /robot[@name='panda']/joint[@name='panda_joint6']/dynamics
+Unknown attribute "K" in /robot[@name='panda']/joint[@name='panda_joint6']/dynamics
+Unknown attribute "mu_coulomb" in /robot[@name='panda']/joint[@name='panda_joint6']/dynamics
+Unknown attribute "mu_viscous" in /robot[@name='panda']/joint[@name='panda_joint6']/dynamics
+Unknown attribute "D" in /robot[@name='panda']/joint[@name='panda_joint7']/dynamics
+Unknown attribute "K" in /robot[@name='panda']/joint[@name='panda_joint7']/dynamics
+Unknown attribute "mu_coulomb" in /robot[@name='panda']/joint[@name='panda_joint7']/dynamics
+Unknown attribute "mu_viscous" in /robot[@name='panda']/joint[@name='panda_joint7']/dynamics
+Unknown attribute "D" in /robot[@name='panda']/joint[@name='panda_joint1']/dynamics
+Unknown attribute "K" in /robot[@name='panda']/joint[@name='panda_joint1']/dynamics
+Unknown attribute "mu_coulomb" in /robot[@name='panda']/joint[@name='panda_joint1']/dynamics
+Unknown attribute "mu_viscous" in /robot[@name='panda']/joint[@name='panda_joint1']/dynamics
+Unknown attribute "D" in /robot[@name='panda']/joint[@name='panda_joint2']/dynamics
+Unknown attribute "K" in /robot[@name='panda']/joint[@name='panda_joint2']/dynamics
+Unknown attribute "mu_coulomb" in /robot[@name='panda']/joint[@name='panda_joint2']/dynamics
+Unknown attribute "mu_viscous" in /robot[@name='panda']/joint[@name='panda_joint2']/dynamics
+Unknown attribute "D" in /robot[@name='panda']/joint[@name='panda_joint3']/dynamics
+Unknown attribute "K" in /robot[@name='panda']/joint[@name='panda_joint3']/dynamics
+Unknown attribute "mu_coulomb" in /robot[@name='panda']/joint[@name='panda_joint3']/dynamics
+Unknown attribute "mu_viscous" in /robot[@name='panda']/joint[@name='panda_joint3']/dynamics
+Unknown attribute "D" in /robot[@name='panda']/joint[@name='panda_joint4']/dynamics
+Unknown attribute "K" in /robot[@name='panda']/joint[@name='panda_joint4']/dynamics
+Unknown attribute "mu_coulomb" in /robot[@name='panda']/joint[@name='panda_joint4']/dynamics
+Unknown attribute "mu_viscous" in /robot[@name='panda']/joint[@name='panda_joint4']/dynamics
+Unknown attribute "D" in /robot[@name='panda']/joint[@name='panda_joint5']/dynamics
+Unknown attribute "K" in /robot[@name='panda']/joint[@name='panda_joint5']/dynamics
+Unknown attribute "mu_coulomb" in /robot[@name='panda']/joint[@name='panda_joint5']/dynamics
+Unknown attribute "mu_viscous" in /robot[@name='panda']/joint[@name='panda_joint5']/dynamics
+Unknown attribute "D" in /robot[@name='panda']/joint[@name='panda_joint6']/dynamics
+Unknown attribute "K" in /robot[@name='panda']/joint[@name='panda_joint6']/dynamics
+Unknown attribute "mu_coulomb" in /robot[@name='panda']/joint[@name='panda_joint6']/dynamics
+Unknown attribute "mu_viscous" in /robot[@name='panda']/joint[@name='panda_joint6']/dynamics
+Unknown attribute "D" in /robot[@name='panda']/joint[@name='panda_joint7']/dynamics
+Unknown attribute "K" in /robot[@name='panda']/joint[@name='panda_joint7']/dynamics
+Unknown attribute "mu_coulomb" in /robot[@name='panda']/joint[@name='panda_joint7']/dynamics
+Unknown attribute "mu_viscous" in /robot[@name='panda']/joint[@name='panda_joint7']/dynamics
+PROBE: missing-gripper embodiment audit
+versions: mani_skill=3.0.1 sapien=3.0.3 torch=2.11.0+cu128
+
+========================================================================
+[A: rollout path  make_stage1_pickplace_env(render_mode=rgb_array)] embodiment
+========================================================================
+  env class                 = Stage1PickPlaceEnv
+  robot_uids                = ('panda_wristcam', 'fetch')
+  control_mode              = {'panda_wristcam': 'pd_joint_delta_pos', 'fetch': 'pd_joint_delta_pos'}
+  obs_mode                  = state_dict
+  action_space (top)        = Dict('fetch': Box(-1.0, 1.0, (13,), float32), 'panda_wristcam': Box(-1.0, 1.0, (8,), float32))
+
+  --- uid='panda_wristcam'  (PandaWristCam) ---
+    urdf_path        = /home/concerto/PyCharmMiscProject/concerto/.venv/lib/python3.12/site-packages/mani_skill/assets/robots/panda/panda_v3.urdf
+    n_links          = 15
+    links            = ['panda_link0', 'panda_link1', 'panda_link2', 'panda_link3', 'panda_link4', 'panda_link5', 'panda_link6', 'panda_link7', 'panda_link8', 'panda_hand', 'panda_hand_tcp', 'panda_leftfinger', 'panda_rightfinger', 'camera_base_link', 'camera_link']
+    active_joints    = ['panda_joint1', 'panda_joint2', 'panda_joint3', 'panda_joint4', 'panda_joint5', 'panda_joint6', 'panda_joint7', 'panda_finger_joint1', 'panda_finger_joint2']
+    n_active_joints  = 9
+    has 'hand' link  = True   n 'finger' links = 2
+    render_shapes (hand/finger/camera links) = {'panda_hand': 1, 'panda_hand_tcp': 0, 'panda_leftfinger': 1, 'panda_rightfinger': 1, 'camera_base_link': 0, 'camera_link': 1}
+    single_action_space = Box(-1.0, 1.0, (8,), float32)
+
+  --- uid='fetch'  (Fetch) ---
+    urdf_path        = /home/concerto/PyCharmMiscProject/concerto/.venv/lib/python3.12/site-packages/mani_skill/assets/robots/fetch/fetch.urdf
+    n_links          = 29
+    links            = ['root', 'root_arm_1_link_1', 'root_arm_1_link_2', 'base_link', 'r_wheel_link', 'l_wheel_link', 'torso_lift_link', 'estop_link', 'laser_link', 'torso_fixed_link', 'head_pan_link', 'shoulder_pan_link', 'bellows_link', 'bellows_link2', 'head_tilt_link', 'shoulder_lift_link', 'head_camera_link', 'upperarm_roll_link', 'head_camera_rgb_frame', 'head_camera_depth_frame', 'elbow_flex_link', 'head_camera_rgb_optical_frame', 'head_camera_depth_optical_frame', 'forearm_roll_link', 'wrist_flex_link', 'wrist_roll_link', 'gripper_link', 'r_gripper_finger_link', 'l_gripper_finger_link']
+    active_joints    = ['root_x_axis_joint', 'root_y_axis_joint', 'root_z_rotation_joint', 'torso_lift_joint', 'head_pan_joint', 'shoulder_pan_joint', 'head_tilt_joint', 'shoulder_lift_joint', 'upperarm_roll_joint', 'elbow_flex_joint', 'forearm_roll_joint', 'wrist_flex_joint', 'wrist_roll_joint', 'r_gripper_finger_joint', 'l_gripper_finger_joint']
+    n_active_joints  = 15
+    has 'hand' link  = False   n 'finger' links = 2
+    render_shapes (hand/finger/camera links) = {'head_camera_link': 0, 'head_camera_rgb_frame': 0, 'head_camera_depth_frame': 0, 'head_camera_rgb_optical_frame': 0, 'head_camera_depth_optical_frame': 0, 'r_gripper_finger_link': 1, 'l_gripper_finger_link': 1}
+    single_action_space = Box(-1.0, 1.0, (13,), float32)
+
+========================================================================
+[checkpoint] actor action-head output dim
+========================================================================
+  checkpoint run_id = ee0e52a9afae6b78
+  actor state_dict tensors (last 8):
+    base.mlp.fc.2.bias                                 (256,)
+    base.mlp.fc.3.weight                               (256, 256)
+    base.mlp.fc.3.bias                                 (256,)
+    base.mlp.fc.5.weight                               (256,)
+    base.mlp.fc.5.bias                                 (256,)
+    act.action_out.log_std                             (8,)
+    act.action_out.fc_mean.weight                      (8, 256)
+    act.action_out.fc_mean.bias                        (8,)
+  trainer.act(...) ego action dim = (8,)  -> [ 0.307  0.297 -0.096  0.315  0.112 -0.002 -0.182 -0.059]
+
+  rendered frame saved: probe_render_frame.png  shape=(480, 640, 3)
+
+========================================================================
+[gripper drive] command open/closed, read finger qpos
+========================================================================
+  reset width=(0.0, [0.0, 0.0])
+  after 30x OPEN +1: width=(0.06295, [0.03155, 0.0314])
+  after 30x CLOSE -1: width=(0.0, [0.0, 0.0])
+
+========================================================================
+[B: training path  _stage1b_env_factory] embodiment
+========================================================================
+  env class                 = Stage1PickPlaceEnv
+  robot_uids                = ('panda_wristcam', 'fetch')
+  control_mode              = {'panda_wristcam': 'pd_joint_delta_pos', 'fetch': 'pd_joint_delta_pos'}
+  obs_mode                  = state_dict
+  action_space (top)        = Dict('fetch': Box(-1.0, 1.0, (13,), float32), 'panda_wristcam': Box(-1.0, 1.0, (8,), float32))
+
+  --- uid='panda_wristcam'  (PandaWristCam) ---
+    urdf_path        = /home/concerto/PyCharmMiscProject/concerto/.venv/lib/python3.12/site-packages/mani_skill/assets/robots/panda/panda_v3.urdf
+    n_links          = 15
+    links            = ['panda_link0', 'panda_link1', 'panda_link2', 'panda_link3', 'panda_link4', 'panda_link5', 'panda_link6', 'panda_link7', 'panda_link8', 'panda_hand', 'panda_hand_tcp', 'panda_leftfinger', 'panda_rightfinger', 'camera_base_link', 'camera_link']
+    active_joints    = ['panda_joint1', 'panda_joint2', 'panda_joint3', 'panda_joint4', 'panda_joint5', 'panda_joint6', 'panda_joint7', 'panda_finger_joint1', 'panda_finger_joint2']
+    n_active_joints  = 9
+    has 'hand' link  = True   n 'finger' links = 2
+    render_shapes (hand/finger/camera links) = {'panda_hand': 1, 'panda_hand_tcp': 0, 'panda_leftfinger': 1, 'panda_rightfinger': 1, 'camera_base_link': 0, 'camera_link': 1}
+    single_action_space = Box(-1.0, 1.0, (8,), float32)
+
+  --- uid='fetch'  (Fetch) ---
+    urdf_path        = /home/concerto/PyCharmMiscProject/concerto/.venv/lib/python3.12/site-packages/mani_skill/assets/robots/fetch/fetch.urdf
+    n_links          = 29
+    links            = ['root', 'root_arm_1_link_1', 'root_arm_1_link_2', 'base_link', 'r_wheel_link', 'l_wheel_link', 'torso_lift_link', 'estop_link', 'laser_link', 'torso_fixed_link', 'head_pan_link', 'shoulder_pan_link', 'bellows_link', 'bellows_link2', 'head_tilt_link', 'shoulder_lift_link', 'head_camera_link', 'upperarm_roll_link', 'head_camera_rgb_frame', 'head_camera_depth_frame', 'elbow_flex_link', 'head_camera_rgb_optical_frame', 'head_camera_depth_optical_frame', 'forearm_roll_link', 'wrist_flex_link', 'wrist_roll_link', 'gripper_link', 'r_gripper_finger_link', 'l_gripper_finger_link']
+    active_joints    = ['root_x_axis_joint', 'root_y_axis_joint', 'root_z_rotation_joint', 'torso_lift_joint', 'head_pan_joint', 'shoulder_pan_joint', 'head_tilt_joint', 'shoulder_lift_joint', 'upperarm_roll_joint', 'elbow_flex_joint', 'forearm_roll_joint', 'wrist_flex_joint', 'wrist_roll_joint', 'r_gripper_finger_joint', 'l_gripper_finger_joint']
+    n_active_joints  = 15
+    has 'hand' link  = False   n 'finger' links = 2
+    render_shapes (hand/finger/camera links) = {'head_camera_link': 0, 'head_camera_rgb_frame': 0, 'head_camera_depth_frame': 0, 'head_camera_rgb_optical_frame': 0, 'head_camera_depth_optical_frame': 0, 'r_gripper_finger_link': 1, 'l_gripper_finger_link': 1}
+    single_action_space = Box(-1.0, 1.0, (13,), float32)
+
+========================================================================
+[A vs B diff] embodiment equality across build paths
+========================================================================
+  uid='panda_wristcam': n_links=True has_hand=True n_finger=True active_joints=True urdf=True
+  uid='fetch': n_links=True has_hand=True n_finger=True active_joints=True urdf=True
+
+PROBE COMPLETE

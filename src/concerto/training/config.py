@@ -86,12 +86,26 @@ class EnvConfig(_FrozenModel):
             overrides per ``(seed, condition)`` cell via
             ``model_copy``. ``None`` for non-Stage-1b tasks (MPE,
             Stage-0) — pre-P1.04 cfgs work unchanged.
+        num_envs: Training-cell parallelisation count (P1.05.10;
+            ADR-007 §Stage 1b regime-alignment revision). ``1``
+            (default) preserves the historical single-env loop
+            byte-identically (ADR-002). ``> 1`` builds the env
+            vectorised (ManiSkill GPU sim) and switches
+            :func:`concerto.training.ego_aht.train` to the batched
+            rollout path; the per-update batch becomes
+            ``num_envs x happo.rollout_length`` transitions.
+            Implementation-detail-of-the-cell per the ADR-007 Rev 15
+            precedent — the prereg condition_ids / seed list / gate
+            criteria are untouched. The training-time safety stack is
+            not batched in this slice: ``num_envs > 1`` with
+            ``safety.enabled=True`` loud-fails in ``train()``.
     """
 
     task: str
     episode_length: int = Field(default=50, gt=0)
     agent_uids: tuple[str, str] = ("ego", "partner")
     condition_id: str | None = None
+    num_envs: int = Field(default=1, ge=1)
 
     @field_validator("agent_uids", mode="before")
     @classmethod
@@ -372,6 +386,35 @@ class HAPPOHyperparams(_FrozenModel):
     hidden_dim: int = Field(default=64, gt=0)
 
 
+class ShapingConfig(_FrozenModel):
+    """Training-cell reward-shaping knobs (P1.05.11; ADR-007 §Stage 1b Rev 18).
+
+    Potential-based settle term in exact Ng-Harada-Russell form,
+    F(s, s') = gamma·Phi(s') - Phi(s) with the training MDP's own gamma and
+    Phi(s) = -settle_alpha · min(max-arm-|qvel|, settle_qvel_cap) ·
+    1[is_obj_placed(s)] — state-only, therefore policy-invariant (NHR
+    1999 Thm 1). Applied by
+    :class:`chamber.envs.stage1_shaping.Stage1SettleShapingWrapper`
+    around the *training* env only
+    (:func:`chamber.benchmarks.training_runner.run_training`); the
+    canonical env reward and ``evaluate()`` are byte-untouched, and
+    every evaluation instrument measures unshaped success. See the
+    2026-06-11 PBRS-settle pre-statement for the alpha derivation and the
+    frozen experiment design.
+
+    Attributes:
+        settle_alpha: Potential scale alpha. ``0.0`` (default) disables the
+            wrapper entirely — byte-identical pre-existing behaviour
+            (ADR-002). The 2026-06-11 slice pre-states 0.1 and 0.5.
+        settle_qvel_cap: Cap on the potential's qvel term, in rad/s.
+            0.7 covers the measured 0.40-0.66 hold band with margin
+            (gamma-scan margins; settle-reachability pre-flight).
+    """
+
+    settle_alpha: float = Field(default=0.0, ge=0.0)
+    settle_qvel_cap: float = Field(default=0.7, gt=0.0)
+
+
 class EgoAHTConfig(_FrozenModel):
     """Root config for an ego-AHT training run (T4b.11; ADR-002 §Decisions).
 
@@ -421,6 +464,7 @@ class EgoAHTConfig(_FrozenModel):
     runtime: RuntimeConfig = Field(default_factory=RuntimeConfig)
     safety: SafetyConfig = Field(default_factory=SafetyConfig)
     rollout_recorder: RolloutRecorderConfig = Field(default_factory=RolloutRecorderConfig)
+    shaping: ShapingConfig = Field(default_factory=ShapingConfig)
 
 
 def load_config(

@@ -144,6 +144,12 @@ def build_env(env_cfg: EnvConfig, *, root_seed: int) -> EnvLike:
                 condition_id=env_cfg.condition_id,
                 episode_length=env_cfg.episode_length,
                 root_seed=root_seed,
+                # P1.05.10 (ADR-007 §Stage 1b regime-alignment): the
+                # training-cell parallelisation count. 1 (default)
+                # preserves the historical single-env cell; > 1 builds
+                # the GPU-parallel cell (ManiSkill physx_cuda) with the
+                # chamber-side auto-reset wrapper outermost.
+                num_envs=env_cfg.num_envs,
             ),
         )
     raise ValueError(
@@ -188,7 +194,7 @@ def run_training(
     trainer_factory: TrainerFactory | None = None,
     repo_root: Path | None = None,
     # P1.04.5 / ADR-007 §Stage 1b: safety-stack kwargs threaded through
-    # to train(). All-None ⇒ pre-P1.04.5 unfiltered behaviour. When
+    # to train(). All-None => pre-P1.04.5 unfiltered behaviour. When
     # cfg.safety.enabled is True the caller must populate all five;
     # train() loud-fails on intent mismatch.
     safety_filter: EgoOnlySafetyFilter | None = None,
@@ -266,6 +272,26 @@ def run_training(
         KeyError: If the partner class is not registered.
     """
     env = build_env(cfg.env, root_seed=cfg.seed)
+    # P1.05.11 (ADR-007 §Stage 1b Rev 18): potential-based settle term
+    # around the TRAINING env only, gated on shaping.settle_alpha > 0
+    # (default 0 = wrapper never constructed = byte-identical behaviour,
+    # ADR-002). Eval envs are built elsewhere and never shaped; the
+    # canonical env reward and evaluate() are untouched.
+    if cfg.shaping.settle_alpha > 0.0:
+        from chamber.envs.stage1_shaping import (
+            Stage1SettleShapingWrapper,
+        )
+
+        env = cast(
+            "EnvLike",
+            Stage1SettleShapingWrapper(
+                cast("gym.Env[Any, Any]", env),
+                alpha=cfg.shaping.settle_alpha,
+                qvel_cap=cfg.shaping.settle_qvel_cap,
+                gamma=cfg.happo.gamma,
+                ego_uid=cfg.env.agent_uids[0],
+            ),
+        )
     partner = build_partner(cfg.partner)
     factory: TrainerFactory = (
         trainer_factory if trainer_factory is not None else EgoPPOTrainer.from_config

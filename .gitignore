@@ -68,6 +68,11 @@ checkpoints/
 *.pth
 *.safetensors
 *.ckpt
+# Local run-output roots (config: artifacts_root=./artifacts, log_dir=./logs).
+# Root-anchored so the committed spikes/results/ audit archives are unaffected;
+# *.pt is already ignored above but the .pt.json sidecars + run JSONLs are not.
+/artifacts/
+/logs/
 
 # Docs build
 site/

@@ -1,0 +1,3 @@
+changed pixels (>20 sum-RGB): 2433
+diff bounding box (x0,y0,x1,y1): (309, 0, 487, 141)
+wrote zoom on diff bbox (left=closed, right=open)

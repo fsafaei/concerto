@@ -1,0 +1,90 @@
+{
+  "arm": "P-RC env-truncation validation (EXPLORATORY; not a gate result)",
+  "branch": "fix/p1-05-9-env-truncation",
+  "seed": 0,
+  "frames": 1000000,
+  "bridge_weight": 0.0,
+  "baseline_broken_mdp": {
+    "run": "ee0e52a9 (broken MDP)",
+    "value_mean": 14.74,
+    "advantage_std": 0.0013,
+    "grasp_rate_max": 0.0
+  },
+  "signature_this_run": {
+    "run_id": "4193162f5e313d7f",
+    "n_train_scalars": 976,
+    "value_mean_late": 16.303058624267578,
+    "value_mean_final": 15.107231140136719,
+    "advantage_std_late": 1.442202091217041,
+    "advantage_std_final": 0.23380592465400696,
+    "dist_entropy_final": 3.8907906264066696,
+    "grasp_rate_max": 0.060546875,
+    "grasp_rate_windows_nonzero": 324,
+    "grasp_rate_n_windows": 976,
+    "n_episodes_in_run": 10096
+  },
+  "eval_ever_grasped_count": 0,
+  "eval_episodes": 10,
+  "eval_rows": [
+    {
+      "episode": 0,
+      "ever_grasped": false,
+      "ever_placed": false,
+      "n_steps": 100
+    },
+    {
+      "episode": 1,
+      "ever_grasped": false,
+      "ever_placed": false,
+      "n_steps": 100
+    },
+    {
+      "episode": 2,
+      "ever_grasped": false,
+      "ever_placed": false,
+      "n_steps": 100
+    },
+    {
+      "episode": 3,
+      "ever_grasped": false,
+      "ever_placed": false,
+      "n_steps": 100
+    },
+    {
+      "episode": 4,
+      "ever_grasped": false,
+      "ever_placed": false,
+      "n_steps": 100
+    },
+    {
+      "episode": 5,
+      "ever_grasped": false,
+      "ever_placed": false,
+      "n_steps": 100
+    },
+    {
+      "episode": 6,
+      "ever_grasped": false,
+      "ever_placed": false,
+      "n_steps": 100
+    },
+    {
+      "episode": 7,
+      "ever_grasped": false,
+      "ever_placed": false,
+      "n_steps": 100
+    },
+    {
+      "episode": 8,
+      "ever_grasped": false,
+      "ever_placed": false,
+      "n_steps": 100
+    },
+    {
+      "episode": 9,
+      "ever_grasped": false,
+      "ever_placed": false,
+      "n_steps": 100
+    }
+  ]
+}

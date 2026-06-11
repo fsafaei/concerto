@@ -124,13 +124,21 @@ class TestPPOObservabilityIntegration:
         assert "scalar" in events, "trainer did not emit any event=scalar lines"
         assert "training_end" in events
         scalar_lines = [ln for ln in lines if ln.get("event") == "scalar"]
-        # Every scalar line is namespaced + carries the PPO health keys.
-        for line in scalar_lines:
-            assert line["metric_namespace"] == "train"
+        # The trainer emits PPO-health scalars in the "train" namespace and
+        # task-progress scalars (e.g. mean_reward) in the "rollout" namespace
+        # (ADR-017 §Schema; task-progress instrumentation). Assert the train
+        # namespace carries the PPO health keys; the rollout namespace is a
+        # separate task-progress channel and is checked below.
+        train_scalars = [ln for ln in scalar_lines if ln.get("metric_namespace") == "train"]
+        assert train_scalars, "trainer did not emit any train-namespace scalar lines"
+        for line in train_scalars:
             for key in ("policy_loss", "value_loss", "dist_entropy", "approx_kl"):
                 assert key in line, f"scalar missing {key}: {line}"
             for key in ("policy_loss", "value_loss"):
                 assert np.isfinite(line[key]), f"non-finite {key}={line[key]!r}"
+        assert any(ln.get("metric_namespace") == "rollout" for ln in scalar_lines), (
+            "trainer did not emit any rollout-namespace task-progress scalars"
+        )
         # The result carries the curve the existing assertions touch.
         assert result.curve is not None
 

@@ -1,0 +1,11 @@
+=== versions ===
+mani_skill 3.0.1
+sapien 3.0.3
+torch 2.11.0+cu128
+
+=== panda_v3.urdf ===
+-rw-rw-r-- 3 concerto concerto 13483 May 18 16:26 .venv/lib/python3.12/site-packages/mani_skill/assets/robots/panda/panda_v3.urdf
+=== hand/finger visual meshes ===
+  link=panda_hand           mesh=franka_description/meshes/visual/hand.glb  exists=True bytes=590608
+  link=panda_leftfinger     mesh=franka_description/meshes/visual/finger.glb exists=True bytes=50032
+  link=panda_rightfinger    mesh=franka_description/meshes/visual/finger.glb exists=True bytes=50032

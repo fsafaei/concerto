@@ -119,6 +119,72 @@ class TestPerConditionConstruction:
             env.close()
 
 
+class TestResetStateInit:
+    """Robots start each episode at the canonical ready pose + open gripper (ADR-007 Rev 16).
+
+    Regression pin for the reset-state feasibility bug: ManiSkill v3's
+    ``TableSceneBuilder.initialize()`` has no branch for the AS ``robot_uids``
+    tuples and no terminal ``else``, so it never set their qpos — every episode
+    started with the ego arm folded at zero and the gripper **closed**
+    (``2026-06-06-missing-gripper/probe_embodiment.log`` L109:
+    ``reset width=(0.0, [0.0, 0.0])``). :meth:`Stage1PickPlaceEnv._initialize_episode`
+    now sets the ready pose explicitly for BOTH AS conditions.
+    """
+
+    _PANDA_READY = (0.0, np.pi / 8, 0.0, -np.pi * 5 / 8, 0.0, np.pi * 3 / 4, -np.pi / 4)
+
+    @staticmethod
+    def _qpos(env: object, uid: str) -> np.ndarray:
+        robot = env.agent.agents_dict[uid].robot  # type: ignore[attr-defined]
+        return torch.as_tensor(robot.get_qpos()).flatten().detach().cpu().numpy()
+
+    @pytest.mark.parametrize("condition_id", [_AS_HETERO, _AS_HOMO])
+    def test_ego_panda_ready_pose_and_open_gripper(self, condition_id: str) -> None:
+        env = make_stage1_pickplace_env(condition_id=condition_id, episode_length=10, root_seed=0)
+        try:
+            env.reset(seed=0)
+            q = self._qpos(env, "panda_wristcam")
+            # Gripper OPEN: the two finger DOF sum to ~0.08 (was 0.0 = closed pre-fix).
+            assert float(q[7] + q[8]) == pytest.approx(0.08, abs=1e-3), (
+                f"gripper not open: {q[7:9]}"
+            )
+            # Arm at the canonical ready pose (was all-zero pre-fix).
+            np.testing.assert_allclose(q[:7], self._PANDA_READY, atol=1e-3)
+            # AS-homo: the second panda (panda_partner) must also be set, not just the ego.
+            if condition_id == _AS_HOMO:
+                qp = self._qpos(env, "panda_partner")
+                assert float(qp[7] + qp[8]) == pytest.approx(0.08, abs=1e-3), (
+                    f"panda_partner gripper not open: {qp[7:9]}"
+                )
+                np.testing.assert_allclose(qp[:7], self._PANDA_READY, atol=1e-3)
+        finally:
+            env.close()
+
+    def test_fetch_partner_ready_pose(self) -> None:
+        env = make_stage1_pickplace_env(condition_id=_AS_HETERO, episode_length=10, root_seed=0)
+        try:
+            env.reset(seed=0)
+            q = self._qpos(env, "fetch")
+            # torso_lift joint = 0.386 in the canonical fetch pose (was 0 pre-fix).
+            assert float(q[3]) == pytest.approx(0.386, abs=1e-3), f"fetch not at ready pose: {q}"
+        finally:
+            env.close()
+
+    def test_reset_state_deterministic_under_seed(self) -> None:
+        """Same root_seed -> identical post-reset ego qpos (P6 / ADR-002)."""
+        a = make_stage1_pickplace_env(condition_id=_AS_HETERO, episode_length=10, root_seed=0)
+        b = make_stage1_pickplace_env(condition_id=_AS_HETERO, episode_length=10, root_seed=0)
+        try:
+            a.reset(seed=0)
+            b.reset(seed=0)
+            np.testing.assert_array_equal(
+                self._qpos(a, "panda_wristcam"), self._qpos(b, "panda_wristcam")
+            )
+        finally:
+            a.close()
+            b.close()
+
+
 class TestActionSpacePerUidShape:
     """Per-uid action_space shapes match URDF expectations (regression pin)."""
 
@@ -172,6 +238,67 @@ class TestTenStepRolloutFiniteReward:
                 assert np.all(np.isfinite(reward_t)), f"reward not finite at {condition_id}"
                 if terminated or truncated:
                     break
+        finally:
+            env.close()
+
+
+class TestEpisodeLengthTruncation:
+    """The env emits ``truncated=True`` at ``episode_length`` (P-RC; ADR-007 §Stage 1b).
+
+    Regression pin for root cause ENV-NO-TRUNCATION (firing
+    ``2026-05-24-p1-05-9``): ManiSkill v3 ``BaseEnv.step`` hard-codes
+    ``truncated=False`` (``mani_skill/envs/sapien_env.py`` L1069), so without
+    :meth:`Stage1PickPlaceEnv.step`'s ``_elapsed_steps >= episode_length``
+    override the training loop (which resets only on
+    ``terminated | truncated``) never bounds an episode — the GAE then sees a
+    non-terminating MDP. These pins assert the boundary fires at exactly
+    ``episode_length`` and resets per episode.
+    """
+
+    @staticmethod
+    def _first_truncation_step(env: object, *, max_steps: int) -> int | None:
+        obs, _ = env.reset(seed=0)  # type: ignore[attr-defined]
+        assert obs is not None
+        zero_action = {
+            uid: np.zeros(box.shape, dtype=np.float32)
+            for uid, box in env.action_space.spaces.items()  # type: ignore[attr-defined]
+        }
+        for step_idx in range(max_steps):
+            _, _, _, truncated, _ = env.step(zero_action)  # type: ignore[attr-defined]
+            if bool(torch.as_tensor(truncated).flatten()[0]):
+                return step_idx
+        return None
+
+    @pytest.mark.parametrize("episode_length", [5, 12])
+    def test_truncates_at_episode_length(self, episode_length: int) -> None:
+        env = make_stage1_pickplace_env(
+            condition_id=_AS_HETERO, episode_length=episode_length, root_seed=0
+        )
+        try:
+            first = self._first_truncation_step(env, max_steps=episode_length + 5)
+            # 0-indexed: the ``episode_length``-th step is index ``episode_length - 1``.
+            assert first == episode_length - 1, (
+                f"expected first truncation at step index {episode_length - 1}, got {first}"
+            )
+        finally:
+            env.close()
+
+    def test_truncation_boundary_resets_per_episode(self) -> None:
+        horizon = 6
+        env = make_stage1_pickplace_env(
+            condition_id=_AS_HETERO, episode_length=horizon, root_seed=0
+        )
+        try:
+            first = self._first_truncation_step(env, max_steps=horizon + 3)
+            assert first == horizon - 1, (
+                f"first episode truncated at {first}, expected {horizon - 1}"
+            )
+            # A fresh reset must restore the horizon (BaseEnv resets _elapsed_steps);
+            # if it did not reset, the second episode would not truncate at the horizon.
+            second = self._first_truncation_step(env, max_steps=horizon + 3)
+            assert second == horizon - 1, (
+                f"second episode truncated at {second}, expected {horizon - 1}"
+            )
         finally:
             env.close()
 

@@ -73,6 +73,20 @@ env:
   # the agent_uids tuple — the condition_id is the explicit
   # disambiguator chamber.benchmarks.training_runner.build_env reads.
   condition_id: stage1_pickplace_panda_plus_fetch_ego_aht_happo_per_agent
+  # P1.05.10 / ADR-007 §Stage 1b regime-alignment revision: training-cell
+  # parallelisation count. 1 (default) is the historical single-env cell,
+  # byte-identical per ADR-002. > 1 builds the ManiSkill GPU-parallel cell
+  # (physx_cuda; per-env derive_substream cube/goal streams; chamber-side
+  # auto-reset wrapper) and the per-update batch becomes
+  # num_envs x happo.rollout_length transitions. The training-time safety
+  # stack is not batched in this slice: num_envs > 1 REQUIRES the operator
+  # override +safety.enabled=false (train() loud-fails otherwise; the
+  # audit gate records "safety disabled by operator" per the contract
+  # below). Implementation-detail-of-the-cell per the Rev 15 precedent —
+  # prereg condition_ids / seed list / gate criteria untouched; both AS
+  # conditions must train under identical regime settings in anything
+  # gate-facing.
+  num_envs: 1
 
 # Frozen partner: ScriptedHeuristicPartner targeting the cube's spawn
 # region. The factory overrides extra.uid and extra.action_dim per
@@ -165,3 +179,16 @@ safety:
   # MUST satisfy clamp_floor_ratio < saturation_threshold; the
   # SafetyConfig @model_validator loud-fails otherwise.
   clamp_floor_ratio: 0.7
+
+# P1.05.11 / ADR-007 §Stage 1b Rev 18: potential-based settle term in the
+# TRAINING cell only (Ng-Harada-Russell form, F = gamma*Phi(s') - Phi(s),
+# Phi = -alpha * min(max-arm-|qvel|, cap) * 1[is_obj_placed]). Default
+# settle_alpha: 0 disables the wrapper entirely - byte-identical
+# pre-existing behaviour (ADR-002). The canonical env reward and
+# evaluate() are untouched; all evaluation measures unshaped success.
+# Anything gate-facing trains BOTH AS conditions with the identical
+# transform and alpha (Rev 18 condition-symmetry clause). The 2026-06-11
+# PBRS-settle pre-statement pre-states alpha in {0.1, 0.5}, cap 0.7.
+shaping:
+  settle_alpha: 0.0
+  settle_qvel_cap: 0.7
