@@ -1,0 +1,1874 @@
+[
+  {
+    "seed": 0,
+    "episode": 0,
+    "placed_at_switch": true,
+    "qvel_at_switch": 0.6169,
+    "settle_steps_to_below_0.2": 0,
+    "floor_median_last10": 0.0023,
+    "placed_throughout_zero_delta": true,
+    "static_ever_during_zero_delta": true,
+    "trajectory": [
+      {
+        "k": 0,
+        "qvel": 0.0152,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 1,
+        "qvel": 0.0038,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 2,
+        "qvel": 0.0022,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 3,
+        "qvel": 0.0023,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 4,
+        "qvel": 0.0023,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 5,
+        "qvel": 0.0023,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 6,
+        "qvel": 0.0023,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 7,
+        "qvel": 0.0023,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 8,
+        "qvel": 0.0023,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 9,
+        "qvel": 0.0023,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 10,
+        "qvel": 0.0023,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 11,
+        "qvel": 0.0023,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 12,
+        "qvel": 0.0023,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 13,
+        "qvel": 0.0023,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 14,
+        "qvel": 0.0023,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 15,
+        "qvel": 0.0023,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 16,
+        "qvel": 0.0023,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 17,
+        "qvel": 0.0023,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 18,
+        "qvel": 0.0023,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 19,
+        "qvel": 0.0023,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 20,
+        "qvel": 0.0023,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 21,
+        "qvel": 0.0023,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 22,
+        "qvel": 0.0023,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 23,
+        "qvel": 0.0023,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 24,
+        "qvel": 0.0023,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 25,
+        "qvel": 0.0023,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 26,
+        "qvel": 0.0023,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 27,
+        "qvel": 0.0023,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 28,
+        "qvel": 0.0023,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 29,
+        "qvel": 0.0023,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 30,
+        "qvel": 0.0023,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 31,
+        "qvel": 0.0023,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 32,
+        "qvel": 0.0023,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 33,
+        "qvel": 0.0023,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 34,
+        "qvel": 0.0023,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 35,
+        "qvel": 0.0023,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 36,
+        "qvel": 0.0023,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 37,
+        "qvel": 0.0023,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 38,
+        "qvel": 0.0023,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 39,
+        "qvel": 0.0023,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 40,
+        "qvel": 0.0023,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 41,
+        "qvel": 0.0023,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 42,
+        "qvel": 0.0023,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 43,
+        "qvel": 0.0023,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 44,
+        "qvel": 0.0023,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 45,
+        "qvel": 0.0023,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 46,
+        "qvel": 0.0023,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 47,
+        "qvel": 0.0023,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 48,
+        "qvel": 0.0023,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 49,
+        "qvel": 0.0023,
+        "placed": true,
+        "static": true
+      }
+    ]
+  },
+  {
+    "seed": 0,
+    "episode": 1,
+    "placed_at_switch": true,
+    "qvel_at_switch": 0.4843,
+    "settle_steps_to_below_0.2": 0,
+    "floor_median_last10": 0.0038,
+    "placed_throughout_zero_delta": true,
+    "static_ever_during_zero_delta": true,
+    "trajectory": [
+      {
+        "k": 0,
+        "qvel": 0.1122,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 1,
+        "qvel": 0.0282,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 2,
+        "qvel": 0.0072,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 3,
+        "qvel": 0.0043,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 4,
+        "qvel": 0.0043,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 5,
+        "qvel": 0.0043,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 6,
+        "qvel": 0.0043,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 7,
+        "qvel": 0.0043,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 8,
+        "qvel": 0.0034,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 9,
+        "qvel": 0.004,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 10,
+        "qvel": 0.0039,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 11,
+        "qvel": 0.0038,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 12,
+        "qvel": 0.0039,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 13,
+        "qvel": 0.0038,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 14,
+        "qvel": 0.0038,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 15,
+        "qvel": 0.0038,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 16,
+        "qvel": 0.0038,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 17,
+        "qvel": 0.0038,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 18,
+        "qvel": 0.0038,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 19,
+        "qvel": 0.0038,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 20,
+        "qvel": 0.0038,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 21,
+        "qvel": 0.0038,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 22,
+        "qvel": 0.0038,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 23,
+        "qvel": 0.0038,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 24,
+        "qvel": 0.0038,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 25,
+        "qvel": 0.0038,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 26,
+        "qvel": 0.0038,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 27,
+        "qvel": 0.0038,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 28,
+        "qvel": 0.0038,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 29,
+        "qvel": 0.0038,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 30,
+        "qvel": 0.0038,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 31,
+        "qvel": 0.0038,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 32,
+        "qvel": 0.0038,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 33,
+        "qvel": 0.0038,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 34,
+        "qvel": 0.0038,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 35,
+        "qvel": 0.0038,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 36,
+        "qvel": 0.0038,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 37,
+        "qvel": 0.0038,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 38,
+        "qvel": 0.0038,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 39,
+        "qvel": 0.0038,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 40,
+        "qvel": 0.0038,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 41,
+        "qvel": 0.0038,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 42,
+        "qvel": 0.0038,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 43,
+        "qvel": 0.0038,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 44,
+        "qvel": 0.0038,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 45,
+        "qvel": 0.0038,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 46,
+        "qvel": 0.0038,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 47,
+        "qvel": 0.0038,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 48,
+        "qvel": 0.0038,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 49,
+        "qvel": 0.0038,
+        "placed": true,
+        "static": true
+      }
+    ]
+  },
+  {
+    "seed": 1,
+    "episode": 0,
+    "placed_at_switch": true,
+    "qvel_at_switch": 0.5313,
+    "settle_steps_to_below_0.2": 0,
+    "floor_median_last10": 0.0023,
+    "placed_throughout_zero_delta": true,
+    "static_ever_during_zero_delta": true,
+    "trajectory": [
+      {
+        "k": 0,
+        "qvel": 0.0338,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 1,
+        "qvel": 0.0085,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 2,
+        "qvel": 0.0027,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 3,
+        "qvel": 0.0023,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 4,
+        "qvel": 0.0023,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 5,
+        "qvel": 0.0023,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 6,
+        "qvel": 0.0023,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 7,
+        "qvel": 0.0023,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 8,
+        "qvel": 0.0023,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 9,
+        "qvel": 0.0023,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 10,
+        "qvel": 0.0023,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 11,
+        "qvel": 0.0023,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 12,
+        "qvel": 0.0023,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 13,
+        "qvel": 0.0023,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 14,
+        "qvel": 0.0023,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 15,
+        "qvel": 0.0023,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 16,
+        "qvel": 0.0023,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 17,
+        "qvel": 0.0023,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 18,
+        "qvel": 0.0023,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 19,
+        "qvel": 0.0023,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 20,
+        "qvel": 0.0023,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 21,
+        "qvel": 0.0023,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 22,
+        "qvel": 0.0023,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 23,
+        "qvel": 0.0023,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 24,
+        "qvel": 0.0023,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 25,
+        "qvel": 0.0023,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 26,
+        "qvel": 0.0023,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 27,
+        "qvel": 0.0023,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 28,
+        "qvel": 0.0023,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 29,
+        "qvel": 0.0023,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 30,
+        "qvel": 0.0023,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 31,
+        "qvel": 0.0023,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 32,
+        "qvel": 0.0023,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 33,
+        "qvel": 0.0023,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 34,
+        "qvel": 0.0023,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 35,
+        "qvel": 0.0023,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 36,
+        "qvel": 0.0023,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 37,
+        "qvel": 0.0023,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 38,
+        "qvel": 0.0023,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 39,
+        "qvel": 0.0023,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 40,
+        "qvel": 0.0023,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 41,
+        "qvel": 0.0023,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 42,
+        "qvel": 0.0023,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 43,
+        "qvel": 0.0023,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 44,
+        "qvel": 0.0023,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 45,
+        "qvel": 0.0023,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 46,
+        "qvel": 0.0023,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 47,
+        "qvel": 0.0023,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 48,
+        "qvel": 0.0023,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 49,
+        "qvel": 0.0023,
+        "placed": true,
+        "static": true
+      }
+    ]
+  },
+  {
+    "seed": 1,
+    "episode": 1,
+    "placed_at_switch": true,
+    "qvel_at_switch": 0.4035,
+    "settle_steps_to_below_0.2": 0,
+    "floor_median_last10": 0.0029,
+    "placed_throughout_zero_delta": true,
+    "static_ever_during_zero_delta": true,
+    "trajectory": [
+      {
+        "k": 0,
+        "qvel": 0.0363,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 1,
+        "qvel": 0.0097,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 2,
+        "qvel": 0.0036,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 3,
+        "qvel": 0.003,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 4,
+        "qvel": 0.0029,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 5,
+        "qvel": 0.0029,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 6,
+        "qvel": 0.0029,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 7,
+        "qvel": 0.0029,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 8,
+        "qvel": 0.0029,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 9,
+        "qvel": 0.0029,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 10,
+        "qvel": 0.0029,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 11,
+        "qvel": 0.0029,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 12,
+        "qvel": 0.0029,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 13,
+        "qvel": 0.0029,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 14,
+        "qvel": 0.0029,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 15,
+        "qvel": 0.0029,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 16,
+        "qvel": 0.0029,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 17,
+        "qvel": 0.0029,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 18,
+        "qvel": 0.0029,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 19,
+        "qvel": 0.0029,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 20,
+        "qvel": 0.0029,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 21,
+        "qvel": 0.0029,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 22,
+        "qvel": 0.0029,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 23,
+        "qvel": 0.0029,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 24,
+        "qvel": 0.0029,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 25,
+        "qvel": 0.0029,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 26,
+        "qvel": 0.0029,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 27,
+        "qvel": 0.0029,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 28,
+        "qvel": 0.0029,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 29,
+        "qvel": 0.0029,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 30,
+        "qvel": 0.0029,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 31,
+        "qvel": 0.0029,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 32,
+        "qvel": 0.0029,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 33,
+        "qvel": 0.0029,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 34,
+        "qvel": 0.0029,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 35,
+        "qvel": 0.0029,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 36,
+        "qvel": 0.0029,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 37,
+        "qvel": 0.0029,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 38,
+        "qvel": 0.0029,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 39,
+        "qvel": 0.0029,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 40,
+        "qvel": 0.0029,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 41,
+        "qvel": 0.0029,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 42,
+        "qvel": 0.0029,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 43,
+        "qvel": 0.0029,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 44,
+        "qvel": 0.0029,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 45,
+        "qvel": 0.0029,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 46,
+        "qvel": 0.0029,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 47,
+        "qvel": 0.0029,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 48,
+        "qvel": 0.0029,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 49,
+        "qvel": 0.0029,
+        "placed": true,
+        "static": true
+      }
+    ]
+  },
+  {
+    "seed": 2,
+    "episode": 0,
+    "placed_at_switch": true,
+    "qvel_at_switch": 0.6094,
+    "settle_steps_to_below_0.2": 0,
+    "floor_median_last10": 0.0027,
+    "placed_throughout_zero_delta": false,
+    "static_ever_during_zero_delta": true,
+    "trajectory": [
+      {
+        "k": 0,
+        "qvel": 0.102,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 1,
+        "qvel": 0.0262,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 2,
+        "qvel": 0.0066,
+        "placed": false,
+        "static": true
+      },
+      {
+        "k": 3,
+        "qvel": 0.0032,
+        "placed": false,
+        "static": true
+      },
+      {
+        "k": 4,
+        "qvel": 0.0029,
+        "placed": false,
+        "static": true
+      },
+      {
+        "k": 5,
+        "qvel": 0.0028,
+        "placed": false,
+        "static": true
+      },
+      {
+        "k": 6,
+        "qvel": 0.0028,
+        "placed": false,
+        "static": true
+      },
+      {
+        "k": 7,
+        "qvel": 0.0028,
+        "placed": false,
+        "static": true
+      },
+      {
+        "k": 8,
+        "qvel": 0.0028,
+        "placed": false,
+        "static": true
+      },
+      {
+        "k": 9,
+        "qvel": 0.0028,
+        "placed": false,
+        "static": true
+      },
+      {
+        "k": 10,
+        "qvel": 0.0028,
+        "placed": false,
+        "static": true
+      },
+      {
+        "k": 11,
+        "qvel": 0.0028,
+        "placed": false,
+        "static": true
+      },
+      {
+        "k": 12,
+        "qvel": 0.0028,
+        "placed": false,
+        "static": true
+      },
+      {
+        "k": 13,
+        "qvel": 0.0028,
+        "placed": false,
+        "static": true
+      },
+      {
+        "k": 14,
+        "qvel": 0.0028,
+        "placed": false,
+        "static": true
+      },
+      {
+        "k": 15,
+        "qvel": 0.0028,
+        "placed": false,
+        "static": true
+      },
+      {
+        "k": 16,
+        "qvel": 0.0027,
+        "placed": false,
+        "static": true
+      },
+      {
+        "k": 17,
+        "qvel": 0.0027,
+        "placed": false,
+        "static": true
+      },
+      {
+        "k": 18,
+        "qvel": 0.0027,
+        "placed": false,
+        "static": true
+      },
+      {
+        "k": 19,
+        "qvel": 0.0027,
+        "placed": false,
+        "static": true
+      },
+      {
+        "k": 20,
+        "qvel": 0.0027,
+        "placed": false,
+        "static": true
+      },
+      {
+        "k": 21,
+        "qvel": 0.0027,
+        "placed": false,
+        "static": true
+      },
+      {
+        "k": 22,
+        "qvel": 0.0027,
+        "placed": false,
+        "static": true
+      },
+      {
+        "k": 23,
+        "qvel": 0.0027,
+        "placed": false,
+        "static": true
+      },
+      {
+        "k": 24,
+        "qvel": 0.0027,
+        "placed": false,
+        "static": true
+      },
+      {
+        "k": 25,
+        "qvel": 0.0027,
+        "placed": false,
+        "static": true
+      },
+      {
+        "k": 26,
+        "qvel": 0.0027,
+        "placed": false,
+        "static": true
+      },
+      {
+        "k": 27,
+        "qvel": 0.0027,
+        "placed": false,
+        "static": true
+      },
+      {
+        "k": 28,
+        "qvel": 0.0027,
+        "placed": false,
+        "static": true
+      },
+      {
+        "k": 29,
+        "qvel": 0.0027,
+        "placed": false,
+        "static": true
+      },
+      {
+        "k": 30,
+        "qvel": 0.0027,
+        "placed": false,
+        "static": true
+      },
+      {
+        "k": 31,
+        "qvel": 0.0027,
+        "placed": false,
+        "static": true
+      },
+      {
+        "k": 32,
+        "qvel": 0.0027,
+        "placed": false,
+        "static": true
+      },
+      {
+        "k": 33,
+        "qvel": 0.0027,
+        "placed": false,
+        "static": true
+      },
+      {
+        "k": 34,
+        "qvel": 0.0027,
+        "placed": false,
+        "static": true
+      },
+      {
+        "k": 35,
+        "qvel": 0.0027,
+        "placed": false,
+        "static": true
+      },
+      {
+        "k": 36,
+        "qvel": 0.0027,
+        "placed": false,
+        "static": true
+      },
+      {
+        "k": 37,
+        "qvel": 0.0027,
+        "placed": false,
+        "static": true
+      },
+      {
+        "k": 38,
+        "qvel": 0.0027,
+        "placed": false,
+        "static": true
+      },
+      {
+        "k": 39,
+        "qvel": 0.0027,
+        "placed": false,
+        "static": true
+      },
+      {
+        "k": 40,
+        "qvel": 0.0027,
+        "placed": false,
+        "static": true
+      },
+      {
+        "k": 41,
+        "qvel": 0.0027,
+        "placed": false,
+        "static": true
+      },
+      {
+        "k": 42,
+        "qvel": 0.0027,
+        "placed": false,
+        "static": true
+      },
+      {
+        "k": 43,
+        "qvel": 0.0027,
+        "placed": false,
+        "static": true
+      },
+      {
+        "k": 44,
+        "qvel": 0.0027,
+        "placed": false,
+        "static": true
+      },
+      {
+        "k": 45,
+        "qvel": 0.0027,
+        "placed": false,
+        "static": true
+      },
+      {
+        "k": 46,
+        "qvel": 0.0027,
+        "placed": false,
+        "static": true
+      },
+      {
+        "k": 47,
+        "qvel": 0.0027,
+        "placed": false,
+        "static": true
+      },
+      {
+        "k": 48,
+        "qvel": 0.0027,
+        "placed": false,
+        "static": true
+      },
+      {
+        "k": 49,
+        "qvel": 0.0027,
+        "placed": false,
+        "static": true
+      }
+    ]
+  },
+  {
+    "seed": 2,
+    "episode": 1,
+    "placed_at_switch": true,
+    "qvel_at_switch": 0.6142,
+    "settle_steps_to_below_0.2": 0,
+    "floor_median_last10": 0.0023,
+    "placed_throughout_zero_delta": true,
+    "static_ever_during_zero_delta": true,
+    "trajectory": [
+      {
+        "k": 0,
+        "qvel": 0.0831,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 1,
+        "qvel": 0.0237,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 2,
+        "qvel": 0.0068,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 3,
+        "qvel": 0.0025,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 4,
+        "qvel": 0.0023,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 5,
+        "qvel": 0.0023,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 6,
+        "qvel": 0.0023,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 7,
+        "qvel": 0.0023,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 8,
+        "qvel": 0.0023,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 9,
+        "qvel": 0.0023,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 10,
+        "qvel": 0.0023,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 11,
+        "qvel": 0.0023,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 12,
+        "qvel": 0.0023,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 13,
+        "qvel": 0.0023,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 14,
+        "qvel": 0.0023,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 15,
+        "qvel": 0.0023,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 16,
+        "qvel": 0.0023,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 17,
+        "qvel": 0.0023,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 18,
+        "qvel": 0.0023,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 19,
+        "qvel": 0.0023,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 20,
+        "qvel": 0.0023,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 21,
+        "qvel": 0.0023,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 22,
+        "qvel": 0.0023,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 23,
+        "qvel": 0.0023,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 24,
+        "qvel": 0.0023,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 25,
+        "qvel": 0.0023,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 26,
+        "qvel": 0.0023,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 27,
+        "qvel": 0.0023,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 28,
+        "qvel": 0.0023,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 29,
+        "qvel": 0.0023,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 30,
+        "qvel": 0.0023,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 31,
+        "qvel": 0.0023,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 32,
+        "qvel": 0.0023,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 33,
+        "qvel": 0.0023,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 34,
+        "qvel": 0.0023,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 35,
+        "qvel": 0.0023,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 36,
+        "qvel": 0.0023,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 37,
+        "qvel": 0.0023,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 38,
+        "qvel": 0.0023,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 39,
+        "qvel": 0.0023,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 40,
+        "qvel": 0.0023,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 41,
+        "qvel": 0.0023,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 42,
+        "qvel": 0.0023,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 43,
+        "qvel": 0.0023,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 44,
+        "qvel": 0.0023,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 45,
+        "qvel": 0.0023,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 46,
+        "qvel": 0.0023,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 47,
+        "qvel": 0.0023,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 48,
+        "qvel": 0.0023,
+        "placed": true,
+        "static": true
+      },
+      {
+        "k": 49,
+        "qvel": 0.0023,
+        "placed": true,
+        "static": true
+      }
+    ]
+  }
+]
