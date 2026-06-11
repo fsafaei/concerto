@@ -41,8 +41,8 @@ seed: 0
 # Implementation-detail-of-the-cell per ADR-007 §Discipline; the
 # comparison-protocol contract (prereg YAMLs / tags / condition_id
 # strings / seed list / episode budget) is unchanged.
-total_frames: 1000000
-checkpoint_every: 10000
+total_frames: 20000000
+checkpoint_every: 1000000
 artifacts_root: ./artifacts
 log_dir: ./logs
 
@@ -86,7 +86,7 @@ env:
   # prereg condition_ids / seed list / gate criteria untouched; both AS
   # conditions must train under identical regime settings in anything
   # gate-facing.
-  num_envs: 1
+  num_envs: 1024
 
 # Frozen partner: ScriptedHeuristicPartner targeting the cube's spawn
 # region. The factory overrides extra.uid and extra.action_dim per
@@ -106,12 +106,12 @@ partner:
 
 happo:
   lr: 3.0e-4
-  gamma: 0.99
+  gamma: 0.8
   gae_lambda: 0.95
   clip_eps: 0.2
   n_epochs: 4
-  rollout_length: 1024
-  batch_size: 256
+  rollout_length: 32
+  batch_size: 4096
   # P1.05.9 / ADR-007 Rev 14: 64 → 256. The MPE-vintage 64-wide MLP was
   # calibrated for the empirical-guarantee Phase-0 task (low-D state, low-D
   # action, simple terminal). Stage-1b post-widening obs is 65-D (ego 18 +
@@ -155,7 +155,7 @@ runtime:
 # predictor_kind=constant_velocity is the Phase-1 default per ADR-004
 # §Decision; AoI-conditioned variants are Phase-2.
 safety:
-  enabled: true
+  enabled: false
   saturation_threshold: 0.9
   cbf_gamma: 5.0
   lambda_safe: 0.0
@@ -190,5 +190,5 @@ safety:
 # transform and alpha (Rev 18 condition-symmetry clause). The 2026-06-11
 # PBRS-settle pre-statement pre-states alpha in {0.1, 0.5}, cap 0.7.
 shaping:
-  settle_alpha: 0.0
+  settle_alpha: 0.5
   settle_qvel_cap: 0.7
