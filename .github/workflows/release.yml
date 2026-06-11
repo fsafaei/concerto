@@ -3,13 +3,14 @@ name: Release
 on:
   push:
     branches: [main]
-  # Manual re-fire for republishing an already-tagged release to
-  # TestPyPI (e.g. recovering from a transient publish failure
-  # without rotating the tag).
+  # Manual re-fire for republishing an already-tagged release
+  # (e.g. recovering from a transient publish failure without
+  # rotating the tag, or pushing an existing tag to a newly
+  # configured index).
   workflow_dispatch:
     inputs:
       tag:
-        description: 'Existing tag to republish to TestPyPI (e.g. v0.3.0).'
+        description: 'Existing tag to republish (e.g. v0.3.0).'
         required: true
         type: string
 
@@ -68,11 +69,16 @@ jobs:
         with:
           tag_name: ${{ env.PUBLISH_TAG }}
           files: sbom.spdx.json
-      # Publish to test.pypi.org for v0.x via OIDC trusted publishing
-      # (no long-lived API token). Requires the TestPyPI-side
-      # trusted-publisher mapping for this repo + workflow.
+      # Publish via OIDC trusted publishing (no long-lived API token):
+      # TestPyPI as a pre-flight, then the real index. Requires the
+      # trusted-publisher mapping for this repo + workflow on BOTH
+      # indexes. --check-url makes re-fires idempotent — files already
+      # on an index are skipped instead of failing the run, so a
+      # transient failure on the PyPI step can be re-dispatched without
+      # the TestPyPI step erroring on the duplicate upload.
       - run: uv build
       - uses: actions/attest-build-provenance@a2bbfa25375fe432b6a289bc6b6cd05ecd0c4c32  # v4.1.0
         with:
           subject-path: 'dist/*'
-      - run: uv publish --publish-url https://test.pypi.org/legacy/ --trusted-publishing always
+      - run: uv publish --publish-url https://test.pypi.org/legacy/ --check-url https://test.pypi.org/simple/ --trusted-publishing always
+      - run: uv publish --check-url https://pypi.org/simple/ --trusted-publishing always
