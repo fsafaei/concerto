@@ -1,0 +1,3 @@
+chamber-spike next-stage: FAIL -- Stage-1 gate (gate_pp=20.0); 0/1 axis(es) pass.
+  axis=AS  ci_low_pp=-2.00  ci_high_pp=0.00  (fail)
+exit 5
