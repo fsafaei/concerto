@@ -192,3 +192,12 @@ safety:
 shaping:
   settle_alpha: 0.5
   settle_qvel_cap: 0.7
+
+# EXPLORATORY knobs (2026-06-11 homo-static slice; default-off = byte-identical,
+# ADR-002). TrainedPolicyFactory REFUSES any of these at construction - the
+# gate-facing dispatch is structurally barred from running them; activation in
+# a gate-facing protocol requires an ADR. partner_static_override wraps the
+# built partner in a zero-action freeze (chamber.partners.static_override);
+# the flag rides the run_id config fingerprint and every JSONL line.
+exploratory:
+  partner_static_override: false
