@@ -1102,6 +1102,30 @@ def make_stage1_pickplace_env(
                 "is_grasped": is_grasped,
             }
 
+        def privileged_settle_state(self) -> dict[str, Any]:
+            """Privileged Phi inputs for the settle wrapper (ADR-007 §Stage 1b Rev 18; #232).
+
+            Training-time reward computation is privileged by
+            construction: these reads come from the same live handles
+            :meth:`compute_normalized_dense_reward` and :meth:`evaluate`
+            already use, never from the (possibly condition-filtered)
+            observation — the OM vision-only keep-set zero-masks
+            ``cube_pose`` and the per-uid proprio, so an obs-derived
+            potential would differ between the two OM conditions and
+            violate the Rev 18 condition-symmetry mandate.
+
+            Returns:
+                ``ego_qvel`` — the ego panda's full joint velocity
+                (``(num_envs, 9)``; the wrapper applies the arm-only
+                reduction), ``cube_pos`` / ``goal_pos`` — xyz positions
+                (``(num_envs, 3)``), all live torch tensors.
+            """
+            return {
+                "ego_qvel": self._panda_agent.robot.get_qvel(),
+                "cube_pos": self.cube.pose.p,
+                "goal_pos": self.goal_site.pose.p,
+            }
+
         def compute_normalized_dense_reward(
             self,
             obs: Any,  # noqa: ANN401 - ManiSkill obs is an unconstrained dict-of-tensors

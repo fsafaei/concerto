@@ -17,36 +17,56 @@ with ``gamma`` the **training MDP's discount** (the invariance theorem
 is stated for the MDP's own gamma) and both Phi factors functions of
 the state only: the qvel reduction is the ``is_static`` predicate's own
 max over the ego's 7 arm joints (fingers excluded), and the placement
-gate is recomputed from the observation (cube/goal positions vs the
-env's goal threshold) so the potential never depends on info-dict
-plumbing.
+gate is the cube/goal distance against the env's goal threshold.
+
+Phi source (issue #232; ADR-007 §Stage 1b Rev 18 condition-symmetry
+mandate). Phi reads **privileged env state** via the inner env's
+``privileged_settle_state()`` accessor — the same live handles
+``compute_normalized_dense_reward`` uses — never the (possibly
+condition-filtered) observation. Training-time reward computation is
+privileged by construction. Pre-fix, Phi read ``obs["extra"]["cube_pose"]``
+/ ``goal_pos`` / per-uid ``qvel`` from the *outer* (filtered) obs; the
+OM vision-only keep-set zero-masks all three, so the shaping would have
+differed between the two OM conditions. AS conditions are unaffected
+(neither AS condition masks; the privileged values are the same tensors
+the obs carried).
 
 Boundary conventions (the bug class this project keeps catching;
-pre-stated in the 2026-06-11 PBRS-settle PRESTATEMENT):
+pre-stated in the 2026-06-11 PBRS-settle PRESTATEMENT — unchanged by
+the #232 source fix, only their realisation moved):
 
 - **True termination:** Phi == 0 at the terminal state — the terminal
   transition contributes F = -Phi(s_T).
 - **Time-limit truncation:** the episode does not terminate; Phi(s') is
-  evaluated on the *actual* final observation. On the vectorised path
-  that is ``info["final_observation"]`` from
-  :class:`chamber.envs.stage1_vector.Stage1AutoResetWrapper` (the
-  returned obs is already the next episode's reset obs); on the
-  single-env path the post-step obs *is* the final obs. No Phi-zeroing
-  at truncation; the trainer's Pardo-style bootstrap then operates on
-  the shaped-reward MDP unchanged.
-- **Episode starts:** Phi_prev re-initialises from the reset obs (both
-  at ``reset()`` and, per-env, after an auto-reset boundary).
+  evaluated on the *actual* final state. Realised positionally: on the
+  vectorised path the wrapper sits **inside**
+  :class:`chamber.envs.stage1_vector.Stage1AutoResetWrapper` (see
+  :func:`chamber.benchmarks.training_runner.run_training`), so the
+  live state at step exit is still the pre-reset final state; on the
+  single-env path the post-step live state *is* the final state. No
+  Phi-zeroing at truncation; the trainer's Pardo-style bootstrap then
+  operates on the shaped-reward MDP unchanged.
+- **Episode starts:** Phi(s) is read live at step *entry*, after any
+  auto-reset from the previous step (and after the single-env loop's
+  own ``reset()``), so the first transition of every episode uses the
+  reset state's potential.
+
+The entry/exit live-read pair makes the wrapper **stateless** — there
+is no cached Phi_prev to go stale across an auto-reset boundary.
 
 Placement of the transform: applied by
 :func:`chamber.benchmarks.training_runner.run_training` around the
-*training* env only, gated on ``cfg.shaping.settle_alpha > 0``
-(default 0 = wrapper never constructed = byte-identical pre-existing
-behaviour, ADR-002). ``Stage1PickPlaceEnv.compute_normalized_dense_reward``
-and ``evaluate()`` are byte-untouched; every evaluation instrument
-measures unshaped success.
+*training* env only — inside the auto-reset wrapper on the vectorised
+path, outermost on the single-env path — gated on
+``cfg.shaping.settle_alpha > 0`` (default 0 = wrapper never constructed
+= byte-identical pre-existing behaviour, ADR-002).
+``Stage1PickPlaceEnv.compute_normalized_dense_reward`` and
+``evaluate()`` are byte-untouched; every evaluation instrument measures
+unshaped success.
 
 Tier-1 contract (ADR-001): no SAPIEN/ManiSkill imports; torch handled
-by duck-typing so the unit tests run on fakes.
+by duck-typing so the unit tests run on fakes exposing
+``privileged_settle_state()``.
 """
 
 from __future__ import annotations
@@ -80,23 +100,42 @@ def _to_np(x: Any) -> np.ndarray:  # type: ignore[type-arg]  # noqa: ANN401 - to
 class Stage1SettleShapingWrapper(gym.Wrapper):  # type: ignore[type-arg]
     """PBRS settle term around the Stage-1b training env (ADR-007 §Stage 1b Rev 18).
 
-    See the module docstring for the form, the invariance argument, and
-    the boundary conventions. Works for both the single-env layout
-    (scalar reward, flat obs) and the vectorised layout (per-env reward
-    vector, ``(num_envs, dim)`` obs, auto-reset with
-    ``info["final_observation"]``).
+    See the module docstring for the form, the invariance argument, the
+    privileged Phi source (issue #232), and the boundary conventions.
+    Works for both the single-env layout (scalar reward) and the
+    vectorised layout (per-env reward vector) — Phi never touches the
+    observation, so the per-condition obs filtering is irrelevant to
+    the shaping by construction.
 
     Args:
-        env: The training env (full wrapper chain; the AS synthesizer's
-            obs layout with per-uid ``qvel`` and ``extra.cube_pose`` /
-            ``extra.goal_pos`` is required — loud-fail at first step
-            otherwise).
+        env: The training env. On the vectorised path this is the
+            wrapper chain *inside*
+            :class:`chamber.envs.stage1_vector.Stage1AutoResetWrapper`
+            (so the truncation-boundary Phi(s') reads the pre-reset
+            state); on the single-env path it is the full chain. Must
+            expose ``privileged_settle_state()`` (forwarded from
+            :class:`chamber.envs.stage1_pickplace.Stage1PickPlaceEnv`
+            through the chain's ``__getattr__``) — loud-fail at
+            construction otherwise.
         alpha: Potential scale alpha > 0 (``cfg.shaping.settle_alpha``).
         qvel_cap: Cap on the qvel term in rad/s
             (``cfg.shaping.settle_qvel_cap``).
         gamma: The training MDP's discount (``cfg.happo.gamma``) — NHR
             invariance requires the MDP's own gamma.
-        ego_uid: The ego agent's uid (the potential reads its qvel).
+        ego_uid: The ego agent's uid. The potential reads the ego's
+            qvel through the privileged accessor (which is ego-routed
+            inside the env); the kwarg is validated against the env's
+            own ``ego_uid`` when the env exposes one, so a mis-wired
+            cell surfaces at construction.
+
+    Raises:
+        ValueError: If ``alpha <= 0`` (default-off must never construct
+            the wrapper), if the env's goal threshold diverges from the
+            pinned predicate value, or if ``ego_uid`` contradicts the
+            env's own ``ego_uid``.
+        TypeError: If the env does not expose a callable
+            ``privileged_settle_state`` (the Phi source contract;
+            issue #232).
     """
 
     def __init__(
@@ -127,71 +166,70 @@ class Stage1SettleShapingWrapper(gym.Wrapper):  # type: ignore[type-arg]
                 "(ADR-007 §Stage 1b Rev 18)."
             )
             raise ValueError(msg)
+        if not callable(getattr(env, "privileged_settle_state", None)):
+            msg = (
+                "Stage1SettleShapingWrapper: env does not expose "
+                "privileged_settle_state(). Phi reads privileged env state — "
+                "never the (possibly condition-filtered) observation — so the "
+                "shaping is identical across OM keep-sets (issue #232; "
+                "ADR-007 §Stage 1b Rev 18 condition-symmetry mandate)."
+            )
+            raise TypeError(msg)
+        env_ego_uid = getattr(env, "ego_uid", None)
+        if env_ego_uid is not None and env_ego_uid != ego_uid:
+            msg = (
+                f"Stage1SettleShapingWrapper: ego_uid={ego_uid!r} contradicts the "
+                f"env's own ego_uid={env_ego_uid!r}. The potential is ego-routed; "
+                "a mis-wired cell must surface at construction "
+                "(ADR-007 §Stage 1b Rev 18)."
+            )
+            raise ValueError(msg)
         self._alpha = float(alpha)
         self._cap = float(qvel_cap)
         self._gamma = float(gamma)
         self._ego_uid = ego_uid
-        self._phi_prev: np.ndarray | None = None  # type: ignore[type-arg]
 
     # ----- potential -----
 
-    def _phi(self, obs: Any) -> np.ndarray:  # type: ignore[type-arg]  # noqa: ANN401 - nested dict of tensors/arrays
-        """Phi(s) per env, from the observation alone (state-only; NHR-eligible)."""
-        try:
-            qvel = _to_np(obs["agent"][self._ego_uid]["qvel"]).reshape(-1, 9)[:, :_ARM_DOF]
-            cube = _to_np(obs["extra"]["cube_pose"]).reshape(-1, 7)[:, :3]
-            goal = _to_np(obs["extra"]["goal_pos"]).reshape(-1, 3)
-        except (KeyError, TypeError) as exc:
-            msg = (
-                "Stage1SettleShapingWrapper: obs is missing the per-uid 'qvel' or "
-                "the 'extra.cube_pose'/'extra.goal_pos' fields the potential "
-                "reads. The wrapper requires the Stage-1b AS obs layout "
-                "(ADR-007 §Stage 1b Rev 18)."
-            )
-            raise TypeError(msg) from exc
+    def _phi(self) -> np.ndarray:  # type: ignore[type-arg]
+        """Phi(s) per env, from privileged live state (state-only; NHR-eligible).
+
+        Issue #232: training-time reward computation is privileged by
+        construction — the reads come from the env's
+        ``privileged_settle_state()`` (the same live handles
+        ``compute_normalized_dense_reward`` uses), never from the
+        filtered observation, so Phi is identical across OM keep-sets.
+        """
+        state = self.env.privileged_settle_state()  # type: ignore[attr-defined]
+        qvel = _to_np(state["ego_qvel"]).reshape(-1, 9)[:, :_ARM_DOF]
+        cube = _to_np(state["cube_pos"]).reshape(-1, 3)
+        goal = _to_np(state["goal_pos"]).reshape(-1, 3)
         speed = np.minimum(np.abs(qvel).max(axis=1), self._cap)
         placed = np.linalg.norm(goal - cube, axis=1) <= _PLACED_GOAL_THRESH_M
         return (-self._alpha * speed * placed).astype(np.float64)
 
     # ----- gym surface -----
 
-    def reset(self, **kwargs: Any) -> tuple[Any, dict[str, Any]]:  # type: ignore[override]  # noqa: ANN401 - gym reset kwargs
-        """Reset and re-initialise Phi_prev from the reset obs (ADR-007 §Stage 1b Rev 18)."""
-        obs, info = self.env.reset(**kwargs)
-        self._phi_prev = self._phi(obs)
-        return obs, info
-
     def step(  # type: ignore[override]
         self,
         action: Any,  # noqa: ANN401 - dict-of-batched-tensors action
     ) -> tuple[Any, Any, Any, Any, dict[str, Any]]:
-        """Add F = gammaPhi(s') - Phi(s) to the reward (ADR-007 §Stage 1b Rev 18).
+        """Add F = gamma*Phi(s') - Phi(s) to the reward (ADR-007 §Stage 1b Rev 18).
 
+        Phi(s) is read live at entry (post-any-reset, so episode starts
+        use the reset state's potential) and Phi(s') live at exit.
         Boundary handling per the frozen pre-statement: terminated =>
-        Phi(s') = 0; truncated => Phi(s') from ``info["final_observation"]``
-        when present (vectorised auto-reset path) else from the
-        returned obs (single-env path, where the post-step obs *is*
-        the final obs); Phi_prev for the next step re-initialises from
-        the post-reset obs on done envs.
+        Phi(s') = 0; truncated => the exit read *is* the actual final
+        state (on the vectorised path the wrapper sits inside the
+        auto-reset wrapper, so the done envs have not been reset yet;
+        on the single-env path the post-step state is the final state).
         """
+        phi_prev = self._phi()
         obs, reward, terminated, truncated, info = self.env.step(action)
         reward_any: Any = reward
-        if self._phi_prev is None:
-            msg = "Stage1SettleShapingWrapper: step() before reset()."
-            raise RuntimeError(msg)
         term = _to_np(terminated).reshape(-1).astype(bool)
-        final_obs = info.get("final_observation") if isinstance(info, dict) else None
-        # Phi(s') of the *pre-reset* next state: the auto-reset wrapper has
-        # already swapped done envs' obs for the new episode's reset obs,
-        # so the true s' for those envs lives in final_observation.
-        phi_next = self._phi(final_obs) if final_obs is not None else self._phi(obs)
-        phi_next = np.where(term, 0.0, phi_next)  # terminal => Phi == 0
-        shaping = self._gamma * phi_next - self._phi_prev
-        # Next step's Phi_prev: post-reset obs for done envs (the returned
-        # obs is exactly that on the auto-reset path; on the single-env
-        # path the training loop calls reset() before the next step,
-        # which re-initialises Phi_prev anyway).
-        self._phi_prev = self._phi(obs)
+        phi_next = np.where(term, 0.0, self._phi())  # terminal => Phi == 0
+        shaping = self._gamma * phi_next - phi_prev
         if hasattr(reward_any, "detach"):
             import torch  # noqa: PLC0415 - lazy: Tier-1 import safety
 

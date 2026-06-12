@@ -281,17 +281,37 @@ def run_training(
         from chamber.envs.stage1_shaping import (
             Stage1SettleShapingWrapper,
         )
+        from chamber.envs.stage1_vector import (
+            Stage1AutoResetWrapper,
+        )
 
-        env = cast(
-            "EnvLike",
-            Stage1SettleShapingWrapper(
-                cast("gym.Env[Any, Any]", env),
+        gym_env = cast("gym.Env[Any, Any]", env)
+        if isinstance(gym_env, Stage1AutoResetWrapper):
+            # Issue #232 / ADR-007 §Stage 1b Rev 18 boundary convention:
+            # the shaping wrapper sits INSIDE the auto-reset wrapper on
+            # the vectorised path, so Phi(s') at a truncation boundary
+            # reads the actual pre-reset final state (the auto-reset
+            # partial reset happens above it). The auto-reset wrapper is
+            # stateless, so re-seating it around the shaped chain is
+            # equivalent to having built it there.
+            gym_env = Stage1AutoResetWrapper(
+                Stage1SettleShapingWrapper(
+                    gym_env.env,
+                    alpha=cfg.shaping.settle_alpha,
+                    qvel_cap=cfg.shaping.settle_qvel_cap,
+                    gamma=cfg.happo.gamma,
+                    ego_uid=cfg.env.agent_uids[0],
+                )
+            )
+        else:
+            gym_env = Stage1SettleShapingWrapper(
+                gym_env,
                 alpha=cfg.shaping.settle_alpha,
                 qvel_cap=cfg.shaping.settle_qvel_cap,
                 gamma=cfg.happo.gamma,
                 ego_uid=cfg.env.agent_uids[0],
-            ),
-        )
+            )
+        env = cast("EnvLike", gym_env)
     partner = build_partner(cfg.partner)
     # EXPLORATORY (2026-06-11 homo-static slice §2; default-off,
     # ADR-002): zero-action partner override. Gate-facing runs cannot
