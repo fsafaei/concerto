@@ -611,6 +611,35 @@ def _validate_and_sum_task_extras(inner: gym.spaces.Dict) -> int:
     return total
 
 
+def _zeros_like_preserving_backend(val: Any) -> Any:  # noqa: ANN401 - leaves are torch.Tensor, np.ndarray, or scalars depending on env backend
+    """Zero-mask ``val`` preserving its container type, dtype, and device (ADR-007 §Stage 1b).
+
+    Device-aware dispatch (issue #231): GPU-sim builds (``num_envs > 1``
+    on ``physx_cuda``; ADR-007 §Stage 1b Rev 17) emit CUDA torch
+    tensors, and ``np.zeros_like`` raises ``TypeError: can't convert
+    cuda:0 device type tensor to numpy`` on those — pre-fix the
+    vision-only OM env could not ``reset()`` at ``num_envs > 1``.
+    Tensor leaves are masked with ``torch.zeros_like`` (device + dtype
+    preserved); ndarray-like leaves keep the historical
+    ``np.zeros_like`` path byte-identically (ADR-002 — only the
+    container type follows the input, never the masking semantics);
+    shapeless leaves pass through untouched.
+    """
+    try:
+        import torch
+
+        if isinstance(val, torch.Tensor):
+            return torch.zeros_like(val)
+    except ImportError:
+        # Torch is a hard project dep; the guard keeps this module
+        # Tier-1 importable on the rare host that ships without it
+        # (same rationale as _to_2d_float32).
+        pass
+    if hasattr(val, "shape"):
+        return np.zeros_like(val)
+    return val
+
+
 class Stage1OMChannelFilter(gym.ObservationWrapper):  # type: ignore[type-arg]
     """OM-axis per-condition channel filter (ADR-007 §Stage 1b).
 
@@ -678,8 +707,7 @@ class Stage1OMChannelFilter(gym.ObservationWrapper):  # type: ignore[type-arg]
             for uid, sub in agent.items():
                 if isinstance(sub, dict):
                     zeroed_agent[uid] = {
-                        ch: np.zeros_like(val) if hasattr(val, "shape") else val
-                        for ch, val in sub.items()
+                        ch: _zeros_like_preserving_backend(val) for ch, val in sub.items()
                     }
                 else:
                     zeroed_agent[uid] = sub
@@ -692,10 +720,8 @@ class Stage1OMChannelFilter(gym.ObservationWrapper):  # type: ignore[type-arg]
             for ch, val in extra.items():
                 if ch in _OM_VISION_ONLY_EXTRA_KEEP:
                     filtered_extra[ch] = val
-                elif hasattr(val, "shape"):
-                    filtered_extra[ch] = np.zeros_like(val)
                 else:
-                    filtered_extra[ch] = val
+                    filtered_extra[ch] = _zeros_like_preserving_backend(val)
             out["extra"] = filtered_extra
         return out
 

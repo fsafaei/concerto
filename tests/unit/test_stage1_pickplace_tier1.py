@@ -796,6 +796,71 @@ class TestStage1OMChannelFilter:
         assert obs["extra"]["force_torque"].dtype == np.float32
         assert obs["extra"]["force_torque"].shape == (6,)
 
+    def test_om_vision_only_masks_tensor_leaves_device_aware(self) -> None:
+        """Tensor leaves mask via ``torch.zeros_like`` — container type, dtype,
+        device, shape all preserved (issue #231; ADR-007 §Stage 1b Rev 17).
+
+        Pre-fix the masking went through ``np.zeros_like``, which raises
+        ``TypeError`` on CUDA tensors — the vision-only OM env could not
+        ``reset()`` at ``num_envs > 1``. CUDA itself is Tier-2; this pin
+        exercises the tensor dispatch branch with CPU tensors (the
+        branch taken is type-, not device-, conditional, so the Tier-1
+        duck covers the code path the GPU build takes).
+        """
+        import torch
+
+        inner = _FakeInnerEnv(condition_id="stage1_pickplace_vision_only")
+        wrap = Stage1OMChannelFilter(inner)  # type: ignore[arg-type]
+        n = 4  # vectorised (num_envs, dim) layout — the failing regime
+        obs_in = {
+            "agent": {
+                "panda_wristcam": {
+                    "qpos": torch.ones((n, 7), dtype=torch.float32),
+                    "qvel": torch.ones((n, 7), dtype=torch.float64),
+                },
+            },
+            "extra": {
+                "tcp_pose": torch.full((n, 7), 0.5, dtype=torch.float32),
+                "goal_pos": torch.full((n, 3), 0.3, dtype=torch.float32),
+                "force_torque": torch.full((n, 6), 2.0, dtype=torch.float32),
+                "cube_pose": torch.full((n, 7), 0.1, dtype=torch.float32),
+            },
+        }
+        obs = wrap.observation(obs_in)
+        for masked in (
+            obs["agent"]["panda_wristcam"]["qpos"],
+            obs["agent"]["panda_wristcam"]["qvel"],
+            obs["extra"]["force_torque"],
+            obs["extra"]["cube_pose"],
+        ):
+            assert isinstance(masked, torch.Tensor)
+            assert bool((masked == 0).all())
+        # dtype + device + shape follow the input leaf.
+        assert obs["agent"]["panda_wristcam"]["qpos"].dtype == torch.float32
+        assert obs["agent"]["panda_wristcam"]["qpos"].shape == (n, 7)
+        assert obs["agent"]["panda_wristcam"]["qpos"].device.type == "cpu"
+        assert obs["agent"]["panda_wristcam"]["qvel"].dtype == torch.float64
+        # Keep-set untouched: identity, not a copy.
+        assert obs["extra"]["tcp_pose"] is obs_in["extra"]["tcp_pose"]
+        assert obs["extra"]["goal_pos"] is obs_in["extra"]["goal_pos"]
+
+    def test_om_vision_only_ndarray_path_byte_identical_to_pre_fix(self) -> None:
+        """ndarray leaves keep the historical ``np.zeros_like`` masking (ADR-002).
+
+        Issue #231 is a container-type fix only — the CPU/ndarray path's
+        masking semantics (values, dtype, shape, container) must be
+        byte-identical pre/post fix.
+        """
+        inner = _FakeInnerEnv(condition_id="stage1_pickplace_vision_only")
+        wrap = Stage1OMChannelFilter(inner)  # type: ignore[arg-type]
+        obs = wrap.observation(_FakeInnerEnv._sample_obs())
+        masked = obs["agent"]["panda_wristcam"]["qpos"]
+        assert isinstance(masked, np.ndarray)
+        expected = np.zeros_like(_FakeInnerEnv._sample_obs()["agent"]["panda_wristcam"]["qpos"])
+        assert masked.tobytes() == expected.tobytes()
+        assert masked.dtype == expected.dtype
+        assert masked.shape == expected.shape
+
 
 # ----- Module-level constants + ADR handoff contracts -----
 
