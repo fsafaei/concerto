@@ -293,6 +293,16 @@ def run_training(
             ),
         )
     partner = build_partner(cfg.partner)
+    # EXPLORATORY (2026-06-11 homo-static slice §2; default-off,
+    # ADR-002): zero-action partner override. Gate-facing runs cannot
+    # reach here with the flag set - TrainedPolicyFactory refuses it at
+    # construction (the safety-loud-fail pattern).
+    if cfg.exploratory.partner_static_override:
+        from chamber.partners.static_override import (
+            ExploratoryStaticPartnerOverride,
+        )
+
+        partner = ExploratoryStaticPartnerOverride(partner)
     factory: TrainerFactory = (
         trainer_factory if trainer_factory is not None else EgoPPOTrainer.from_config
     )

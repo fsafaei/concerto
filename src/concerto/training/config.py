@@ -415,6 +415,35 @@ class ShapingConfig(_FrozenModel):
     settle_qvel_cap: float = Field(default=0.7, gt=0.0)
 
 
+class ExploratoryConfig(_FrozenModel):
+    """EXPLORATORY rig knobs — structurally barred from gate-facing runs.
+
+    Every field here is default-off (byte-identical pre-existing
+    behaviour, ADR-002) and refused by
+    :class:`chamber.benchmarks.stage1_common.TrainedPolicyFactory` at
+    construction — the production gate dispatch cannot run with any
+    EXPLORATORY knob active, by construction (the safety-loud-fail
+    pattern). Activating one for a gate-facing protocol requires an
+    ADR, not a config edit.
+
+    Attributes:
+        partner_static_override: When ``True``,
+            :func:`chamber.benchmarks.training_runner.run_training`
+            wraps the built partner in the zero-action
+            :class:`chamber.partners.static_override.ExploratoryStaticPartnerOverride`
+            (the partner stands motionless at its reset pose; partner
+            classes and registry untouched). EXPLORATORY only — the
+            2026-06-11 homo-static slice
+            (``spikes/results/stage1-failure-investigation/2026-06-11-homo-static-exploratory/``)
+            is its sole pre-stated use. The flag is folded into the
+            run_id config fingerprint and stamped on every JSONL line
+            (``exploratory_partner_static``) so no archive can carry a
+            static-partner run silently.
+    """
+
+    partner_static_override: bool = False
+
+
 class EgoAHTConfig(_FrozenModel):
     """Root config for an ego-AHT training run (T4b.11; ADR-002 §Decisions).
 
@@ -465,6 +494,7 @@ class EgoAHTConfig(_FrozenModel):
     safety: SafetyConfig = Field(default_factory=SafetyConfig)
     rollout_recorder: RolloutRecorderConfig = Field(default_factory=RolloutRecorderConfig)
     shaping: ShapingConfig = Field(default_factory=ShapingConfig)
+    exploratory: ExploratoryConfig = Field(default_factory=ExploratoryConfig)
 
 
 def load_config(
