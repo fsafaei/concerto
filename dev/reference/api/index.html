@@ -1865,6 +1865,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#concerto.training.config.ExploratoryConfig" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ExploratoryConfig
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#concerto.training.config.HAPPOHyperparams" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -6812,6 +6823,17 @@
     <span class="md-ellipsis">
       
         EnvConfig
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#concerto.training.config.ExploratoryConfig" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ExploratoryConfig
       
     </span>
   </a>
@@ -21390,36 +21412,7 @@ behaviour (no recording, no render-mode change).</p>
 
               <details class="mkdocstrings-source">
                 <summary>Source code in <code>src/concerto/training/config.py</code></summary>
-                <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">418</span>
-<span class="normal">419</span>
-<span class="normal">420</span>
-<span class="normal">421</span>
-<span class="normal">422</span>
-<span class="normal">423</span>
-<span class="normal">424</span>
-<span class="normal">425</span>
-<span class="normal">426</span>
-<span class="normal">427</span>
-<span class="normal">428</span>
-<span class="normal">429</span>
-<span class="normal">430</span>
-<span class="normal">431</span>
-<span class="normal">432</span>
-<span class="normal">433</span>
-<span class="normal">434</span>
-<span class="normal">435</span>
-<span class="normal">436</span>
-<span class="normal">437</span>
-<span class="normal">438</span>
-<span class="normal">439</span>
-<span class="normal">440</span>
-<span class="normal">441</span>
-<span class="normal">442</span>
-<span class="normal">443</span>
-<span class="normal">444</span>
-<span class="normal">445</span>
-<span class="normal">446</span>
-<span class="normal">447</span>
+                <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">447</span>
 <span class="normal">448</span>
 <span class="normal">449</span>
 <span class="normal">450</span>
@@ -21439,7 +21432,37 @@ behaviour (no recording, no render-mode change).</p>
 <span class="normal">464</span>
 <span class="normal">465</span>
 <span class="normal">466</span>
-<span class="normal">467</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">EgoAHTConfig</span><span class="p">(</span><span class="n">_FrozenModel</span><span class="p">):</span>
+<span class="normal">467</span>
+<span class="normal">468</span>
+<span class="normal">469</span>
+<span class="normal">470</span>
+<span class="normal">471</span>
+<span class="normal">472</span>
+<span class="normal">473</span>
+<span class="normal">474</span>
+<span class="normal">475</span>
+<span class="normal">476</span>
+<span class="normal">477</span>
+<span class="normal">478</span>
+<span class="normal">479</span>
+<span class="normal">480</span>
+<span class="normal">481</span>
+<span class="normal">482</span>
+<span class="normal">483</span>
+<span class="normal">484</span>
+<span class="normal">485</span>
+<span class="normal">486</span>
+<span class="normal">487</span>
+<span class="normal">488</span>
+<span class="normal">489</span>
+<span class="normal">490</span>
+<span class="normal">491</span>
+<span class="normal">492</span>
+<span class="normal">493</span>
+<span class="normal">494</span>
+<span class="normal">495</span>
+<span class="normal">496</span>
+<span class="normal">497</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">EgoAHTConfig</span><span class="p">(</span><span class="n">_FrozenModel</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Root config for an ego-AHT training run (T4b.11; ADR-002 §Decisions).</span>
 
 <span class="sd">    Validates the composed Hydra config and exposes a frozen</span>
@@ -21489,6 +21512,7 @@ behaviour (no recording, no render-mode change).</p>
     <span class="n">safety</span><span class="p">:</span> <span class="n">SafetyConfig</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="n">SafetyConfig</span><span class="p">)</span>
     <span class="n">rollout_recorder</span><span class="p">:</span> <span class="n">RolloutRecorderConfig</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="n">RolloutRecorderConfig</span><span class="p">)</span>
     <span class="n">shaping</span><span class="p">:</span> <span class="n">ShapingConfig</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="n">ShapingConfig</span><span class="p">)</span>
+    <span class="n">exploratory</span><span class="p">:</span> <span class="n">ExploratoryConfig</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="n">ExploratoryConfig</span><span class="p">)</span>
 </code></pre></div></td></tr></table></div>
               </details>
 
@@ -21733,6 +21757,142 @@ not batched in this slice: <code>num_envs &gt; 1</code> with
         <span class="k">if</span> <span class="n">v</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">v</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;agent_uids must be distinct; got </span><span class="si">{</span><span class="n">v</span><span class="si">!r}</span><span class="s2">&quot;</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">v</span>
+</code></pre></div></td></tr></table></div>
+              </details>
+
+
+
+<div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+
+
+  </div>
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-class">
+
+
+
+<h2 id="concerto.training.config.ExploratoryConfig" class="doc doc-heading">
+            <span class="doc doc-object-name doc-class-name">ExploratoryConfig</span>
+
+
+</h2>
+
+
+    <div class="doc doc-contents ">
+            <p class="doc doc-class-bases">
+              Bases: <code><span title="concerto.training.config._FrozenModel">_FrozenModel</span></code></p>
+
+
+
+        <p>EXPLORATORY rig knobs — structurally barred from gate-facing runs.</p>
+<p>Every field here is default-off (byte-identical pre-existing
+behaviour, ADR-002) and refused by
+:class:<code>chamber.benchmarks.stage1_common.TrainedPolicyFactory</code> at
+construction — the production gate dispatch cannot run with any
+EXPLORATORY knob active, by construction (the safety-loud-fail
+pattern). Activating one for a gate-facing protocol requires an
+ADR, not a config edit.</p>
+
+
+<p><span class="doc-section-title">Attributes:</span></p>
+    <ul>
+        <li class="doc-section-item field-body">
+          <b><code><span title="concerto.training.config.ExploratoryConfig.partner_static_override">partner_static_override</span></code></b>
+              (<code><span title="bool">bool</span></code>)
+          –
+          <div class="doc-md-description">
+            <p>When <code>True</code>,
+:func:<code>chamber.benchmarks.training_runner.run_training</code>
+wraps the built partner in the zero-action
+:class:<code>chamber.partners.static_override.ExploratoryStaticPartnerOverride</code>
+(the partner stands motionless at its reset pose; partner
+classes and registry untouched). EXPLORATORY only — the
+2026-06-11 homo-static slice
+(<code>spikes/results/stage1-failure-investigation/2026-06-11-homo-static-exploratory/</code>)
+is its sole pre-stated use. The flag is folded into the
+run_id config fingerprint and stamped on every JSONL line
+(<code>exploratory_partner_static</code>) so no archive can carry a
+static-partner run silently.</p>
+          </div>
+        </li>
+    </ul>
+
+
+
+
+
+
+
+
+              <details class="mkdocstrings-source">
+                <summary>Source code in <code>src/concerto/training/config.py</code></summary>
+                <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">418</span>
+<span class="normal">419</span>
+<span class="normal">420</span>
+<span class="normal">421</span>
+<span class="normal">422</span>
+<span class="normal">423</span>
+<span class="normal">424</span>
+<span class="normal">425</span>
+<span class="normal">426</span>
+<span class="normal">427</span>
+<span class="normal">428</span>
+<span class="normal">429</span>
+<span class="normal">430</span>
+<span class="normal">431</span>
+<span class="normal">432</span>
+<span class="normal">433</span>
+<span class="normal">434</span>
+<span class="normal">435</span>
+<span class="normal">436</span>
+<span class="normal">437</span>
+<span class="normal">438</span>
+<span class="normal">439</span>
+<span class="normal">440</span>
+<span class="normal">441</span>
+<span class="normal">442</span>
+<span class="normal">443</span>
+<span class="normal">444</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">ExploratoryConfig</span><span class="p">(</span><span class="n">_FrozenModel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;EXPLORATORY rig knobs — structurally barred from gate-facing runs.</span>
+
+<span class="sd">    Every field here is default-off (byte-identical pre-existing</span>
+<span class="sd">    behaviour, ADR-002) and refused by</span>
+<span class="sd">    :class:`chamber.benchmarks.stage1_common.TrainedPolicyFactory` at</span>
+<span class="sd">    construction — the production gate dispatch cannot run with any</span>
+<span class="sd">    EXPLORATORY knob active, by construction (the safety-loud-fail</span>
+<span class="sd">    pattern). Activating one for a gate-facing protocol requires an</span>
+<span class="sd">    ADR, not a config edit.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        partner_static_override: When ``True``,</span>
+<span class="sd">            :func:`chamber.benchmarks.training_runner.run_training`</span>
+<span class="sd">            wraps the built partner in the zero-action</span>
+<span class="sd">            :class:`chamber.partners.static_override.ExploratoryStaticPartnerOverride`</span>
+<span class="sd">            (the partner stands motionless at its reset pose; partner</span>
+<span class="sd">            classes and registry untouched). EXPLORATORY only — the</span>
+<span class="sd">            2026-06-11 homo-static slice</span>
+<span class="sd">            (``spikes/results/stage1-failure-investigation/2026-06-11-homo-static-exploratory/``)</span>
+<span class="sd">            is its sole pre-stated use. The flag is folded into the</span>
+<span class="sd">            run_id config fingerprint and stamped on every JSONL line</span>
+<span class="sd">            (``exploratory_partner_static``) so no archive can carry a</span>
+<span class="sd">            static-partner run silently.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">partner_static_override</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
 </code></pre></div></td></tr></table></div>
               </details>
 
@@ -23242,37 +23402,7 @@ duplicate agent uids, etc.).</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/concerto/training/config.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">470</span>
-<span class="normal">471</span>
-<span class="normal">472</span>
-<span class="normal">473</span>
-<span class="normal">474</span>
-<span class="normal">475</span>
-<span class="normal">476</span>
-<span class="normal">477</span>
-<span class="normal">478</span>
-<span class="normal">479</span>
-<span class="normal">480</span>
-<span class="normal">481</span>
-<span class="normal">482</span>
-<span class="normal">483</span>
-<span class="normal">484</span>
-<span class="normal">485</span>
-<span class="normal">486</span>
-<span class="normal">487</span>
-<span class="normal">488</span>
-<span class="normal">489</span>
-<span class="normal">490</span>
-<span class="normal">491</span>
-<span class="normal">492</span>
-<span class="normal">493</span>
-<span class="normal">494</span>
-<span class="normal">495</span>
-<span class="normal">496</span>
-<span class="normal">497</span>
-<span class="normal">498</span>
-<span class="normal">499</span>
-<span class="normal">500</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">500</span>
 <span class="normal">501</span>
 <span class="normal">502</span>
 <span class="normal">503</span>
@@ -23286,7 +23416,37 @@ duplicate agent uids, etc.).</p>
 <span class="normal">511</span>
 <span class="normal">512</span>
 <span class="normal">513</span>
-<span class="normal">514</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">load_config</span><span class="p">(</span>
+<span class="normal">514</span>
+<span class="normal">515</span>
+<span class="normal">516</span>
+<span class="normal">517</span>
+<span class="normal">518</span>
+<span class="normal">519</span>
+<span class="normal">520</span>
+<span class="normal">521</span>
+<span class="normal">522</span>
+<span class="normal">523</span>
+<span class="normal">524</span>
+<span class="normal">525</span>
+<span class="normal">526</span>
+<span class="normal">527</span>
+<span class="normal">528</span>
+<span class="normal">529</span>
+<span class="normal">530</span>
+<span class="normal">531</span>
+<span class="normal">532</span>
+<span class="normal">533</span>
+<span class="normal">534</span>
+<span class="normal">535</span>
+<span class="normal">536</span>
+<span class="normal">537</span>
+<span class="normal">538</span>
+<span class="normal">539</span>
+<span class="normal">540</span>
+<span class="normal">541</span>
+<span class="normal">542</span>
+<span class="normal">543</span>
+<span class="normal">544</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">load_config</span><span class="p">(</span>
     <span class="o">*</span><span class="p">,</span>
     <span class="n">config_path</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span>
     <span class="n">overrides</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -25962,7 +26122,14 @@ of the safety stack is wired.</p>
 <span class="normal">972</span>
 <span class="normal">973</span>
 <span class="normal">974</span>
-<span class="normal">975</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">train</span><span class="p">(</span>  <span class="c1"># noqa: PLR0912, PLR0915 - P1.04.5 added safety-stack integration to the canonical training loop; the body&#39;s branch + statement counts exceed the default thresholds because the safety path is interleaved per step. Refactoring into a SafetyFilterDriver collaborator is the Phase-2 cleanup path (see Plan-subagent D1 alternative).</span>
+<span class="normal">975</span>
+<span class="normal">976</span>
+<span class="normal">977</span>
+<span class="normal">978</span>
+<span class="normal">979</span>
+<span class="normal">980</span>
+<span class="normal">981</span>
+<span class="normal">982</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">train</span><span class="p">(</span>  <span class="c1"># noqa: PLR0912, PLR0915 - P1.04.5 added safety-stack integration to the canonical training loop; the body&#39;s branch + statement counts exceed the default thresholds because the safety path is interleaved per step. Refactoring into a SafetyFilterDriver collaborator is the Phase-2 cleanup path (see Plan-subagent D1 alternative).</span>
     <span class="n">cfg</span><span class="p">:</span> <span class="n">EgoAHTConfig</span><span class="p">,</span>
     <span class="o">*</span><span class="p">,</span>
     <span class="n">env</span><span class="p">:</span> <span class="n">EnvLike</span><span class="p">,</span>
@@ -26094,6 +26261,13 @@ of the safety stack is wired.</p>
             <span class="s2">&quot;task&quot;</span><span class="p">:</span> <span class="n">cfg</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">task</span><span class="p">,</span>
             <span class="s2">&quot;partner_class&quot;</span><span class="p">:</span> <span class="n">cfg</span><span class="o">.</span><span class="n">partner</span><span class="o">.</span><span class="n">class_name</span><span class="p">,</span>
             <span class="s2">&quot;config_hash&quot;</span><span class="p">:</span> <span class="n">config_fingerprint</span><span class="p">,</span>
+            <span class="c1"># EXPLORATORY stamp (2026-06-11 homo-static slice §2): a</span>
+            <span class="c1"># static-override run can never sit silently in an archive.</span>
+            <span class="o">**</span><span class="p">(</span>
+                <span class="p">{</span><span class="s2">&quot;exploratory_partner_static&quot;</span><span class="p">:</span> <span class="s2">&quot;true&quot;</span><span class="p">}</span>
+                <span class="k">if</span> <span class="n">cfg</span><span class="o">.</span><span class="n">exploratory</span><span class="o">.</span><span class="n">partner_static_override</span>
+                <span class="k">else</span> <span class="p">{}</span>
+            <span class="p">),</span>
         <span class="p">},</span>
         <span class="n">config_fingerprint</span><span class="o">=</span><span class="n">config_fingerprint</span><span class="p">,</span>
     <span class="p">)</span>
@@ -58040,17 +58214,7 @@ from <code>PANDA_CARTESIAN_ACCEL_CAPACITY_MS2 = 10.0 m/s²</code>).</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/chamber/benchmarks/training_runner.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">422</span>
-<span class="normal">423</span>
-<span class="normal">424</span>
-<span class="normal">425</span>
-<span class="normal">426</span>
-<span class="normal">427</span>
-<span class="normal">428</span>
-<span class="normal">429</span>
-<span class="normal">430</span>
-<span class="normal">431</span>
-<span class="normal">432</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">432</span>
 <span class="normal">433</span>
 <span class="normal">434</span>
 <span class="normal">435</span>
@@ -58071,7 +58235,17 @@ from <code>PANDA_CARTESIAN_ACCEL_CAPACITY_MS2 = 10.0 m/s²</code>).</p>
 <span class="normal">450</span>
 <span class="normal">451</span>
 <span class="normal">452</span>
-<span class="normal">453</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">build_bounds_for_env</span><span class="p">(</span><span class="n">env</span><span class="p">:</span> <span class="n">gym</span><span class="o">.</span><span class="n">Env</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Bounds</span><span class="p">:</span>
+<span class="normal">453</span>
+<span class="normal">454</span>
+<span class="normal">455</span>
+<span class="normal">456</span>
+<span class="normal">457</span>
+<span class="normal">458</span>
+<span class="normal">459</span>
+<span class="normal">460</span>
+<span class="normal">461</span>
+<span class="normal">462</span>
+<span class="normal">463</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">build_bounds_for_env</span><span class="p">(</span><span class="n">env</span><span class="p">:</span> <span class="n">gym</span><span class="o">.</span><span class="n">Env</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Bounds</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Source per-task :class:`Bounds` from the env (P1.04.5; ADR-006 §Decision).</span>
 
 <span class="sd">    Delegates to ``env.build_bounds()`` when present</span>
@@ -58215,17 +58389,7 @@ identity).</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/chamber/benchmarks/training_runner.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">314</span>
-<span class="normal">315</span>
-<span class="normal">316</span>
-<span class="normal">317</span>
-<span class="normal">318</span>
-<span class="normal">319</span>
-<span class="normal">320</span>
-<span class="normal">321</span>
-<span class="normal">322</span>
-<span class="normal">323</span>
-<span class="normal">324</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">324</span>
 <span class="normal">325</span>
 <span class="normal">326</span>
 <span class="normal">327</span>
@@ -58290,7 +58454,17 @@ identity).</p>
 <span class="normal">386</span>
 <span class="normal">387</span>
 <span class="normal">388</span>
-<span class="normal">389</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">build_control_models</span><span class="p">(</span><span class="n">env</span><span class="p">:</span> <span class="n">gym</span><span class="o">.</span><span class="n">Env</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">AgentControlModel</span><span class="p">]:</span>
+<span class="normal">389</span>
+<span class="normal">390</span>
+<span class="normal">391</span>
+<span class="normal">392</span>
+<span class="normal">393</span>
+<span class="normal">394</span>
+<span class="normal">395</span>
+<span class="normal">396</span>
+<span class="normal">397</span>
+<span class="normal">398</span>
+<span class="normal">399</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">build_control_models</span><span class="p">(</span><span class="n">env</span><span class="p">:</span> <span class="n">gym</span><span class="o">.</span><span class="n">Env</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">AgentControlModel</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Build a per-uid :class:`AgentControlModel` map from an env (ADR-004 §Decision; spike_004A).</span>
 
 <span class="sd">    Two-tier dispatch (P1.03 / Task B):</span>
@@ -58439,17 +58613,7 @@ the default-DI fallback in :func:<code>build_control_models</code>.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/chamber/benchmarks/training_runner.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">526</span>
-<span class="normal">527</span>
-<span class="normal">528</span>
-<span class="normal">529</span>
-<span class="normal">530</span>
-<span class="normal">531</span>
-<span class="normal">532</span>
-<span class="normal">533</span>
-<span class="normal">534</span>
-<span class="normal">535</span>
-<span class="normal">536</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">536</span>
 <span class="normal">537</span>
 <span class="normal">538</span>
 <span class="normal">539</span>
@@ -58485,7 +58649,17 @@ the default-DI fallback in :func:<code>build_control_models</code>.</p>
 <span class="normal">569</span>
 <span class="normal">570</span>
 <span class="normal">571</span>
-<span class="normal">572</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">build_emergency_controllers</span><span class="p">(</span>
+<span class="normal">572</span>
+<span class="normal">573</span>
+<span class="normal">574</span>
+<span class="normal">575</span>
+<span class="normal">576</span>
+<span class="normal">577</span>
+<span class="normal">578</span>
+<span class="normal">579</span>
+<span class="normal">580</span>
+<span class="normal">581</span>
+<span class="normal">582</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">build_emergency_controllers</span><span class="p">(</span>
     <span class="n">env</span><span class="p">:</span> <span class="n">gym</span><span class="o">.</span><span class="n">Env</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">EmergencyController</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Build per-uid emergency-controller dispatch for the cell&#39;s env (P1.04.6).</span>
@@ -59031,17 +59205,7 @@ and for the numerical-difference velocity computation in
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/chamber/benchmarks/training_runner.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">491</span>
-<span class="normal">492</span>
-<span class="normal">493</span>
-<span class="normal">494</span>
-<span class="normal">495</span>
-<span class="normal">496</span>
-<span class="normal">497</span>
-<span class="normal">498</span>
-<span class="normal">499</span>
-<span class="normal">500</span>
-<span class="normal">501</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">501</span>
 <span class="normal">502</span>
 <span class="normal">503</span>
 <span class="normal">504</span>
@@ -59063,7 +59227,17 @@ and for the numerical-difference velocity computation in
 <span class="normal">520</span>
 <span class="normal">521</span>
 <span class="normal">522</span>
-<span class="normal">523</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">build_safety_dt</span><span class="p">(</span><span class="n">env</span><span class="p">:</span> <span class="n">gym</span><span class="o">.</span><span class="n">Env</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="o">*</span><span class="p">,</span> <span class="n">fallback</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.02</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="normal">523</span>
+<span class="normal">524</span>
+<span class="normal">525</span>
+<span class="normal">526</span>
+<span class="normal">527</span>
+<span class="normal">528</span>
+<span class="normal">529</span>
+<span class="normal">530</span>
+<span class="normal">531</span>
+<span class="normal">532</span>
+<span class="normal">533</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">build_safety_dt</span><span class="p">(</span><span class="n">env</span><span class="p">:</span> <span class="n">gym</span><span class="o">.</span><span class="n">Env</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="o">*</span><span class="p">,</span> <span class="n">fallback</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.02</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Source the control-step dt from the env (P1.04.5; ADR-007 §Stage 1b).</span>
 
 <span class="sd">    Reads :attr:`env.control_timestep` (the ManiSkill BaseEnv default;</span>
@@ -59160,17 +59334,7 @@ DI dispatch in :func:<code>build_control_models</code>).</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/chamber/benchmarks/training_runner.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">392</span>
-<span class="normal">393</span>
-<span class="normal">394</span>
-<span class="normal">395</span>
-<span class="normal">396</span>
-<span class="normal">397</span>
-<span class="normal">398</span>
-<span class="normal">399</span>
-<span class="normal">400</span>
-<span class="normal">401</span>
-<span class="normal">402</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">402</span>
 <span class="normal">403</span>
 <span class="normal">404</span>
 <span class="normal">405</span>
@@ -59187,7 +59351,17 @@ DI dispatch in :func:<code>build_control_models</code>).</p>
 <span class="normal">416</span>
 <span class="normal">417</span>
 <span class="normal">418</span>
-<span class="normal">419</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">build_safety_filter</span><span class="p">(</span><span class="n">env</span><span class="p">:</span> <span class="n">gym</span><span class="o">.</span><span class="n">Env</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">EgoOnlySafetyFilter</span><span class="p">:</span>
+<span class="normal">419</span>
+<span class="normal">420</span>
+<span class="normal">421</span>
+<span class="normal">422</span>
+<span class="normal">423</span>
+<span class="normal">424</span>
+<span class="normal">425</span>
+<span class="normal">426</span>
+<span class="normal">427</span>
+<span class="normal">428</span>
+<span class="normal">429</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">build_safety_filter</span><span class="p">(</span><span class="n">env</span><span class="p">:</span> <span class="n">gym</span><span class="o">.</span><span class="n">Env</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">EgoOnlySafetyFilter</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Construct the CBF-QP outer filter for the cell&#39;s env (P1.04.5; ADR-007 §Stage 1b).</span>
 
 <span class="sd">    Wraps :meth:`concerto.safety.cbf_qp.ExpCBFQP.ego_only` with the</span>
@@ -59299,17 +59473,7 @@ the per-uid snapshot dict.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/chamber/benchmarks/training_runner.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">456</span>
-<span class="normal">457</span>
-<span class="normal">458</span>
-<span class="normal">459</span>
-<span class="normal">460</span>
-<span class="normal">461</span>
-<span class="normal">462</span>
-<span class="normal">463</span>
-<span class="normal">464</span>
-<span class="normal">465</span>
-<span class="normal">466</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">466</span>
 <span class="normal">467</span>
 <span class="normal">468</span>
 <span class="normal">469</span>
@@ -59331,7 +59495,17 @@ the per-uid snapshot dict.</p>
 <span class="normal">485</span>
 <span class="normal">486</span>
 <span class="normal">487</span>
-<span class="normal">488</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">build_safety_snapshot_builder</span><span class="p">(</span>
+<span class="normal">488</span>
+<span class="normal">489</span>
+<span class="normal">490</span>
+<span class="normal">491</span>
+<span class="normal">492</span>
+<span class="normal">493</span>
+<span class="normal">494</span>
+<span class="normal">495</span>
+<span class="normal">496</span>
+<span class="normal">497</span>
+<span class="normal">498</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">build_safety_snapshot_builder</span><span class="p">(</span>
     <span class="n">env</span><span class="p">:</span> <span class="n">gym</span><span class="o">.</span><span class="n">Env</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">gym</span><span class="o">.</span><span class="n">Env</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="n">Any</span><span class="p">]],</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">AgentSnapshot</span><span class="p">]]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Return the env&#39;s ``build_agent_snapshots`` method, or ``None`` (P1.04.5; ADR-007 §Stage 1b).</span>
@@ -59716,7 +59890,17 @@ via :func:<code>build_emergency_controllers</code>.</p>
 <span class="normal">308</span>
 <span class="normal">309</span>
 <span class="normal">310</span>
-<span class="normal">311</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">run_training</span><span class="p">(</span>
+<span class="normal">311</span>
+<span class="normal">312</span>
+<span class="normal">313</span>
+<span class="normal">314</span>
+<span class="normal">315</span>
+<span class="normal">316</span>
+<span class="normal">317</span>
+<span class="normal">318</span>
+<span class="normal">319</span>
+<span class="normal">320</span>
+<span class="normal">321</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">run_training</span><span class="p">(</span>
     <span class="n">cfg</span><span class="p">:</span> <span class="n">EgoAHTConfig</span><span class="p">,</span>
     <span class="o">*</span><span class="p">,</span>
     <span class="n">trainer_factory</span><span class="p">:</span> <span class="n">TrainerFactory</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -59821,6 +60005,16 @@ via :func:<code>build_emergency_controllers</code>.</p>
             <span class="p">),</span>
         <span class="p">)</span>
     <span class="n">partner</span> <span class="o">=</span> <span class="n">build_partner</span><span class="p">(</span><span class="n">cfg</span><span class="o">.</span><span class="n">partner</span><span class="p">)</span>
+    <span class="c1"># EXPLORATORY (2026-06-11 homo-static slice §2; default-off,</span>
+    <span class="c1"># ADR-002): zero-action partner override. Gate-facing runs cannot</span>
+    <span class="c1"># reach here with the flag set - TrainedPolicyFactory refuses it at</span>
+    <span class="c1"># construction (the safety-loud-fail pattern).</span>
+    <span class="k">if</span> <span class="n">cfg</span><span class="o">.</span><span class="n">exploratory</span><span class="o">.</span><span class="n">partner_static_override</span><span class="p">:</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">chamber.partners.static_override</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+            <span class="n">ExploratoryStaticPartnerOverride</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="n">partner</span> <span class="o">=</span> <span class="n">ExploratoryStaticPartnerOverride</span><span class="p">(</span><span class="n">partner</span><span class="p">)</span>
     <span class="n">factory</span><span class="p">:</span> <span class="n">TrainerFactory</span> <span class="o">=</span> <span class="p">(</span>
         <span class="n">trainer_factory</span> <span class="k">if</span> <span class="n">trainer_factory</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">EgoPPOTrainer</span><span class="o">.</span><span class="n">from_config</span>
     <span class="p">)</span>
@@ -64809,7 +65003,17 @@ spike_run = _run_axis_with_factories(
 <span class="normal">659</span>
 <span class="normal">660</span>
 <span class="normal">661</span>
-<span class="normal">662</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">TrainedPolicyFactory</span><span class="p">:</span>
+<span class="normal">662</span>
+<span class="normal">663</span>
+<span class="normal">664</span>
+<span class="normal">665</span>
+<span class="normal">666</span>
+<span class="normal">667</span>
+<span class="normal">668</span>
+<span class="normal">669</span>
+<span class="normal">670</span>
+<span class="normal">671</span>
+<span class="normal">672</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">TrainedPolicyFactory</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Phase-1 :class:`EgoActionFactory` — wires the ego-AHT training loop per cell.</span>
 
 <span class="sd">    ADR-007 §Stage 1b production factory. Implements the</span>
@@ -64940,6 +65144,16 @@ spike_run = _run_axis_with_factories(
 <span class="sd">                ``tests/integration/test_stage1_vectorised_real.py``</span>
 <span class="sd">                isolates them).</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">cfg</span><span class="o">.</span><span class="n">exploratory</span><span class="o">.</span><span class="n">partner_static_override</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="s2">&quot;TrainedPolicyFactory: cfg.exploratory.partner_static_override &quot;</span>
+                <span class="s2">&quot;is set. EXPLORATORY knobs are structurally barred from the &quot;</span>
+                <span class="s2">&quot;gate-facing dispatch - the production spike path cannot train &quot;</span>
+                <span class="s2">&quot;against a static-override partner. Sole pre-stated use: the &quot;</span>
+                <span class="s2">&quot;2026-06-11 homo-static slice (its own driver, not this &quot;</span>
+                <span class="s2">&quot;factory). Gate-facing use requires an ADR, not a config edit.&quot;</span>
+            <span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">cfg</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">num_envs</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
             <span class="n">_ensure_gpu_physx_enabled</span><span class="p">(</span><span class="n">num_envs</span><span class="o">=</span><span class="n">cfg</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">num_envs</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_cfg</span> <span class="o">=</span> <span class="n">cfg</span>
@@ -65339,17 +65553,7 @@ also propagates unchanged (per the
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/chamber/benchmarks/stage1_common.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">382</span>
-<span class="normal">383</span>
-<span class="normal">384</span>
-<span class="normal">385</span>
-<span class="normal">386</span>
-<span class="normal">387</span>
-<span class="normal">388</span>
-<span class="normal">389</span>
-<span class="normal">390</span>
-<span class="normal">391</span>
-<span class="normal">392</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">392</span>
 <span class="normal">393</span>
 <span class="normal">394</span>
 <span class="normal">395</span>
@@ -65434,7 +65638,17 @@ also propagates unchanged (per the
 <span class="normal">474</span>
 <span class="normal">475</span>
 <span class="normal">476</span>
-<span class="normal">477</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="fm">__call__</span><span class="p">(</span>
+<span class="normal">477</span>
+<span class="normal">478</span>
+<span class="normal">479</span>
+<span class="normal">480</span>
+<span class="normal">481</span>
+<span class="normal">482</span>
+<span class="normal">483</span>
+<span class="normal">484</span>
+<span class="normal">485</span>
+<span class="normal">486</span>
+<span class="normal">487</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="fm">__call__</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
     <span class="n">env</span><span class="p">:</span> <span class="n">gym</span><span class="o">.</span><span class="n">Env</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span>
     <span class="n">seed</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
@@ -65631,7 +65845,17 @@ isolates them).</p>
 <span class="normal">377</span>
 <span class="normal">378</span>
 <span class="normal">379</span>
-<span class="normal">380</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">cfg</span><span class="p">:</span> <span class="n">EgoAHTConfig</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="normal">380</span>
+<span class="normal">381</span>
+<span class="normal">382</span>
+<span class="normal">383</span>
+<span class="normal">384</span>
+<span class="normal">385</span>
+<span class="normal">386</span>
+<span class="normal">387</span>
+<span class="normal">388</span>
+<span class="normal">389</span>
+<span class="normal">390</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">cfg</span><span class="p">:</span> <span class="n">EgoAHTConfig</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Build the factory; capture the base config.</span>
 
 <span class="sd">    Vectorised cells (``cfg.env.num_envs &gt; 1``; ADR-007 §Stage 1b</span>
@@ -65661,6 +65885,16 @@ isolates them).</p>
 <span class="sd">            ``tests/integration/test_stage1_vectorised_real.py``</span>
 <span class="sd">            isolates them).</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">cfg</span><span class="o">.</span><span class="n">exploratory</span><span class="o">.</span><span class="n">partner_static_override</span><span class="p">:</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="s2">&quot;TrainedPolicyFactory: cfg.exploratory.partner_static_override &quot;</span>
+            <span class="s2">&quot;is set. EXPLORATORY knobs are structurally barred from the &quot;</span>
+            <span class="s2">&quot;gate-facing dispatch - the production spike path cannot train &quot;</span>
+            <span class="s2">&quot;against a static-override partner. Sole pre-stated use: the &quot;</span>
+            <span class="s2">&quot;2026-06-11 homo-static slice (its own driver, not this &quot;</span>
+            <span class="s2">&quot;factory). Gate-facing use requires an ADR, not a config edit.&quot;</span>
+        <span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">cfg</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">num_envs</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
         <span class="n">_ensure_gpu_physx_enabled</span><span class="p">(</span><span class="n">num_envs</span><span class="o">=</span><span class="n">cfg</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">num_envs</span><span class="p">)</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">_cfg</span> <span class="o">=</span> <span class="n">cfg</span>
