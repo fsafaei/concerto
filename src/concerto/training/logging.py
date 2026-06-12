@@ -74,9 +74,12 @@ class RunContext:
             from different sinks describe the same run.
         seed: Project-wide root seed; ego-AHT runs derive every RNG
             substream from this via :func:`concerto.training.seeding.derive_substream`.
-        git_sha: Full SHA of the currently-checked-out commit, or
-            :data:`GIT_SHA_UNKNOWN` when the working tree is not a git
-            repository or the ``git`` binary is missing.
+        git_sha: Full SHA of the commit checked out at the *first*
+            resolution in this process (the launch SHA; resolved once
+            per process per repo root — issue #227, ADR-002 §Revision
+            history 2026-06-12), or :data:`GIT_SHA_UNKNOWN` when the
+            working tree is not a git repository or the ``git`` binary
+            is missing.
         pyproject_hash: SHA-256 of ``pyproject.toml`` (full hex digest).
             A silent dependency drift produces a different hash and
             therefore a different ``run_id``.
@@ -112,12 +115,34 @@ class RunContext:
     safety_telemetry: dict[str, object] | None = None
 
 
+#: Process-lifetime cache of resolved git SHAs, keyed by ``repo_root``
+#: string (issue #227; ADR-002 §Revision history 2026-06-12). The first
+#: resolution per repo root is pinned for the life of the process so
+#: every cell of one launch carries the launch SHA — the 2026-06-11 AS
+#: gate chain carried four different per-cell SHAs because PR merges
+#: moved HEAD mid-run. Provenance, not determinism: nothing RNG-side
+#: reads this.
+_GIT_SHA_CACHE: dict[str, str] = {}
+
+
 def _detect_git_sha(repo_root: Path) -> str:
-    """Return the current commit SHA of ``repo_root`` or :data:`GIT_SHA_UNKNOWN`.
+    """Return ``repo_root``'s commit SHA, resolved once per process (issue #227).
 
     Plan/05 §2: the run-context bundle is always populated; missing git
     provenance is a sentinel rather than a None so the downstream JSONL
     schema is uniform.
+
+    Launch-SHA pinning (issue #227; ADR-002 §Revision history
+    2026-06-12): the underlying ``git rev-parse HEAD`` runs only on the
+    first call per ``repo_root`` in this process; later calls return
+    the cached value even if HEAD has moved (e.g. PR merges landing in
+    the working tree during a multi-hour ``chamber-spike`` chain).
+    Every cell of one launch therefore carries the launch SHA, and
+    ``run_id`` derivation inherits the stability. The sentinel is
+    cached too — a launch that starts unrooted stays uniformly
+    ``unknown`` rather than flipping vintage mid-process. Complements
+    (does not replace) the #228 operational rule: no repository
+    mutations in the working tree during a live chain.
 
     Args:
         repo_root: Working-tree directory to query.
@@ -125,6 +150,21 @@ def _detect_git_sha(repo_root: Path) -> str:
     Returns:
         Full SHA string, or :data:`GIT_SHA_UNKNOWN` on any failure
         (missing ``git`` binary, not-a-repo, detached HEAD with no commits).
+    """
+    key = str(repo_root)
+    cached = _GIT_SHA_CACHE.get(key)
+    if cached is None:
+        cached = _resolve_git_sha(repo_root)
+        _GIT_SHA_CACHE[key] = cached
+    return cached
+
+
+def _resolve_git_sha(repo_root: Path) -> str:
+    """Run ``git rev-parse HEAD`` for ``repo_root`` (uncached; plan/05 §2).
+
+    The cached entry point is :func:`_detect_git_sha`; this helper is
+    split out so the issue #227 cache pin can monkeypatch the resolver
+    in tests.
     """
     try:
         # Inputs are: literal "git" + literal subcommand + a Path-as-str
