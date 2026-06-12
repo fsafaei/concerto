@@ -375,6 +375,16 @@ class TrainedPolicyFactory:
                 ``tests/integration/test_stage1_vectorised_real.py``
                 isolates them).
         """
+        if cfg.exploratory.partner_static_override:
+            msg = (
+                "TrainedPolicyFactory: cfg.exploratory.partner_static_override "
+                "is set. EXPLORATORY knobs are structurally barred from the "
+                "gate-facing dispatch - the production spike path cannot train "
+                "against a static-override partner. Sole pre-stated use: the "
+                "2026-06-11 homo-static slice (its own driver, not this "
+                "factory). Gate-facing use requires an ADR, not a config edit."
+            )
+            raise ValueError(msg)
         if cfg.env.num_envs > 1:
             _ensure_gpu_physx_enabled(num_envs=cfg.env.num_envs)
         self._cfg = cfg
