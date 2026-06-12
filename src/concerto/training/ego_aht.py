@@ -531,6 +531,13 @@ def train(  # noqa: PLR0912, PLR0915 - P1.04.5 added safety-stack integration to
             "task": cfg.env.task,
             "partner_class": cfg.partner.class_name,
             "config_hash": config_fingerprint,
+            # EXPLORATORY stamp (2026-06-11 homo-static slice §2): a
+            # static-override run can never sit silently in an archive.
+            **(
+                {"exploratory_partner_static": "true"}
+                if cfg.exploratory.partner_static_override
+                else {}
+            ),
         },
         config_fingerprint=config_fingerprint,
     )
