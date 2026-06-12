@@ -167,6 +167,51 @@ class TestComputeRunMetadata:
         assert legacy.run_id == explicit_none.run_id
         assert legacy.run_id != fingerprinted.run_id
 
+    def test_git_sha_resolved_once_per_process_even_if_head_moves(
+        self, repo_root: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """Launch-SHA pinning (issue #227; ADR-002 §Revision history 2026-06-12).
+
+        The 2026-06-11 AS gate chain carried four different per-cell
+        ``git_sha`` stamps because ``git rev-parse HEAD`` ran at each
+        cell's training start and PR merges moved HEAD mid-run. Two
+        calls in one process must return the first-resolved SHA even
+        when the underlying resolver would now report a different HEAD.
+        """
+        import concerto.training.logging as cl
+
+        resolved = iter(["sha-at-launch", "sha-after-merge"])
+        monkeypatch.setattr(cl, "_resolve_git_sha", lambda _root: next(resolved))
+        a = compute_run_metadata(seed=0, run_kind="x", repo_root=repo_root)
+        b = compute_run_metadata(seed=0, run_kind="x", repo_root=repo_root)
+        # First-call value is the recorded one — the launch SHA.
+        assert a.git_sha == "sha-at-launch"
+        # The cache wins over the moved HEAD; run_id inherits the stability.
+        assert b.git_sha == "sha-at-launch"
+        assert a.run_id == b.run_id
+
+    def test_git_sha_cache_is_keyed_per_repo_root(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """Issue #227: the pin is per repo root — distinct roots resolve independently.
+
+        Keeps the unrooted-sentinel semantics meaningful (a not-a-repo
+        ``repo_root`` still resolves its own ``unknown`` rather than
+        inheriting another root's SHA).
+        """
+        import concerto.training.logging as cl
+
+        root_a = tmp_path / "a"
+        root_b = tmp_path / "b"
+        for root in (root_a, root_b):
+            root.mkdir()
+            (root / "pyproject.toml").write_text("[project]\nname = 'fake'\n", encoding="utf-8")
+        monkeypatch.setattr(cl, "_resolve_git_sha", lambda root: f"sha-of-{root.name}")
+        a = compute_run_metadata(seed=0, run_kind="x", repo_root=root_a)
+        b = compute_run_metadata(seed=0, run_kind="x", repo_root=root_b)
+        assert a.git_sha == "sha-of-a"
+        assert b.git_sha == "sha-of-b"
+
     def test_run_context_is_frozen(self) -> None:
         """Immutability: bound logger context cannot drift mid-run."""
         import dataclasses

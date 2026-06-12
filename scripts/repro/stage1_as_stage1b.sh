@@ -15,10 +15,14 @@
 #   - The repo is on a commit >= PR 5a merge.
 #   - OPERATIONAL: no repository mutations (checkouts, merges, pulls,
 #     rebases) in this working tree while the chain is live. The run
-#     loads code + config once at process start, but per-cell
-#     provenance stamps re-read `git rev-parse HEAD` (issue #227) and
-#     HEAD movement mid-run skews the audit trail - observed in the
-#     2026-06-11 AS gate archive (four sha stamps across one launch).
+#     loads code + config once at process start, and since the #227
+#     fix the per-cell provenance stamps resolve `git rev-parse HEAD`
+#     once per process too (launch-SHA pinning; ADR-002 §Revision
+#     history 2026-06-12), so HEAD movement can no longer skew the
+#     stamps - observed pre-fix in the 2026-06-11 AS gate archive
+#     (four sha stamps across one launch). The rule stands regardless:
+#     the working tree should match the archive's recorded SHA for the
+#     whole chain.
 #
 # Wall-time on RTX 2080: ~25-40 GPU-h.
 # Wall-time on cloud A100 (rental): ~5-8 GPU-h (~$6-10 on Lambda Labs
