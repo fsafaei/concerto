@@ -135,6 +135,47 @@ class PandaJacobianProvider:
         """The end-effector link the chain terminates at (read-only)."""
         return self._ee_link
 
+    def fk_tcp_position(self, qpos_arm: NDArray[np.floating]) -> NDArray[np.float64]:
+        """Forward-kinematics TCP position in the arm base frame (ADR-004 §Decision; ADR-026).
+
+        Companion to :meth:`__call__`: evaluates the cached serial
+        chain's forward kinematics at ``qpos_arm`` and returns the 3-D
+        Cartesian position of :attr:`ee_link` in the panda base
+        (``panda_link0``) frame — the same frame the Jacobian
+        :meth:`__call__` returns, so a Cartesian error and its
+        damped-pseudoinverse joint step compose consistently. Consumed
+        by the co-carry matched impedance controller
+        (:class:`chamber.partners.cocarry_impedance.CoCarryImpedancePartner`),
+        which drives each held bar-end TCP to its cooperative target.
+
+        Args:
+            qpos_arm: Joint-angle vector for the 7 panda arm joints,
+                shape ``(7,)``, in the same order as
+                :attr:`mani_skill.agents.robots.panda.Panda.arm_joint_names`.
+
+        Returns:
+            TCP position in the base frame, shape ``(3,)``, dtype
+            ``float64``.
+
+        Raises:
+            ValueError: If ``qpos_arm`` shape mismatches ``(7,)``.
+        """
+        import torch
+
+        q = np.asarray(qpos_arm, dtype=np.float32)
+        if q.shape != (PANDA_ARM_DOF,):
+            msg = (
+                f"PandaJacobianProvider.fk_tcp_position: qpos_arm shape {q.shape} "
+                f"mismatches expected ({PANDA_ARM_DOF},) for the 7-DOF Panda chain."
+            )
+            raise ValueError(msg)
+        q_torch = torch.from_numpy(q).unsqueeze(0)
+        # forward_kinematics(end_only=True default) returns a Transform3d;
+        # the pytorch_kinematics stub mistypes it as a dict.
+        mat = self._chain.forward_kinematics(q_torch).get_matrix()  # type: ignore[union-attr]
+        pos = mat[0, :CARTESIAN_POSITION_DIM, 3].detach().cpu().numpy()
+        return np.ascontiguousarray(pos, dtype=np.float64)
+
     def __call__(
         self,
         snap: AgentSnapshot,
