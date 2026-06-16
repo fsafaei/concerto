@@ -12,7 +12,7 @@ directory of this repository.
 | ADR-004 | Safety filter design | Accepted |
 | ADR-005 | Simulator base (SAPIEN + Warp-MPM) | Accepted |
 | ADR-006 | Partner policy assumptions and bounds | Accepted |
-| ADR-007 | Heterogeneity axis selection and staging | Accepted (working rec.) |
+| ADR-007 | Heterogeneity axis selection and staging | Accepted — superseded in part by ADR-026 |
 | ADR-008 | HRS bundle composition | Accepted (working rec.) |
 | ADR-009 | Partner zoo construction | Accepted |
 | ADR-010 | Foundation-model partner integration | Accepted |
@@ -22,5 +22,7 @@ directory of this repository.
 | ADR-014 | Safety reporting format | Accepted |
 | ADR-015 | Task tier scope | Pending |
 | ADR-016 | SpikeRun schema lifecycle (Stage 1a / 1b disambiguation) | Accepted |
+| ADR-017 | Observability and experiment tracking | Accepted |
+| ADR-026 | Coupling-validity criterion (+ Stage-1 AS reinterpretation) | RFC |
 
 For full text see the `adr/` directory.

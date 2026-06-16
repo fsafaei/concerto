@@ -1,8 +1,11 @@
 # How-to: Submit a leaderboard entry
 
 !!! note "Phase-0 placeholder"
-    The populated leaderboard lands with M5 once the Stage-1 (AS + OM)
-    spike rows are in. This page documents the submission protocol so
+    The leaderboard is unpopulated. Under
+    [ADR-026 (coupling-validity criterion)](https://github.com/fsafaei/concerto/blob/main/adr/ADR-026-coupling-validity-criterion.md)
+    the Stage-1 (AS + OM) axes as operationalized are non-coupling-valid;
+    leaderboard-eligible results come from the Phase-2 coupling-valid
+    re-operationalization. This page documents the submission protocol so
     that external contributors can prepare entries against the same
     contract used by the in-tree spikes.
 
@@ -18,7 +21,7 @@ archive schema, and the bootstrap / HRS pipeline live in
 and verifies the git-tag SHA per
 [ADR-007 §Discipline](https://github.com/fsafaei/concerto/blob/main/adr/ADR-007-heterogeneity-axis-selection.md);
 `bootstrap.py` ships the cluster + paired-cluster bootstrap used for
-the ≥20 pp gap test (reviewer P1-9); `hrs.py` computes the per-axis
+the ≥20 pp gap test (reviewer P1-9; necessary but not sufficient — coupling-validity per ADR-026); `hrs.py` computes the per-axis
 HRS vector and the headline scalar per
 [ADR-008 §Decision](https://github.com/fsafaei/concerto/blob/main/adr/ADR-008-hrs-bundle.md).
 

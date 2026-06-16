@@ -13,8 +13,8 @@ Tier (c) lives in
 [`adr/international_axis_evidence.md`](https://github.com/fsafaei/concerto/blob/main/adr/international_axis_evidence.md):
 deployment signal (humanoid factory pilots, logistics fleets, surgical
 robotics) used as a prior on which heterogeneity axes are commercially
-load-bearing, but never as a substitute for the empirical ≥20pp gap
-rule (see [`ADR-007 §Validation criteria`](https://github.com/fsafaei/concerto/blob/main/adr/ADR-007-heterogeneity-axis-selection.md)).
+load-bearing, but never as a substitute for the empirical gap-plus-coupling-validity
+criterion (ADR-026 amends ADR-007; see [`ADR-007 §Validation criteria`](https://github.com/fsafaei/concerto/blob/main/adr/ADR-007-heterogeneity-axis-selection.md)).
 This page covers tier (a) only.
 
 > Every entry below carries a BibTeX cite-key in square brackets

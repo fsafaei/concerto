@@ -7,6 +7,17 @@
     [Month-3 lock-priority report][snapshot] for the full per-stage
     evidence.
 
+!!! warning "Superseded in part — 2026-06-15 (ADR-026)"
+    [ADR-026 (coupling-validity criterion)](https://github.com/fsafaei/concerto/blob/main/adr/ADR-026-coupling-validity-criterion.md)
+    reframes the forward plan below. The Stage-1 action-space (AS) axis
+    has since been measured and is reinterpreted as construct-invalid
+    for cooperation (an ego-solvable task; a non-participating partner);
+    the ≥20 pp magnitude gate is necessary but **not** sufficient
+    (coupling-validity is required); and the cooperation proof moves to
+    a Phase-2 co-carry re-operationalization. The Stage-1 → 2 → 3
+    staging narrative below is retained as the pre-2026-06-15 plan of
+    record.
+
 The CONCERTO project gates Phase-0 close-out on the ADR-007
 §Implementation staging protocol: Stage 0 rig validation, then the
 six-axis staged spike sweep (Stage 1: AS + OM; Stage 2: CR + CM;
