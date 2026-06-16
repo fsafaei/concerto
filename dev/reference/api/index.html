@@ -3256,6 +3256,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#chamber.agents.PandaJacobianProvider.fk_tcp_position" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        fk_tcp_position
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -3344,6 +3355,17 @@
     <span class="md-ellipsis">
       
         __init__
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#chamber.agents.panda_jacobian.PandaJacobianProvider.fk_tcp_position" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        fk_tcp_position
       
     </span>
   </a>
@@ -8221,6 +8243,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#chamber.agents.PandaJacobianProvider.fk_tcp_position" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        fk_tcp_position
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -8309,6 +8342,17 @@
     <span class="md-ellipsis">
       
         __init__
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#chamber.agents.panda_jacobian.PandaJacobianProvider.fk_tcp_position" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        fk_tcp_position
       
     </span>
   </a>
@@ -40973,7 +41017,48 @@ fails to extract a chain ending at <code>ee_link</code>.</p>
 <span class="normal">182</span>
 <span class="normal">183</span>
 <span class="normal">184</span>
-<span class="normal">185</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">PandaJacobianProvider</span><span class="p">:</span>
+<span class="normal">185</span>
+<span class="normal">186</span>
+<span class="normal">187</span>
+<span class="normal">188</span>
+<span class="normal">189</span>
+<span class="normal">190</span>
+<span class="normal">191</span>
+<span class="normal">192</span>
+<span class="normal">193</span>
+<span class="normal">194</span>
+<span class="normal">195</span>
+<span class="normal">196</span>
+<span class="normal">197</span>
+<span class="normal">198</span>
+<span class="normal">199</span>
+<span class="normal">200</span>
+<span class="normal">201</span>
+<span class="normal">202</span>
+<span class="normal">203</span>
+<span class="normal">204</span>
+<span class="normal">205</span>
+<span class="normal">206</span>
+<span class="normal">207</span>
+<span class="normal">208</span>
+<span class="normal">209</span>
+<span class="normal">210</span>
+<span class="normal">211</span>
+<span class="normal">212</span>
+<span class="normal">213</span>
+<span class="normal">214</span>
+<span class="normal">215</span>
+<span class="normal">216</span>
+<span class="normal">217</span>
+<span class="normal">218</span>
+<span class="normal">219</span>
+<span class="normal">220</span>
+<span class="normal">221</span>
+<span class="normal">222</span>
+<span class="normal">223</span>
+<span class="normal">224</span>
+<span class="normal">225</span>
+<span class="normal">226</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">PandaJacobianProvider</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Frozen URDF chain -&gt; linear Jacobian callable (ADR-004 §Decision; §Stage 1b).</span>
 
 <span class="sd">    Parses the panda URDF once at construction (via</span>
@@ -41032,6 +41117,47 @@ fails to extract a chain ending at <code>ee_link</code>.</p>
     <span class="k">def</span><span class="w"> </span><span class="nf">ee_link</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;The end-effector link the chain terminates at (read-only).&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ee_link</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">fk_tcp_position</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">qpos_arm</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">floating</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Forward-kinematics TCP position in the arm base frame (ADR-004 §Decision; ADR-026).</span>
+
+<span class="sd">        Companion to :meth:`__call__`: evaluates the cached serial</span>
+<span class="sd">        chain&#39;s forward kinematics at ``qpos_arm`` and returns the 3-D</span>
+<span class="sd">        Cartesian position of :attr:`ee_link` in the panda base</span>
+<span class="sd">        (``panda_link0``) frame — the same frame the Jacobian</span>
+<span class="sd">        :meth:`__call__` returns, so a Cartesian error and its</span>
+<span class="sd">        damped-pseudoinverse joint step compose consistently. Consumed</span>
+<span class="sd">        by the co-carry matched impedance controller</span>
+<span class="sd">        (:class:`chamber.partners.cocarry_impedance.CoCarryImpedancePartner`),</span>
+<span class="sd">        which drives each held bar-end TCP to its cooperative target.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            qpos_arm: Joint-angle vector for the 7 panda arm joints,</span>
+<span class="sd">                shape ``(7,)``, in the same order as</span>
+<span class="sd">                :attr:`mani_skill.agents.robots.panda.Panda.arm_joint_names`.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            TCP position in the base frame, shape ``(3,)``, dtype</span>
+<span class="sd">            ``float64``.</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            ValueError: If ``qpos_arm`` shape mismatches ``(7,)``.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
+
+        <span class="n">q</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">qpos_arm</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">q</span><span class="o">.</span><span class="n">shape</span> <span class="o">!=</span> <span class="p">(</span><span class="n">PANDA_ARM_DOF</span><span class="p">,):</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;PandaJacobianProvider.fk_tcp_position: qpos_arm shape </span><span class="si">{</span><span class="n">q</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2"> &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;mismatches expected (</span><span class="si">{</span><span class="n">PANDA_ARM_DOF</span><span class="si">}</span><span class="s2">,) for the 7-DOF Panda chain.&quot;</span>
+            <span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+        <span class="n">q_torch</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">from_numpy</span><span class="p">(</span><span class="n">q</span><span class="p">)</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+        <span class="c1"># forward_kinematics(end_only=True default) returns a Transform3d;</span>
+        <span class="c1"># the pytorch_kinematics stub mistypes it as a dict.</span>
+        <span class="n">mat</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_chain</span><span class="o">.</span><span class="n">forward_kinematics</span><span class="p">(</span><span class="n">q_torch</span><span class="p">)</span><span class="o">.</span><span class="n">get_matrix</span><span class="p">()</span>  <span class="c1"># type: ignore[union-attr]</span>
+        <span class="n">pos</span> <span class="o">=</span> <span class="n">mat</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="p">:</span><span class="n">CARTESIAN_POSITION_DIM</span><span class="p">,</span> <span class="mi">3</span><span class="p">]</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">ascontiguousarray</span><span class="p">(</span><span class="n">pos</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__call__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
@@ -41216,54 +41342,54 @@ Shape <code>(7,)</code>; dtype float-coercible to <code>float32</code>.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/chamber/agents/panda_jacobian.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">138</span>
-<span class="normal">139</span>
-<span class="normal">140</span>
-<span class="normal">141</span>
-<span class="normal">142</span>
-<span class="normal">143</span>
-<span class="normal">144</span>
-<span class="normal">145</span>
-<span class="normal">146</span>
-<span class="normal">147</span>
-<span class="normal">148</span>
-<span class="normal">149</span>
-<span class="normal">150</span>
-<span class="normal">151</span>
-<span class="normal">152</span>
-<span class="normal">153</span>
-<span class="normal">154</span>
-<span class="normal">155</span>
-<span class="normal">156</span>
-<span class="normal">157</span>
-<span class="normal">158</span>
-<span class="normal">159</span>
-<span class="normal">160</span>
-<span class="normal">161</span>
-<span class="normal">162</span>
-<span class="normal">163</span>
-<span class="normal">164</span>
-<span class="normal">165</span>
-<span class="normal">166</span>
-<span class="normal">167</span>
-<span class="normal">168</span>
-<span class="normal">169</span>
-<span class="normal">170</span>
-<span class="normal">171</span>
-<span class="normal">172</span>
-<span class="normal">173</span>
-<span class="normal">174</span>
-<span class="normal">175</span>
-<span class="normal">176</span>
-<span class="normal">177</span>
-<span class="normal">178</span>
-<span class="normal">179</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">179</span>
 <span class="normal">180</span>
 <span class="normal">181</span>
 <span class="normal">182</span>
 <span class="normal">183</span>
 <span class="normal">184</span>
-<span class="normal">185</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="fm">__call__</span><span class="p">(</span>
+<span class="normal">185</span>
+<span class="normal">186</span>
+<span class="normal">187</span>
+<span class="normal">188</span>
+<span class="normal">189</span>
+<span class="normal">190</span>
+<span class="normal">191</span>
+<span class="normal">192</span>
+<span class="normal">193</span>
+<span class="normal">194</span>
+<span class="normal">195</span>
+<span class="normal">196</span>
+<span class="normal">197</span>
+<span class="normal">198</span>
+<span class="normal">199</span>
+<span class="normal">200</span>
+<span class="normal">201</span>
+<span class="normal">202</span>
+<span class="normal">203</span>
+<span class="normal">204</span>
+<span class="normal">205</span>
+<span class="normal">206</span>
+<span class="normal">207</span>
+<span class="normal">208</span>
+<span class="normal">209</span>
+<span class="normal">210</span>
+<span class="normal">211</span>
+<span class="normal">212</span>
+<span class="normal">213</span>
+<span class="normal">214</span>
+<span class="normal">215</span>
+<span class="normal">216</span>
+<span class="normal">217</span>
+<span class="normal">218</span>
+<span class="normal">219</span>
+<span class="normal">220</span>
+<span class="normal">221</span>
+<span class="normal">222</span>
+<span class="normal">223</span>
+<span class="normal">224</span>
+<span class="normal">225</span>
+<span class="normal">226</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="fm">__call__</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
     <span class="n">snap</span><span class="p">:</span> <span class="n">AgentSnapshot</span><span class="p">,</span>
     <span class="n">qpos_arm</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">floating</span><span class="p">],</span>
@@ -41386,6 +41512,166 @@ Shape <code>(7,)</code>; dtype float-coercible to <code>float32</code>.</p>
             <span class="s2">&quot;joints. Check URDF integrity or pick a different end-effector link.&quot;</span>
         <span class="p">)</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="chamber.agents.PandaJacobianProvider.fk_tcp_position" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">fk_tcp_position</span>
+
+
+</h3>
+<div class="doc-signature highlight"><pre><span></span><code><span class="nf">fk_tcp_position</span><span class="p">(</span>
+    <span class="n">qpos_arm</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">floating</span><span class="p">],</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Forward-kinematics TCP position in the arm base frame (ADR-004 §Decision; ADR-026).</p>
+<p>Companion to :meth:<code>__call__</code>: evaluates the cached serial
+chain's forward kinematics at <code>qpos_arm</code> and returns the 3-D
+Cartesian position of :attr:<code>ee_link</code> in the panda base
+(<code>panda_link0</code>) frame — the same frame the Jacobian
+:meth:<code>__call__</code> returns, so a Cartesian error and its
+damped-pseudoinverse joint step compose consistently. Consumed
+by the co-carry matched impedance controller
+(:class:<code>chamber.partners.cocarry_impedance.CoCarryImpedancePartner</code>),
+which drives each held bar-end TCP to its cooperative target.</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <ul>
+        <li class="doc-section-item field-body">
+            <b><code>qpos_arm</code></b>
+              (<code><span title="numpy.typing.NDArray">NDArray</span>[<span title="numpy.floating">floating</span>]</code>)
+          –
+          <div class="doc-md-description">
+            <p>Joint-angle vector for the 7 panda arm joints,
+shape <code>(7,)</code>, in the same order as
+:attr:<code>mani_skill.agents.robots.panda.Panda.arm_joint_names</code>.</p>
+          </div>
+        </li>
+    </ul>
+
+
+<p><span class="doc-section-title">Returns:</span></p>
+    <ul>
+        <li class="doc-section-item field-body">
+              <code><span title="numpy.typing.NDArray">NDArray</span>[<span title="numpy.float64">float64</span>]</code>
+          –
+          <div class="doc-md-description">
+            <p>TCP position in the base frame, shape <code>(3,)</code>, dtype</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+              <code><span title="numpy.typing.NDArray">NDArray</span>[<span title="numpy.float64">float64</span>]</code>
+          –
+          <div class="doc-md-description">
+            <p><code>float64</code>.</p>
+          </div>
+        </li>
+    </ul>
+
+
+<p><span class="doc-section-title">Raises:</span></p>
+    <ul>
+        <li class="doc-section-item field-body">
+              <code><span title="ValueError">ValueError</span></code>
+            –
+          <div class="doc-md-description">
+            <p>If <code>qpos_arm</code> shape mismatches <code>(7,)</code>.</p>
+          </div>
+        </li>
+    </ul>
+
+
+            <details class="mkdocstrings-source">
+              <summary>Source code in <code>src/chamber/agents/panda_jacobian.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">138</span>
+<span class="normal">139</span>
+<span class="normal">140</span>
+<span class="normal">141</span>
+<span class="normal">142</span>
+<span class="normal">143</span>
+<span class="normal">144</span>
+<span class="normal">145</span>
+<span class="normal">146</span>
+<span class="normal">147</span>
+<span class="normal">148</span>
+<span class="normal">149</span>
+<span class="normal">150</span>
+<span class="normal">151</span>
+<span class="normal">152</span>
+<span class="normal">153</span>
+<span class="normal">154</span>
+<span class="normal">155</span>
+<span class="normal">156</span>
+<span class="normal">157</span>
+<span class="normal">158</span>
+<span class="normal">159</span>
+<span class="normal">160</span>
+<span class="normal">161</span>
+<span class="normal">162</span>
+<span class="normal">163</span>
+<span class="normal">164</span>
+<span class="normal">165</span>
+<span class="normal">166</span>
+<span class="normal">167</span>
+<span class="normal">168</span>
+<span class="normal">169</span>
+<span class="normal">170</span>
+<span class="normal">171</span>
+<span class="normal">172</span>
+<span class="normal">173</span>
+<span class="normal">174</span>
+<span class="normal">175</span>
+<span class="normal">176</span>
+<span class="normal">177</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">fk_tcp_position</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">qpos_arm</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">floating</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Forward-kinematics TCP position in the arm base frame (ADR-004 §Decision; ADR-026).</span>
+
+<span class="sd">    Companion to :meth:`__call__`: evaluates the cached serial</span>
+<span class="sd">    chain&#39;s forward kinematics at ``qpos_arm`` and returns the 3-D</span>
+<span class="sd">    Cartesian position of :attr:`ee_link` in the panda base</span>
+<span class="sd">    (``panda_link0``) frame — the same frame the Jacobian</span>
+<span class="sd">    :meth:`__call__` returns, so a Cartesian error and its</span>
+<span class="sd">    damped-pseudoinverse joint step compose consistently. Consumed</span>
+<span class="sd">    by the co-carry matched impedance controller</span>
+<span class="sd">    (:class:`chamber.partners.cocarry_impedance.CoCarryImpedancePartner`),</span>
+<span class="sd">    which drives each held bar-end TCP to its cooperative target.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        qpos_arm: Joint-angle vector for the 7 panda arm joints,</span>
+<span class="sd">            shape ``(7,)``, in the same order as</span>
+<span class="sd">            :attr:`mani_skill.agents.robots.panda.Panda.arm_joint_names`.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        TCP position in the base frame, shape ``(3,)``, dtype</span>
+<span class="sd">        ``float64``.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">        ValueError: If ``qpos_arm`` shape mismatches ``(7,)``.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
+
+    <span class="n">q</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">qpos_arm</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">q</span><span class="o">.</span><span class="n">shape</span> <span class="o">!=</span> <span class="p">(</span><span class="n">PANDA_ARM_DOF</span><span class="p">,):</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;PandaJacobianProvider.fk_tcp_position: qpos_arm shape </span><span class="si">{</span><span class="n">q</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2"> &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;mismatches expected (</span><span class="si">{</span><span class="n">PANDA_ARM_DOF</span><span class="si">}</span><span class="s2">,) for the 7-DOF Panda chain.&quot;</span>
+        <span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+    <span class="n">q_torch</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">from_numpy</span><span class="p">(</span><span class="n">q</span><span class="p">)</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+    <span class="c1"># forward_kinematics(end_only=True default) returns a Transform3d;</span>
+    <span class="c1"># the pytorch_kinematics stub mistypes it as a dict.</span>
+    <span class="n">mat</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_chain</span><span class="o">.</span><span class="n">forward_kinematics</span><span class="p">(</span><span class="n">q_torch</span><span class="p">)</span><span class="o">.</span><span class="n">get_matrix</span><span class="p">()</span>  <span class="c1"># type: ignore[union-attr]</span>
+    <span class="n">pos</span> <span class="o">=</span> <span class="n">mat</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="p">:</span><span class="n">CARTESIAN_POSITION_DIM</span><span class="p">,</span> <span class="mi">3</span><span class="p">]</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">ascontiguousarray</span><span class="p">(</span><span class="n">pos</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
 </code></pre></div></td></tr></table></div>
             </details>
     </div>
@@ -41910,7 +42196,48 @@ fails to extract a chain ending at <code>ee_link</code>.</p>
 <span class="normal">182</span>
 <span class="normal">183</span>
 <span class="normal">184</span>
-<span class="normal">185</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">PandaJacobianProvider</span><span class="p">:</span>
+<span class="normal">185</span>
+<span class="normal">186</span>
+<span class="normal">187</span>
+<span class="normal">188</span>
+<span class="normal">189</span>
+<span class="normal">190</span>
+<span class="normal">191</span>
+<span class="normal">192</span>
+<span class="normal">193</span>
+<span class="normal">194</span>
+<span class="normal">195</span>
+<span class="normal">196</span>
+<span class="normal">197</span>
+<span class="normal">198</span>
+<span class="normal">199</span>
+<span class="normal">200</span>
+<span class="normal">201</span>
+<span class="normal">202</span>
+<span class="normal">203</span>
+<span class="normal">204</span>
+<span class="normal">205</span>
+<span class="normal">206</span>
+<span class="normal">207</span>
+<span class="normal">208</span>
+<span class="normal">209</span>
+<span class="normal">210</span>
+<span class="normal">211</span>
+<span class="normal">212</span>
+<span class="normal">213</span>
+<span class="normal">214</span>
+<span class="normal">215</span>
+<span class="normal">216</span>
+<span class="normal">217</span>
+<span class="normal">218</span>
+<span class="normal">219</span>
+<span class="normal">220</span>
+<span class="normal">221</span>
+<span class="normal">222</span>
+<span class="normal">223</span>
+<span class="normal">224</span>
+<span class="normal">225</span>
+<span class="normal">226</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">PandaJacobianProvider</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Frozen URDF chain -&gt; linear Jacobian callable (ADR-004 §Decision; §Stage 1b).</span>
 
 <span class="sd">    Parses the panda URDF once at construction (via</span>
@@ -41969,6 +42296,47 @@ fails to extract a chain ending at <code>ee_link</code>.</p>
     <span class="k">def</span><span class="w"> </span><span class="nf">ee_link</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;The end-effector link the chain terminates at (read-only).&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ee_link</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">fk_tcp_position</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">qpos_arm</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">floating</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Forward-kinematics TCP position in the arm base frame (ADR-004 §Decision; ADR-026).</span>
+
+<span class="sd">        Companion to :meth:`__call__`: evaluates the cached serial</span>
+<span class="sd">        chain&#39;s forward kinematics at ``qpos_arm`` and returns the 3-D</span>
+<span class="sd">        Cartesian position of :attr:`ee_link` in the panda base</span>
+<span class="sd">        (``panda_link0``) frame — the same frame the Jacobian</span>
+<span class="sd">        :meth:`__call__` returns, so a Cartesian error and its</span>
+<span class="sd">        damped-pseudoinverse joint step compose consistently. Consumed</span>
+<span class="sd">        by the co-carry matched impedance controller</span>
+<span class="sd">        (:class:`chamber.partners.cocarry_impedance.CoCarryImpedancePartner`),</span>
+<span class="sd">        which drives each held bar-end TCP to its cooperative target.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            qpos_arm: Joint-angle vector for the 7 panda arm joints,</span>
+<span class="sd">                shape ``(7,)``, in the same order as</span>
+<span class="sd">                :attr:`mani_skill.agents.robots.panda.Panda.arm_joint_names`.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            TCP position in the base frame, shape ``(3,)``, dtype</span>
+<span class="sd">            ``float64``.</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            ValueError: If ``qpos_arm`` shape mismatches ``(7,)``.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
+
+        <span class="n">q</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">qpos_arm</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">q</span><span class="o">.</span><span class="n">shape</span> <span class="o">!=</span> <span class="p">(</span><span class="n">PANDA_ARM_DOF</span><span class="p">,):</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;PandaJacobianProvider.fk_tcp_position: qpos_arm shape </span><span class="si">{</span><span class="n">q</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2"> &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;mismatches expected (</span><span class="si">{</span><span class="n">PANDA_ARM_DOF</span><span class="si">}</span><span class="s2">,) for the 7-DOF Panda chain.&quot;</span>
+            <span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+        <span class="n">q_torch</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">from_numpy</span><span class="p">(</span><span class="n">q</span><span class="p">)</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+        <span class="c1"># forward_kinematics(end_only=True default) returns a Transform3d;</span>
+        <span class="c1"># the pytorch_kinematics stub mistypes it as a dict.</span>
+        <span class="n">mat</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_chain</span><span class="o">.</span><span class="n">forward_kinematics</span><span class="p">(</span><span class="n">q_torch</span><span class="p">)</span><span class="o">.</span><span class="n">get_matrix</span><span class="p">()</span>  <span class="c1"># type: ignore[union-attr]</span>
+        <span class="n">pos</span> <span class="o">=</span> <span class="n">mat</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="p">:</span><span class="n">CARTESIAN_POSITION_DIM</span><span class="p">,</span> <span class="mi">3</span><span class="p">]</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">ascontiguousarray</span><span class="p">(</span><span class="n">pos</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__call__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
@@ -42153,54 +42521,54 @@ Shape <code>(7,)</code>; dtype float-coercible to <code>float32</code>.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/chamber/agents/panda_jacobian.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">138</span>
-<span class="normal">139</span>
-<span class="normal">140</span>
-<span class="normal">141</span>
-<span class="normal">142</span>
-<span class="normal">143</span>
-<span class="normal">144</span>
-<span class="normal">145</span>
-<span class="normal">146</span>
-<span class="normal">147</span>
-<span class="normal">148</span>
-<span class="normal">149</span>
-<span class="normal">150</span>
-<span class="normal">151</span>
-<span class="normal">152</span>
-<span class="normal">153</span>
-<span class="normal">154</span>
-<span class="normal">155</span>
-<span class="normal">156</span>
-<span class="normal">157</span>
-<span class="normal">158</span>
-<span class="normal">159</span>
-<span class="normal">160</span>
-<span class="normal">161</span>
-<span class="normal">162</span>
-<span class="normal">163</span>
-<span class="normal">164</span>
-<span class="normal">165</span>
-<span class="normal">166</span>
-<span class="normal">167</span>
-<span class="normal">168</span>
-<span class="normal">169</span>
-<span class="normal">170</span>
-<span class="normal">171</span>
-<span class="normal">172</span>
-<span class="normal">173</span>
-<span class="normal">174</span>
-<span class="normal">175</span>
-<span class="normal">176</span>
-<span class="normal">177</span>
-<span class="normal">178</span>
-<span class="normal">179</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">179</span>
 <span class="normal">180</span>
 <span class="normal">181</span>
 <span class="normal">182</span>
 <span class="normal">183</span>
 <span class="normal">184</span>
-<span class="normal">185</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="fm">__call__</span><span class="p">(</span>
+<span class="normal">185</span>
+<span class="normal">186</span>
+<span class="normal">187</span>
+<span class="normal">188</span>
+<span class="normal">189</span>
+<span class="normal">190</span>
+<span class="normal">191</span>
+<span class="normal">192</span>
+<span class="normal">193</span>
+<span class="normal">194</span>
+<span class="normal">195</span>
+<span class="normal">196</span>
+<span class="normal">197</span>
+<span class="normal">198</span>
+<span class="normal">199</span>
+<span class="normal">200</span>
+<span class="normal">201</span>
+<span class="normal">202</span>
+<span class="normal">203</span>
+<span class="normal">204</span>
+<span class="normal">205</span>
+<span class="normal">206</span>
+<span class="normal">207</span>
+<span class="normal">208</span>
+<span class="normal">209</span>
+<span class="normal">210</span>
+<span class="normal">211</span>
+<span class="normal">212</span>
+<span class="normal">213</span>
+<span class="normal">214</span>
+<span class="normal">215</span>
+<span class="normal">216</span>
+<span class="normal">217</span>
+<span class="normal">218</span>
+<span class="normal">219</span>
+<span class="normal">220</span>
+<span class="normal">221</span>
+<span class="normal">222</span>
+<span class="normal">223</span>
+<span class="normal">224</span>
+<span class="normal">225</span>
+<span class="normal">226</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="fm">__call__</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
     <span class="n">snap</span><span class="p">:</span> <span class="n">AgentSnapshot</span><span class="p">,</span>
     <span class="n">qpos_arm</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">floating</span><span class="p">],</span>
@@ -42323,6 +42691,166 @@ Shape <code>(7,)</code>; dtype float-coercible to <code>float32</code>.</p>
             <span class="s2">&quot;joints. Check URDF integrity or pick a different end-effector link.&quot;</span>
         <span class="p">)</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="chamber.agents.panda_jacobian.PandaJacobianProvider.fk_tcp_position" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">fk_tcp_position</span>
+
+
+</h3>
+<div class="doc-signature highlight"><pre><span></span><code><span class="nf">fk_tcp_position</span><span class="p">(</span>
+    <span class="n">qpos_arm</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">floating</span><span class="p">],</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Forward-kinematics TCP position in the arm base frame (ADR-004 §Decision; ADR-026).</p>
+<p>Companion to :meth:<code>__call__</code>: evaluates the cached serial
+chain's forward kinematics at <code>qpos_arm</code> and returns the 3-D
+Cartesian position of :attr:<code>ee_link</code> in the panda base
+(<code>panda_link0</code>) frame — the same frame the Jacobian
+:meth:<code>__call__</code> returns, so a Cartesian error and its
+damped-pseudoinverse joint step compose consistently. Consumed
+by the co-carry matched impedance controller
+(:class:<code>chamber.partners.cocarry_impedance.CoCarryImpedancePartner</code>),
+which drives each held bar-end TCP to its cooperative target.</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <ul>
+        <li class="doc-section-item field-body">
+            <b><code>qpos_arm</code></b>
+              (<code><span title="numpy.typing.NDArray">NDArray</span>[<span title="numpy.floating">floating</span>]</code>)
+          –
+          <div class="doc-md-description">
+            <p>Joint-angle vector for the 7 panda arm joints,
+shape <code>(7,)</code>, in the same order as
+:attr:<code>mani_skill.agents.robots.panda.Panda.arm_joint_names</code>.</p>
+          </div>
+        </li>
+    </ul>
+
+
+<p><span class="doc-section-title">Returns:</span></p>
+    <ul>
+        <li class="doc-section-item field-body">
+              <code><span title="numpy.typing.NDArray">NDArray</span>[<span title="numpy.float64">float64</span>]</code>
+          –
+          <div class="doc-md-description">
+            <p>TCP position in the base frame, shape <code>(3,)</code>, dtype</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+              <code><span title="numpy.typing.NDArray">NDArray</span>[<span title="numpy.float64">float64</span>]</code>
+          –
+          <div class="doc-md-description">
+            <p><code>float64</code>.</p>
+          </div>
+        </li>
+    </ul>
+
+
+<p><span class="doc-section-title">Raises:</span></p>
+    <ul>
+        <li class="doc-section-item field-body">
+              <code><span title="ValueError">ValueError</span></code>
+            –
+          <div class="doc-md-description">
+            <p>If <code>qpos_arm</code> shape mismatches <code>(7,)</code>.</p>
+          </div>
+        </li>
+    </ul>
+
+
+            <details class="mkdocstrings-source">
+              <summary>Source code in <code>src/chamber/agents/panda_jacobian.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">138</span>
+<span class="normal">139</span>
+<span class="normal">140</span>
+<span class="normal">141</span>
+<span class="normal">142</span>
+<span class="normal">143</span>
+<span class="normal">144</span>
+<span class="normal">145</span>
+<span class="normal">146</span>
+<span class="normal">147</span>
+<span class="normal">148</span>
+<span class="normal">149</span>
+<span class="normal">150</span>
+<span class="normal">151</span>
+<span class="normal">152</span>
+<span class="normal">153</span>
+<span class="normal">154</span>
+<span class="normal">155</span>
+<span class="normal">156</span>
+<span class="normal">157</span>
+<span class="normal">158</span>
+<span class="normal">159</span>
+<span class="normal">160</span>
+<span class="normal">161</span>
+<span class="normal">162</span>
+<span class="normal">163</span>
+<span class="normal">164</span>
+<span class="normal">165</span>
+<span class="normal">166</span>
+<span class="normal">167</span>
+<span class="normal">168</span>
+<span class="normal">169</span>
+<span class="normal">170</span>
+<span class="normal">171</span>
+<span class="normal">172</span>
+<span class="normal">173</span>
+<span class="normal">174</span>
+<span class="normal">175</span>
+<span class="normal">176</span>
+<span class="normal">177</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">fk_tcp_position</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">qpos_arm</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">floating</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Forward-kinematics TCP position in the arm base frame (ADR-004 §Decision; ADR-026).</span>
+
+<span class="sd">    Companion to :meth:`__call__`: evaluates the cached serial</span>
+<span class="sd">    chain&#39;s forward kinematics at ``qpos_arm`` and returns the 3-D</span>
+<span class="sd">    Cartesian position of :attr:`ee_link` in the panda base</span>
+<span class="sd">    (``panda_link0``) frame — the same frame the Jacobian</span>
+<span class="sd">    :meth:`__call__` returns, so a Cartesian error and its</span>
+<span class="sd">    damped-pseudoinverse joint step compose consistently. Consumed</span>
+<span class="sd">    by the co-carry matched impedance controller</span>
+<span class="sd">    (:class:`chamber.partners.cocarry_impedance.CoCarryImpedancePartner`),</span>
+<span class="sd">    which drives each held bar-end TCP to its cooperative target.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        qpos_arm: Joint-angle vector for the 7 panda arm joints,</span>
+<span class="sd">            shape ``(7,)``, in the same order as</span>
+<span class="sd">            :attr:`mani_skill.agents.robots.panda.Panda.arm_joint_names`.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        TCP position in the base frame, shape ``(3,)``, dtype</span>
+<span class="sd">        ``float64``.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">        ValueError: If ``qpos_arm`` shape mismatches ``(7,)``.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
+
+    <span class="n">q</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">qpos_arm</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">q</span><span class="o">.</span><span class="n">shape</span> <span class="o">!=</span> <span class="p">(</span><span class="n">PANDA_ARM_DOF</span><span class="p">,):</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;PandaJacobianProvider.fk_tcp_position: qpos_arm shape </span><span class="si">{</span><span class="n">q</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2"> &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;mismatches expected (</span><span class="si">{</span><span class="n">PANDA_ARM_DOF</span><span class="si">}</span><span class="s2">,) for the 7-DOF Panda chain.&quot;</span>
+        <span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+    <span class="n">q_torch</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">from_numpy</span><span class="p">(</span><span class="n">q</span><span class="p">)</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+    <span class="c1"># forward_kinematics(end_only=True default) returns a Transform3d;</span>
+    <span class="c1"># the pytorch_kinematics stub mistypes it as a dict.</span>
+    <span class="n">mat</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_chain</span><span class="o">.</span><span class="n">forward_kinematics</span><span class="p">(</span><span class="n">q_torch</span><span class="p">)</span><span class="o">.</span><span class="n">get_matrix</span><span class="p">()</span>  <span class="c1"># type: ignore[union-attr]</span>
+    <span class="n">pos</span> <span class="o">=</span> <span class="n">mat</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="p">:</span><span class="n">CARTESIAN_POSITION_DIM</span><span class="p">,</span> <span class="mi">3</span><span class="p">]</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">ascontiguousarray</span><span class="p">(</span><span class="n">pos</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
 </code></pre></div></td></tr></table></div>
             </details>
     </div>
