@@ -1499,13 +1499,25 @@ from the first leaderboard entry. This page records the contract:
 how many seeds, which aggregate metrics, which guard rails. The
 rationale anchors are
 <a href="https://github.com/fsafaei/concerto/blob/main/adr/ADR-007-heterogeneity-axis-selection.md">ADR-007</a>
-(≥20pp gap rule for axis admission),
+(≥20pp gap rule for axis admission, as amended by ADR-026 — see the note below),
 <a href="https://github.com/fsafaei/concerto/blob/main/adr/ADR-009-partner-zoo.md">ADR-009</a>
 (partner-zoo stratum sizing), and
 <a href="https://github.com/fsafaei/concerto/blob/main/adr/ADR-014-safety-reporting.md">ADR-014</a>
 (safety-reporting tables). The peer-reviewed evidence is on the
 <a href="../literature/">literature page</a> §5.</p>
 <hr />
+<div class="admonition note">
+<p class="admonition-title">Amended by ADR-026 (2026-06-15)</p>
+<p>The ≥20 pp gap is <strong>necessary but not sufficient</strong>. Under
+<a href="https://github.com/fsafaei/concerto/blob/main/adr/ADR-026-coupling-validity-criterion.md">ADR-026 (coupling-validity criterion)</a>
+an axis is admitted / promoted to <strong>Validated</strong> only on a task that
+meets the <em>coupling-validity</em> criterion — the manipulated
+heterogeneity must be coupled to the outcome through the cooperation
+the task demands, demonstrated by a pre-registered coupling
+positive-control. The Stage-1 action-space and observation-modality
+axes as operationalized are non-coupling-valid; the coupling-valid
+re-operationalization is a Phase-2 co-carry design.</p>
+</div>
 <h2 id="1-seeds-and-reporting">1. Seeds and reporting</h2>
 <p>CHAMBER leaderboard entries report multi-seed runs with 95%
 <strong>cluster bootstrap</strong> confidence intervals on every published metric.
