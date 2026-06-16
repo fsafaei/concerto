@@ -409,10 +409,23 @@ class ShapingConfig(_FrozenModel):
         settle_qvel_cap: Cap on the potential's qvel term, in rad/s.
             0.7 covers the measured 0.40-0.66 hold band with margin
             (gamma-scan margins; settle-reachability pre-flight).
+        transport_pbrs_coeff: Co-carry Rung-2 remediation
+            (COCARRY_RUNG2_REMEDIATION_2026-06-16; ADR-026 §Decision 4).
+            Scale of the policy-invariant transport PBRS potential
+            ``Phi = -coeff * dist(bar_centroid, goal)`` applied by
+            :func:`chamber.benchmarks.training_runner.run_training` via
+            :class:`chamber.envs.cocarry_shaping.CoCarryTransportPBRSWrapper`
+            (``F = gamma*Phi(s') - Phi(s)``; NHR-invariant, cannot change
+            the optimum). ``0.0`` (default) disables the wrapper entirely —
+            byte-identical pre-existing behaviour (ADR-002), so non-co-carry
+            cells are unaffected. The co-carry training config sets this to
+            :data:`chamber.envs.cocarry.COCARRY_REWARD_TRANSPORT_PBRS_COEFF`
+            (a Tier-1 parity test pins the equality).
     """
 
     settle_alpha: float = Field(default=0.0, ge=0.0)
     settle_qvel_cap: float = Field(default=0.7, gt=0.0)
+    transport_pbrs_coeff: float = Field(default=0.0, ge=0.0)
 
 
 class ExploratoryConfig(_FrozenModel):

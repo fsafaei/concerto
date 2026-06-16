@@ -102,11 +102,17 @@ runtime:
 safety:
   enabled: false
 
-# Reward shaping off: the co-carry env's dense reward already carries a
-# settle term (COCARRY_REWARD_SETTLE_COEFF). The Stage-1b PBRS-settle
-# wrapper is not applied here (settle_alpha 0 = byte-identical no-op).
+# Reward shaping (Rung-2 remediation, COCARRY_RUNG2_REMEDIATION_2026-06-16):
+# the Stage-1b PBRS-settle wrapper stays off (the co-carry env reward already
+# has a settle term). transport_pbrs_coeff turns ON the policy-invariant
+# transport PBRS (chamber.envs.cocarry_shaping) — F = gamma*Phi(s')-Phi(s),
+# Phi = -coeff*dist(bar_centroid, goal) — to sharpen the gradient toward
+# goal-directed transport. It MUST equal COCARRY_REWARD_TRANSPORT_PBRS_COEFF
+# (Tier-1 parity test). The keystone (excess-internal-stress penalty) is
+# always-on in the env reward, not a config flag.
 shaping:
   settle_alpha: 0.0
+  transport_pbrs_coeff: 1.0
 
 exploratory:
   partner_static_override: false
