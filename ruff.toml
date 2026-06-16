@@ -29,6 +29,7 @@ ignore = [
 "src/chamber/agents/**/*.py" = ["PLC0415"]     # lazy ManiSkill/SAPIEN/pytorch_kinematics imports (Tier-1 import-safe on Vulkan-less hosts; ADR-007 §Stage 1b)
 "src/chamber/envs/stage1_pickplace.py" = ["PLC0415"]  # lazy ManiSkill/SAPIEN imports inside make_stage1_pickplace_env (Tier-1 import-safe; ADR-007 §Stage 1b)
 "src/chamber/envs/stage1_obs_filter.py" = ["PLC0415"]  # lazy chamber.envs.stage1_pickplace import (breaks the stage1_pickplace ↔ stage1_obs_filter cycle introduced by P1.04 fix) + lazy torch (Tier-1 import-safe on torch-less hosts)
+"src/chamber/envs/cocarry.py" = ["PLC0415"]  # lazy ManiSkill/SAPIEN imports inside make_cocarry_env + lazy torch in the env hooks (Tier-1 import-safe; ADR-026 §Decision 4)
 "src/chamber/cli/**/*.py" = ["T20"]       # print-allowed in CLI
 "src/concerto/safety/**/*.py" = ["N803", "N806"]  # QP / linear-algebra math notation (P, A, M, J, K capitals) per plan/03 §3.7 + ADR-004 §Decision; matches numpy/scipy/cvxpy/qpsolvers convention
 
