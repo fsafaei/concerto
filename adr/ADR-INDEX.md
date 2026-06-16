@@ -26,7 +26,7 @@ evidence per their own §Validation criteria.
 | 004 | Safety filter formulation — exp CBF, HO-CBF, MPC, learned          | §6.2 + §13         | Phase 0    | Accepted (2026-05-13)<sup>a</sup> |
 | 005 | Simulator base — Isaac Lab, MuJoCo, PyBullet, ManiSkill            | §3.1, §3.9         | Phase 0    | Accepted (2026-05-13)        |
 | 006 | Partner-policy assumption set — bounded action norm/rate/latency   | §6.1               | Phase 0    | Accepted (2026-05-13)<sup>a</sup> |
-| 007 | Heterogeneity-axis selection (≥20pp gap rule)                      | §3.4               | Phase 0    | Accepted (2026-05-13)<sup>b</sup> |
+| 007 | Heterogeneity-axis selection (≥20pp gap rule)                      | §3.4               | Phase 0    | Accepted (2026-05-13)<sup>b,h</sup> |
 | 008 | HRS bundle composition                                             | §3.7               | Phase 0–1  | Accepted (2026-05-13)<sup>c</sup> |
 | 009 | Partner-zoo construction (algos / seeds / public-private split)    | §3.5               | Phase 1    | Accepted (2026-05-13)        |
 | 010 | Foundation-model partner selection                                 | §3.5               | Phase 1    | Accepted (2026-05-13)        |
@@ -37,6 +37,7 @@ evidence per their own §Validation criteria.
 | 015 | Tier-task scope freeze                                             | §3.3 + §7.3        | Phase 1    | RFC<sup>e</sup>              |
 | 016 | SpikeRun schema lifecycle (Stage 1a / 1b disambiguation)           | §3.4 + §3.7        | Phase 0    | Accepted (2026-05-17)<sup>b</sup> |
 | 017 | Observability and experiment tracking (W&B + chamber-analyze)      | §13 + P1.05.11     | Phase 1    | Accepted (2026-05-22)        |
+| 026 | Coupling-validity criterion (+ Stage-1 AS reinterpretation)        | §3.2 + §3.4        | Phase 1→2  | RFC (2026-06-15)<sup>h</sup> |
 
 ### Open work flags
 
@@ -113,6 +114,29 @@ also surfaces the trainer-side partner-freeze gate
 (`chamber.benchmarks.ego_ppo_trainer._assert_partner_is_frozen`,
 ADR-009 §Consequences; plan/05 §6 #3). See [ADR-002 §Revision history
 (2026-05-15 + 2026-05-16)](ADR-002-rl-framework.md#revision-history).
+
+<sup>h</sup> ADR-026 (coupling-validity criterion) supersedes-in-part
+[ADR-007 §Validation criteria](ADR-007-heterogeneity-axis-selection.md#validation-criteria)
+and its §Stage-1 framing: the ≥20 pp magnitude rule is necessary but not
+sufficient; an axis is promoted to **Validated** only on a task for which
+the coupling-validity criterion is demonstrated (with a pre-registered
+coupling positive-control). The recorded Stage-1 AS verdict
+(`spikes/results/stage1-AS-2026-06-11/`) is reinterpreted as
+construct-invalid for cooperation (ego-solvable task; non-participating
+partner; never-built MAPPO baseline) and is immutable, not edited (I8);
+promotion to Validated for AS / OM is **closed** under ADR-026
+(non-coupling-valid as operationalized), not via the ≥20 pp gate. The
+coupling-valid re-operationalization (a tightly-coupled co-carry task) is
+a Phase-2 / post-M10 forward design and adds no Phase-1 gate work. Status
+is **RFC** pending (i) verification of the Evidence-basis reading-note
+passages (`notes/tier1/construct_validity_in_cooperative_evaluation.md`)
+per the §Locking rule, and (ii) confirmation of the permanent number at
+the one-shot ADR-INDEX reconciliation — 026 is the first free integer
+(017 Accepted; 018–020 reserved for the proposed open-core / realism /
+certification governance ADRs; 021–025 for the proposed RSA-ADR cluster,
+reference-system-architecture §18.2), so the 018–025 gap is intentional.
+Grounded in the project's structured internal review record (2026-06-15)
+— a documented internal review protocol, not an external assessment.
 
 ## Lock-by phases (per v0.2 §8 gates)
 - **Phase 0** (Month 3): ADRs 001, 002, 003, 004, 005, 006, 007, 012, 013, 016.
