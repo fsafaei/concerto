@@ -1,0 +1,79 @@
+{
+  "fmax_consistency_band_n": [
+    104.0,
+    156.0
+  ],
+  "fmax_derived_n": 130.56970529556276,
+  "fmax_multiplier": 1.25,
+  "fmax_status": "consistent",
+  "matched_success_p99_band_n": [
+    85.0,
+    120.0
+  ],
+  "matched_success_stress_p99_n": 104.4557642364502,
+  "matched_success_stress_proxy_n": [
+    101.05228424072266,
+    94.6511001586914,
+    96.4012680053711,
+    87.7164535522461,
+    94.18912506103516,
+    86.3016357421875,
+    85.14783477783203,
+    66.40107727050781,
+    100.27890014648438,
+    82.13935852050781,
+    104.87641906738281,
+    90.7057113647461
+  ],
+  "matched_summary": {
+    "centroid_to_goal_p50": 0.09510503336787224,
+    "max_tilt_max": 7.380129814147949,
+    "max_tilt_p50": 5.0369873046875,
+    "max_tilt_p90": 6.2671142578125005,
+    "n": 12.0,
+    "stress_limit": 130.0,
+    "stress_max": 104.87641906738281,
+    "stress_p50": 92.44741821289062,
+    "stress_p90": 100.97494583129883,
+    "stress_p99": 104.4557642364502,
+    "success_rate": 1.0,
+    "success_stress_p95": 102.77314491271973,
+    "tilt_limit": 15.0
+  },
+  "n_seed_clusters": 12,
+  "provisional_fmax_n": 130.0,
+  "rescore_under_new_fmax": {
+    "matched_success_rate": 1.0,
+    "single_arm_success_rate": 0.0
+  },
+  "schema": "cocarry_rung2_fmax_distribution/v1",
+  "seeds": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11
+  ],
+  "single_arm_summary": {
+    "centroid_to_goal_p50": 0.14722482860088348,
+    "max_tilt_max": 88.78565979003906,
+    "max_tilt_p50": 85.03127670288086,
+    "max_tilt_p90": 88.71106491088867,
+    "n": 12.0,
+    "stress_limit": 130.0,
+    "stress_max": 8.626191139221191,
+    "stress_p50": 7.389551877975464,
+    "stress_p90": 8.405967807769775,
+    "stress_p99": 8.60215087890625,
+    "success_rate": 0.0,
+    "success_stress_p95": NaN,
+    "tilt_limit": 15.0
+  }
+}
