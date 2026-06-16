@@ -8,8 +8,10 @@ on:
       - "tests/**"
       - ".github/workflows/ci.yml"
       - "pyproject.toml"
+      - "uv.lock"
       - "README.md"
       - "docs/**"
+      - "adr/**"
       - "mkdocs.yml"
   pull_request:
     branches: [main]
@@ -18,8 +20,10 @@ on:
       - "tests/**"
       - ".github/workflows/ci.yml"
       - "pyproject.toml"
+      - "uv.lock"
       - "README.md"
       - "docs/**"
+      - "adr/**"
       - "mkdocs.yml"
       # Catch release-please PRs (which only touch CHANGELOG + pyproject) for
       # the verify-changelog-completeness job below — closes #126.
