@@ -35,14 +35,18 @@
 </p>
 
 > **Status &mdash; pre-release, Phase&nbsp;0.** Architecture is
-> locked in 15 ADRs (13 Accepted, 2 RFC) under the working policy
+> locked in 18 ADRs (15 Accepted, 3 RFC) under the working policy
 > recorded in [`adr/ADR-INDEX.md`](adr/ADR-INDEX.md); the staged
 > Phase-0 spike protocol
 > ([ADR-007](adr/ADR-007-heterogeneity-axis-selection.md)) is the
-> validation gate that promotes Accepted ADRs to **Validated** with
-> per-axis &#8805;20&nbsp;pp evidence. The Stage-1 (AS&nbsp;+&nbsp;OM)
-> preregistrations are the next launch; the leaderboard fills with
-> M5. The public API is on `0.x` &mdash; MINOR bumps may break it
+> validation gate. Under
+> [ADR-026](adr/ADR-026-coupling-validity-criterion.md) a per-axis
+> &#8805;20&nbsp;pp gap is **necessary but not sufficient** &mdash; an
+> axis reaches **Validated** only on a task meeting the
+> coupling-validity criterion. The Stage-1 action-space axis has been
+> measured and reinterpreted as construct-invalid for cooperation; the
+> coupling-valid re-operationalization is a Phase-2 forward design, so
+> the leaderboard is unpopulated pending it. The public API is on `0.x` &mdash; MINOR bumps may break it
 > per SemVer&nbsp;&sect;4. See [Roadmap](#roadmap).
 
 **TL;DR.** CONCERTO is a three-layer safety stack &mdash; exponential
@@ -241,8 +245,10 @@ CONCERTO + CHAMBER occupy the four-aspect intersection at the
 **design-contract** level (ADRs, scaffold, smoke test); empirical
 validation across the six heterogeneity sub-axes is the staged
 Phase-0 spike protocol's job (Stage 1: AS&nbsp;+&nbsp;OM &rarr;
-Stage 2: CR&nbsp;+&nbsp;CM &rarr; Stage 3: PF&nbsp;+&nbsp;SA), with
-results landing on the leaderboard from M5 onward.
+Stage 2: CR&nbsp;+&nbsp;CM &rarr; Stage 3: PF&nbsp;+&nbsp;SA). Under
+[ADR-026](adr/ADR-026-coupling-validity-criterion.md) the Stage-1 axes
+as operationalized are non-coupling-valid; leaderboard-eligible results
+come from the Phase-2 coupling-valid re-operationalization.
 
 See [`adr/ADR-007`](adr/ADR-007-heterogeneity-axis-selection.md) for the
 six-axis taxonomy that defines "heterogeneous" precisely, and the
@@ -343,17 +349,20 @@ Full cookbook: [`docs/observability.md`](docs/observability.md).
 
 <sub>Stage&#x2011;0 acceptance results; rendered by
 `chamber-render-tables` after each tagged spike.
-**Stage&nbsp;1 (AS&nbsp;+&nbsp;OM) rows land with M5 &mdash; see
-[Roadmap](#roadmap).**</sub>
+**The leaderboard is unpopulated; under
+[ADR-026](adr/ADR-026-coupling-validity-criterion.md) the Stage-1 axes
+as operationalized are non-coupling-valid, and leaderboard-eligible
+results come from the Phase-2 coupling-valid re-operationalization
+&mdash; see [Roadmap](#roadmap).**</sub>
 
 <details>
 <summary>Show placeholder table</summary>
 
 | Method | Stage 0 success | Inter-robot collision | Force-limit violation | Conformal &lambda; mean | Reference |
 |---|---:|---:|---:|---:|---|
-| MAPPO (homogeneous baseline) | _pending_ | _pending_ | _pending_ | _n/a_ | M5 |
-| HetGPPO + naive CBF          | _pending_ | _pending_ | _pending_ | _n/a_ | M5 |
-| **CONCERTO**                 | _pending_ | _pending_ | _pending_ | _pending_ | M5 |
+| MAPPO (homogeneous baseline) | _pending_ | _pending_ | _pending_ | _n/a_ | Phase 2 |
+| HetGPPO + naive CBF          | _pending_ | _pending_ | _pending_ | _n/a_ | Phase 2 |
+| **CONCERTO**                 | _pending_ | _pending_ | _pending_ | _pending_ | Phase 2 |
 
 </details>
 
@@ -413,9 +422,11 @@ and M4b (training stack) are merged on `main`. The `chamber-spike`
 CLI runs the ego-AHT loop end-to-end against a Hydra config.
 
 **Next.**
-Stage-1 spikes (AS&nbsp;+&nbsp;OM) &mdash; preregistered, launched,
-first leaderboard rows. arXiv design-report preprint (priority defence
-on the four-aspect framing). Stage-2 spikes (CR&nbsp;+&nbsp;CM).
+Coupling-valid co-carry re-operationalization (Phase-2 forward design
+per [ADR-026](adr/ADR-026-coupling-validity-criterion.md); the Stage-1
+action-space spike is measured and reinterpreted as construct-invalid
+for cooperation). arXiv design-report preprint (priority defence on the
+four-aspect framing).
 
 **Later.**
 Stage-3 spikes (PF&nbsp;+&nbsp;SA) &mdash; possibly HIL for SA.
@@ -486,8 +497,11 @@ Safety filters implement the `SafetyFilter` Protocol in
 <details>
 <summary><strong>When will the leaderboard be populated?</strong></summary>
 
-Stage-1 (AS&nbsp;+&nbsp;OM) rows land with M5. The remaining rows
-fill as the staged spikes complete; see [Roadmap](#roadmap).
+The leaderboard is unpopulated. Under
+[ADR-026](adr/ADR-026-coupling-validity-criterion.md) the Stage-1 axes
+as operationalized are non-coupling-valid; leaderboard-eligible results
+come from the Phase-2 coupling-valid re-operationalization. See
+[Roadmap](#roadmap).
 
 </details>
 
