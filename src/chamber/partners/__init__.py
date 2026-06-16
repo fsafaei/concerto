@@ -24,6 +24,10 @@ plan/04 §3 (architecture). Phase-0 ships:
   the :class:`StochasticPolicy` with the same args, freezes every
   parameter, runs ``deterministic=True`` inference under
   :func:`torch.no_grad`.
+- :class:`CoCarryImpedancePartner` — the matched hand-written co-carry
+  controller (:mod:`chamber.partners.cocarry_impedance`; ADR-026
+  §Decision 1). The frozen teammate the Rung-2 learned incumbent trains
+  against (R-2026-06-B §15); imported here so it registers package-wide.
 - :class:`OpenVLAPartner` and :class:`CrossFormerPartner` Phase-1 stubs
   (:mod:`chamber.partners.stubs`) — ADR-010 §Decision Option B; both
   raise :class:`NotImplementedError` referencing the Phase-1 ticket.
@@ -34,6 +38,7 @@ The M4-gate integration test (T4.9) lands in a follow-up PR (plan/04 §1).
 """
 
 from chamber.partners.api import FrozenPartner, PartnerSpec
+from chamber.partners.cocarry_impedance import CoCarryImpedancePartner
 from chamber.partners.frozen_harl import FrozenHARLPartner
 from chamber.partners.frozen_mappo import FrozenMAPPOPartner
 from chamber.partners.heuristic import ScriptedHeuristicPartner
@@ -44,6 +49,7 @@ from chamber.partners.stubs.crossformer import CrossFormerPartner
 from chamber.partners.stubs.openvla import OpenVLAPartner
 
 __all__ = [
+    "CoCarryImpedancePartner",
     "CrossFormerPartner",
     "FrozenHARLPartner",
     "FrozenMAPPOPartner",

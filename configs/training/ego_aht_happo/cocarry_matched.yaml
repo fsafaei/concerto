@@ -1,0 +1,112 @@
+# SPDX-License-Identifier: Apache-2.0
+# Hydra config for the Rung-2 co-carry matched-pair training cell
+# (ADR-026 §Decision 1-2 + §Decision 4; ADR-002 §Decisions; ADR-009
+# §Decision; ADR-007 §Stage 1b; R-2026-06-B §15 Rung 2).
+#
+# Phase-2 / post-M10 forward design. Trains a learned Panda ego against
+# the frozen matched hand-written `cocarry_impedance` partner on the
+# co-carry env (matched condition), to reach the Rung-1 matched-pair
+# reference before being byte-frozen as the Rung-2 incumbent. Governance:
+# nothing on the Phase-1 / Stage-1 gate or M10 calendar (I1); partner
+# frozen during ego training (I3); no schema bump (I9).
+#
+# Mirrors stage1_pickplace.yaml's shape. Two deliberate differences:
+#   * env.num_envs is 1 — the matched CoCarryImpedancePartner reads env 0
+#     only, so the cell is single-env (the safety stack is off anyway).
+#   * task=cocarry routes build_env to make_cocarry_training_env
+#     (chamber.envs.cocarry_obs), which synthesises the ego `state`
+#     channel the trainer reads.
+#
+# Validates against concerto.training.config.EgoAHTConfig.
+
+algo: ego_aht_happo
+seed: 0
+# Founder-tunable train-to-reference budget. Single-env (the partner is
+# single-env), so frames advance one tick at a time — the smoke overrides
+# this down via Hydra (+total_frames=...). The Step-1 stop criterion
+# (R-2026-06-B §15) is the cheap-fail guard: if training cannot reach the
+# Rung-1 matched reference, STOP rather than grinding the budget up.
+total_frames: 300000
+checkpoint_every: 50000
+artifacts_root: ./artifacts
+log_dir: ./logs
+
+wandb:
+  enabled: false
+  # Single W&B project across all stages per ADR-017 §Decisions.
+  project: concerto-chamber
+
+env:
+  task: cocarry
+  # Matches chamber.envs.cocarry.COCARRY_DEFAULT_EPISODE_LENGTH — the
+  # quasi-static lift + forward transport + settle converges inside this
+  # horizon at the 20 Hz control rate.
+  episode_length: 320
+  # The matched Panda pair: ego = panda_wristcam (learned), partner =
+  # panda_partner (frozen cocarry_impedance). agent_uids[0] is the ego.
+  agent_uids: [panda_wristcam, panda_partner]
+  # The matched coupling-valid condition (ADR-026 §Decision 1). The
+  # single-arm positive-control is a measurement condition, never trained.
+  condition_id: cocarry_matched_panda_pair
+  # Single-env: CoCarryImpedancePartner reads env 0 only. Do NOT raise
+  # this without first making the matched partner batched.
+  num_envs: 1
+
+# Frozen partner: the matched hand-written impedance controller on the
+# partner seat (the bar's -x end). extra mirrors
+# chamber.envs.cocarry.cocarry_matched_controller_specs()["panda_partner"]
+# verbatim so the controller geometry has a single source of truth.
+# CoCarryImpedancePartner subclasses PartnerBase (no train/learn/update),
+# so EgoPPOTrainer._assert_partner_is_frozen passes (I3; ADR-009).
+partner:
+  class_name: cocarry_impedance
+  seed: 0
+  checkpoint_step: null
+  weights_uri: null
+  extra:
+    uid: panda_partner
+    base_xyz: "0.5,0.0,0.0"
+    base_yaw_deg: "180"
+    end_sign: "-1"
+    bar_half_len: "0.115"
+
+happo:
+  lr: 3.0e-4
+  # Dense co-carry reward over a 320-step quasi-static carry; a higher
+  # discount than the short Stage-1 pick-place (gamma 0.8) values the
+  # delayed place/settle terminal bonus.
+  gamma: 0.9
+  gae_lambda: 0.95
+  clip_eps: 0.2
+  n_epochs: 4
+  # One full episode per rollout-update on the single-env cell; the
+  # update fires every `rollout_length` frames (ego_aht single-env loop).
+  rollout_length: 320
+  batch_size: 320
+  # 256-wide MLP matches the Stage-1b post-widening capacity (ADR-002
+  # Rev 2026-05-23); the co-carry ego state is 46-D (ego+partner qpos/qvel
+  # = 36, bar_pose 7, goal_pos 3), comparable to the AS-homo 53-D state.
+  hidden_dim: 256
+
+# GPU host (SAPIEN needs Vulkan/CUDA). plan/08 §4 GPU-determinism caveat:
+# cuDNN / cuBLAS are not bit-deterministic even with the flag, so
+# deterministic_torch is off on CUDA; all env + trainer RNG still routes
+# through concerto.training.seeding.derive_substream (P6 / ADR-002).
+runtime:
+  device: cuda
+  deterministic_torch: false
+
+# Safety stack off: this is a Phase-2 co-carry forward-design cell, not a
+# Stage-1b safety-gated cell. Single-env, so the num_envs>1 safety
+# loud-fail is moot regardless.
+safety:
+  enabled: false
+
+# Reward shaping off: the co-carry env's dense reward already carries a
+# settle term (COCARRY_REWARD_SETTLE_COEFF). The Stage-1b PBRS-settle
+# wrapper is not applied here (settle_alpha 0 = byte-identical no-op).
+shaping:
+  settle_alpha: 0.0
+
+exploratory:
+  partner_static_override: false
