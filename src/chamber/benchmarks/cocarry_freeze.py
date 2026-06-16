@@ -101,6 +101,11 @@ def _is_frozen_grade_constant(value: object) -> bool:
     numeric tuples/lists (e.g. the goal-centroid geometry). These are the
     pre-registration-grade constants the manifest must freeze; non-numeric
     module objects (strings, arrays, NamedTuples, functions) are skipped.
+
+    Scope caveat: a future **non-numeric** ``COCARRY_*`` constant (a string
+    or dict — e.g. a named reward mode) would be silently excluded here and
+    so escape the manifest-completeness guard. If such a constant is added,
+    broaden this predicate (and the manifest serialisation) to cover it.
     """
     if isinstance(value, bool):
         return False

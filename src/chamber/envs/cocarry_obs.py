@@ -435,6 +435,9 @@ def make_cocarry_training_env(
         COCARRY_DEFAULT_EPISODE_LENGTH,
         make_cocarry_env,
     )
+    from chamber.envs.errors import (  # noqa: PLC0415 - lazy: Tier-1 import safety
+        ChamberEnvCompatibilityError,
+    )
 
     inner = make_cocarry_env(
         condition_id=condition_id,
@@ -447,6 +450,20 @@ def make_cocarry_training_env(
         render_backend=render_backend,
         goal_centroid=goal_centroid,
     )
+    # Rung 2 trains on the env's dense reward (Rungs 0-1 discarded it), so the
+    # reward mode is now load-bearing: fail loudly if a host resolves to a
+    # non-``normalized_dense`` mode rather than silently mistraining
+    # (R-2026-06-B §15 reward-mode robustness). The co-carry env defines only
+    # ``compute_normalized_dense_reward``, so ManiSkill resolves this mode by
+    # default; the assert is the guard against a future env/ManiSkill change.
+    resolved_reward_mode = getattr(inner, "reward_mode", None)
+    if resolved_reward_mode != "normalized_dense":
+        inner.close()
+        raise ChamberEnvCompatibilityError(
+            "make_cocarry_training_env requires reward_mode='normalized_dense' "
+            f"(the dense co-carry reward the ego trains on); resolved "
+            f"{resolved_reward_mode!r}. See ADR-026 §Decision 1 + R-2026-06-B §15."
+        )
     return CoCarryEgoStateSynthesizer(inner)
 
 

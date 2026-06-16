@@ -43,7 +43,8 @@ echo "==> Co-carry Rung-2 f_max re-derivation + matched reference (ADR-026 §Dec
 echo "    $(uv run python -c 'from chamber.utils.device import device_report; print(device_report())' 2>/dev/null)"
 
 if ! uv run python -c "from chamber.utils.device import sapien_gpu_available; import sys; sys.exit(0 if sapien_gpu_available() else 1)" 2>/dev/null; then
-    echo "==> WARNING — sapien_gpu_available() is False; this measurement needs a GPU host."
+    echo "==> ERROR — sapien_gpu_available() is False; this measurement needs a Vulkan/GPU host. Aborting."
+    exit 1
 fi
 
 echo "    Matched + single-arm sweep (N=${N_SEEDS} seed-clusters; ADR-026 §Validation criteria)"
@@ -65,7 +66,6 @@ matched = evaluate_condition(condition_id="cocarry_matched_panda_pair", seeds=se
 single = evaluate_condition(condition_id="cocarry_single_arm_positive_control", seeds=seeds)
 ms, ss = summarize(matched), summarize(single)
 
-p99 = ms["success_stress_p95"] if np.isnan(ms.get("stress_p99", float("nan"))) else ms["stress_p99"]
 # f_max is derived from the matched-SUCCESS distribution p99 (the documented
 # rule). summarize() reports success_stress_p95; for the p99 we recompute it
 # from the successful matched episodes directly.
