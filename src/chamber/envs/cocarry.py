@@ -286,20 +286,32 @@ COCARRY_REWARD_NORMALIZER: float = 5.0
 COCARRY_REWARD_STRESS_COEFF: float = 1.0
 
 #: Soft threshold (N) above which wrist constraint-solver stress is
-#: penalised. Set to the success ceiling :data:`COCARRY_STRESS_MAX_PROXY_N`
-#: (= f_max): the penalty bites exactly the stress that would VIOLATE the
-#: success constraint. The matched cooperative band (committed Step-1
-#: 12-seed: success-stress p99 = 104.5 N, max = 105 N) sits >= 25 N below
-#: this, so the penalty is ~0 on the matched pair (the 100% reference is
-#: unchanged) and bites only the fight (incumbent p90 = 854 N). Principled.
-COCARRY_REWARD_STRESS_SOFT_THRESHOLD_N: float = COCARRY_STRESS_MAX_PROXY_N
+#: penalised. **Re-grounded 2026-06-18** (cocarry_rung2_900k_train_stop.json):
+#: the original tie to the success ceiling :data:`COCARRY_STRESS_MAX_PROXY_N`
+#: (= f_max 130 N) bit only AT the failure edge — with the old 100 N tanh
+#: scale the penalty at 133 N was ~0.03, no gradient to build margin, so the
+#: budget-only 900k incumbent rode the edge and 2/12 seeds spiked the bar to
+#: 133-134 N (on-goal but FAILING the unstressed conjunct). Now grounded at
+#: the *demonstrated cooperative ceiling*: just above the committed Step-1
+#: matched success-stress p99 (104.5 N) / max (104.9 N), within the pre-stated
+#: matched-p99 band [85, 120] N, and 20 N below the 130 N success limit. The
+#: matched pair (max 104.9 N < 110 N) still incurs ~0 penalty (the 100%
+#: reference is unchanged); the policy is now pushed to stay INSIDE the
+#: cooperative regime with margin rather than at the limit. Principled, set
+#: once on the committed distribution — NOT tuned to a success target.
+COCARRY_REWARD_STRESS_SOFT_THRESHOLD_N: float = 110.0
 
 #: ``tanh`` saturation scale (N) for the excess-stress penalty:
-#: ``penalty = COEFF * tanh(relu(stress - threshold) / scale)``. 100 N is
-#: the order of the f_max force scale, so the penalty saturates over a
-#: force range comparable to the constraint itself (the ~724 N fight excess
-#: saturates it). Bounded => safe under the reward normaliser.
-COCARRY_REWARD_STRESS_TANH_SCALE_N: float = 100.0
+#: ``penalty = COEFF * tanh(relu(stress - threshold) / scale)``. **Sharpened
+#: 2026-06-18 (100 N -> 20 N)** to span the cooperative-ceiling -> success-limit
+#: corridor (threshold 110 N -> limit 130 N = 20 N): the penalty now rises to
+#: ~tanh(1) = 0.76*COEFF at the 130 N edge (was ~0.20) and ~0.46*COEFF at
+#: 120 N, giving a real gradient that holds stress in the cooperative band
+#: instead of letting it ride the edge. The fight excess (incumbent p90 ~854 N)
+#: still saturates tanh ~ COEFF. Bounded => safe under the reward normaliser;
+#: COEFF held at parity (1.0) so the bounded penalty never dominates the
+#: cooperation terms (a large COEFF could make dropping the bar look optimal).
+COCARRY_REWARD_STRESS_TANH_SCALE_N: float = 20.0
 
 #: Weight on the policy-invariant transport PBRS potential
 #: ``Phi = -coeff * dist(bar_centroid, goal)`` (Ng-Harada-Russell 1999;
@@ -537,13 +549,16 @@ def cocarry_excess_stress_penalty(
     """Excess-internal-stress reward penalty (ADR-026 §Decision 4; Rung-2 remediation).
 
     ``penalty = coeff * tanh(relu(stress - threshold) / scale)`` — zero at or
-    below the soft threshold (the success ceiling :data:`COCARRY_STRESS_MAX_PROXY_N`),
+    below the soft threshold :data:`COCARRY_REWARD_STRESS_SOFT_THRESHOLD_N`
+    (110 N, the demonstrated cooperative ceiling; re-grounded 2026-06-18),
     rising monotonically and saturating at ``coeff`` for large excess. By
     construction the matched cooperative band (Step-1 success-stress p99 ≈
-    104.5 N << threshold 130 N) incurs ≈0 penalty (so the 100% reference is
-    unchanged); it bites only the antagonistic fight (incumbent p90 ≈ 854 N).
-    Partner-agnostic — penalises a physical constraint force, never partner
-    identity (spec §11 anti-leakage).
+    104.5 N, max ≈ 104.9 N < threshold 110 N) incurs ≈0 penalty (so the 100%
+    reference is unchanged); with the 20 N tanh scale it rises to ≈0.76·coeff
+    at the 130 N success limit — a real gradient holding stress inside the
+    cooperative regime, not at the edge — and saturates on the antagonistic
+    fight (incumbent p90 ≈ 854 N). Partner-agnostic — penalises a physical
+    constraint force, never partner identity (spec §11 anti-leakage).
 
     Backend-agnostic: a torch tensor in (the env reward path) returns a torch
     tensor; a numpy/array-like in (the Tier-1 shape test) returns an ndarray.

@@ -51,8 +51,9 @@ class TestStressPenaltyShape:
     """Excess-internal-stress penalty shape (keystone; ADR-026 §Decision 4)."""
 
     def test_zero_across_matched_cooperative_band(self) -> None:
-        # The whole matched band sits below the threshold (= f_max 130 N),
-        # so the cooperative pair incurs ~0 penalty (reference invariant).
+        # The whole matched band (max 105 N) sits below the re-grounded
+        # threshold (110 N, the demonstrated cooperative ceiling), so the
+        # cooperative pair incurs ~0 penalty (the 100% reference invariant).
         for s in _MATCHED_BAND_N:
             assert float(cocarry_excess_stress_penalty(np.array([s]))[0]) == pytest.approx(
                 0.0, abs=1e-9
@@ -60,7 +61,10 @@ class TestStressPenaltyShape:
 
     def test_zero_at_and_below_threshold(self) -> None:
         assert (
-            float(cocarry_excess_stress_penalty(np.array([COCARRY_STRESS_MAX_PROXY_N]))[0]) == 0.0
+            float(
+                cocarry_excess_stress_penalty(np.array([COCARRY_REWARD_STRESS_SOFT_THRESHOLD_N]))[0]
+            )
+            == 0.0
         )
         assert float(cocarry_excess_stress_penalty(np.array([0.0]))[0]) == 0.0
 
@@ -70,15 +74,32 @@ class TestStressPenaltyShape:
         assert np.all(np.diff(np.asarray(ys)) >= -1e-12)
 
     def test_saturates_near_coeff_on_the_fight(self) -> None:
-        # The incumbent fight (p90 ~854 N, excess ~724 N) saturates tanh ~ coeff.
+        # The incumbent fight (p90 ~854 N, excess ~744 N) saturates tanh ~ coeff.
         pen = float(cocarry_excess_stress_penalty(np.array([_FIGHT_P90_N]))[0])
         assert pen > 0.9 * COCARRY_REWARD_STRESS_COEFF
         assert pen <= COCARRY_REWARD_STRESS_COEFF
 
-    def test_threshold_is_the_success_ceiling(self) -> None:
-        # Principled tie: the penalty bites exactly the stress that violates
-        # the success constraint (COCARRY_STRESS_MAX_PROXY_N).
-        assert COCARRY_REWARD_STRESS_SOFT_THRESHOLD_N == COCARRY_STRESS_MAX_PROXY_N
+    def test_threshold_grounded_in_cooperative_band_below_limit(self) -> None:
+        # Re-grounded 2026-06-18 (cocarry_rung2_900k_train_stop.json): the
+        # threshold is the demonstrated cooperative ceiling — strictly ABOVE
+        # the matched success-stress p99 (104.5 N, so the matched pair pays ~0)
+        # and strictly BELOW the f_max success limit (so the policy is pushed
+        # into the cooperative regime with margin, not onto the failure edge).
+        assert 104.5 < COCARRY_REWARD_STRESS_SOFT_THRESHOLD_N < COCARRY_STRESS_MAX_PROXY_N
+
+    def test_bites_before_the_failure_edge(self) -> None:
+        # The regression guard for the squeeze-fragility fix: with the old
+        # threshold=130 / scale=100 the penalty at the 130 N limit was ~0.20
+        # and ~0.03 at the 133 N spike — no gradient, so the 900k incumbent
+        # rode the edge and 2/12 seeds spiked to 133-134 N. The re-grounded
+        # penalty must carry a REAL cost across the corridor BEFORE the limit:
+        # comfortably positive at 120 N and strong (> half coeff) at the 130 N
+        # edge, so margin-building is rewarded.
+        at_120 = float(cocarry_excess_stress_penalty(np.array([120.0]))[0])
+        at_limit = float(cocarry_excess_stress_penalty(np.array([COCARRY_STRESS_MAX_PROXY_N]))[0])
+        assert at_120 > 0.2 * COCARRY_REWARD_STRESS_COEFF
+        assert at_limit > 0.5 * COCARRY_REWARD_STRESS_COEFF
+        assert at_limit < COCARRY_REWARD_STRESS_COEFF  # still below saturation at the edge
 
     def test_torch_backend_returns_torch(self) -> None:
         torch = pytest.importorskip("torch")
