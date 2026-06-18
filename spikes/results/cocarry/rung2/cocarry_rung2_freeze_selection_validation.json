@@ -1,0 +1,410 @@
+{
+  "schema": "cocarry_rung2_freeze_selection_validation/v1",
+  "run_id": "f6dad85ec9df4d58",
+  "prereg_artifact": "spikes/results/cocarry/rung2/cocarry_rung2_freeze_selection_prereg.json",
+  "prereg_commit": "5fc291b",
+  "reach_band": 0.9,
+  "matched_reference_success_rate": 1.0,
+  "tilt_limit_deg": 15.0,
+  "stress_limit_n": 130.0,
+  "selection_seed_set_S": [
+    10000,
+    10001,
+    10002,
+    10003,
+    10004,
+    10005,
+    10006,
+    10007,
+    10008,
+    10009,
+    10010,
+    10011
+  ],
+  "validation_seed_set_V": [
+    20000,
+    20001,
+    20002,
+    20003,
+    20004,
+    20005,
+    20006,
+    20007,
+    20008,
+    20009,
+    20010,
+    20011,
+    20012,
+    20013,
+    20014,
+    20015,
+    20016,
+    20017,
+    20018,
+    20019,
+    20020,
+    20021,
+    20022,
+    20023
+  ],
+  "selection_eval_on_S": [
+    {
+      "step": 50000,
+      "success_rate": 0.9167,
+      "successes": 11,
+      "max_tilt_max": 46.025,
+      "stress_p90": 75.5,
+      "stress_max": 79.9,
+      "constraint_clean": false
+    },
+    {
+      "step": 100000,
+      "success_rate": 1.0,
+      "successes": 12,
+      "max_tilt_max": 13.112,
+      "stress_p90": 77.2,
+      "stress_max": 79.5,
+      "constraint_clean": true
+    },
+    {
+      "step": 150000,
+      "success_rate": 0.5,
+      "successes": 6,
+      "max_tilt_max": 21.211,
+      "stress_p90": 89.4,
+      "stress_max": 92.8,
+      "constraint_clean": false
+    },
+    {
+      "step": 200000,
+      "success_rate": 0.25,
+      "successes": 3,
+      "max_tilt_max": 42.592,
+      "stress_p90": 83.1,
+      "stress_max": 87.1,
+      "constraint_clean": false
+    },
+    {
+      "step": 250000,
+      "success_rate": 1.0,
+      "successes": 12,
+      "max_tilt_max": 11.288,
+      "stress_p90": 80.1,
+      "stress_max": 81.0,
+      "constraint_clean": true
+    },
+    {
+      "step": 300000,
+      "success_rate": 0.75,
+      "successes": 9,
+      "max_tilt_max": 19.57,
+      "stress_p90": 85.1,
+      "stress_max": 108.3,
+      "constraint_clean": false
+    },
+    {
+      "step": 350000,
+      "success_rate": 0.75,
+      "successes": 9,
+      "max_tilt_max": 14.72,
+      "stress_p90": 154.6,
+      "stress_max": 266.1,
+      "constraint_clean": false
+    },
+    {
+      "step": 400000,
+      "success_rate": 1.0,
+      "successes": 12,
+      "max_tilt_max": 11.508,
+      "stress_p90": 69.2,
+      "stress_max": 73.4,
+      "constraint_clean": true
+    },
+    {
+      "step": 450000,
+      "success_rate": 0.5,
+      "successes": 6,
+      "max_tilt_max": 39.421,
+      "stress_p90": 75.7,
+      "stress_max": 78.1,
+      "constraint_clean": false
+    },
+    {
+      "step": 500000,
+      "success_rate": 0.5,
+      "successes": 6,
+      "max_tilt_max": 41.482,
+      "stress_p90": 76.2,
+      "stress_max": 77.8,
+      "constraint_clean": false
+    },
+    {
+      "step": 550000,
+      "success_rate": 0.5833,
+      "successes": 7,
+      "max_tilt_max": 22.628,
+      "stress_p90": 144.3,
+      "stress_max": 176.1,
+      "constraint_clean": false
+    },
+    {
+      "step": 600000,
+      "success_rate": 0.8333,
+      "successes": 10,
+      "max_tilt_max": 16.386,
+      "stress_p90": 118.9,
+      "stress_max": 128.7,
+      "constraint_clean": false
+    },
+    {
+      "step": 650000,
+      "success_rate": 0.8333,
+      "successes": 10,
+      "max_tilt_max": 16.925,
+      "stress_p90": 96.5,
+      "stress_max": 97.2,
+      "constraint_clean": false
+    },
+    {
+      "step": 700000,
+      "success_rate": 0.3333,
+      "successes": 4,
+      "max_tilt_max": 35.718,
+      "stress_p90": 166.3,
+      "stress_max": 169.5,
+      "constraint_clean": false
+    },
+    {
+      "step": 750000,
+      "success_rate": 0.0,
+      "successes": 0,
+      "max_tilt_max": 30.788,
+      "stress_p90": 173.8,
+      "stress_max": 176.5,
+      "constraint_clean": false
+    },
+    {
+      "step": 800000,
+      "success_rate": 0.0,
+      "successes": 0,
+      "max_tilt_max": 19.448,
+      "stress_p90": 216.3,
+      "stress_max": 217.9,
+      "constraint_clean": false
+    },
+    {
+      "step": 850000,
+      "success_rate": 0.0,
+      "successes": 0,
+      "max_tilt_max": 18.07,
+      "stress_p90": 176.2,
+      "stress_max": 195.8,
+      "constraint_clean": false
+    },
+    {
+      "step": 900000,
+      "success_rate": 0.1667,
+      "successes": 2,
+      "max_tilt_max": 20.816,
+      "stress_p90": 191.7,
+      "stress_max": 195.8,
+      "constraint_clean": false
+    }
+  ],
+  "selected_checkpoint_step": 100000,
+  "selection_basis": "earliest constraint-clean checkpoint at the max clean success (12/12) on S",
+  "validation_eval_on_V": {
+    "checkpoint_step": 100000,
+    "n_seeds": 24,
+    "successes": 24,
+    "success_rate": 1.0,
+    "summary": {
+      "n": 24.0,
+      "success_rate": 1.0,
+      "centroid_to_goal_p50": 0.0993,
+      "max_tilt_p50": 12.5914,
+      "max_tilt_p90": 12.8743,
+      "max_tilt_max": 13.2072,
+      "tilt_limit": 15.0,
+      "stress_p50": 70.0191,
+      "stress_p90": 73.6838,
+      "stress_p99": 76.2205,
+      "stress_max": 76.635,
+      "stress_limit": 130.0,
+      "success_stress_p95": 74.706
+    },
+    "per_seed": [
+      {
+        "seed": 20000,
+        "success": true,
+        "centroid_to_goal": 0.0999,
+        "max_tilt_deg": 12.455,
+        "max_stress_proxy": 66.2
+      },
+      {
+        "seed": 20001,
+        "success": true,
+        "centroid_to_goal": 0.0977,
+        "max_tilt_deg": 12.683,
+        "max_stress_proxy": 69.3
+      },
+      {
+        "seed": 20002,
+        "success": true,
+        "centroid_to_goal": 0.0957,
+        "max_tilt_deg": 12.524,
+        "max_stress_proxy": 68.7
+      },
+      {
+        "seed": 20003,
+        "success": true,
+        "centroid_to_goal": 0.0992,
+        "max_tilt_deg": 12.552,
+        "max_stress_proxy": 74.8
+      },
+      {
+        "seed": 20004,
+        "success": true,
+        "centroid_to_goal": 0.0986,
+        "max_tilt_deg": 12.737,
+        "max_stress_proxy": 69.2
+      },
+      {
+        "seed": 20005,
+        "success": true,
+        "centroid_to_goal": 0.0996,
+        "max_tilt_deg": 12.858,
+        "max_stress_proxy": 70.5
+      },
+      {
+        "seed": 20006,
+        "success": true,
+        "centroid_to_goal": 0.1,
+        "max_tilt_deg": 12.468,
+        "max_stress_proxy": 68.2
+      },
+      {
+        "seed": 20007,
+        "success": true,
+        "centroid_to_goal": 0.0955,
+        "max_tilt_deg": 12.77,
+        "max_stress_proxy": 70.1
+      },
+      {
+        "seed": 20008,
+        "success": true,
+        "centroid_to_goal": 0.0998,
+        "max_tilt_deg": 12.79,
+        "max_stress_proxy": 73.0
+      },
+      {
+        "seed": 20009,
+        "success": true,
+        "centroid_to_goal": 0.0996,
+        "max_tilt_deg": 12.461,
+        "max_stress_proxy": 69.3
+      },
+      {
+        "seed": 20010,
+        "success": true,
+        "centroid_to_goal": 0.0984,
+        "max_tilt_deg": 12.648,
+        "max_stress_proxy": 67.9
+      },
+      {
+        "seed": 20011,
+        "success": true,
+        "centroid_to_goal": 0.0867,
+        "max_tilt_deg": 12.467,
+        "max_stress_proxy": 65.5
+      },
+      {
+        "seed": 20012,
+        "success": true,
+        "centroid_to_goal": 0.0997,
+        "max_tilt_deg": 12.367,
+        "max_stress_proxy": 71.8
+      },
+      {
+        "seed": 20013,
+        "success": true,
+        "centroid_to_goal": 0.0938,
+        "max_tilt_deg": 12.674,
+        "max_stress_proxy": 66.6
+      },
+      {
+        "seed": 20014,
+        "success": true,
+        "centroid_to_goal": 0.0928,
+        "max_tilt_deg": 12.963,
+        "max_stress_proxy": 70.9
+      },
+      {
+        "seed": 20015,
+        "success": true,
+        "centroid_to_goal": 0.0999,
+        "max_tilt_deg": 12.51,
+        "max_stress_proxy": 67.1
+      },
+      {
+        "seed": 20016,
+        "success": true,
+        "centroid_to_goal": 0.0933,
+        "max_tilt_deg": 12.438,
+        "max_stress_proxy": 71.5
+      },
+      {
+        "seed": 20017,
+        "success": true,
+        "centroid_to_goal": 0.0998,
+        "max_tilt_deg": 12.696,
+        "max_stress_proxy": 72.6
+      },
+      {
+        "seed": 20018,
+        "success": true,
+        "centroid_to_goal": 0.0892,
+        "max_tilt_deg": 12.199,
+        "max_stress_proxy": 72.6
+      },
+      {
+        "seed": 20019,
+        "success": true,
+        "centroid_to_goal": 0.0993,
+        "max_tilt_deg": 13.207,
+        "max_stress_proxy": 76.6
+      },
+      {
+        "seed": 20020,
+        "success": true,
+        "centroid_to_goal": 0.0996,
+        "max_tilt_deg": 12.881,
+        "max_stress_proxy": 74.0
+      },
+      {
+        "seed": 20021,
+        "success": true,
+        "centroid_to_goal": 0.0995,
+        "max_tilt_deg": 12.606,
+        "max_stress_proxy": 70.5
+      },
+      {
+        "seed": 20022,
+        "success": true,
+        "centroid_to_goal": 0.0999,
+        "max_tilt_deg": 12.576,
+        "max_stress_proxy": 70.0
+      },
+      {
+        "seed": 20023,
+        "success": true,
+        "centroid_to_goal": 0.0935,
+        "max_tilt_deg": 12.423,
+        "max_stress_proxy": 69.4
+      }
+    ],
+    "failures": []
+  },
+  "verdict": "HOLDS",
+  "decision": "Held-out validation passed the reach band with constraint-clean margins -> FREEZE this checkpoint."
+}

@@ -1,0 +1,73 @@
+{
+  "checkpoint": {
+    "seed": 0,
+    "sha256": "6290e2ae61f5f801bae51fbf602b0d0f456e516465309e93d3db80ffa014bccb",
+    "step": 100000,
+    "uri": "local://artifacts/f6dad85ec9df4d58_step100000.pt"
+  },
+  "env_constants": {
+    "COCARRY_BAR_CROSS_SECTION_M": 0.025,
+    "COCARRY_BAR_LENGTH_M": 0.23,
+    "COCARRY_BAR_MASS_KG": 0.4,
+    "COCARRY_BASE_X_M": 0.5,
+    "COCARRY_DEFAULT_EPISODE_LENGTH": 320,
+    "COCARRY_DRIVE_LINEAR_DAMPING": 2000.0,
+    "COCARRY_DRIVE_LINEAR_STIFFNESS": 20000.0,
+    "COCARRY_GOAL_CENTROID_XYZ": [
+      0.0,
+      0.12,
+      0.28
+    ],
+    "COCARRY_GOAL_JITTER_HALF_M": 0.02,
+    "COCARRY_GOAL_THRESH_M": 0.1,
+    "COCARRY_GRIP_OFFSET_Z_M": 0.1034,
+    "COCARRY_REWARD_LEVEL_COEFF": 1.0,
+    "COCARRY_REWARD_LEVEL_TANH_SCALE": 5.0,
+    "COCARRY_REWARD_NORMALIZER": 5.0,
+    "COCARRY_REWARD_SETTLE_COEFF": 1.0,
+    "COCARRY_REWARD_STRESS_COEFF": 1.0,
+    "COCARRY_REWARD_STRESS_SOFT_THRESHOLD_N": 110.0,
+    "COCARRY_REWARD_STRESS_TANH_SCALE_N": 20.0,
+    "COCARRY_REWARD_SUCCESS_BONUS": 5.0,
+    "COCARRY_REWARD_TANH_SCALE": 5.0,
+    "COCARRY_REWARD_TRANSPORT_COEFF": 1.0,
+    "COCARRY_REWARD_TRANSPORT_PBRS_COEFF": 1.0,
+    "COCARRY_SETTLE_WINDOW_STEPS": 15,
+    "COCARRY_STATIC_QVEL_THRESH": 0.2,
+    "COCARRY_STRESS_MAX_PROXY_N": 130.0,
+    "COCARRY_TILT_MAX_DEG": 15.0
+  },
+  "env_module_sha256": "e4606c6f1d16ae480aa8e611458c5a48181a06f71ce878e19f4147382978cfe6",
+  "fmax": {
+    "consistency_band_n": [
+      104.0,
+      156.0
+    ],
+    "derivation": "1.25 x matched-success stress p99 (R-2026-06-B \u00a715)",
+    "distribution_artifact": "spikes/results/cocarry/rung2/cocarry_rung2_fmax_distribution.json",
+    "matched_success_p99_band_n": [
+      85.0,
+      120.0
+    ],
+    "matched_success_stress_p99_n": 104.4557642364502,
+    "multiplier": 1.25,
+    "previous_provisional_n": 130.0,
+    "status": "consistent",
+    "value_n": 130.56970529556276
+  },
+  "matched_reference": {
+    "artifact": "spikes/results/cocarry/rung2/cocarry_rung2_fmax_distribution.json",
+    "n_seed_clusters": 12,
+    "success_rate": 1.0
+  },
+  "notes": [
+    "Eval-only best-checkpoint freeze (2026-06-18). Pre-registered selection rule + S/V seed split committed BEFORE held-out validation (prereg 5fc291b).",
+    "Selected step 100000 by the pre-registered rule: earliest constraint-clean checkpoint at max matched success on S (12/12, tilt_max 13.1 deg, stress_max 80 N).",
+    "Held-out validation on disjoint fresh V (24 seeds): success 24/24 (100%) >= 0.90 band; tilt p90 12.9/15 deg, stress p90 74/130 N (comfortable margins, 0 failures).",
+    "Stress penalty re-grounded 110/20 (the banked stabilization win) is captured below in env_constants and re-frozen. Success predicate, f_max, goal radius UNCHANGED.",
+    "The training run wandered; this is a deterministic, SHA-verified, held-out-validated snapshot \u2014 a stable frozen reference, not a stable training process."
+  ],
+  "rung": 2,
+  "schema": "cocarry_freeze_manifest/v1",
+  "training_config_sha256": "3049f547ac0ef0d01f5c10c67de3c0d09ffde24879a383272f02411fc9c47178"
+}
