@@ -70,14 +70,29 @@ partner:
     end_sign: "-1"
     bar_half_len: "0.115"
 
+# PPO stability hygiene (re-grounded 2026-06-18, cocarry_rung2_900k_train_stop.json):
+# the budget-only 900k run did NOT plateau — it WANDERED (success 67->75->50->42
+# ->83% across the budget) with mid-run constraint blowups (tilt_max 27.9 deg @
+# 600k; stress_p90 298 N @ 750k). That is policy oscillation: the per-update
+# policy step is too large for this single-env, 1-minibatch cell. Standard,
+# bounded fix = halve the two step-size levers so the trajectory is steadier and
+# the final checkpoint is a reliable reference. (entropy_coef 0.01 + max_grad_norm
+# 10.0 live in chamber.benchmarks.ego_ppo_trainer._HARL_FIXED_DEFAULTS, a default
+# SHARED with Stage-1 — left unchanged to preserve Stage-1 repro. LR-anneal /
+# target-KL are not implemented in EgoPPOTrainer; the clip-range tightening is the
+# in-cell knob that damps oscillation, per the prompt.)
 happo:
-  lr: 3.0e-4
+  # Halved 3.0e-4 -> 1.5e-4: smaller Adam steps, less per-update policy drift.
+  lr: 1.5e-4
   # Dense co-carry reward over a 320-step quasi-static carry; a higher
   # discount than the short Stage-1 pick-place (gamma 0.8) values the
   # delayed place/settle terminal bonus.
   gamma: 0.9
   gae_lambda: 0.95
-  clip_eps: 0.2
+  # Halved 0.2 -> 0.1: tighter PPO trust region — the keystone oscillation
+  # damper. Bounds how far the policy can move per update, directly targeting
+  # the non-monotonic wandering seen across the 900k checkpoints.
+  clip_eps: 0.1
   n_epochs: 4
   # One full episode per rollout-update on the single-env cell; the
   # update fires every `rollout_length` frames (ego_aht single-env loop).
@@ -102,11 +117,17 @@ runtime:
 safety:
   enabled: false
 
-# Reward shaping off: the co-carry env's dense reward already carries a
-# settle term (COCARRY_REWARD_SETTLE_COEFF). The Stage-1b PBRS-settle
-# wrapper is not applied here (settle_alpha 0 = byte-identical no-op).
+# Reward shaping (Rung-2 remediation, COCARRY_RUNG2_REMEDIATION_2026-06-16):
+# the Stage-1b PBRS-settle wrapper stays off (the co-carry env reward already
+# has a settle term). transport_pbrs_coeff turns ON the policy-invariant
+# transport PBRS (chamber.envs.cocarry_shaping) — F = gamma*Phi(s')-Phi(s),
+# Phi = -coeff*dist(bar_centroid, goal) — to sharpen the gradient toward
+# goal-directed transport. It MUST equal COCARRY_REWARD_TRANSPORT_PBRS_COEFF
+# (Tier-1 parity test). The keystone (excess-internal-stress penalty) is
+# always-on in the env reward, not a config flag.
 shaping:
   settle_alpha: 0.0
+  transport_pbrs_coeff: 1.0
 
 exploratory:
   partner_static_override: false

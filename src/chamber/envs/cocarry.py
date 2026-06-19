@@ -265,6 +265,65 @@ COCARRY_REWARD_LEVEL_TANH_SCALE: float = 5.0
 COCARRY_REWARD_NORMALIZER: float = 5.0
 
 # ---------------------------------------------------------------------------
+# Rung-2 reward remediation (COCARRY_RUNG2_REMEDIATION_2026-06-16). The
+# Rung-2 train-to-reference STOP showed the learned ego climbs the dense
+# reward (significant +slope) yet reaches 0% joint success because it
+# *fights* the frozen partner — wrist constraint-solver stress p90 ~854 N,
+# ~6.5x the f_max ceiling the success predicate gates on — and never
+# transports the bar (centroid p50 0.37 m). Root cause: the dense reward
+# rewarded transport+level+settle+success-bonus but had NO internal-stress
+# term, so there was no gradient against the fight (reward-up / success-flat).
+# These two additions are partner-agnostic (they penalise / shape physical
+# quantities — internal force, distance-to-goal — never partner identity),
+# named, and captured by the freeze enumerator. Set on a principled basis
+# from the committed Step-1 distribution, NOT tuned to a target.
+# ---------------------------------------------------------------------------
+
+#: Weight on the excess-internal-stress penalty. Parity with the
+#: transport/level/settle coefficients (1.0): the antagonistic fight is
+#: penalised on the same scale cooperation is rewarded. Subtracted from the
+#: reward sum (pre-normaliser).
+COCARRY_REWARD_STRESS_COEFF: float = 1.0
+
+#: Soft threshold (N) above which wrist constraint-solver stress is
+#: penalised. **Re-grounded 2026-06-18** (cocarry_rung2_900k_train_stop.json):
+#: the original tie to the success ceiling :data:`COCARRY_STRESS_MAX_PROXY_N`
+#: (= f_max 130 N) bit only AT the failure edge — with the old 100 N tanh
+#: scale the penalty at 133 N was ~0.03, no gradient to build margin, so the
+#: budget-only 900k incumbent rode the edge and 2/12 seeds spiked the bar to
+#: 133-134 N (on-goal but FAILING the unstressed conjunct). Now grounded at
+#: the *demonstrated cooperative ceiling*: just above the committed Step-1
+#: matched success-stress p99 (104.5 N) / max (104.9 N), within the pre-stated
+#: matched-p99 band [85, 120] N, and 20 N below the 130 N success limit. The
+#: matched pair (max 104.9 N < 110 N) still incurs ~0 penalty (the 100%
+#: reference is unchanged); the policy is now pushed to stay INSIDE the
+#: cooperative regime with margin rather than at the limit. Principled, set
+#: once on the committed distribution — NOT tuned to a success target.
+COCARRY_REWARD_STRESS_SOFT_THRESHOLD_N: float = 110.0
+
+#: ``tanh`` saturation scale (N) for the excess-stress penalty:
+#: ``penalty = COEFF * tanh(relu(stress - threshold) / scale)``. **Sharpened
+#: 2026-06-18 (100 N -> 20 N)** to span the cooperative-ceiling -> success-limit
+#: corridor (threshold 110 N -> limit 130 N = 20 N): the penalty now rises to
+#: ~tanh(1) = 0.76*COEFF at the 130 N edge (was ~0.20) and ~0.46*COEFF at
+#: 120 N, giving a real gradient that holds stress in the cooperative band
+#: instead of letting it ride the edge. The fight excess (incumbent p90 ~854 N)
+#: still saturates tanh ~ COEFF. Bounded => safe under the reward normaliser;
+#: COEFF held at parity (1.0) so the bounded penalty never dominates the
+#: cooperation terms (a large COEFF could make dropping the bar look optimal).
+COCARRY_REWARD_STRESS_TANH_SCALE_N: float = 20.0
+
+#: Weight on the policy-invariant transport PBRS potential
+#: ``Phi = -coeff * dist(bar_centroid, goal)`` (Ng-Harada-Russell 1999;
+#: applied as a training-time wrapper, :mod:`chamber.envs.cocarry_shaping`,
+#: with ``F = gamma * Phi(s') - Phi(s)``). PBRS cannot change the optimum
+#: (policy-invariant) — it only sharpens the gradient toward goal-directed
+#: transport. Parity 1.0; bounded (the workspace distance is bounded). The
+#: training config's ``shaping.transport_pbrs_coeff`` MUST equal this
+#: constant (a Tier-1 parity test pins it; the freeze enumerator captures it).
+COCARRY_REWARD_TRANSPORT_PBRS_COEFF: float = 1.0
+
+# ---------------------------------------------------------------------------
 # Robot / link wiring.
 # ---------------------------------------------------------------------------
 
@@ -478,6 +537,42 @@ def evaluate_cocarry_success(
     unstressed = np.asarray(max_stress_proxy) < stress_max
     static = np.asarray(both_static, dtype=bool)
     return np.asarray(placed & level & unstressed & static, dtype=bool)
+
+
+def cocarry_excess_stress_penalty(
+    stress: ArrayLike,
+    *,
+    coeff: float = COCARRY_REWARD_STRESS_COEFF,
+    threshold: float = COCARRY_REWARD_STRESS_SOFT_THRESHOLD_N,
+    scale: float = COCARRY_REWARD_STRESS_TANH_SCALE_N,
+) -> Any:  # noqa: ANN401 - returns torch.Tensor or np.ndarray mirroring the input backend
+    """Excess-internal-stress reward penalty (ADR-026 §Decision 4; Rung-2 remediation).
+
+    ``penalty = coeff * tanh(relu(stress - threshold) / scale)`` — zero at or
+    below the soft threshold :data:`COCARRY_REWARD_STRESS_SOFT_THRESHOLD_N`
+    (110 N, the demonstrated cooperative ceiling; re-grounded 2026-06-18),
+    rising monotonically and saturating at ``coeff`` for large excess. By
+    construction the matched cooperative band (Step-1 success-stress p99 ≈
+    104.5 N, max ≈ 104.9 N < threshold 110 N) incurs ≈0 penalty (so the 100%
+    reference is unchanged); with the 20 N tanh scale it rises to ≈0.76·coeff
+    at the 130 N success limit — a real gradient holding stress inside the
+    cooperative regime, not at the edge — and saturates on the antagonistic
+    fight (incumbent p90 ≈ 854 N). Partner-agnostic — penalises a physical
+    constraint force, never partner identity (spec §11 anti-leakage).
+
+    Backend-agnostic: a torch tensor in (the env reward path) returns a torch
+    tensor; a numpy/array-like in (the Tier-1 shape test) returns an ndarray.
+    A single formula, so the env reward and the Tier-1 shape guard cannot
+    drift.
+    """
+    if hasattr(stress, "detach"):  # torch.Tensor (the env reward path)
+        import torch
+
+        excess = torch.clamp(stress - threshold, min=0.0)  # type: ignore[operator]
+        return coeff * torch.tanh(excess / scale)
+    arr = np.asarray(stress, dtype=np.float64)
+    excess = np.maximum(arr - threshold, 0.0)
+    return coeff * np.tanh(excess / scale)
 
 
 def cocarry_matched_controller_specs() -> dict[str, dict[str, str]]:
@@ -881,6 +976,18 @@ def make_cocarry_env(
                 "max_stress_proxy": self._max_stress,
             }
 
+        def privileged_transport_distance(self) -> torch.Tensor:
+            """Per-env bar-centroid-to-goal distance from live state (ADR-026 §Decision 1).
+
+            The privileged accessor the Rung-2 transport-PBRS wrapper
+            (:mod:`chamber.envs.cocarry_shaping`) reads at step entry/exit,
+            so the potential is a function of privileged env state, never
+            the (synthesised) observation — mirrors Stage-1's
+            ``privileged_settle_state`` (issue #232; ADR-007 §Stage 1b Rev 18).
+            Training-time reward computation is privileged by construction.
+            """
+            return self._centroid_to_goal_dist_now()
+
         # ----- Observation / reward / success (ADR-026 §Decision 1) -----
 
         def _get_obs_extra(self, info: dict[str, Any]) -> dict[str, Any]:
@@ -984,7 +1091,20 @@ def make_cocarry_env(
             settle = COCARRY_REWARD_SETTLE_COEFF * (
                 1.0 - _torch.tanh(COCARRY_REWARD_TANH_SCALE * qvel_max)
             )
-            reward = transport + level + settle * info["is_placed"]
+            # Rung-2 remediation (COCARRY_RUNG2_REMEDIATION_2026-06-16):
+            # penalise EXCESS internal stress — the antagonistic fight the
+            # success predicate gates on but the original reward gave no
+            # gradient against. Gated past the placement-settle window
+            # (consistent with evaluate()'s settle handling) so the startup
+            # placement ring is not punished. ~0 on the matched cooperative
+            # band (stress << f_max); bites the fight. Partner-agnostic: a
+            # physical constraint force, never partner identity.
+            stress_now = self._wrist_stress_proxy_now()
+            past_settle = _torch.as_tensor(
+                self.elapsed_steps >= COCARRY_SETTLE_WINDOW_STEPS, device=self.device
+            ).reshape(-1)
+            stress_penalty = cocarry_excess_stress_penalty(stress_now) * past_settle
+            reward = transport + level + settle * info["is_placed"] - stress_penalty
             reward = _torch.where(
                 info["success"],
                 _torch.full_like(reward, COCARRY_REWARD_SUCCESS_BONUS),
@@ -1037,9 +1157,14 @@ __all__ = [
     "COCARRY_BAR_MASS_KG",
     "COCARRY_GOAL_THRESH_M",
     "COCARRY_REWARD_NORMALIZER",
+    "COCARRY_REWARD_STRESS_COEFF",
+    "COCARRY_REWARD_STRESS_SOFT_THRESHOLD_N",
+    "COCARRY_REWARD_STRESS_TANH_SCALE_N",
+    "COCARRY_REWARD_TRANSPORT_PBRS_COEFF",
     "COCARRY_STRESS_MAX_PROXY_N",
     "COCARRY_TILT_MAX_DEG",
     "CoCarryCondition",
+    "cocarry_excess_stress_penalty",
     "evaluate_cocarry_success",
     "make_cocarry_env",
     "resolve_cocarry_condition",

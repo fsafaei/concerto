@@ -1,0 +1,32 @@
+{
+  "budget_total_frames": 80000,
+  "episode_length": 320,
+  "incumbent_eval_6seed": {
+    "centroid_to_goal_p50": 0.173,
+    "max_tilt_p50": 21.2,
+    "stress_p50": 66.0,
+    "stress_p90": 73.0,
+    "stress_p99": 74.0,
+    "success_rate": 0.0
+  },
+  "learning_slope": {
+    "p_value": 0.126,
+    "slope": 0.01356,
+    "status": "FAILED_not_sig_at_smoke_budget"
+  },
+  "n_eval_seeds": 6,
+  "purpose": "GPU smoke go/no-go for the reward remediation (mechanism check, NOT the gate)",
+  "reward_changes": {
+    "stress_penalty": "always-on in compute_normalized_dense_reward (threshold=f_max 130 N, scale 100 N, coeff 1.0)",
+    "transport_pbrs_coeff": 1.0
+  },
+  "schema": "cocarry_rung2_remediation_smoke/v1",
+  "seed": 0,
+  "stop_run_baseline_300k": {
+    "centroid_to_goal_p50": 0.373,
+    "max_tilt_p50": 13.4,
+    "stress_p90": 853.6,
+    "success_rate": 0.0
+  },
+  "verdict": "FIGHT RESOLVING \u2014 stress p90 854->73 N (11.7x drop, below the matched 101 N band); transport improving (0.37->0.17 m). Failure mode shifted from fight+no-transport to gentle-but-tilts (21 deg). STOP gate (no stress drop AND success 0) NOT met -> proceed to train-to-reference (the reach-the-reference gate)."
+}

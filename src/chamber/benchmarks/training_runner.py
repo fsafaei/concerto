@@ -349,6 +349,25 @@ def run_training(
                 ego_uid=cfg.env.agent_uids[0],
             )
         env = cast("EnvLike", gym_env)
+    # Co-carry Rung-2 remediation (COCARRY_RUNG2_REMEDIATION_2026-06-16;
+    # ADR-026 §Decision 4): policy-invariant transport PBRS around the
+    # TRAINING env only, gated on shaping.transport_pbrs_coeff > 0 (default
+    # 0 = wrapper never constructed = byte-identical, ADR-002; non-co-carry
+    # cells are unaffected). The wrapper reads the env's privileged
+    # bar-centroid-to-goal distance (never the obs) and uses the training
+    # MDP's gamma (NHR invariance). The canonical env reward + evaluate()
+    # are untouched; eval envs are never shaped.
+    if cfg.shaping.transport_pbrs_coeff > 0.0:
+        from chamber.envs.cocarry_shaping import CoCarryTransportPBRSWrapper
+
+        env = cast(
+            "EnvLike",
+            CoCarryTransportPBRSWrapper(
+                cast("gym.Env[Any, Any]", env),
+                coeff=cfg.shaping.transport_pbrs_coeff,
+                gamma=cfg.happo.gamma,
+            ),
+        )
     partner = build_partner(cfg.partner)
     # EXPLORATORY (2026-06-11 homo-static slice §2; default-off,
     # ADR-002): zero-action partner override. Gate-facing runs cannot

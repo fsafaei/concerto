@@ -1,0 +1,31 @@
+{
+  "schema": "cocarry_rung2_freeze_selection_prereg/v1",
+  "date": "2026-06-18",
+  "purpose": "Eval-only best-checkpoint freeze for the Rung-2 incumbent. The stabilization run (run_id f6dad85ec9df4d58, commit 06406a7) wandered in success but PASSED THROUGH a fully clean, 100%-joint-success checkpoint. This pre-registration fixes the selection rule and the seed split BEFORE the held-out validation is run, so the freeze is honest model selection (standard early-stopping made rigorous by disjoint held-out validation), not cherry-picking.",
+  "context_artifacts": [
+    "spikes/results/cocarry/rung2/cocarry_rung2_stabilization_stop.json",
+    "spikes/results/cocarry/rung2/cocarry_rung2_fmax_distribution.json"
+  ],
+  "run_id": "f6dad85ec9df4d58",
+  "saved_checkpoints_steps": [50000, 100000, 150000, 200000, 250000, 300000, 350000, 400000, 450000, 500000, 550000, 600000, 650000, 700000, 750000, 800000, 850000, 900000],
+  "unchanged_bar": {
+    "matched_reference_success_rate": 1.0,
+    "reach_band": 0.9,
+    "fmax_n": 130.56970529556276,
+    "success_stress_limit_n": 130.0,
+    "tilt_limit_deg": 15.0,
+    "goal_radius_m": 0.10,
+    "success_predicate": "is_placed & is_level & is_unstressed & both_static & is_settled (cocarry.py:1031); UNCHANGED",
+    "stress_penalty_constants": "the banked 110/20 re-grounding is KEPT and re-frozen (COCARRY_REWARD_STRESS_SOFT_THRESHOLD_N=110, COCARRY_REWARD_STRESS_TANH_SCALE_N=20)"
+  },
+  "selection_rule": "Among the saved checkpoints, choose the one with the highest matched joint-success rate on the SELECTION seed set S that is ALSO constraint-clean (all-seed max tilt < 15 deg AND all-seed max stress < 130 N). Ties broken toward the EARLIER checkpoint (less overfit). Deterministic eval (P6).",
+  "selection_seed_set_S": [10000, 10001, 10002, 10003, 10004, 10005, 10006, 10007, 10008, 10009, 10010, 10011],
+  "validation_seed_set_V": [20000, 20001, 20002, 20003, 20004, 20005, 20006, 20007, 20008, 20009, 20010, 20011, 20012, 20013, 20014, 20015, 20016, 20017, 20018, 20019, 20020, 20021, 20022, 20023],
+  "validation_acceptance": {
+    "holds_if": "matched joint success on V >= 0.90 (the reach band) AND comfortable margins: all-seed max tilt strictly < 15 deg without riding the limit, AND stress p90 and max comfortably below 130 N (not edge-riding).",
+    "brittle_if": "V success < 0.90, OR tilt rides/exceeds the 15 deg limit on fresh seeds, OR stress rides the 130 N edge. -> STOP, the peak was seed-specific; escalation (warm-start from the matched impedance controller -> residual-on-impedance) is the founder's call."
+  },
+  "candidate_determination": "Mechanical from the rule. Per the already-observed S trajectory (committed in cocarry_rung2_stabilization_stop.json: 50k=92% but tilt_max 46 deg NOT clean; 100k=100% with tilt_max 13.1 deg, stress_max 80 N CLEAN), the earliest constraint-clean 100% checkpoint is 100k. Because 100% is the success ceiling and ties resolve to the earlier checkpoint, no later checkpoint can displace 100k. The selection eval below re-confirms over ALL 18 saved checkpoints; the freeze candidate is the 100000-step checkpoint.",
+  "honesty_statement": "As of this committed file, the validation seed set V (20000-20023) has NOT been evaluated on any checkpoint. The selection seed set S has been evaluated (it is the selection set, by construction). The validation result is computed only AFTER this pre-registration is committed.",
+  "repro_command": "bash scripts/repro/cocarry_rung2_train.sh 900000 0 12  (the run that produced the checkpoints); selection+validation eval via the committed eval over chamber.benchmarks.cocarry_incumbent.evaluate_incumbent_matched"
+}
