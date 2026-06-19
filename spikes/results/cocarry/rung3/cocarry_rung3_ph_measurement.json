@@ -1,0 +1,762 @@
+{
+  "admitted_teammates": [
+    "cocarry_stiff_impedance",
+    "cocarry_admittance",
+    "cocarry_slew_impedance"
+  ],
+  "axis": "PH (policy heterogeneity)",
+  "calibration_roster_artifact": "spikes/results/cocarry/rung3/cocarry_rung3_calibration_roster.json",
+  "checkpoint_uri": "local://artifacts/f6dad85ec9df4d58_step100000.pt",
+  "date": "2026-06-19",
+  "decision": {
+    "delta_min": 0.2,
+    "drop_rule_met": false,
+    "null_caveat": "The capability gate truncates heterogeneity from above (it excludes teammates the cooperative reference cannot succeed with), which biases \u0394 toward zero. When exclusions occurred, a \u0394\u22480 result may NOT be read as 'the PH axis does not couple to cooperation' \u2014 only as 'among capability-matched policies, no qualifying drop was observed'.",
+    "null_rule_met": true,
+    "pooled_ci_lower_one_sided": 0.02777777777777779,
+    "pooled_mean_delta": 0.08333333333333337,
+    "positive_control_holds": true,
+    "verdict": "thesis_disconfirming_null"
+  },
+  "delta": {
+    "alpha": 0.05,
+    "n_boot": 10000,
+    "n_seed_clusters": 12,
+    "per_teammate": {
+      "cocarry_admittance": {
+        "ci_lower_one_sided": 0.0,
+        "mean_delta": 0.0,
+        "reference_rate": 1.0,
+        "shifted_rate": 1.0
+      },
+      "cocarry_slew_impedance": {
+        "ci_lower_one_sided": 0.0,
+        "mean_delta": 0.0,
+        "reference_rate": 1.0,
+        "shifted_rate": 1.0
+      },
+      "cocarry_stiff_impedance": {
+        "ci_lower_one_sided": 0.08333333333333337,
+        "mean_delta": 0.25,
+        "reference_rate": 1.0,
+        "shifted_rate": 0.75
+      }
+    },
+    "pooled_ci_lower_one_sided": 0.02777777777777779,
+    "pooled_ci_two_sided": [
+      0.0,
+      0.16666666666666663
+    ],
+    "pooled_mean_delta": 0.08333333333333337,
+    "pooling_method": "pooled = reference_rate - mean_over_teammates(shifted_rate); each teammate weighted equally; per-teammate \u0394 also reported. Cluster (seed) bootstrap resamples the 12 paired seed-clusters."
+  },
+  "delta_min": 0.2,
+  "excluded_teammates": [
+    "cocarry_nullspace_impedance"
+  ],
+  "freeze_manifest_artifact": "spikes/results/cocarry/rung2/cocarry_rung2_freeze_manifest.json",
+  "glmm_confirmatory": {
+    "coef_shifted_logodds": -26.168075608164955,
+    "n_rows": 48,
+    "reason": "near-perfect separation (coefficient diverges, Wald p undefined); the bootstrap remains the headline",
+    "status": "degenerate"
+  },
+  "iqm_secondary": {
+    "iqm_pooled_delta": 0.0,
+    "note": "IQM is the secondary, NON-gate-bearing estimator (R-2026-06-B \u00a715).",
+    "per_teammate_iqm": {
+      "cocarry_admittance": 1.0,
+      "cocarry_slew_impedance": 1.0,
+      "cocarry_stiff_impedance": 1.0
+    },
+    "pooled_shifted_iqm": 1.0,
+    "reference_iqm": 1.0
+  },
+  "measurement_seeds": [
+    30000,
+    30001,
+    30002,
+    30003,
+    30004,
+    30005,
+    30006,
+    30007,
+    30008,
+    30009,
+    30010,
+    30011
+  ],
+  "null_caveat": "The capability gate truncates heterogeneity from above (it excludes teammates the cooperative reference cannot succeed with), which biases \u0394 toward zero. When exclusions occurred, a \u0394\u22480 result may NOT be read as 'the PH axis does not couple to cooperation' \u2014 only as 'among capability-matched policies, no qualifying drop was observed'.",
+  "null_caveat_applies": true,
+  "null_rule": "The coupling positive-control passes (single-arm ~ 0, established at Rung 1) AND \u0394 ~ 0 (the one-sided 95% CI excludes \u0394_min) \u21d2 a thesis-disconfirming null: no policy-heterogeneity penalty on this axis under this task. Reported as such \u2014 NEVER re-described as a coupling failure (the coupling is already established).",
+  "positive_control_holds": true,
+  "prereg_artifact": "spikes/results/cocarry/rung3/cocarry_rung3_ph_prereg.json",
+  "reference": {
+    "conjunct_summary": {
+      "centroid_to_goal_max": 0.09982345253229141,
+      "centroid_to_goal_p50": 0.09861398488283157,
+      "fail_level": 0,
+      "fail_placed": 0,
+      "fail_static": 0,
+      "fail_unstressed": 0,
+      "max_tilt_p90": 12.962467193603516,
+      "n": 12,
+      "stress_p90": 75.25747299194336,
+      "success_rate": 1.0
+    },
+    "partner_class": "cocarry_impedance",
+    "per_seed": [
+      {
+        "both_static": true,
+        "centroid_to_goal": 0.0947,
+        "is_level": true,
+        "is_placed": true,
+        "is_unstressed": true,
+        "max_stress_proxy": 66.6,
+        "max_tilt_deg": 12.56,
+        "seed": 30000,
+        "success": true
+      },
+      {
+        "both_static": true,
+        "centroid_to_goal": 0.0976,
+        "is_level": true,
+        "is_placed": true,
+        "is_unstressed": true,
+        "max_stress_proxy": 69.5,
+        "max_tilt_deg": 12.966,
+        "seed": 30001,
+        "success": true
+      },
+      {
+        "both_static": true,
+        "centroid_to_goal": 0.0997,
+        "is_level": true,
+        "is_placed": true,
+        "is_unstressed": true,
+        "max_stress_proxy": 75.3,
+        "max_tilt_deg": 12.822,
+        "seed": 30002,
+        "success": true
+      },
+      {
+        "both_static": true,
+        "centroid_to_goal": 0.0998,
+        "is_level": true,
+        "is_placed": true,
+        "is_unstressed": true,
+        "max_stress_proxy": 75.7,
+        "max_tilt_deg": 12.493,
+        "seed": 30003,
+        "success": true
+      },
+      {
+        "both_static": true,
+        "centroid_to_goal": 0.087,
+        "is_level": true,
+        "is_placed": true,
+        "is_unstressed": true,
+        "max_stress_proxy": 73.3,
+        "max_tilt_deg": 12.707,
+        "seed": 30004,
+        "success": true
+      },
+      {
+        "both_static": true,
+        "centroid_to_goal": 0.0992,
+        "is_level": true,
+        "is_placed": true,
+        "is_unstressed": true,
+        "max_stress_proxy": 72.9,
+        "max_tilt_deg": 12.933,
+        "seed": 30005,
+        "success": true
+      },
+      {
+        "both_static": true,
+        "centroid_to_goal": 0.0865,
+        "is_level": true,
+        "is_placed": true,
+        "is_unstressed": true,
+        "max_stress_proxy": 72.2,
+        "max_tilt_deg": 12.627,
+        "seed": 30006,
+        "success": true
+      },
+      {
+        "both_static": true,
+        "centroid_to_goal": 0.0922,
+        "is_level": true,
+        "is_placed": true,
+        "is_unstressed": true,
+        "max_stress_proxy": 69.5,
+        "max_tilt_deg": 12.531,
+        "seed": 30007,
+        "success": true
+      },
+      {
+        "both_static": true,
+        "centroid_to_goal": 0.0996,
+        "is_level": true,
+        "is_placed": true,
+        "is_unstressed": true,
+        "max_stress_proxy": 65.9,
+        "max_tilt_deg": 12.558,
+        "seed": 30008,
+        "success": true
+      },
+      {
+        "both_static": true,
+        "centroid_to_goal": 0.0991,
+        "is_level": true,
+        "is_placed": true,
+        "is_unstressed": true,
+        "max_stress_proxy": 69.2,
+        "max_tilt_deg": 13.21,
+        "seed": 30009,
+        "success": true
+      },
+      {
+        "both_static": true,
+        "centroid_to_goal": 0.0997,
+        "is_level": true,
+        "is_placed": true,
+        "is_unstressed": true,
+        "max_stress_proxy": 74.5,
+        "max_tilt_deg": 12.339,
+        "seed": 30010,
+        "success": true
+      },
+      {
+        "both_static": true,
+        "centroid_to_goal": 0.0981,
+        "is_level": true,
+        "is_placed": true,
+        "is_unstressed": true,
+        "max_stress_proxy": 68.0,
+        "max_tilt_deg": 12.605,
+        "seed": 30011,
+        "success": true
+      }
+    ],
+    "success_rate": 1.0,
+    "summary": {
+      "centroid_to_goal_p50": 0.09861398488283157,
+      "max_tilt_max": 13.210476875305176,
+      "max_tilt_p50": 12.616254806518555,
+      "max_tilt_p90": 12.962467193603516,
+      "n": 12.0,
+      "stress_limit": 130.0,
+      "stress_max": 75.66500091552734,
+      "stress_p50": 70.87930297851562,
+      "stress_p90": 75.25747299194336,
+      "stress_p99": 75.6297371673584,
+      "success_rate": 1.0,
+      "success_stress_p95": 75.48868217468262,
+      "tilt_limit": 15.0
+    }
+  },
+  "reference_reconfirm_floor": 0.9,
+  "reference_reconfirms": true,
+  "schema": "cocarry_rung3_ph_measurement/v1",
+  "shifted": {
+    "cocarry_admittance": {
+      "conjunct_summary": {
+        "centroid_to_goal_max": 0.09574488550424576,
+        "centroid_to_goal_p50": 0.07807442918419838,
+        "fail_level": 0,
+        "fail_placed": 0,
+        "fail_static": 0,
+        "fail_unstressed": 0,
+        "max_tilt_p90": 11.837154293060303,
+        "n": 12,
+        "stress_p90": 64.89572372436524,
+        "success_rate": 1.0
+      },
+      "per_seed": [
+        {
+          "both_static": true,
+          "centroid_to_goal": 0.0659,
+          "is_level": true,
+          "is_placed": true,
+          "is_unstressed": true,
+          "max_stress_proxy": 61.3,
+          "max_tilt_deg": 11.394,
+          "seed": 30000,
+          "success": true
+        },
+        {
+          "both_static": true,
+          "centroid_to_goal": 0.07,
+          "is_level": true,
+          "is_placed": true,
+          "is_unstressed": true,
+          "max_stress_proxy": 65.1,
+          "max_tilt_deg": 11.783,
+          "seed": 30001,
+          "success": true
+        },
+        {
+          "both_static": true,
+          "centroid_to_goal": 0.0807,
+          "is_level": true,
+          "is_placed": true,
+          "is_unstressed": true,
+          "max_stress_proxy": 62.0,
+          "max_tilt_deg": 11.801,
+          "seed": 30002,
+          "success": true
+        },
+        {
+          "both_static": true,
+          "centroid_to_goal": 0.0957,
+          "is_level": true,
+          "is_placed": true,
+          "is_unstressed": true,
+          "max_stress_proxy": 62.2,
+          "max_tilt_deg": 11.488,
+          "seed": 30003,
+          "success": true
+        },
+        {
+          "both_static": true,
+          "centroid_to_goal": 0.0863,
+          "is_level": true,
+          "is_placed": true,
+          "is_unstressed": true,
+          "max_stress_proxy": 61.3,
+          "max_tilt_deg": 11.841,
+          "seed": 30004,
+          "success": true
+        },
+        {
+          "both_static": true,
+          "centroid_to_goal": 0.0944,
+          "is_level": true,
+          "is_placed": true,
+          "is_unstressed": true,
+          "max_stress_proxy": 59.5,
+          "max_tilt_deg": 11.318,
+          "seed": 30005,
+          "success": true
+        },
+        {
+          "both_static": true,
+          "centroid_to_goal": 0.0755,
+          "is_level": true,
+          "is_placed": true,
+          "is_unstressed": true,
+          "max_stress_proxy": 65.6,
+          "max_tilt_deg": 11.977,
+          "seed": 30006,
+          "success": true
+        },
+        {
+          "both_static": true,
+          "centroid_to_goal": 0.0914,
+          "is_level": true,
+          "is_placed": true,
+          "is_unstressed": true,
+          "max_stress_proxy": 57.3,
+          "max_tilt_deg": 11.198,
+          "seed": 30007,
+          "success": true
+        },
+        {
+          "both_static": true,
+          "centroid_to_goal": 0.0725,
+          "is_level": true,
+          "is_placed": true,
+          "is_unstressed": true,
+          "max_stress_proxy": 61.3,
+          "max_tilt_deg": 11.337,
+          "seed": 30008,
+          "success": true
+        },
+        {
+          "both_static": true,
+          "centroid_to_goal": 0.0586,
+          "is_level": true,
+          "is_placed": true,
+          "is_unstressed": true,
+          "max_stress_proxy": 62.8,
+          "max_tilt_deg": 11.378,
+          "seed": 30009,
+          "success": true
+        },
+        {
+          "both_static": true,
+          "centroid_to_goal": 0.0817,
+          "is_level": true,
+          "is_placed": true,
+          "is_unstressed": true,
+          "max_stress_proxy": 61.7,
+          "max_tilt_deg": 11.338,
+          "seed": 30010,
+          "success": true
+        },
+        {
+          "both_static": true,
+          "centroid_to_goal": 0.0606,
+          "is_level": true,
+          "is_placed": true,
+          "is_unstressed": true,
+          "max_stress_proxy": 63.1,
+          "max_tilt_deg": 11.735,
+          "seed": 30011,
+          "success": true
+        }
+      ],
+      "success_rate": 1.0,
+      "summary": {
+        "centroid_to_goal_p50": 0.07807442918419838,
+        "max_tilt_max": 11.977045059204102,
+        "max_tilt_p50": 11.44087553024292,
+        "max_tilt_p90": 11.837154293060303,
+        "n": 12.0,
+        "stress_limit": 130.0,
+        "stress_max": 65.58988952636719,
+        "stress_p50": 61.879682540893555,
+        "stress_p90": 64.89572372436524,
+        "stress_p99": 65.53587226867675,
+        "success_rate": 1.0,
+        "success_stress_p95": 65.31980323791504,
+        "tilt_limit": 15.0
+      }
+    },
+    "cocarry_slew_impedance": {
+      "conjunct_summary": {
+        "centroid_to_goal_max": 0.09964990615844727,
+        "centroid_to_goal_p50": 0.09284256026148796,
+        "fail_level": 0,
+        "fail_placed": 0,
+        "fail_static": 0,
+        "fail_unstressed": 0,
+        "max_tilt_p90": 8.671805953979492,
+        "n": 12,
+        "stress_p90": 81.50696029663087,
+        "success_rate": 1.0
+      },
+      "per_seed": [
+        {
+          "both_static": true,
+          "centroid_to_goal": 0.0938,
+          "is_level": true,
+          "is_placed": true,
+          "is_unstressed": true,
+          "max_stress_proxy": 75.1,
+          "max_tilt_deg": 8.498,
+          "seed": 30000,
+          "success": true
+        },
+        {
+          "both_static": true,
+          "centroid_to_goal": 0.0907,
+          "is_level": true,
+          "is_placed": true,
+          "is_unstressed": true,
+          "max_stress_proxy": 82.3,
+          "max_tilt_deg": 8.575,
+          "seed": 30001,
+          "success": true
+        },
+        {
+          "both_static": true,
+          "centroid_to_goal": 0.0918,
+          "is_level": true,
+          "is_placed": true,
+          "is_unstressed": true,
+          "max_stress_proxy": 64.7,
+          "max_tilt_deg": 8.678,
+          "seed": 30002,
+          "success": true
+        },
+        {
+          "both_static": true,
+          "centroid_to_goal": 0.0939,
+          "is_level": true,
+          "is_placed": true,
+          "is_unstressed": true,
+          "max_stress_proxy": 81.6,
+          "max_tilt_deg": 8.639,
+          "seed": 30003,
+          "success": true
+        },
+        {
+          "both_static": true,
+          "centroid_to_goal": 0.0968,
+          "is_level": true,
+          "is_placed": true,
+          "is_unstressed": true,
+          "max_stress_proxy": 81.1,
+          "max_tilt_deg": 8.48,
+          "seed": 30004,
+          "success": true
+        },
+        {
+          "both_static": true,
+          "centroid_to_goal": 0.0919,
+          "is_level": true,
+          "is_placed": true,
+          "is_unstressed": true,
+          "max_stress_proxy": 63.8,
+          "max_tilt_deg": 8.575,
+          "seed": 30005,
+          "success": true
+        },
+        {
+          "both_static": true,
+          "centroid_to_goal": 0.0983,
+          "is_level": true,
+          "is_placed": true,
+          "is_unstressed": true,
+          "max_stress_proxy": 60.3,
+          "max_tilt_deg": 8.675,
+          "seed": 30006,
+          "success": true
+        },
+        {
+          "both_static": true,
+          "centroid_to_goal": 0.0963,
+          "is_level": true,
+          "is_placed": true,
+          "is_unstressed": true,
+          "max_stress_proxy": 64.2,
+          "max_tilt_deg": 8.471,
+          "seed": 30007,
+          "success": true
+        },
+        {
+          "both_static": true,
+          "centroid_to_goal": 0.0894,
+          "is_level": true,
+          "is_placed": true,
+          "is_unstressed": true,
+          "max_stress_proxy": 78.2,
+          "max_tilt_deg": 8.443,
+          "seed": 30008,
+          "success": true
+        },
+        {
+          "both_static": true,
+          "centroid_to_goal": 0.0778,
+          "is_level": true,
+          "is_placed": true,
+          "is_unstressed": true,
+          "max_stress_proxy": 77.7,
+          "max_tilt_deg": 8.571,
+          "seed": 30009,
+          "success": true
+        },
+        {
+          "both_static": true,
+          "centroid_to_goal": 0.0996,
+          "is_level": true,
+          "is_placed": true,
+          "is_unstressed": true,
+          "max_stress_proxy": 74.2,
+          "max_tilt_deg": 8.594,
+          "seed": 30010,
+          "success": true
+        },
+        {
+          "both_static": true,
+          "centroid_to_goal": 0.0911,
+          "is_level": true,
+          "is_placed": true,
+          "is_unstressed": true,
+          "max_stress_proxy": 61.9,
+          "max_tilt_deg": 8.592,
+          "seed": 30011,
+          "success": true
+        }
+      ],
+      "success_rate": 1.0,
+      "summary": {
+        "centroid_to_goal_p50": 0.09284256026148796,
+        "max_tilt_max": 8.678263664245605,
+        "max_tilt_p50": 8.574960231781006,
+        "max_tilt_p90": 8.671805953979492,
+        "n": 12.0,
+        "stress_limit": 130.0,
+        "stress_max": 82.26361846923828,
+        "stress_p50": 74.63300323486328,
+        "stress_p90": 81.50696029663087,
+        "stress_p99": 82.18550682067871,
+        "success_rate": 1.0,
+        "success_stress_p95": 81.87306022644043,
+        "tilt_limit": 15.0
+      }
+    },
+    "cocarry_stiff_impedance": {
+      "conjunct_summary": {
+        "centroid_to_goal_max": 0.10945423692464828,
+        "centroid_to_goal_p50": 0.09905127435922623,
+        "fail_level": 3,
+        "fail_placed": 2,
+        "fail_static": 0,
+        "fail_unstressed": 0,
+        "max_tilt_p90": 31.211039924621584,
+        "n": 12,
+        "stress_p90": 122.1557518005371,
+        "success_rate": 0.75
+      },
+      "per_seed": [
+        {
+          "both_static": true,
+          "centroid_to_goal": 0.0988,
+          "is_level": true,
+          "is_placed": true,
+          "is_unstressed": true,
+          "max_stress_proxy": 113.4,
+          "max_tilt_deg": 13.318,
+          "seed": 30000,
+          "success": true
+        },
+        {
+          "both_static": true,
+          "centroid_to_goal": 0.0995,
+          "is_level": true,
+          "is_placed": true,
+          "is_unstressed": true,
+          "max_stress_proxy": 113.1,
+          "max_tilt_deg": 14.423,
+          "seed": 30001,
+          "success": true
+        },
+        {
+          "both_static": true,
+          "centroid_to_goal": 0.0973,
+          "is_level": false,
+          "is_placed": true,
+          "is_unstressed": true,
+          "max_stress_proxy": 115.7,
+          "max_tilt_deg": 29.751,
+          "seed": 30002,
+          "success": false
+        },
+        {
+          "both_static": true,
+          "centroid_to_goal": 0.0997,
+          "is_level": true,
+          "is_placed": true,
+          "is_unstressed": true,
+          "max_stress_proxy": 120.3,
+          "max_tilt_deg": 11.748,
+          "seed": 30003,
+          "success": true
+        },
+        {
+          "both_static": true,
+          "centroid_to_goal": 0.0944,
+          "is_level": true,
+          "is_placed": true,
+          "is_unstressed": true,
+          "max_stress_proxy": 113.7,
+          "max_tilt_deg": 14.695,
+          "seed": 30004,
+          "success": true
+        },
+        {
+          "both_static": true,
+          "centroid_to_goal": 0.0999,
+          "is_level": true,
+          "is_placed": true,
+          "is_unstressed": true,
+          "max_stress_proxy": 122.4,
+          "max_tilt_deg": 12.726,
+          "seed": 30005,
+          "success": true
+        },
+        {
+          "both_static": true,
+          "centroid_to_goal": 0.1095,
+          "is_level": false,
+          "is_placed": false,
+          "is_unstressed": true,
+          "max_stress_proxy": 110.5,
+          "max_tilt_deg": 31.373,
+          "seed": 30006,
+          "success": false
+        },
+        {
+          "both_static": true,
+          "centroid_to_goal": 0.0986,
+          "is_level": true,
+          "is_placed": true,
+          "is_unstressed": true,
+          "max_stress_proxy": 114.2,
+          "max_tilt_deg": 13.432,
+          "seed": 30007,
+          "success": true
+        },
+        {
+          "both_static": true,
+          "centroid_to_goal": 0.0894,
+          "is_level": true,
+          "is_placed": true,
+          "is_unstressed": true,
+          "max_stress_proxy": 117.6,
+          "max_tilt_deg": 13.55,
+          "seed": 30008,
+          "success": true
+        },
+        {
+          "both_static": true,
+          "centroid_to_goal": 0.0962,
+          "is_level": true,
+          "is_placed": true,
+          "is_unstressed": true,
+          "max_stress_proxy": 113.2,
+          "max_tilt_deg": 14.696,
+          "seed": 30009,
+          "success": true
+        },
+        {
+          "both_static": true,
+          "centroid_to_goal": 0.0993,
+          "is_level": true,
+          "is_placed": true,
+          "is_unstressed": true,
+          "max_stress_proxy": 122.9,
+          "max_tilt_deg": 12.14,
+          "seed": 30010,
+          "success": true
+        },
+        {
+          "both_static": true,
+          "centroid_to_goal": 0.109,
+          "is_level": false,
+          "is_placed": false,
+          "is_unstressed": true,
+          "max_stress_proxy": 110.0,
+          "max_tilt_deg": 32.703,
+          "seed": 30011,
+          "success": false
+        }
+      ],
+      "success_rate": 0.75,
+      "summary": {
+        "centroid_to_goal_p50": 0.09905127435922623,
+        "max_tilt_max": 32.70342254638672,
+        "max_tilt_p50": 13.986609935760498,
+        "max_tilt_p90": 31.211039924621584,
+        "n": 12.0,
+        "stress_limit": 130.0,
+        "stress_max": 122.93399047851562,
+        "stress_p50": 113.96964645385742,
+        "stress_p90": 122.1557518005371,
+        "stress_p99": 122.87061996459961,
+        "success_rate": 0.75,
+        "success_stress_p95": 122.70355224609375,
+        "tilt_limit": 15.0
+      }
+    }
+  },
+  "unchanged_bar": {
+    "fmax_n": 130.56970529556276,
+    "goal_radius_m": 0.1,
+    "matched_reference_success_rate": 1.0,
+    "success_predicate": "is_placed & is_level & is_unstressed & both_static & is_settled (cocarry.py); UNCHANGED"
+  }
+}
