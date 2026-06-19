@@ -4379,6 +4379,56 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#chamber.partners.CoCarryImpedancePartner" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        CoCarryImpedancePartner
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="CoCarryImpedancePartner">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#chamber.partners.CoCarryImpedancePartner.__init__" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        __init__
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#chamber.partners.CoCarryImpedancePartner.act" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        act
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#chamber.partners.CoCarryImpedancePartner.reset" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        reset
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#chamber.partners.CrossFormerPartner" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -9362,6 +9412,56 @@
       
     </span>
   </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#chamber.partners.CoCarryImpedancePartner" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        CoCarryImpedancePartner
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="CoCarryImpedancePartner">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#chamber.partners.CoCarryImpedancePartner.__init__" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        __init__
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#chamber.partners.CoCarryImpedancePartner.act" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        act
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#chamber.partners.CoCarryImpedancePartner.reset" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        reset
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -50011,6 +50111,10 @@ plan/04 §3 (architecture). Phase-0 ships:</p>
   the :class:<code>StochasticPolicy</code> with the same args, freezes every
   parameter, runs <code>deterministic=True</code> inference under
   :func:<code>torch.no_grad</code>.</li>
+<li>:class:<code>CoCarryImpedancePartner</code> — the matched hand-written co-carry
+  controller (:mod:<code>chamber.partners.cocarry_impedance</code>; ADR-026
+  §Decision 1). The frozen teammate the Rung-2 learned incumbent trains
+  against (R-2026-06-B §15); imported here so it registers package-wide.</li>
 <li>:class:<code>OpenVLAPartner</code> and :class:<code>CrossFormerPartner</code> Phase-1 stubs
   (:mod:<code>chamber.partners.stubs</code>) — ADR-010 §Decision Option B; both
   raise :class:<code>NotImplementedError</code> referencing the Phase-1 ticket.</li>
@@ -50037,6 +50141,622 @@ plan/04 §3 (architecture). Phase-0 ships:</p>
 
 
 
+
+<div class="doc doc-object doc-class">
+
+
+
+<h2 id="chamber.partners.CoCarryImpedancePartner" class="doc doc-heading">
+            <span class="doc doc-object-name doc-class-name">CoCarryImpedancePartner</span>
+
+
+</h2>
+
+
+    <div class="doc doc-contents ">
+            <p class="doc doc-class-bases">
+              Bases: <code><a class="autorefs autorefs-internal" title="PartnerBase (chamber.partners.interface.PartnerBase)" href="#chamber.partners.PartnerBase">PartnerBase</a></code></p>
+
+
+
+        <p>EE-space impedance controller for one co-carry arm (ADR-026 §Decision 1; ADR-009 §Decision).</p>
+<p>Reads <code>obs["extra"]["goal_pos"]</code> (the world goal centroid) and
+<code>obs["agent"][uid]["qpos"]</code> (the arm's joint angles), computes the
+cooperative TCP target, and returns the <code>pd_joint_delta_pos</code> action
+that steps the TCP toward it via the damped-pseudoinverse Jacobian.</p>
+<p><code>spec.extra</code> keys:</p>
+<ul>
+<li><code>uid</code> — the arm this controller drives (<code>panda_wristcam</code> /
+  <code>panda_partner</code>).</li>
+<li><code>base_xyz</code> — the arm's base position <code>"x,y,z"</code> (world).</li>
+<li><code>base_yaw_deg</code> — the arm's base yaw about z, degrees
+  (<code>"0"</code> ego, <code>"180"</code> partner).</li>
+<li><code>end_sign</code> — <code>"+1"</code> if the arm holds the bar's <code>+x</code> end,
+  <code>"-1"</code> for the <code>-x</code> end.</li>
+<li><code>bar_half_len</code> — half the bar length, metres.</li>
+<li><code>urdf_path</code> — optional; defaults to the wristcam URDF
+  (<code>panda_partner</code> shares the kinematic chain, so the default is
+  correct for both).</li>
+<li><code>kp</code> / <code>ki</code> / <code>step_max</code> / <code>damping</code> — optional gain overrides.</li>
+</ul>
+
+
+
+
+
+
+
+
+              <details class="mkdocstrings-source">
+                <summary>Source code in <code>src/chamber/partners/cocarry_impedance.py</code></summary>
+                <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">177</span>
+<span class="normal">178</span>
+<span class="normal">179</span>
+<span class="normal">180</span>
+<span class="normal">181</span>
+<span class="normal">182</span>
+<span class="normal">183</span>
+<span class="normal">184</span>
+<span class="normal">185</span>
+<span class="normal">186</span>
+<span class="normal">187</span>
+<span class="normal">188</span>
+<span class="normal">189</span>
+<span class="normal">190</span>
+<span class="normal">191</span>
+<span class="normal">192</span>
+<span class="normal">193</span>
+<span class="normal">194</span>
+<span class="normal">195</span>
+<span class="normal">196</span>
+<span class="normal">197</span>
+<span class="normal">198</span>
+<span class="normal">199</span>
+<span class="normal">200</span>
+<span class="normal">201</span>
+<span class="normal">202</span>
+<span class="normal">203</span>
+<span class="normal">204</span>
+<span class="normal">205</span>
+<span class="normal">206</span>
+<span class="normal">207</span>
+<span class="normal">208</span>
+<span class="normal">209</span>
+<span class="normal">210</span>
+<span class="normal">211</span>
+<span class="normal">212</span>
+<span class="normal">213</span>
+<span class="normal">214</span>
+<span class="normal">215</span>
+<span class="normal">216</span>
+<span class="normal">217</span>
+<span class="normal">218</span>
+<span class="normal">219</span>
+<span class="normal">220</span>
+<span class="normal">221</span>
+<span class="normal">222</span>
+<span class="normal">223</span>
+<span class="normal">224</span>
+<span class="normal">225</span>
+<span class="normal">226</span>
+<span class="normal">227</span>
+<span class="normal">228</span>
+<span class="normal">229</span>
+<span class="normal">230</span>
+<span class="normal">231</span>
+<span class="normal">232</span>
+<span class="normal">233</span>
+<span class="normal">234</span>
+<span class="normal">235</span>
+<span class="normal">236</span>
+<span class="normal">237</span>
+<span class="normal">238</span>
+<span class="normal">239</span>
+<span class="normal">240</span>
+<span class="normal">241</span>
+<span class="normal">242</span>
+<span class="normal">243</span>
+<span class="normal">244</span>
+<span class="normal">245</span>
+<span class="normal">246</span>
+<span class="normal">247</span>
+<span class="normal">248</span>
+<span class="normal">249</span>
+<span class="normal">250</span>
+<span class="normal">251</span>
+<span class="normal">252</span>
+<span class="normal">253</span>
+<span class="normal">254</span>
+<span class="normal">255</span>
+<span class="normal">256</span>
+<span class="normal">257</span>
+<span class="normal">258</span>
+<span class="normal">259</span>
+<span class="normal">260</span>
+<span class="normal">261</span>
+<span class="normal">262</span>
+<span class="normal">263</span>
+<span class="normal">264</span>
+<span class="normal">265</span>
+<span class="normal">266</span>
+<span class="normal">267</span>
+<span class="normal">268</span>
+<span class="normal">269</span>
+<span class="normal">270</span>
+<span class="normal">271</span>
+<span class="normal">272</span>
+<span class="normal">273</span>
+<span class="normal">274</span>
+<span class="normal">275</span>
+<span class="normal">276</span>
+<span class="normal">277</span>
+<span class="normal">278</span>
+<span class="normal">279</span>
+<span class="normal">280</span>
+<span class="normal">281</span>
+<span class="normal">282</span>
+<span class="normal">283</span>
+<span class="normal">284</span>
+<span class="normal">285</span>
+<span class="normal">286</span>
+<span class="normal">287</span>
+<span class="normal">288</span>
+<span class="normal">289</span>
+<span class="normal">290</span>
+<span class="normal">291</span>
+<span class="normal">292</span>
+<span class="normal">293</span>
+<span class="normal">294</span>
+<span class="normal">295</span>
+<span class="normal">296</span>
+<span class="normal">297</span>
+<span class="normal">298</span>
+<span class="normal">299</span>
+<span class="normal">300</span>
+<span class="normal">301</span>
+<span class="normal">302</span>
+<span class="normal">303</span>
+<span class="normal">304</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@register_partner</span><span class="p">(</span><span class="s2">&quot;cocarry_impedance&quot;</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">CoCarryImpedancePartner</span><span class="p">(</span><span class="n">PartnerBase</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;EE-space impedance controller for one co-carry arm (ADR-026 §Decision 1; ADR-009 §Decision).</span>
+
+<span class="sd">    Reads ``obs[&quot;extra&quot;][&quot;goal_pos&quot;]`` (the world goal centroid) and</span>
+<span class="sd">    ``obs[&quot;agent&quot;][uid][&quot;qpos&quot;]`` (the arm&#39;s joint angles), computes the</span>
+<span class="sd">    cooperative TCP target, and returns the ``pd_joint_delta_pos`` action</span>
+<span class="sd">    that steps the TCP toward it via the damped-pseudoinverse Jacobian.</span>
+
+<span class="sd">    ``spec.extra`` keys:</span>
+
+<span class="sd">    - ``uid`` — the arm this controller drives (``panda_wristcam`` /</span>
+<span class="sd">      ``panda_partner``).</span>
+<span class="sd">    - ``base_xyz`` — the arm&#39;s base position ``&quot;x,y,z&quot;`` (world).</span>
+<span class="sd">    - ``base_yaw_deg`` — the arm&#39;s base yaw about z, degrees</span>
+<span class="sd">      (``&quot;0&quot;`` ego, ``&quot;180&quot;`` partner).</span>
+<span class="sd">    - ``end_sign`` — ``&quot;+1&quot;`` if the arm holds the bar&#39;s ``+x`` end,</span>
+<span class="sd">      ``&quot;-1&quot;`` for the ``-x`` end.</span>
+<span class="sd">    - ``bar_half_len`` — half the bar length, metres.</span>
+<span class="sd">    - ``urdf_path`` — optional; defaults to the wristcam URDF</span>
+<span class="sd">      (``panda_partner`` shares the kinematic chain, so the default is</span>
+<span class="sd">      correct for both).</span>
+<span class="sd">    - ``kp`` / ``ki`` / ``step_max`` / ``damping`` — optional gain overrides.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">spec</span><span class="p">:</span> <span class="n">PartnerSpec</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Bind the spec and build the Jacobian/FK provider (ADR-026 §Decision 1).&quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">spec</span><span class="p">)</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">chamber.agents.panda_jacobian</span><span class="w"> </span><span class="kn">import</span> <span class="n">PandaJacobianProvider</span>
+
+        <span class="n">extra</span> <span class="o">=</span> <span class="n">spec</span><span class="o">.</span><span class="n">extra</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_uid</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">extra</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;uid&quot;</span><span class="p">,</span> <span class="s2">&quot;panda_wristcam&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_base_xyz</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]</span> <span class="o">=</span> <span class="n">_parse_vec3</span><span class="p">(</span><span class="n">extra</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;base_xyz&quot;</span><span class="p">,</span> <span class="s2">&quot;0,0,0&quot;</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_base_rot_t</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]</span> <span class="o">=</span> <span class="n">_rot_z</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">extra</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;base_yaw_deg&quot;</span><span class="p">,</span> <span class="s2">&quot;0&quot;</span><span class="p">)))</span><span class="o">.</span><span class="n">T</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_end_sign</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">extra</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;end_sign&quot;</span><span class="p">,</span> <span class="s2">&quot;1&quot;</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_bar_half_len</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">extra</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;bar_half_len&quot;</span><span class="p">,</span> <span class="s2">&quot;0.115&quot;</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_kp</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">extra</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;kp&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">_DEFAULT_KP</span><span class="p">)))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_ki</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">extra</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;ki&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">_DEFAULT_KI</span><span class="p">)))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_step_max</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">extra</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;step_max&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">_DEFAULT_STEP_MAX_M</span><span class="p">)))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_damping</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">extra</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;damping&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">_DEFAULT_DAMPING</span><span class="p">)))</span>
+        <span class="n">urdf_path</span> <span class="o">=</span> <span class="n">extra</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;urdf_path&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_provider</span> <span class="o">=</span> <span class="n">PandaJacobianProvider</span><span class="p">(</span><span class="n">urdf_path</span><span class="p">)</span>
+        <span class="c1"># Within-episode Cartesian integral (base frame); cleared in reset.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_integral</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">_XYZ</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">reset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">seed</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Clear the within-episode integral (ADR-009 §Decision; stateless across episodes).</span>
+
+<span class="sd">        The control law is a deterministic function of ``obs`` + ``spec``</span>
+<span class="sd">        plus a within-episode Cartesian integral that is zeroed here, so</span>
+<span class="sd">        the partner carries no state across episodes (ADR-009 §Decision;</span>
+<span class="sd">        plan/04 §2). The seed is accepted only for</span>
+<span class="sd">        :class:`~chamber.partners.api.FrozenPartner` Protocol conformance.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">del</span> <span class="n">seed</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_integral</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">_XYZ</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">act</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">obs</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">object</span><span class="p">],</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">deterministic</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">floating</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the ``pd_joint_delta_pos`` action toward the target (ADR-026 §Decision 1).</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            obs: Gymnasium observation mapping with ``obs[&quot;extra&quot;]</span>
+<span class="sd">                [&quot;goal_pos&quot;]`` (world goal centroid) and</span>
+<span class="sd">                ``obs[&quot;agent&quot;][uid][&quot;qpos&quot;]`` (the arm&#39;s joint angles).</span>
+<span class="sd">            deterministic: Ignored — the controller is deterministic.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Float32 action of length ``_PANDA_ARM_DOF + 1`` (7 normalised</span>
+<span class="sd">            joint deltas + gripper-open); a gripper-only action if the obs</span>
+<span class="sd">            lacks the required keys (defensive — keeps the rollout shape</span>
+<span class="sd">            stable).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">del</span> <span class="n">deterministic</span>
+        <span class="n">goal</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_read_goal</span><span class="p">(</span><span class="n">obs</span><span class="p">)</span>
+        <span class="n">qpos</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_read_qpos</span><span class="p">(</span><span class="n">obs</span><span class="p">)</span>
+        <span class="n">action</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">_PANDA_ARM_DOF</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+        <span class="n">action</span><span class="p">[</span><span class="n">_PANDA_ARM_DOF</span><span class="p">]</span> <span class="o">=</span> <span class="n">_GRIPPER_ACTION_OPEN</span>
+        <span class="k">if</span> <span class="n">goal</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">qpos</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">action</span>
+        <span class="c1"># Cooperative TCP target (world) -&gt; arm base frame.</span>
+        <span class="n">target_world</span> <span class="o">=</span> <span class="n">goal</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">_end_sign</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">_bar_half_len</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">])</span>
+        <span class="n">target_base</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_base_rot_t</span> <span class="o">@</span> <span class="p">(</span><span class="n">target_world</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">_base_xyz</span><span class="p">)</span>
+        <span class="n">tcp_base</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_provider</span><span class="o">.</span><span class="n">fk_tcp_position</span><span class="p">(</span><span class="n">qpos</span><span class="p">)</span>
+        <span class="n">error</span> <span class="o">=</span> <span class="n">target_base</span> <span class="o">-</span> <span class="n">tcp_base</span>
+        <span class="c1"># PI law: the deadzone-gated, anti-windup-clamped integral closes</span>
+        <span class="c1"># the load-induced steady-state offset of the delta-from-measured</span>
+        <span class="c1"># joint controller, engaging only once the TCP is near its target.</span>
+        <span class="k">if</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">error</span><span class="p">))</span> <span class="o">&lt;</span> <span class="n">_INTEGRAL_ENGAGE_M</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_integral</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_integral</span> <span class="o">+</span> <span class="n">error</span> <span class="o">*</span> <span class="n">_CONTROL_DT</span><span class="p">,</span> <span class="o">-</span><span class="n">_INTEGRAL_CLAMP_MS</span><span class="p">,</span> <span class="n">_INTEGRAL_CLAMP_MS</span>
+            <span class="p">)</span>
+        <span class="n">v_cmd</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_kp</span> <span class="o">*</span> <span class="n">error</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ki</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">_integral</span><span class="p">,</span> <span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">_step_max</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_step_max</span>
+        <span class="p">)</span>
+        <span class="n">jac</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_provider</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">qpos</span><span class="p">)</span>  <span class="c1"># type: ignore[arg-type]  # (3, 7), base frame</span>
+        <span class="c1"># Damped pseudo-inverse joint step: dq = J^T (J J^T + l^2 I)^-1 v.</span>
+        <span class="n">jjt</span> <span class="o">=</span> <span class="n">jac</span> <span class="o">@</span> <span class="n">jac</span><span class="o">.</span><span class="n">T</span> <span class="o">+</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_damping</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">_XYZ</span><span class="p">)</span>
+        <span class="n">dq</span> <span class="o">=</span> <span class="n">jac</span><span class="o">.</span><span class="n">T</span> <span class="o">@</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">jjt</span><span class="p">,</span> <span class="n">v_cmd</span><span class="p">)</span>
+        <span class="n">action</span><span class="p">[:</span><span class="n">_PANDA_ARM_DOF</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">dq</span> <span class="o">/</span> <span class="n">_ACTION_DELTA_SCALE</span><span class="p">,</span> <span class="o">-</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">action</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_read_goal</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obs</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">object</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Read the world goal centroid from ``obs[&quot;extra&quot;][&quot;goal_pos&quot;]``.&quot;&quot;&quot;</span>
+        <span class="n">extra</span> <span class="o">=</span> <span class="n">obs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;extra&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">extra</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">&quot;goal_pos&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">extra</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+        <span class="n">goal</span> <span class="o">=</span> <span class="n">_to_numpy_flat</span><span class="p">(</span><span class="n">extra</span><span class="p">[</span><span class="s2">&quot;goal_pos&quot;</span><span class="p">])</span>
+        <span class="k">if</span> <span class="n">goal</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">_XYZ</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+        <span class="k">return</span> <span class="n">goal</span><span class="p">[:</span><span class="n">_XYZ</span><span class="p">]</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_read_qpos</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obs</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">object</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Read the arm&#39;s 7 joint angles from ``obs[&quot;agent&quot;][uid][&quot;qpos&quot;]``.&quot;&quot;&quot;</span>
+        <span class="n">agent</span> <span class="o">=</span> <span class="n">obs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;agent&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">agent</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">)</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">_uid</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">agent</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+        <span class="n">entry</span> <span class="o">=</span> <span class="n">agent</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_uid</span><span class="p">]</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">entry</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">&quot;qpos&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">entry</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+        <span class="n">qpos</span> <span class="o">=</span> <span class="n">_to_numpy_flat</span><span class="p">(</span><span class="n">entry</span><span class="p">[</span><span class="s2">&quot;qpos&quot;</span><span class="p">])</span>
+        <span class="k">if</span> <span class="n">qpos</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">_PANDA_ARM_DOF</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+        <span class="k">return</span> <span class="n">qpos</span><span class="p">[:</span><span class="n">_PANDA_ARM_DOF</span><span class="p">]</span>
+</code></pre></div></td></tr></table></div>
+              </details>
+
+
+
+<div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="chamber.partners.CoCarryImpedancePartner.__init__" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">__init__</span>
+
+
+</h3>
+<div class="doc-signature highlight"><pre><span></span><code><span class="nf">__init__</span><span class="p">(</span><span class="n">spec</span><span class="p">:</span> <span class="n">PartnerSpec</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Bind the spec and build the Jacobian/FK provider (ADR-026 §Decision 1).</p>
+
+
+            <details class="mkdocstrings-source">
+              <summary>Source code in <code>src/chamber/partners/cocarry_impedance.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">202</span>
+<span class="normal">203</span>
+<span class="normal">204</span>
+<span class="normal">205</span>
+<span class="normal">206</span>
+<span class="normal">207</span>
+<span class="normal">208</span>
+<span class="normal">209</span>
+<span class="normal">210</span>
+<span class="normal">211</span>
+<span class="normal">212</span>
+<span class="normal">213</span>
+<span class="normal">214</span>
+<span class="normal">215</span>
+<span class="normal">216</span>
+<span class="normal">217</span>
+<span class="normal">218</span>
+<span class="normal">219</span>
+<span class="normal">220</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">spec</span><span class="p">:</span> <span class="n">PartnerSpec</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Bind the spec and build the Jacobian/FK provider (ADR-026 §Decision 1).&quot;&quot;&quot;</span>
+    <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">spec</span><span class="p">)</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">chamber.agents.panda_jacobian</span><span class="w"> </span><span class="kn">import</span> <span class="n">PandaJacobianProvider</span>
+
+    <span class="n">extra</span> <span class="o">=</span> <span class="n">spec</span><span class="o">.</span><span class="n">extra</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_uid</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">extra</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;uid&quot;</span><span class="p">,</span> <span class="s2">&quot;panda_wristcam&quot;</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_base_xyz</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]</span> <span class="o">=</span> <span class="n">_parse_vec3</span><span class="p">(</span><span class="n">extra</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;base_xyz&quot;</span><span class="p">,</span> <span class="s2">&quot;0,0,0&quot;</span><span class="p">))</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_base_rot_t</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]</span> <span class="o">=</span> <span class="n">_rot_z</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">extra</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;base_yaw_deg&quot;</span><span class="p">,</span> <span class="s2">&quot;0&quot;</span><span class="p">)))</span><span class="o">.</span><span class="n">T</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_end_sign</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">extra</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;end_sign&quot;</span><span class="p">,</span> <span class="s2">&quot;1&quot;</span><span class="p">))</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_bar_half_len</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">extra</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;bar_half_len&quot;</span><span class="p">,</span> <span class="s2">&quot;0.115&quot;</span><span class="p">))</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_kp</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">extra</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;kp&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">_DEFAULT_KP</span><span class="p">)))</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_ki</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">extra</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;ki&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">_DEFAULT_KI</span><span class="p">)))</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_step_max</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">extra</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;step_max&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">_DEFAULT_STEP_MAX_M</span><span class="p">)))</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_damping</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">extra</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;damping&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">_DEFAULT_DAMPING</span><span class="p">)))</span>
+    <span class="n">urdf_path</span> <span class="o">=</span> <span class="n">extra</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;urdf_path&quot;</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_provider</span> <span class="o">=</span> <span class="n">PandaJacobianProvider</span><span class="p">(</span><span class="n">urdf_path</span><span class="p">)</span>
+    <span class="c1"># Within-episode Cartesian integral (base frame); cleared in reset.</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_integral</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">_XYZ</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="chamber.partners.CoCarryImpedancePartner.act" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">act</span>
+
+
+</h3>
+<div class="doc-signature highlight"><pre><span></span><code><span class="nf">act</span><span class="p">(</span>
+    <span class="n">obs</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">object</span><span class="p">],</span> <span class="o">*</span><span class="p">,</span> <span class="n">deterministic</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">floating</span><span class="p">]</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Return the <code>pd_joint_delta_pos</code> action toward the target (ADR-026 §Decision 1).</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <ul>
+        <li class="doc-section-item field-body">
+            <b><code>obs</code></b>
+              (<code><span title="collections.abc.Mapping">Mapping</span>[<span title="str">str</span>, <span title="object">object</span>]</code>)
+          –
+          <div class="doc-md-description">
+            <p>Gymnasium observation mapping with <code>obs["extra"]
+["goal_pos"]</code> (world goal centroid) and
+<code>obs["agent"][uid]["qpos"]</code> (the arm's joint angles).</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+            <b><code>deterministic</code></b>
+              (<code><span title="bool">bool</span></code>, default:
+                  <code>True</code>
+)
+          –
+          <div class="doc-md-description">
+            <p>Ignored — the controller is deterministic.</p>
+          </div>
+        </li>
+    </ul>
+
+
+<p><span class="doc-section-title">Returns:</span></p>
+    <ul>
+        <li class="doc-section-item field-body">
+              <code><span title="numpy.typing.NDArray">NDArray</span>[<span title="numpy.floating">floating</span>]</code>
+          –
+          <div class="doc-md-description">
+            <p>Float32 action of length <code>_PANDA_ARM_DOF + 1</code> (7 normalised</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+              <code><span title="numpy.typing.NDArray">NDArray</span>[<span title="numpy.floating">floating</span>]</code>
+          –
+          <div class="doc-md-description">
+            <p>joint deltas + gripper-open); a gripper-only action if the obs</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+              <code><span title="numpy.typing.NDArray">NDArray</span>[<span title="numpy.floating">floating</span>]</code>
+          –
+          <div class="doc-md-description">
+            <p>lacks the required keys (defensive — keeps the rollout shape</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+              <code><span title="numpy.typing.NDArray">NDArray</span>[<span title="numpy.floating">floating</span>]</code>
+          –
+          <div class="doc-md-description">
+            <p>stable).</p>
+          </div>
+        </li>
+    </ul>
+
+
+            <details class="mkdocstrings-source">
+              <summary>Source code in <code>src/chamber/partners/cocarry_impedance.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">234</span>
+<span class="normal">235</span>
+<span class="normal">236</span>
+<span class="normal">237</span>
+<span class="normal">238</span>
+<span class="normal">239</span>
+<span class="normal">240</span>
+<span class="normal">241</span>
+<span class="normal">242</span>
+<span class="normal">243</span>
+<span class="normal">244</span>
+<span class="normal">245</span>
+<span class="normal">246</span>
+<span class="normal">247</span>
+<span class="normal">248</span>
+<span class="normal">249</span>
+<span class="normal">250</span>
+<span class="normal">251</span>
+<span class="normal">252</span>
+<span class="normal">253</span>
+<span class="normal">254</span>
+<span class="normal">255</span>
+<span class="normal">256</span>
+<span class="normal">257</span>
+<span class="normal">258</span>
+<span class="normal">259</span>
+<span class="normal">260</span>
+<span class="normal">261</span>
+<span class="normal">262</span>
+<span class="normal">263</span>
+<span class="normal">264</span>
+<span class="normal">265</span>
+<span class="normal">266</span>
+<span class="normal">267</span>
+<span class="normal">268</span>
+<span class="normal">269</span>
+<span class="normal">270</span>
+<span class="normal">271</span>
+<span class="normal">272</span>
+<span class="normal">273</span>
+<span class="normal">274</span>
+<span class="normal">275</span>
+<span class="normal">276</span>
+<span class="normal">277</span>
+<span class="normal">278</span>
+<span class="normal">279</span>
+<span class="normal">280</span>
+<span class="normal">281</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">act</span><span class="p">(</span>
+    <span class="bp">self</span><span class="p">,</span>
+    <span class="n">obs</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">object</span><span class="p">],</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">deterministic</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">floating</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return the ``pd_joint_delta_pos`` action toward the target (ADR-026 §Decision 1).</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        obs: Gymnasium observation mapping with ``obs[&quot;extra&quot;]</span>
+<span class="sd">            [&quot;goal_pos&quot;]`` (world goal centroid) and</span>
+<span class="sd">            ``obs[&quot;agent&quot;][uid][&quot;qpos&quot;]`` (the arm&#39;s joint angles).</span>
+<span class="sd">        deterministic: Ignored — the controller is deterministic.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        Float32 action of length ``_PANDA_ARM_DOF + 1`` (7 normalised</span>
+<span class="sd">        joint deltas + gripper-open); a gripper-only action if the obs</span>
+<span class="sd">        lacks the required keys (defensive — keeps the rollout shape</span>
+<span class="sd">        stable).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">del</span> <span class="n">deterministic</span>
+    <span class="n">goal</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_read_goal</span><span class="p">(</span><span class="n">obs</span><span class="p">)</span>
+    <span class="n">qpos</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_read_qpos</span><span class="p">(</span><span class="n">obs</span><span class="p">)</span>
+    <span class="n">action</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">_PANDA_ARM_DOF</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+    <span class="n">action</span><span class="p">[</span><span class="n">_PANDA_ARM_DOF</span><span class="p">]</span> <span class="o">=</span> <span class="n">_GRIPPER_ACTION_OPEN</span>
+    <span class="k">if</span> <span class="n">goal</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">qpos</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">action</span>
+    <span class="c1"># Cooperative TCP target (world) -&gt; arm base frame.</span>
+    <span class="n">target_world</span> <span class="o">=</span> <span class="n">goal</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">_end_sign</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">_bar_half_len</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">])</span>
+    <span class="n">target_base</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_base_rot_t</span> <span class="o">@</span> <span class="p">(</span><span class="n">target_world</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">_base_xyz</span><span class="p">)</span>
+    <span class="n">tcp_base</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_provider</span><span class="o">.</span><span class="n">fk_tcp_position</span><span class="p">(</span><span class="n">qpos</span><span class="p">)</span>
+    <span class="n">error</span> <span class="o">=</span> <span class="n">target_base</span> <span class="o">-</span> <span class="n">tcp_base</span>
+    <span class="c1"># PI law: the deadzone-gated, anti-windup-clamped integral closes</span>
+    <span class="c1"># the load-induced steady-state offset of the delta-from-measured</span>
+    <span class="c1"># joint controller, engaging only once the TCP is near its target.</span>
+    <span class="k">if</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">error</span><span class="p">))</span> <span class="o">&lt;</span> <span class="n">_INTEGRAL_ENGAGE_M</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_integral</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_integral</span> <span class="o">+</span> <span class="n">error</span> <span class="o">*</span> <span class="n">_CONTROL_DT</span><span class="p">,</span> <span class="o">-</span><span class="n">_INTEGRAL_CLAMP_MS</span><span class="p">,</span> <span class="n">_INTEGRAL_CLAMP_MS</span>
+        <span class="p">)</span>
+    <span class="n">v_cmd</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_kp</span> <span class="o">*</span> <span class="n">error</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ki</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">_integral</span><span class="p">,</span> <span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">_step_max</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_step_max</span>
+    <span class="p">)</span>
+    <span class="n">jac</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_provider</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">qpos</span><span class="p">)</span>  <span class="c1"># type: ignore[arg-type]  # (3, 7), base frame</span>
+    <span class="c1"># Damped pseudo-inverse joint step: dq = J^T (J J^T + l^2 I)^-1 v.</span>
+    <span class="n">jjt</span> <span class="o">=</span> <span class="n">jac</span> <span class="o">@</span> <span class="n">jac</span><span class="o">.</span><span class="n">T</span> <span class="o">+</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_damping</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">_XYZ</span><span class="p">)</span>
+    <span class="n">dq</span> <span class="o">=</span> <span class="n">jac</span><span class="o">.</span><span class="n">T</span> <span class="o">@</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">jjt</span><span class="p">,</span> <span class="n">v_cmd</span><span class="p">)</span>
+    <span class="n">action</span><span class="p">[:</span><span class="n">_PANDA_ARM_DOF</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">dq</span> <span class="o">/</span> <span class="n">_ACTION_DELTA_SCALE</span><span class="p">,</span> <span class="o">-</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">action</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="chamber.partners.CoCarryImpedancePartner.reset" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">reset</span>
+
+
+</h3>
+<div class="doc-signature highlight"><pre><span></span><code><span class="nf">reset</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n">seed</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Clear the within-episode integral (ADR-009 §Decision; stateless across episodes).</p>
+<p>The control law is a deterministic function of <code>obs</code> + <code>spec</code>
+plus a within-episode Cartesian integral that is zeroed here, so
+the partner carries no state across episodes (ADR-009 §Decision;
+plan/04 §2). The seed is accepted only for
+:class:<code>~chamber.partners.api.FrozenPartner</code> Protocol conformance.</p>
+
+
+            <details class="mkdocstrings-source">
+              <summary>Source code in <code>src/chamber/partners/cocarry_impedance.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">222</span>
+<span class="normal">223</span>
+<span class="normal">224</span>
+<span class="normal">225</span>
+<span class="normal">226</span>
+<span class="normal">227</span>
+<span class="normal">228</span>
+<span class="normal">229</span>
+<span class="normal">230</span>
+<span class="normal">231</span>
+<span class="normal">232</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">reset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">seed</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Clear the within-episode integral (ADR-009 §Decision; stateless across episodes).</span>
+
+<span class="sd">    The control law is a deterministic function of ``obs`` + ``spec``</span>
+<span class="sd">    plus a within-episode Cartesian integral that is zeroed here, so</span>
+<span class="sd">    the partner carries no state across episodes (ADR-009 §Decision;</span>
+<span class="sd">    plan/04 §2). The seed is accepted only for</span>
+<span class="sd">    :class:`~chamber.partners.api.FrozenPartner` Protocol conformance.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">del</span> <span class="n">seed</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_integral</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">_XYZ</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+
+
+  </div>
+
+    </div>
+
+</div>
 
 <div class="doc doc-object doc-class">
 
@@ -58823,38 +59543,38 @@ from <code>PANDA_CARTESIAN_ACCEL_CAPACITY_MS2 = 10.0 m/s²</code>).</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/chamber/benchmarks/training_runner.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">452</span>
-<span class="normal">453</span>
-<span class="normal">454</span>
-<span class="normal">455</span>
-<span class="normal">456</span>
-<span class="normal">457</span>
-<span class="normal">458</span>
-<span class="normal">459</span>
-<span class="normal">460</span>
-<span class="normal">461</span>
-<span class="normal">462</span>
-<span class="normal">463</span>
-<span class="normal">464</span>
-<span class="normal">465</span>
-<span class="normal">466</span>
-<span class="normal">467</span>
-<span class="normal">468</span>
-<span class="normal">469</span>
-<span class="normal">470</span>
-<span class="normal">471</span>
-<span class="normal">472</span>
-<span class="normal">473</span>
-<span class="normal">474</span>
-<span class="normal">475</span>
-<span class="normal">476</span>
-<span class="normal">477</span>
-<span class="normal">478</span>
-<span class="normal">479</span>
-<span class="normal">480</span>
-<span class="normal">481</span>
-<span class="normal">482</span>
-<span class="normal">483</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">build_bounds_for_env</span><span class="p">(</span><span class="n">env</span><span class="p">:</span> <span class="n">gym</span><span class="o">.</span><span class="n">Env</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Bounds</span><span class="p">:</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">489</span>
+<span class="normal">490</span>
+<span class="normal">491</span>
+<span class="normal">492</span>
+<span class="normal">493</span>
+<span class="normal">494</span>
+<span class="normal">495</span>
+<span class="normal">496</span>
+<span class="normal">497</span>
+<span class="normal">498</span>
+<span class="normal">499</span>
+<span class="normal">500</span>
+<span class="normal">501</span>
+<span class="normal">502</span>
+<span class="normal">503</span>
+<span class="normal">504</span>
+<span class="normal">505</span>
+<span class="normal">506</span>
+<span class="normal">507</span>
+<span class="normal">508</span>
+<span class="normal">509</span>
+<span class="normal">510</span>
+<span class="normal">511</span>
+<span class="normal">512</span>
+<span class="normal">513</span>
+<span class="normal">514</span>
+<span class="normal">515</span>
+<span class="normal">516</span>
+<span class="normal">517</span>
+<span class="normal">518</span>
+<span class="normal">519</span>
+<span class="normal">520</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">build_bounds_for_env</span><span class="p">(</span><span class="n">env</span><span class="p">:</span> <span class="n">gym</span><span class="o">.</span><span class="n">Env</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Bounds</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Source per-task :class:`Bounds` from the env (P1.04.5; ADR-006 §Decision).</span>
 
 <span class="sd">    Delegates to ``env.build_bounds()`` when present</span>
@@ -58998,44 +59718,7 @@ identity).</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/chamber/benchmarks/training_runner.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">344</span>
-<span class="normal">345</span>
-<span class="normal">346</span>
-<span class="normal">347</span>
-<span class="normal">348</span>
-<span class="normal">349</span>
-<span class="normal">350</span>
-<span class="normal">351</span>
-<span class="normal">352</span>
-<span class="normal">353</span>
-<span class="normal">354</span>
-<span class="normal">355</span>
-<span class="normal">356</span>
-<span class="normal">357</span>
-<span class="normal">358</span>
-<span class="normal">359</span>
-<span class="normal">360</span>
-<span class="normal">361</span>
-<span class="normal">362</span>
-<span class="normal">363</span>
-<span class="normal">364</span>
-<span class="normal">365</span>
-<span class="normal">366</span>
-<span class="normal">367</span>
-<span class="normal">368</span>
-<span class="normal">369</span>
-<span class="normal">370</span>
-<span class="normal">371</span>
-<span class="normal">372</span>
-<span class="normal">373</span>
-<span class="normal">374</span>
-<span class="normal">375</span>
-<span class="normal">376</span>
-<span class="normal">377</span>
-<span class="normal">378</span>
-<span class="normal">379</span>
-<span class="normal">380</span>
-<span class="normal">381</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">381</span>
 <span class="normal">382</span>
 <span class="normal">383</span>
 <span class="normal">384</span>
@@ -59073,7 +59756,44 @@ identity).</p>
 <span class="normal">416</span>
 <span class="normal">417</span>
 <span class="normal">418</span>
-<span class="normal">419</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">build_control_models</span><span class="p">(</span><span class="n">env</span><span class="p">:</span> <span class="n">gym</span><span class="o">.</span><span class="n">Env</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">AgentControlModel</span><span class="p">]:</span>
+<span class="normal">419</span>
+<span class="normal">420</span>
+<span class="normal">421</span>
+<span class="normal">422</span>
+<span class="normal">423</span>
+<span class="normal">424</span>
+<span class="normal">425</span>
+<span class="normal">426</span>
+<span class="normal">427</span>
+<span class="normal">428</span>
+<span class="normal">429</span>
+<span class="normal">430</span>
+<span class="normal">431</span>
+<span class="normal">432</span>
+<span class="normal">433</span>
+<span class="normal">434</span>
+<span class="normal">435</span>
+<span class="normal">436</span>
+<span class="normal">437</span>
+<span class="normal">438</span>
+<span class="normal">439</span>
+<span class="normal">440</span>
+<span class="normal">441</span>
+<span class="normal">442</span>
+<span class="normal">443</span>
+<span class="normal">444</span>
+<span class="normal">445</span>
+<span class="normal">446</span>
+<span class="normal">447</span>
+<span class="normal">448</span>
+<span class="normal">449</span>
+<span class="normal">450</span>
+<span class="normal">451</span>
+<span class="normal">452</span>
+<span class="normal">453</span>
+<span class="normal">454</span>
+<span class="normal">455</span>
+<span class="normal">456</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">build_control_models</span><span class="p">(</span><span class="n">env</span><span class="p">:</span> <span class="n">gym</span><span class="o">.</span><span class="n">Env</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">AgentControlModel</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Build a per-uid :class:`AgentControlModel` map from an env (ADR-004 §Decision; spike_004A).</span>
 
 <span class="sd">    Two-tier dispatch (P1.03 / Task B):</span>
@@ -59222,44 +59942,7 @@ the default-DI fallback in :func:<code>build_control_models</code>.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/chamber/benchmarks/training_runner.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">556</span>
-<span class="normal">557</span>
-<span class="normal">558</span>
-<span class="normal">559</span>
-<span class="normal">560</span>
-<span class="normal">561</span>
-<span class="normal">562</span>
-<span class="normal">563</span>
-<span class="normal">564</span>
-<span class="normal">565</span>
-<span class="normal">566</span>
-<span class="normal">567</span>
-<span class="normal">568</span>
-<span class="normal">569</span>
-<span class="normal">570</span>
-<span class="normal">571</span>
-<span class="normal">572</span>
-<span class="normal">573</span>
-<span class="normal">574</span>
-<span class="normal">575</span>
-<span class="normal">576</span>
-<span class="normal">577</span>
-<span class="normal">578</span>
-<span class="normal">579</span>
-<span class="normal">580</span>
-<span class="normal">581</span>
-<span class="normal">582</span>
-<span class="normal">583</span>
-<span class="normal">584</span>
-<span class="normal">585</span>
-<span class="normal">586</span>
-<span class="normal">587</span>
-<span class="normal">588</span>
-<span class="normal">589</span>
-<span class="normal">590</span>
-<span class="normal">591</span>
-<span class="normal">592</span>
-<span class="normal">593</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">593</span>
 <span class="normal">594</span>
 <span class="normal">595</span>
 <span class="normal">596</span>
@@ -59268,7 +59951,44 @@ the default-DI fallback in :func:<code>build_control_models</code>.</p>
 <span class="normal">599</span>
 <span class="normal">600</span>
 <span class="normal">601</span>
-<span class="normal">602</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">build_emergency_controllers</span><span class="p">(</span>
+<span class="normal">602</span>
+<span class="normal">603</span>
+<span class="normal">604</span>
+<span class="normal">605</span>
+<span class="normal">606</span>
+<span class="normal">607</span>
+<span class="normal">608</span>
+<span class="normal">609</span>
+<span class="normal">610</span>
+<span class="normal">611</span>
+<span class="normal">612</span>
+<span class="normal">613</span>
+<span class="normal">614</span>
+<span class="normal">615</span>
+<span class="normal">616</span>
+<span class="normal">617</span>
+<span class="normal">618</span>
+<span class="normal">619</span>
+<span class="normal">620</span>
+<span class="normal">621</span>
+<span class="normal">622</span>
+<span class="normal">623</span>
+<span class="normal">624</span>
+<span class="normal">625</span>
+<span class="normal">626</span>
+<span class="normal">627</span>
+<span class="normal">628</span>
+<span class="normal">629</span>
+<span class="normal">630</span>
+<span class="normal">631</span>
+<span class="normal">632</span>
+<span class="normal">633</span>
+<span class="normal">634</span>
+<span class="normal">635</span>
+<span class="normal">636</span>
+<span class="normal">637</span>
+<span class="normal">638</span>
+<span class="normal">639</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">build_emergency_controllers</span><span class="p">(</span>
     <span class="n">env</span><span class="p">:</span> <span class="n">gym</span><span class="o">.</span><span class="n">Env</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">EmergencyController</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Build per-uid emergency-controller dispatch for the cell&#39;s env (P1.04.6).</span>
@@ -59353,6 +60073,13 @@ the default-DI fallback in :func:<code>build_control_models</code>.</p>
   :class:<code>TrainedPolicyFactory</code> invokes this dispatch from its
   <code>__call__</code> body through the chamber-side
   :func:<code>run_training</code> wrapper. Requires SAPIEN + Vulkan.</li>
+<li><code>"cocarry"</code> → :func:<code>chamber.envs.cocarry_obs.make_cocarry_training_env</code>
+  (ADR-026 §Decision 4; R-2026-06-B §15 Rung 2). The two-Panda
+  co-carry env wrapped with the ego-<code>state</code> synthesizer for the
+  trainer. <code>EnvConfig.condition_id</code> selects the condition (the
+  Rung-2 cell trains <code>cocarry_matched_panda_pair</code>); single-env
+  only (the matched frozen partner reads env 0). Requires SAPIEN +
+  Vulkan.</li>
 </ul>
 
 
@@ -59517,7 +60244,44 @@ SAPIEN / Vulkan is unavailable (see ADR-001 §Risks).</p>
 <span class="normal">155</span>
 <span class="normal">156</span>
 <span class="normal">157</span>
-<span class="normal">158</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">build_env</span><span class="p">(</span><span class="n">env_cfg</span><span class="p">:</span> <span class="n">EnvConfig</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">root_seed</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">EnvLike</span><span class="p">:</span>
+<span class="normal">158</span>
+<span class="normal">159</span>
+<span class="normal">160</span>
+<span class="normal">161</span>
+<span class="normal">162</span>
+<span class="normal">163</span>
+<span class="normal">164</span>
+<span class="normal">165</span>
+<span class="normal">166</span>
+<span class="normal">167</span>
+<span class="normal">168</span>
+<span class="normal">169</span>
+<span class="normal">170</span>
+<span class="normal">171</span>
+<span class="normal">172</span>
+<span class="normal">173</span>
+<span class="normal">174</span>
+<span class="normal">175</span>
+<span class="normal">176</span>
+<span class="normal">177</span>
+<span class="normal">178</span>
+<span class="normal">179</span>
+<span class="normal">180</span>
+<span class="normal">181</span>
+<span class="normal">182</span>
+<span class="normal">183</span>
+<span class="normal">184</span>
+<span class="normal">185</span>
+<span class="normal">186</span>
+<span class="normal">187</span>
+<span class="normal">188</span>
+<span class="normal">189</span>
+<span class="normal">190</span>
+<span class="normal">191</span>
+<span class="normal">192</span>
+<span class="normal">193</span>
+<span class="normal">194</span>
+<span class="normal">195</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">build_env</span><span class="p">(</span><span class="n">env_cfg</span><span class="p">:</span> <span class="n">EnvConfig</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">root_seed</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">EnvLike</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Construct the env from :class:`EnvConfig` (T4b.11; ADR-002 §Decisions; plan/05 §3.5).</span>
 
 <span class="sd">    Dispatch table:</span>
@@ -59538,6 +60302,13 @@ SAPIEN / Vulkan is unavailable (see ADR-001 §Risks).</p>
 <span class="sd">      :class:`TrainedPolicyFactory` invokes this dispatch from its</span>
 <span class="sd">      ``__call__`` body through the chamber-side</span>
 <span class="sd">      :func:`run_training` wrapper. Requires SAPIEN + Vulkan.</span>
+<span class="sd">    - ``&quot;cocarry&quot;`` → :func:`chamber.envs.cocarry_obs.make_cocarry_training_env`</span>
+<span class="sd">      (ADR-026 §Decision 4; R-2026-06-B §15 Rung 2). The two-Panda</span>
+<span class="sd">      co-carry env wrapped with the ego-``state`` synthesizer for the</span>
+<span class="sd">      trainer. ``EnvConfig.condition_id`` selects the condition (the</span>
+<span class="sd">      Rung-2 cell trains ``cocarry_matched_panda_pair``); single-env</span>
+<span class="sd">      only (the matched frozen partner reads env 0). Requires SAPIEN +</span>
+<span class="sd">      Vulkan.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        env_cfg: The validated :class:`~concerto.training.config.EnvConfig`.</span>
@@ -59610,9 +60381,39 @@ SAPIEN / Vulkan is unavailable (see ADR-001 §Risks).</p>
                 <span class="n">num_envs</span><span class="o">=</span><span class="n">env_cfg</span><span class="o">.</span><span class="n">num_envs</span><span class="p">,</span>
             <span class="p">),</span>
         <span class="p">)</span>
+    <span class="k">if</span> <span class="n">env_cfg</span><span class="o">.</span><span class="n">task</span> <span class="o">==</span> <span class="s2">&quot;cocarry&quot;</span><span class="p">:</span>
+        <span class="c1"># Lazy import to keep build_env Tier-1-safe — make_cocarry_training_env</span>
+        <span class="c1"># defers ManiSkill / SAPIEN imports to the cocarry factory body</span>
+        <span class="c1"># (ADR-026 §Decision 1; Tier-1 import-safety on Vulkan-less hosts).</span>
+        <span class="c1"># The synthesizer wrapper supplies obs[&quot;agent&quot;][ego_uid][&quot;state&quot;]</span>
+        <span class="c1"># for the trainer (R-2026-06-B §15 Rung 2).</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">chamber.envs.cocarry_obs</span><span class="w"> </span><span class="kn">import</span> <span class="n">make_cocarry_training_env</span>
+
+        <span class="c1"># The condition_id is required: the matched pair vs the single-arm</span>
+        <span class="c1"># positive-control share the agent_uids tuple, so it disambiguates</span>
+        <span class="c1"># (see chamber.envs.cocarry.resolve_cocarry_condition). The Rung-2</span>
+        <span class="c1"># cell trains only the matched condition; the positive-control is a</span>
+        <span class="c1"># measurement condition, never trained.</span>
+        <span class="k">if</span> <span class="n">env_cfg</span><span class="o">.</span><span class="n">condition_id</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="s2">&quot;build_env: task=&#39;cocarry&#39; requires EnvConfig.condition_id to be &quot;</span>
+                <span class="s2">&quot;set (a co-carry condition_id string; see &quot;</span>
+                <span class="s2">&quot;chamber.envs.cocarry.resolve_cocarry_condition). The cfg yaml&#39;s &quot;</span>
+                <span class="s2">&quot;env.condition_id carries &#39;cocarry_matched_panda_pair&#39; as default.&quot;</span>
+            <span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">cast</span><span class="p">(</span>
+            <span class="s2">&quot;EnvLike&quot;</span><span class="p">,</span>
+            <span class="n">make_cocarry_training_env</span><span class="p">(</span>
+                <span class="n">condition_id</span><span class="o">=</span><span class="n">env_cfg</span><span class="o">.</span><span class="n">condition_id</span><span class="p">,</span>
+                <span class="n">episode_length</span><span class="o">=</span><span class="n">env_cfg</span><span class="o">.</span><span class="n">episode_length</span><span class="p">,</span>
+                <span class="n">root_seed</span><span class="o">=</span><span class="n">root_seed</span><span class="p">,</span>
+                <span class="n">num_envs</span><span class="o">=</span><span class="n">env_cfg</span><span class="o">.</span><span class="n">num_envs</span><span class="p">,</span>
+            <span class="p">),</span>
+        <span class="p">)</span>
     <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
         <span class="sa">f</span><span class="s2">&quot;Unknown env task </span><span class="si">{</span><span class="n">env_cfg</span><span class="o">.</span><span class="n">task</span><span class="si">!r}</span><span class="s2">; supported: &quot;</span>
-        <span class="s2">&quot;&#39;mpe_cooperative_push&#39;, &#39;stage0_smoke&#39;, &#39;stage1_pickplace&#39;.&quot;</span>
+        <span class="s2">&quot;&#39;mpe_cooperative_push&#39;, &#39;stage0_smoke&#39;, &#39;stage1_pickplace&#39;, &#39;cocarry&#39;.&quot;</span>
     <span class="p">)</span>
 </code></pre></div></td></tr></table></div>
             </details>
@@ -59688,34 +60489,34 @@ classes) applies uniformly.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/chamber/benchmarks/training_runner.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">161</span>
-<span class="normal">162</span>
-<span class="normal">163</span>
-<span class="normal">164</span>
-<span class="normal">165</span>
-<span class="normal">166</span>
-<span class="normal">167</span>
-<span class="normal">168</span>
-<span class="normal">169</span>
-<span class="normal">170</span>
-<span class="normal">171</span>
-<span class="normal">172</span>
-<span class="normal">173</span>
-<span class="normal">174</span>
-<span class="normal">175</span>
-<span class="normal">176</span>
-<span class="normal">177</span>
-<span class="normal">178</span>
-<span class="normal">179</span>
-<span class="normal">180</span>
-<span class="normal">181</span>
-<span class="normal">182</span>
-<span class="normal">183</span>
-<span class="normal">184</span>
-<span class="normal">185</span>
-<span class="normal">186</span>
-<span class="normal">187</span>
-<span class="normal">188</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">build_partner</span><span class="p">(</span><span class="n">partner_cfg</span><span class="p">:</span> <span class="n">PartnerConfig</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">PartnerLike</span><span class="p">:</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">198</span>
+<span class="normal">199</span>
+<span class="normal">200</span>
+<span class="normal">201</span>
+<span class="normal">202</span>
+<span class="normal">203</span>
+<span class="normal">204</span>
+<span class="normal">205</span>
+<span class="normal">206</span>
+<span class="normal">207</span>
+<span class="normal">208</span>
+<span class="normal">209</span>
+<span class="normal">210</span>
+<span class="normal">211</span>
+<span class="normal">212</span>
+<span class="normal">213</span>
+<span class="normal">214</span>
+<span class="normal">215</span>
+<span class="normal">216</span>
+<span class="normal">217</span>
+<span class="normal">218</span>
+<span class="normal">219</span>
+<span class="normal">220</span>
+<span class="normal">221</span>
+<span class="normal">222</span>
+<span class="normal">223</span>
+<span class="normal">224</span>
+<span class="normal">225</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">build_partner</span><span class="p">(</span><span class="n">partner_cfg</span><span class="p">:</span> <span class="n">PartnerConfig</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">PartnerLike</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Construct the frozen partner from :class:`PartnerConfig` (ADR-009 §Decision).</span>
 
 <span class="sd">    Builds a :class:`~chamber.partners.api.PartnerSpec` from the config</span>
@@ -59814,39 +60615,39 @@ and for the numerical-difference velocity computation in
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/chamber/benchmarks/training_runner.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">521</span>
-<span class="normal">522</span>
-<span class="normal">523</span>
-<span class="normal">524</span>
-<span class="normal">525</span>
-<span class="normal">526</span>
-<span class="normal">527</span>
-<span class="normal">528</span>
-<span class="normal">529</span>
-<span class="normal">530</span>
-<span class="normal">531</span>
-<span class="normal">532</span>
-<span class="normal">533</span>
-<span class="normal">534</span>
-<span class="normal">535</span>
-<span class="normal">536</span>
-<span class="normal">537</span>
-<span class="normal">538</span>
-<span class="normal">539</span>
-<span class="normal">540</span>
-<span class="normal">541</span>
-<span class="normal">542</span>
-<span class="normal">543</span>
-<span class="normal">544</span>
-<span class="normal">545</span>
-<span class="normal">546</span>
-<span class="normal">547</span>
-<span class="normal">548</span>
-<span class="normal">549</span>
-<span class="normal">550</span>
-<span class="normal">551</span>
-<span class="normal">552</span>
-<span class="normal">553</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">build_safety_dt</span><span class="p">(</span><span class="n">env</span><span class="p">:</span> <span class="n">gym</span><span class="o">.</span><span class="n">Env</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="o">*</span><span class="p">,</span> <span class="n">fallback</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.02</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">558</span>
+<span class="normal">559</span>
+<span class="normal">560</span>
+<span class="normal">561</span>
+<span class="normal">562</span>
+<span class="normal">563</span>
+<span class="normal">564</span>
+<span class="normal">565</span>
+<span class="normal">566</span>
+<span class="normal">567</span>
+<span class="normal">568</span>
+<span class="normal">569</span>
+<span class="normal">570</span>
+<span class="normal">571</span>
+<span class="normal">572</span>
+<span class="normal">573</span>
+<span class="normal">574</span>
+<span class="normal">575</span>
+<span class="normal">576</span>
+<span class="normal">577</span>
+<span class="normal">578</span>
+<span class="normal">579</span>
+<span class="normal">580</span>
+<span class="normal">581</span>
+<span class="normal">582</span>
+<span class="normal">583</span>
+<span class="normal">584</span>
+<span class="normal">585</span>
+<span class="normal">586</span>
+<span class="normal">587</span>
+<span class="normal">588</span>
+<span class="normal">589</span>
+<span class="normal">590</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">build_safety_dt</span><span class="p">(</span><span class="n">env</span><span class="p">:</span> <span class="n">gym</span><span class="o">.</span><span class="n">Env</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="o">*</span><span class="p">,</span> <span class="n">fallback</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.02</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Source the control-step dt from the env (P1.04.5; ADR-007 §Stage 1b).</span>
 
 <span class="sd">    Reads :attr:`env.control_timestep` (the ManiSkill BaseEnv default;</span>
@@ -59943,34 +60744,34 @@ DI dispatch in :func:<code>build_control_models</code>).</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/chamber/benchmarks/training_runner.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">422</span>
-<span class="normal">423</span>
-<span class="normal">424</span>
-<span class="normal">425</span>
-<span class="normal">426</span>
-<span class="normal">427</span>
-<span class="normal">428</span>
-<span class="normal">429</span>
-<span class="normal">430</span>
-<span class="normal">431</span>
-<span class="normal">432</span>
-<span class="normal">433</span>
-<span class="normal">434</span>
-<span class="normal">435</span>
-<span class="normal">436</span>
-<span class="normal">437</span>
-<span class="normal">438</span>
-<span class="normal">439</span>
-<span class="normal">440</span>
-<span class="normal">441</span>
-<span class="normal">442</span>
-<span class="normal">443</span>
-<span class="normal">444</span>
-<span class="normal">445</span>
-<span class="normal">446</span>
-<span class="normal">447</span>
-<span class="normal">448</span>
-<span class="normal">449</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">build_safety_filter</span><span class="p">(</span><span class="n">env</span><span class="p">:</span> <span class="n">gym</span><span class="o">.</span><span class="n">Env</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">EgoOnlySafetyFilter</span><span class="p">:</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">459</span>
+<span class="normal">460</span>
+<span class="normal">461</span>
+<span class="normal">462</span>
+<span class="normal">463</span>
+<span class="normal">464</span>
+<span class="normal">465</span>
+<span class="normal">466</span>
+<span class="normal">467</span>
+<span class="normal">468</span>
+<span class="normal">469</span>
+<span class="normal">470</span>
+<span class="normal">471</span>
+<span class="normal">472</span>
+<span class="normal">473</span>
+<span class="normal">474</span>
+<span class="normal">475</span>
+<span class="normal">476</span>
+<span class="normal">477</span>
+<span class="normal">478</span>
+<span class="normal">479</span>
+<span class="normal">480</span>
+<span class="normal">481</span>
+<span class="normal">482</span>
+<span class="normal">483</span>
+<span class="normal">484</span>
+<span class="normal">485</span>
+<span class="normal">486</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">build_safety_filter</span><span class="p">(</span><span class="n">env</span><span class="p">:</span> <span class="n">gym</span><span class="o">.</span><span class="n">Env</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">EgoOnlySafetyFilter</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Construct the CBF-QP outer filter for the cell&#39;s env (P1.04.5; ADR-007 §Stage 1b).</span>
 
 <span class="sd">    Wraps :meth:`concerto.safety.cbf_qp.ExpCBFQP.ego_only` with the</span>
@@ -60082,39 +60883,39 @@ the per-uid snapshot dict.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/chamber/benchmarks/training_runner.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">486</span>
-<span class="normal">487</span>
-<span class="normal">488</span>
-<span class="normal">489</span>
-<span class="normal">490</span>
-<span class="normal">491</span>
-<span class="normal">492</span>
-<span class="normal">493</span>
-<span class="normal">494</span>
-<span class="normal">495</span>
-<span class="normal">496</span>
-<span class="normal">497</span>
-<span class="normal">498</span>
-<span class="normal">499</span>
-<span class="normal">500</span>
-<span class="normal">501</span>
-<span class="normal">502</span>
-<span class="normal">503</span>
-<span class="normal">504</span>
-<span class="normal">505</span>
-<span class="normal">506</span>
-<span class="normal">507</span>
-<span class="normal">508</span>
-<span class="normal">509</span>
-<span class="normal">510</span>
-<span class="normal">511</span>
-<span class="normal">512</span>
-<span class="normal">513</span>
-<span class="normal">514</span>
-<span class="normal">515</span>
-<span class="normal">516</span>
-<span class="normal">517</span>
-<span class="normal">518</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">build_safety_snapshot_builder</span><span class="p">(</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">523</span>
+<span class="normal">524</span>
+<span class="normal">525</span>
+<span class="normal">526</span>
+<span class="normal">527</span>
+<span class="normal">528</span>
+<span class="normal">529</span>
+<span class="normal">530</span>
+<span class="normal">531</span>
+<span class="normal">532</span>
+<span class="normal">533</span>
+<span class="normal">534</span>
+<span class="normal">535</span>
+<span class="normal">536</span>
+<span class="normal">537</span>
+<span class="normal">538</span>
+<span class="normal">539</span>
+<span class="normal">540</span>
+<span class="normal">541</span>
+<span class="normal">542</span>
+<span class="normal">543</span>
+<span class="normal">544</span>
+<span class="normal">545</span>
+<span class="normal">546</span>
+<span class="normal">547</span>
+<span class="normal">548</span>
+<span class="normal">549</span>
+<span class="normal">550</span>
+<span class="normal">551</span>
+<span class="normal">552</span>
+<span class="normal">553</span>
+<span class="normal">554</span>
+<span class="normal">555</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">build_safety_snapshot_builder</span><span class="p">(</span>
     <span class="n">env</span><span class="p">:</span> <span class="n">gym</span><span class="o">.</span><span class="n">Env</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">gym</span><span class="o">.</span><span class="n">Env</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="n">Any</span><span class="p">]],</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">AgentSnapshot</span><span class="p">]]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Return the env&#39;s ``build_agent_snapshots`` method, or ``None`` (P1.04.5; ADR-007 §Stage 1b).</span>
@@ -60379,44 +61180,7 @@ via :func:<code>build_emergency_controllers</code>.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/chamber/benchmarks/training_runner.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">191</span>
-<span class="normal">192</span>
-<span class="normal">193</span>
-<span class="normal">194</span>
-<span class="normal">195</span>
-<span class="normal">196</span>
-<span class="normal">197</span>
-<span class="normal">198</span>
-<span class="normal">199</span>
-<span class="normal">200</span>
-<span class="normal">201</span>
-<span class="normal">202</span>
-<span class="normal">203</span>
-<span class="normal">204</span>
-<span class="normal">205</span>
-<span class="normal">206</span>
-<span class="normal">207</span>
-<span class="normal">208</span>
-<span class="normal">209</span>
-<span class="normal">210</span>
-<span class="normal">211</span>
-<span class="normal">212</span>
-<span class="normal">213</span>
-<span class="normal">214</span>
-<span class="normal">215</span>
-<span class="normal">216</span>
-<span class="normal">217</span>
-<span class="normal">218</span>
-<span class="normal">219</span>
-<span class="normal">220</span>
-<span class="normal">221</span>
-<span class="normal">222</span>
-<span class="normal">223</span>
-<span class="normal">224</span>
-<span class="normal">225</span>
-<span class="normal">226</span>
-<span class="normal">227</span>
-<span class="normal">228</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">228</span>
 <span class="normal">229</span>
 <span class="normal">230</span>
 <span class="normal">231</span>
@@ -60529,7 +61293,44 @@ via :func:<code>build_emergency_controllers</code>.</p>
 <span class="normal">338</span>
 <span class="normal">339</span>
 <span class="normal">340</span>
-<span class="normal">341</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">run_training</span><span class="p">(</span>
+<span class="normal">341</span>
+<span class="normal">342</span>
+<span class="normal">343</span>
+<span class="normal">344</span>
+<span class="normal">345</span>
+<span class="normal">346</span>
+<span class="normal">347</span>
+<span class="normal">348</span>
+<span class="normal">349</span>
+<span class="normal">350</span>
+<span class="normal">351</span>
+<span class="normal">352</span>
+<span class="normal">353</span>
+<span class="normal">354</span>
+<span class="normal">355</span>
+<span class="normal">356</span>
+<span class="normal">357</span>
+<span class="normal">358</span>
+<span class="normal">359</span>
+<span class="normal">360</span>
+<span class="normal">361</span>
+<span class="normal">362</span>
+<span class="normal">363</span>
+<span class="normal">364</span>
+<span class="normal">365</span>
+<span class="normal">366</span>
+<span class="normal">367</span>
+<span class="normal">368</span>
+<span class="normal">369</span>
+<span class="normal">370</span>
+<span class="normal">371</span>
+<span class="normal">372</span>
+<span class="normal">373</span>
+<span class="normal">374</span>
+<span class="normal">375</span>
+<span class="normal">376</span>
+<span class="normal">377</span>
+<span class="normal">378</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">run_training</span><span class="p">(</span>
     <span class="n">cfg</span><span class="p">:</span> <span class="n">EgoAHTConfig</span><span class="p">,</span>
     <span class="o">*</span><span class="p">,</span>
     <span class="n">trainer_factory</span><span class="p">:</span> <span class="n">TrainerFactory</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
