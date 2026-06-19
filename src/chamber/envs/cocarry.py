@@ -336,6 +336,14 @@ COCARRY_REWARD_TRANSPORT_PBRS_COEFF: float = 1.0
 #: (this constant is the documented expectation, not the lookup path).
 _HAND_LINK_NAME: str = "panda_hand"
 
+#: xArm6 grip/TCP link the bar -x end is welded to in the embodiment-shifted
+#: condition (``eef`` is the tool-center-point between the Robotiq fingers).
+_XARM6_GRIP_LINK_NAME: str = "eef"
+
+#: xArm6 "hand"/wrist link whose incoming joint force is its stress proxy (the
+#: Robotiq gripper base — the analogue of ``panda_hand``).
+_XARM6_HAND_LINK_NAME: str = "robotiq_arg2f_base_link"
+
 #: Ego + partner uids (AS-homo convention from
 #: :mod:`chamber.envs.stage1_pickplace`; the matched pair shares the
 #: Panda body, the partner mounts the no-camera ``panda_v2.urdf`` via
@@ -376,6 +384,98 @@ _PANDA_ARM_DOF: int = 7
 #: Substream name routed through :func:`derive_substream` for the env's
 #: deterministic RNG (P6 / ADR-002 determinism rule).
 _SUBSTREAM_NAME: str = "env.cocarry"
+
+# ---------------------------------------------------------------------------
+# Rung-4 embodiment-shift partner: xArm6 + Robotiq 2F-85 (ADR-005 §Decision;
+# ADR-026 §Decision 4; R-2026-06-B §15 Rung 4). The ego seat stays the Panda
+# incumbent; the PARTNER seat is embodiment-configurable — Panda (the matched
+# reference) or this xArm6 (the embodiment-shifted condition). Only the
+# partner's body changes; the bar, goal, success predicate, and ego side stay
+# byte-identical, so a measured drop isolates the embodiment.
+# ---------------------------------------------------------------------------
+
+#: The xArm6 + Robotiq 2F-85 partner uid (the built-in ManiSkill agent;
+#: ADR-005). 6 arm joints + a Robotiq 2F-85 (12 qpos total, 7-D action).
+_XARM6_PARTNER_UID: str = "xarm6_robotiq"
+
+#: Number of xArm6 arm DOF (excludes the Robotiq gripper joints).
+_XARM6_ARM_DOF: int = 6
+
+#: xArm6 base x position, metres. The xArm6 faces -x (yaw pi about z) like the
+#: Panda partner, but is mounted CLOSER to the workspace centre than the Panda
+#: (0.35 m vs the Panda partner's 0.50 m) — a deliberate, geometry-verified
+#: accommodation of the xArm6's shorter reach (R-2026-06-B §15 Rung 4 / spec
+#: §2.1: "set the base so it can reach its bar end"). At 0.50 m the goal-region
+#: bar-end target (~0.69 m away) sits at the xArm6's reach limit, so the
+#: compliant controller tracks through ill-conditioned configurations and the
+#: bar tilts; at 0.35 m the whole lift+transport path stays well-conditioned
+#: (the longer-reach Panda needs no such move — that reach difference IS part
+#: of the embodiment). The bar still starts identically (the ready ``eef`` is
+#: at the same -x bar end), the goal and ego side are unchanged.
+_XARM6_BASE_X_M: float = 0.35
+
+#: xArm6 base pose — same facing as the Panda partner (yaw pi about z), mounted
+#: at :data:`_XARM6_BASE_X_M`.
+_XARM6_BASE_POSE: tuple[tuple[float, float, float], tuple[float, float, float, float]] = (
+    (_XARM6_BASE_X_M, 0.0, 0.0),
+    (0.0, 0.0, 0.0, 1.0),
+)
+
+#: xArm6 ready qpos: 6 arm joints + 6 Robotiq joints. The arm joints are the
+#: position-IK solution (for the :data:`_XARM6_BASE_X_M` base) placing the
+#: ``eef`` tool-center-point at the partner -x bar end (world (-0.115, 0,
+#: 0.1698) — the same point the Panda partner's TCP reaches), so the dual-hold
+#: weld starts at ~zero stress with the bar spanning the identical 0.23 m gap.
+#: The Robotiq joints are 0 (the gripper is inert — the bar is welded). Solved
+#: offline via the xArm6 :class:`chamber.agents.xarm6_jacobian.XArm6JacobianProvider`
+#: chain; deterministic, no init noise (P6 / ADR-002).
+_XARM6_READY_QPOS: NDArray[np.float64] = np.array(
+    [0.0, -0.084, -0.8, 0.0, 0.692, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+)
+
+#: Per-uid initial base pose (ego Panda, partner Panda, partner xArm6).
+_BASE_POSE_BY_UID: dict[
+    str, tuple[tuple[float, float, float], tuple[float, float, float, float]]
+] = {
+    _EGO_UID: _AGENT_BASE_POSE[_EGO_UID],
+    _PARTNER_UID: _AGENT_BASE_POSE[_PARTNER_UID],
+    _XARM6_PARTNER_UID: _XARM6_BASE_POSE,
+}
+
+#: Per-uid ready qpos (Panda arms are 9-D; the xArm6 is 12-D).
+_READY_QPOS_BY_UID: dict[str, NDArray[np.float64]] = {
+    _EGO_UID: _PANDA_READY_QPOS,
+    _PARTNER_UID: _PANDA_READY_QPOS,
+    _XARM6_PARTNER_UID: _XARM6_READY_QPOS,
+}
+
+#: Per-uid link the bar end is rigidly welded to (the grip frame). The Panda
+#: welds the ``panda_hand`` link offset to the TCP; the xArm6 welds the ``eef``
+#: link (which IS its TCP, so the offset is identity).
+_WELD_LINK_BY_UID: dict[str, str] = {
+    _EGO_UID: _HAND_LINK_NAME,
+    _PARTNER_UID: _HAND_LINK_NAME,
+    _XARM6_PARTNER_UID: _XARM6_GRIP_LINK_NAME,
+}
+
+#: Per-uid grip-frame offset along the weld link's local z (m). Panda TCP is
+#: 0.1034 m down the hand link; the xArm6 ``eef`` is itself the TCP (offset 0).
+_GRIP_OFFSET_Z_BY_UID: dict[str, float] = {
+    _EGO_UID: COCARRY_GRIP_OFFSET_Z_M,
+    _PARTNER_UID: COCARRY_GRIP_OFFSET_Z_M,
+    _XARM6_PARTNER_UID: 0.0,
+}
+
+#: Per-uid link whose incoming joint force is the wrist constraint-solver
+#: stress proxy. Panda reads ``panda_hand``; the xArm6 reads the Robotiq
+#: gripper base (its "hand" — the bar load flows through its incoming joint),
+#: the direct analogue, so the proxy stays comparable in Newtons to the
+#: Panda-derived f_max (130.6 N) the success predicate gates on.
+_STRESS_LINK_BY_UID: dict[str, str] = {
+    _EGO_UID: _HAND_LINK_NAME,
+    _PARTNER_UID: _HAND_LINK_NAME,
+    _XARM6_PARTNER_UID: _XARM6_HAND_LINK_NAME,
+}
 
 
 class CoCarryCondition(NamedTuple):
@@ -419,6 +519,16 @@ _CONDITION_TABLE: dict[str, CoCarryCondition] = {
         condition_id="cocarry_single_arm_positive_control",
         agent_uids=(_EGO_UID, _PARTNER_UID),
         single_arm=True,
+    ),
+    # Rung-4 embodiment shift (ADR-026 §Decision 4; ADR-005; R-2026-06-B §15
+    # Rung 4): the Panda ego incumbent + an xArm6 + Robotiq 2F-85 partner. The
+    # partner body is the ONLY change vs the matched pair — same bar, goal,
+    # success predicate, ego side. agent_uids[1] is the partner uid the env
+    # resolves the body / base pose / weld / stress link from.
+    "cocarry_xarm6_partner": CoCarryCondition(
+        condition_id="cocarry_xarm6_partner",
+        agent_uids=(_EGO_UID, _XARM6_PARTNER_UID),
+        single_arm=False,
     ),
 }
 
@@ -611,6 +721,29 @@ def cocarry_matched_controller_specs() -> dict[str, dict[str, str]]:
     }
 
 
+def cocarry_xarm6_controller_spec() -> dict[str, str]:
+    """``spec.extra`` for the Rung-4 xArm6 partner controller (ADR-026 §Decision 4; ADR-005).
+
+    Pure Tier-1 function — derives the xArm6 partner-seat geometry (its base
+    pose, the -x bar-end sign, half-length) from this module's constants, so
+    the :class:`chamber.partners.cocarry_xarm6.CoCarryXArm6Partner` controller's
+    frame transform uses the SAME base pose the env mounts the xArm6 at
+    (:data:`_XARM6_BASE_X_M` = 0.35 m, yaw pi) — the single source of truth.
+    The xArm6 mounts closer than the Panda partner (its shorter reach), so this
+    base x differs from :func:`cocarry_matched_controller_specs`'s partner.
+
+    Returns:
+        The ``extra`` dict for the ``xarm6_robotiq`` partner seat.
+    """
+    return {
+        "uid": _XARM6_PARTNER_UID,
+        "base_xyz": f"{_XARM6_BASE_X_M},0.0,0.0",
+        "base_yaw_deg": "180",
+        "end_sign": "-1",
+        "bar_half_len": repr(COCARRY_BAR_LENGTH_M / 2.0),
+    }
+
+
 #: Default episode horizon, in env ticks. The quasi-static carry (lift +
 #: forward transport + settle) converges inside ~320 control steps at the
 #: 20 Hz control rate; sized so the matched pair's PI controller closes
@@ -695,7 +828,7 @@ def make_cocarry_env(
         """
 
         SUPPORTED_ROBOTS: ClassVar[list[tuple[str, str]]] = [  # type: ignore[assignment]
-            (_EGO_UID, _PARTNER_UID),
+            (_EGO_UID, config.agent_uids[1]),
         ]
 
         def __init__(self) -> None:
@@ -703,19 +836,23 @@ def make_cocarry_env(
             self._episode_length: int = int(episode_length)
             self._root_seed: int = int(root_seed)
             self._single_arm: bool = config.single_arm
+            # The ego seat is always the Panda incumbent; the PARTNER seat is
+            # embodiment-configurable (Panda or xArm6) — agent_uids[1] resolves
+            # the body, base pose, weld, and stress link (ADR-026 §D4 Rung 4).
+            self._partner_uid: str = config.agent_uids[1]
             self._goal_centroid_base: tuple[float, float, float] = goal_xyz
             self._rng: np.random.Generator = derive_substream(
                 _SUBSTREAM_NAME, root_seed=self._root_seed
             ).default_rng()
-            # Per-episode goal centroid (num_envs, 3), running maxima, and
-            # the cached hand-link index are populated below / at reset.
+            # Per-episode goal centroid (num_envs, 3), running maxima, and the
+            # cached per-uid hand-link indices are populated below / at reset.
             # Assigned before super().__init__ because BaseEnv.__init__
             # calls reset() -> _initialize_episode during super-init.
-            self._hand_link_index: int = -1
+            self._hand_link_index_by_uid: dict[str, int] = {}
             self._drives: list[Any] = []
             try:
                 super().__init__(
-                    robot_uids=(_EGO_UID, _PARTNER_UID),  # type: ignore[arg-type]
+                    robot_uids=(_EGO_UID, self._partner_uid),  # type: ignore[arg-type]
                     num_envs=num_envs,
                     obs_mode="state_dict",
                     control_mode="pd_joint_delta_pos",
@@ -752,7 +889,7 @@ def make_cocarry_env(
             if initial_agent_poses is None:
                 poses: list[object] = []
                 for uid in self.robot_uids:  # type: ignore[union-attr]
-                    xyz, quat = _AGENT_BASE_POSE[uid]
+                    xyz, quat = _BASE_POSE_BY_UID[uid]
                     poses.append(sapien.Pose(p=list(xyz), q=list(quat)))
                 initial_agent_poses = poses
             load_agent_with_bare_uids(
@@ -807,31 +944,32 @@ def make_cocarry_env(
             )
             self._hidden_objects.append(self.goal_site)  # type: ignore[attr-defined]
 
-            # Cache the hand-link index from the ego articulation's ordered
-            # link list (consistent ordering across the matched pair).
-            ego_links = self.agent.agents_dict[_EGO_UID].robot.links  # type: ignore[attr-defined]
-            self._hand_link_index = [link.name for link in ego_links].index(_HAND_LINK_NAME)
+            # Cache the per-uid stress-link index from each articulation's
+            # ordered link list. The Panda reads ``panda_hand``; the xArm6
+            # reads its Robotiq gripper base (the analogue wrist). Per-uid
+            # because the link orderings differ across embodiments (Rung 4).
+            for uid in self.robot_uids:  # type: ignore[union-attr]
+                links = self.agent.agents_dict[uid].robot.links  # type: ignore[attr-defined]
+                stress_link = _STRESS_LINK_BY_UID[uid]
+                self._hand_link_index_by_uid[uid] = [ln.name for ln in links].index(stress_link)
 
             # Dual-hold weld(s). Ego always holds; the partner holds only
-            # in the matched condition (single-arm positive-control omits
-            # the partner drive so a single arm attempts the task).
-            # At the ready pose the two grippers reach across the table
-            # centre: the ego TCP sits at world +x, the partner TCP at
-            # world -x (measured: +-0.115 m). So the ego holds the bar's
-            # +x end and the partner the -x end.
-            grip_in_hand = sapien.Pose(p=[0.0, 0.0, COCARRY_GRIP_OFFSET_Z_M])
+            # in the matched / embodiment-shift conditions (single-arm
+            # positive-control omits the partner drive so a single arm
+            # attempts the task). At the ready pose the two grippers reach
+            # across the table centre: the ego TCP sits at world +x, the
+            # partner TCP/eef at world -x (measured: +-0.115 m). So the ego
+            # holds the bar's +x end and the partner the -x end. The grip
+            # offset + weld link are per-uid (the xArm6 ``eef`` is its TCP,
+            # offset 0; the Panda welds ``panda_hand`` offset to its TCP).
             self._drives = []
-            self._add_weld(
-                _EGO_UID, sapien.Pose(p=[COCARRY_BAR_LENGTH_M / 2.0, 0.0, 0.0]), grip_in_hand
-            )
+            self._add_weld(_EGO_UID, sapien.Pose(p=[COCARRY_BAR_LENGTH_M / 2.0, 0.0, 0.0]))
             if not self._single_arm:
                 self._add_weld(
-                    _PARTNER_UID,
-                    sapien.Pose(p=[-COCARRY_BAR_LENGTH_M / 2.0, 0.0, 0.0]),
-                    grip_in_hand,
+                    self._partner_uid, sapien.Pose(p=[-COCARRY_BAR_LENGTH_M / 2.0, 0.0, 0.0])
                 )
 
-        def _add_weld(self, uid: str, bar_end_local: Any, grip_in_hand: Any) -> None:  # noqa: ANN401 - sapien.Pose
+        def _add_weld(self, uid: str, bar_end_local: Any) -> None:  # noqa: ANN401 - sapien.Pose
             """Create one high-stiffness linear pin between a gripper and a bar end.
 
             The attach locks the three *linear* DOF (the bar end tracks
@@ -844,9 +982,13 @@ def make_cocarry_env(
             physical mechanism of the coupling positive-control
             (ADR-026 §Decision 2). Leaving rotation free also keeps the
             transmitted load a pure linear force, which is exactly what
-            the wrist constraint-solver stress proxy reads.
+            the wrist constraint-solver stress proxy reads. The weld link +
+            grip-in-link offset are per-uid (Panda ``panda_hand`` offset to
+            TCP; xArm6 ``eef`` offset 0 — Rung 4 embodiment shift).
             """
-            hand = self.agent.agents_dict[uid].robot.links_map[_HAND_LINK_NAME]  # type: ignore[attr-defined]
+            grip_in_hand = sapien.Pose(p=[0.0, 0.0, _GRIP_OFFSET_Z_BY_UID[uid]])
+            weld_link = _WELD_LINK_BY_UID[uid]
+            hand = self.agent.agents_dict[uid].robot.links_map[weld_link]  # type: ignore[attr-defined]
             drive = self.scene.create_drive(hand, grip_in_hand, self.bar, bar_end_local)
             for axis in ("x", "y", "z"):
                 getattr(drive, f"set_drive_property_{axis}")(
@@ -866,13 +1008,14 @@ def make_cocarry_env(
             with torch.device(self.device):  # type: ignore[attr-defined]
                 b = len(env_idx)
                 self.table_scene.initialize(env_idx)
-                # Ready pose for the ego; ready (matched) or retracted
+                # Ready pose per uid (the xArm6 partner is 12-D, the Pandas
+                # 9-D); ready (matched / embodiment shift) or retracted
                 # (single-arm) for the partner.
                 for uid in self.robot_uids:  # type: ignore[union-attr]
-                    if uid == _PARTNER_UID and self._single_arm:
+                    if uid == self._partner_uid and self._single_arm:
                         ready = _PANDA_RETRACTED_QPOS
                     else:
-                        ready = _PANDA_READY_QPOS
+                        ready = _READY_QPOS_BY_UID[uid]
                     qpos = torch.from_numpy(np.tile(ready, (b, 1)).astype(np.float32)).to(
                         self.device
                     )
@@ -891,7 +1034,7 @@ def make_cocarry_env(
                     bar_center = ego_tcp_np.copy()
                     bar_center[:, 0] -= COCARRY_BAR_LENGTH_M / 2.0
                 else:
-                    partner_tcp = self.agent.agents_dict[_PARTNER_UID].tcp_pose.p  # type: ignore[attr-defined]
+                    partner_tcp = self.agent.agents_dict[self._partner_uid].tcp_pose.p  # type: ignore[attr-defined]
                     partner_tcp_np = np.asarray(
                         partner_tcp.detach().cpu(), dtype=np.float64
                     ).reshape(b, 3)
@@ -935,19 +1078,21 @@ def make_cocarry_env(
         def _wrist_stress_proxy_now(self) -> torch.Tensor:
             """Current wrist constraint-solver force proxy, Newtons, per env.
 
-            The stress proxy is the linear-force norm of the ``panda_hand``
-            incoming joint force, taken over the **holding** arms and
-            reduced by max. For the matched pair both arms hold; for the
+            The stress proxy is the linear-force norm of each holding arm's
+            wrist-link incoming joint force (``panda_hand`` for the Panda,
+            the Robotiq gripper base for the xArm6 — the per-uid analogue),
+            taken over the **holding** arms and reduced by max. For the
+            matched / embodiment-shift pair both arms hold; for the
             single-arm positive-control only the ego holds. See the module
             docstring for why this articulation-solver force is the
             faithful proxy (SAPIEN exposes no free-drive force).
             """
-            holding = [_EGO_UID] if self._single_arm else [_EGO_UID, _PARTNER_UID]
+            holding = [_EGO_UID] if self._single_arm else [_EGO_UID, self._partner_uid]
             per_arm: list[torch.Tensor] = []
             for uid in holding:
                 robot = self.agent.agents_dict[uid].robot  # type: ignore[attr-defined]
                 forces = robot.get_link_incoming_joint_forces()  # (b, n_links, 6)
-                wrist = forces[:, self._hand_link_index, :3]  # linear force
+                wrist = forces[:, self._hand_link_index_by_uid[uid], :3]  # linear force
                 per_arm.append(torch.linalg.norm(wrist, axis=1))
             return torch.stack(per_arm, dim=0).amax(dim=0)
 
@@ -1039,7 +1184,7 @@ def make_cocarry_env(
             if self._single_arm:
                 both_static = ego_static
             else:
-                partner_static = self.agent.agents_dict[_PARTNER_UID].is_static(  # type: ignore[attr-defined]
+                partner_static = self.agent.agents_dict[self._partner_uid].is_static(  # type: ignore[attr-defined]
                     COCARRY_STATIC_QVEL_THRESH
                 )
                 both_static = ego_static & partner_static
@@ -1081,11 +1226,15 @@ def make_cocarry_env(
             level = COCARRY_REWARD_LEVEL_COEFF * (
                 1.0 - _torch.tanh(COCARRY_REWARD_LEVEL_TANH_SCALE * tilt_rad)
             )
-            # Settle: both arms slow once the bar is placed.
+            # Settle: both arms slow once the bar is placed. (Reward is a
+            # training-time signal; the Rung-4 measurement evaluates the
+            # FROZEN incumbent, so the partner-embodiment qvel slice here is
+            # not on the eval path. The arm-DOF slice is per-uid.)
             qvel_norms: list[Any] = []
-            holding = [_EGO_UID] if self._single_arm else [_EGO_UID, _PARTNER_UID]
+            holding = [_EGO_UID] if self._single_arm else [_EGO_UID, self._partner_uid]
             for uid in holding:
-                qvel = self.agent.agents_dict[uid].robot.get_qvel()[..., :_PANDA_ARM_DOF]  # type: ignore[attr-defined]
+                arm_dof = _XARM6_ARM_DOF if uid == _XARM6_PARTNER_UID else _PANDA_ARM_DOF
+                qvel = self.agent.agents_dict[uid].robot.get_qvel()[..., :arm_dof]  # type: ignore[attr-defined]
                 qvel_norms.append(_torch.linalg.norm(qvel, axis=1))
             qvel_max = _torch.stack(qvel_norms, dim=0).amax(dim=0)
             settle = COCARRY_REWARD_SETTLE_COEFF * (
@@ -1136,8 +1285,8 @@ def make_cocarry_env(
 
         @property
         def partner_uid(self) -> str:
-            """The partner uid (ADR-026 §Decision 1)."""
-            return _PARTNER_UID
+            """The partner uid — Panda or xArm6 per the condition (ADR-026 §Decision 1; §D4)."""
+            return self._partner_uid
 
         @property
         def goal_centroid(self) -> NDArray[np.float64]:

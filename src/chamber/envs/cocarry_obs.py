@@ -81,6 +81,18 @@ _COCARRY_TASK_EXTRA_FIELDS: tuple[tuple[str, int], ...] = (
     ("goal_pos", 3),
 )
 
+#: The ego-state partner block layout the FROZEN Rung-2 incumbent was trained
+#: with: a Panda partner's 7 arm + 2 gripper joints (9 per qpos/qvel, 18
+#: total). The incumbent's 46-D actor input is fixed at this layout, so a
+#: non-Panda partner (Rung-4 embodiment heterogeneity; the 12-DOF xArm6) must
+#: be ADAPTED into it — else the frozen actor/critic cannot load. For the
+#: Panda partner the adapter is a no-op so the reference stays byte-identical
+#: (see :func:`_adapt_partner_vec`; ADR-026 §Decision 4; R-2026-06-B §15 Rung 4).
+_PARTNER_EGO_ARM_DOF: int = 7
+_PARTNER_EGO_GRIP_DOF: int = 2
+#: Per-field (qpos or qvel) width of the adapted partner block (= 9).
+_PARTNER_EGO_BLOCK_PER_FIELD: int = _PARTNER_EGO_ARM_DOF + _PARTNER_EGO_GRIP_DOF
+
 
 def _to_2d_float32(arr: Any, *, source: str) -> NDArray[np.float32]:  # noqa: ANN401 - torch.Tensor or np.ndarray
     """Coerce ``arr`` to a ``(batch, dim)`` float32 ndarray (ADR-026 §Decision 1).
@@ -136,10 +148,45 @@ def _batched_concat(parts: list[NDArray[np.float32]], *, sources: list[str]) -> 
     return out
 
 
-def _partner_state_concat(qpos: Any, qvel: Any) -> NDArray[np.float32]:  # noqa: ANN401
-    """Concat ``qpos`` + ``qvel`` into the non-ego ``state`` (ADR-026 §Decision 1; ADR-009)."""
+def _fix_width(arr: NDArray[np.float32], target: int) -> NDArray[np.float32]:
+    """Zero-pad (if narrower) or truncate (if wider) a ``(batch, dim)`` array to ``target`` cols."""
+    cur = int(arr.shape[-1])
+    if cur == target:
+        return arr
+    if cur > target:
+        return arr[:, :target]
+    pad = np.zeros((int(arr.shape[0]), target - cur), dtype=np.float32)
+    return np.concatenate([arr, pad], axis=-1)
+
+
+def _adapt_partner_vec(
+    vec: Any,  # noqa: ANN401 - torch.Tensor / ndarray
+    *,
+    arm_dof: int,
+) -> NDArray[np.float32]:
+    """Adapt a partner qpos/qvel into the fixed Panda ego-state layout (ADR-026 §D4; Rung 4).
+
+    Splits ``vec`` into the partner's ``arm_dof`` arm joints + the remaining
+    gripper joints, then maps each to the frozen incumbent's expected layout
+    (:data:`_PARTNER_EGO_ARM_DOF` arm + :data:`_PARTNER_EGO_GRIP_DOF` gripper,
+    zero-padded / truncated). For the Panda partner (``arm_dof=7``, 7 arm + 2
+    finger) this is the identity, so the matched reference's ego/partner state
+    is byte-identical; for the 6-DOF xArm6 (``arm_dof=6``, 6 arm + 6 Robotiq)
+    it embeds the 6 arm joints (+1 zero) and the first 2 gripper joints into
+    the 9-D slot. Returns ``(batch, 9)`` float32. The bar pose — the actual
+    cooperative coupling channel — flows through unchanged; this adapter only
+    bridges the partner *proprioception* interface the frozen ego fixes.
+    """
+    arr = _to_2d_float32(vec, source="partner")
+    arm = _fix_width(arr[:, :arm_dof], _PARTNER_EGO_ARM_DOF)
+    grip = _fix_width(arr[:, arm_dof:], _PARTNER_EGO_GRIP_DOF)
+    return np.concatenate([arm, grip], axis=-1)
+
+
+def _partner_state_concat(qpos: Any, qvel: Any, *, arm_dof: int) -> NDArray[np.float32]:  # noqa: ANN401
+    """Concat adapted ``qpos`` + ``qvel`` into the non-ego ``state`` (ADR-026 §D4; ADR-009)."""
     return _batched_concat(
-        [_to_2d_float32(qpos, source="qpos"), _to_2d_float32(qvel, source="qvel")],
+        [_adapt_partner_vec(qpos, arm_dof=arm_dof), _adapt_partner_vec(qvel, arm_dof=arm_dof)],
         sources=["qpos", "qvel"],
     )
 
@@ -151,12 +198,18 @@ def _ego_state_concat(
     partner_qvel: Any,  # noqa: ANN401
     bar_pose: Any,  # noqa: ANN401
     goal_pos: Any,  # noqa: ANN401
+    *,
+    partner_arm_dof: int,
 ) -> NDArray[np.float32]:
-    """Concat the ego's flat ``state`` (ADR-026 §Decision 1; R-2026-06-B §15 Rung 2).
+    """Concat the ego's flat ``state`` (ADR-026 §Decision 1; R-2026-06-B §15 Rung 2/4).
 
     Order: ``[ego_qpos, ego_qvel, partner_qpos, partner_qvel, bar_pose,
     goal_pos]`` — load-bearing (see the module docstring + the Tier-1
-    positional regression test). 1-D for the single-env co-carry cell.
+    positional regression test). The partner qpos/qvel are ADAPTED into the
+    fixed Panda 18-D layout (:func:`_adapt_partner_vec`) so the frozen
+    incumbent's 46-D actor input is dimension-stable across partner
+    embodiments; identity for the Panda partner (Rung-4 EH). 1-D for the
+    single-env co-carry cell.
     """
     sources = [
         "ego.qpos",
@@ -170,8 +223,8 @@ def _ego_state_concat(
         [
             _to_2d_float32(ego_qpos, source="ego.qpos"),
             _to_2d_float32(ego_qvel, source="ego.qvel"),
-            _to_2d_float32(partner_qpos, source="partner.qpos"),
-            _to_2d_float32(partner_qvel, source="partner.qvel"),
+            _adapt_partner_vec(partner_qpos, arm_dof=partner_arm_dof),
+            _adapt_partner_vec(partner_qvel, arm_dof=partner_arm_dof),
             _to_2d_float32(bar_pose, source="extra.bar_pose"),
             _to_2d_float32(goal_pos, source="extra.goal_pos"),
         ],
@@ -263,8 +316,18 @@ class CoCarryEgoStateSynthesizer(gym.ObservationWrapper):  # type: ignore[type-a
             message names the offending key and cites ADR-026 §Decision 1.
     """
 
-    def __init__(self, env: gym.Env[Any, Any]) -> None:
-        """Detect uids + build the widened observation space (ADR-026 §Decision 1)."""
+    def __init__(
+        self, env: gym.Env[Any, Any], *, partner_arm_dof: int = _PARTNER_EGO_ARM_DOF
+    ) -> None:
+        """Detect uids + build the widened observation space (ADR-026 §Decision 1; §D4).
+
+        Args:
+            env: The inner co-carry env.
+            partner_arm_dof: The partner's arm DOF, used to adapt its
+                proprioception into the frozen incumbent's fixed Panda
+                ego-state layout (7 for the Panda partner — a no-op keeping
+                the reference byte-identical; 6 for the xArm6, Rung-4 EH).
+        """
         super().__init__(env)
         if not isinstance(env.observation_space, gym.spaces.Dict):
             msg = (
@@ -274,6 +337,7 @@ class CoCarryEgoStateSynthesizer(gym.ObservationWrapper):  # type: ignore[type-a
             raise TypeError(msg)
         self._ego_uid: str = str(env.get_wrapper_attr("ego_uid"))
         self._partner_uid: str = str(env.get_wrapper_attr("partner_uid"))
+        self._partner_arm_dof: int = int(partner_arm_dof)
         self.observation_space = self._build_observation_space(env.observation_space)
 
     def _build_observation_space(self, inner: gym.spaces.Dict) -> gym.spaces.Dict:
@@ -292,13 +356,13 @@ class CoCarryEgoStateSynthesizer(gym.ObservationWrapper):  # type: ignore[type-a
             )
             raise TypeError(msg)
         ego_qpos_dim, ego_qvel_dim = _resolve_qpos_qvel_dims(agent, uid=self._ego_uid, role="ego")
-        partner_qpos_dim, partner_qvel_dim = _resolve_qpos_qvel_dims(
-            agent, uid=self._partner_uid, role="partner"
-        )
+        # Validate the partner sub-Dict exists, but size its contribution from
+        # the FIXED adapted layout (18 = 2 x 9), not the native partner dims, so
+        # the ego-state width is embodiment-stable (Rung-4 EH; ADR-026 §D4).
+        _resolve_qpos_qvel_dims(agent, uid=self._partner_uid, role="partner")
+        partner_block_dim = 2 * _PARTNER_EGO_BLOCK_PER_FIELD
         extra_total_dim = _validate_and_sum_task_extras(inner)
-        ego_state_dim = (
-            ego_qpos_dim + ego_qvel_dim + partner_qpos_dim + partner_qvel_dim + extra_total_dim
-        )
+        ego_state_dim = ego_qpos_dim + ego_qvel_dim + partner_block_dim + extra_total_dim
 
         new_agent_spaces: dict[str, gym.spaces.Space[Any]] = {}
         for uid, sub in agent.spaces.items():
@@ -306,11 +370,9 @@ class CoCarryEgoStateSynthesizer(gym.ObservationWrapper):  # type: ignore[type-a
                 qpos = sub.spaces.get("qpos")
                 qvel = sub.spaces.get("qvel")
                 if isinstance(qpos, gym.spaces.Box) and isinstance(qvel, gym.spaces.Box):
-                    state_dim = (
-                        ego_state_dim
-                        if uid == self._ego_uid
-                        else int(qpos.shape[-1]) + int(qvel.shape[-1])
-                    )
+                    # Ego: the 46-D widened state. Partner: the adapted 18-D
+                    # block (NOT native dims) so the frozen critic also loads.
+                    state_dim = ego_state_dim if uid == self._ego_uid else partner_block_dim
                     qpos_shape = qpos.shape if qpos.shape is not None else (state_dim,)
                     state_shape = (
                         (int(qpos_shape[0]), state_dim)
@@ -375,9 +437,12 @@ class CoCarryEgoStateSynthesizer(gym.ObservationWrapper):  # type: ignore[type-a
                         partner_sub["qvel"],
                         task_arrays["bar_pose"],
                         task_arrays["goal_pos"],
+                        partner_arm_dof=self._partner_arm_dof,
                     )
                 else:
-                    augmented["state"] = _partner_state_concat(sub["qpos"], sub["qvel"])
+                    augmented["state"] = _partner_state_concat(
+                        sub["qpos"], sub["qvel"], arm_dof=self._partner_arm_dof
+                    )
                 new_agent[uid] = augmented
             else:
                 new_agent[uid] = sub
@@ -464,7 +529,12 @@ def make_cocarry_training_env(
             f"(the dense co-carry reward the ego trains on); resolved "
             f"{resolved_reward_mode!r}. See ADR-026 §Decision 1 + R-2026-06-B §15."
         )
-    return CoCarryEgoStateSynthesizer(inner)
+    # Partner arm DOF for the ego-state proprioception adapter (Rung-4 EH):
+    # the xArm6 is 6-DOF, every other (Panda) partner is 7-DOF. The adapter is
+    # a no-op for the Panda partner (the matched reference stays byte-identical).
+    partner_uid = str(inner.get_wrapper_attr("partner_uid"))
+    partner_arm_dof = 6 if partner_uid == "xarm6_robotiq" else _PARTNER_EGO_ARM_DOF
+    return CoCarryEgoStateSynthesizer(inner, partner_arm_dof=partner_arm_dof)
 
 
 __all__ = ["CoCarryEgoStateSynthesizer", "make_cocarry_training_env"]

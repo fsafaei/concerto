@@ -1,0 +1,81 @@
+{
+  "schema": "cocarry_rung4_eh_prereg/v1",
+  "date": "2026-06-19",
+  "axis": "EH (embodiment heterogeneity) — different partner BODY (xArm6 + Robotiq), same frozen Panda ego",
+  "purpose": "Pre-register the Rung-4 embodiment-heterogeneity measurement BEFORE measuring (mirrors the Rung-3 PH prereg, tag prereg-cocarry-rung3-ph-2026-06-19). The frozen Rung-2 Panda incumbent is held fixed; the Panda partner is swapped for an xArm6 + Robotiq 2F-85 teammate; the question is whether a different partner BODY degrades cooperation, SEPARATED from control-style via the Rung-3 PH floor. The capability-calibration gate runs first; if no embodiment teammate clears it, the measurement does not run — itself the result.",
+  "governance": {
+    "phase": "Phase-2 (scope question open; does not block)",
+    "incumbent_frozen": true,
+    "incumbent_never_retrained": true,
+    "black_box_partner_I3_ADR009": "the xArm6 teammate reads task leaves only (goal_pos / bar_pose / its own qpos), never the ego's internals",
+    "no_schema_bump_I9": "new co-carry tags reuse the existing serialisation surface",
+    "no_immutable_archive_edits_I8": true,
+    "do_not_merge": "STOP at the open PR for founder review"
+  },
+  "frozen_incumbent": {
+    "manifest_artifact": "spikes/results/cocarry/rung2/cocarry_rung2_freeze_manifest.json",
+    "checkpoint_uri": "local://artifacts/f6dad85ec9df4d58_step100000.pt",
+    "checkpoint_sha256": "6290e2ae61f5f801bae51fbf602b0d0f456e516465309e93d3db80ffa014bccb",
+    "checkpoint_step": 100000
+  },
+  "unchanged_bar": {
+    "success_predicate": "is_placed & is_level & is_unstressed & both_static & is_settled; UNCHANGED",
+    "fmax_n": 130.56970529556276,
+    "goal_radius_m": 0.10,
+    "tilt_limit_deg": 15.0,
+    "matched_reference_success_rate": 1.0,
+    "note": "The matched reference = frozen incumbent + matched cocarry_impedance (Panda) partner (100%). The predicate, f_max, and radius are NOT moved for this slice."
+  },
+  "embodiment_teammate": {
+    "class": "cocarry_xarm6_impedance",
+    "uid": "xarm6_robotiq",
+    "condition_id": "cocarry_xarm6_partner",
+    "body": "xArm6 (6-DOF) + Robotiq 2F-85 gripper",
+    "base": "mounted at x=0.35 m (closer than the Panda partner's 0.50 m — the xArm6's shorter reach; geometry-verified per spec §2.1), yaw pi; eef starts at the same -x bar end (-0.115,0,0.17) as the Panda partner for a zero-stress weld start",
+    "control_style": "compliant / matched-timing impedance + cooperative bar-leveling — the Rung-3 ZERO-DROP control-style family (NOT stiff). Deliberately built in the family Rung 3 showed costs ~0, so any EH drop is attributable to embodiment, not control style.",
+    "partner_observation_adapter": "the frozen ego's 46-D state fixes a Panda 18-D partner-proprioception block; the xArm6's 12-DOF proprioception is embedded into that block (6 arm + pad + 2 gripper) so the frozen actor/critic load. The bar pose — the actual coupling channel — is unchanged. A necessary, declared consequence of the frozen ego's fixed interface (itself part of embodiment heterogeneity)."
+  },
+  "ur_backup": {
+    "requested": "ur_e",
+    "available_in_maniskill_3_0_1": "ur_10e only (no ur_e)",
+    "usable": false,
+    "reason": "ur_10e ships with no gripper / TCP link, so the dual-hold bar weld has no grip frame to attach to — structurally unusable as a co-carry teammate. xarm6_robotiq is the only ManiSkill 3.0.1 robot with a different body AND a weldable Robotiq gripper."
+  },
+  "capability_gate": {
+    "rule": "The xArm6 enters the test iff, paired with the cooperative-reference Panda ego (matched cocarry_impedance on the ego seat — NOT the frozen incumbent), its joint success over the calibration seeds is >= C_min. Same gate as Rung 3. If it cannot be matched it is EXCLUDED (feasibility finding); C_min is NEVER weakened.",
+    "cooperative_reference_ego": "cocarry_impedance",
+    "c_min": 0.75,
+    "c_min_derivation": "Carried over unchanged from Rung 3: grounded on the matched reference (~1.0); C_min = max(0.75, M-0.25) = 0.75.",
+    "calibration_seeds": [60000, 60001, 60002, 60003, 60004, 60005, 60006, 60007, 60008, 60009, 60010, 60011],
+    "roster_artifact": "spikes/results/cocarry/rung4/cocarry_rung4_calibration_roster.json"
+  },
+  "mixed_embodiment_stability_gate": {
+    "rule": "Before calibration, the Panda ego + xArm6 partner rigid-bar chain must be stable (finite, bounded telemetry; no solver blow-up). A new contact-dynamics regime (two different arms on one rigid bar).",
+    "outcome": "PASSED — stable (finite telemetry; bounded constraint force). The rig is physically stable; the issue downstream is capability, not numerical instability."
+  },
+  "delta_min": 0.20,
+  "delta_min_basis": "Reuses the Rung-3 archived power simulation (spikes/results/cocarry/rung3/cocarry_rung3_power_sim.json): type-I ~0 under the null, MDE ~0.30 at 80% power. Same n (12 clusters), same procedure.",
+  "measurement_seeds": [50000, 50001, 50002, 50003, 50004, 50005, 50006, 50007, 50008, 50009, 50010, 50011],
+  "measurement_seeds_status": "RESERVED and UNUSED — the capability gate failed (0 admitted), so the reference/shifted measurement does not run. These pristine seeds are reserved for a future EH measurement if a capability-matched cross-embodiment teammate becomes available (e.g. under a more compliant attach).",
+  "pooling_method": "Pooled Δ = reference_rate - mean_over_teammates(shifted_rate); per-teammate also reported; cluster (seed) bootstrap one-sided 95% CI. (Same as Rung 3. Not exercised — gate failed.)",
+  "decision_rule": {
+    "primary": "Conclude 'embodiment heterogeneity reduces cooperation' iff pooled mean Δ >= Δ_min (0.20) AND the one-sided 95% CI excludes 0.",
+    "secondary_iqm": "IQM reported as secondary, non-gate-bearing.",
+    "confirmatory_glmm": "Cluster-robust binomial GEE (clustered by seed) confirmatory.",
+    "null_rule": "Positive control holds (single-arm ~0, Rung 1) AND Δ ~ 0 (CI excludes Δ_min) ⇒ thesis-disconfirming null; never re-described as a coupling failure.",
+    "feasibility_rule": "If no embodiment teammate clears the capability gate, the measurement cannot run — that is itself the result (a feasibility finding), reported as such."
+  },
+  "eh_vs_control_style_separation": {
+    "rule": "The EH Δ is compared to the Rung-3 PH control-style floor: admitted PH teammates (compliant / timing shifts on the same Panda body) had Δ ~ 0; the stiff-impedance PH teammate had Δ = 0.25. An EH drop BEYOND the PH control-style spread is attributed to embodiment; a drop within it is control-style, not body. The xArm6 controller is built in the zero-drop (compliant) control-style family so its control style sits at the floor.",
+    "rung3_ph_floor_artifact": "spikes/results/cocarry/rung3/cocarry_rung3_ph_measurement.json"
+  },
+  "directional_bias_caveat": "The capability gate truncates heterogeneity from above and (when it excludes the only embodiment teammate) PRECLUDES the measurement. A failed gate may NOT be read as 'embodiment does not couple to cooperation'. Here the opposite holds: the rigid weld couples embodiment SO strongly (only symmetric pairs cooperate at low stress) that no capability-matched cross-embodiment teammate exists with a hand-written controller. C_min was NOT weakened.",
+  "outcome": "FEASIBILITY FINDING — the xArm6 (the only viable embodiment teammate; ur_10e is gripper-less) scored 0/12 in calibration with the cooperative Panda ego (fails level 12/12 + unstressed 12/12; stress p90 518 N vs the 130 N ceiling and the matched pair's ~75 N), across a wide hand-written-controller sweep. EXCLUDED. The reference/shifted measurement does not run.",
+  "honesty_statement": "As of this committed file, NO reference or shifted episode has been evaluated on the frozen incumbent for the EH axis; the measurement seeds (50000-50011) are untouched. Only the mixed-embodiment stability gate and the capability calibration (cooperative ego, NOT the incumbent; seeds 60000-60011) were run, and the gate failed.",
+  "repro_commands": [
+    "bash scripts/repro/cocarry_rung4_eh_calibrate.sh   # stability gate + calibration -> roster (EXCLUDE, RC=2)",
+    "git add + commit + tag prereg-cocarry-rung4-eh-2026-06-19",
+    "# measurement does NOT run (gate failed); cocarry_rung4_eh_measure.sh would run it if a teammate were admitted"
+  ],
+  "git_tag": "prereg-cocarry-rung4-eh-2026-06-19"
+}

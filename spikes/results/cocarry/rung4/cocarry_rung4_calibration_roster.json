@@ -1,0 +1,209 @@
+{
+  "admitted": [],
+  "axis": "EH (embodiment heterogeneity) \u2014 different partner BODY, same frozen Panda ego",
+  "c_min": 0.75,
+  "c_min_derivation": "Grounded on the matched cooperative reference, which scores ~1.0 joint success (Rung-1 matched competence; Rung-2 manifest 24/24 on held-out V). C_min = matched_reference - 0.25 competence margin = 0.75: a candidate must jointly succeed with the proven cooperative controller on >= 9/12 calibration seeds. The 0.25 margin admits legitimately-different-but-competent policies (so the gate does not truncate the heterogeneity it is meant to admit) while excluding teammates that simply cannot do the task (success ~0.5 or below, near the single-arm positive-control floor). Fixed before measurement; the matched teammate's calibrated score M is reported and C_min = max(0.75, M - 0.25) holds with M ~ 1.0.",
+  "calibration_seeds": [
+    60000,
+    60001,
+    60002,
+    60003,
+    60004,
+    60005,
+    60006,
+    60007,
+    60008,
+    60009,
+    60010,
+    60011
+  ],
+  "candidates": [
+    {
+      "calibration_success_rate": 0.0,
+      "class_name": "cocarry_xarm6_impedance",
+      "condition_id": "cocarry_xarm6_partner",
+      "conjunct_summary": {
+        "centroid_to_goal_max": 0.1762068122625351,
+        "centroid_to_goal_p50": 0.14158272743225098,
+        "fail_level": 12,
+        "fail_placed": 10,
+        "fail_static": 8,
+        "fail_unstressed": 12,
+        "max_tilt_p90": 35.97839012145997,
+        "n": 12,
+        "stress_p90": 518.4067352294921,
+        "success_rate": 0.0
+      },
+      "partner_uid": "xarm6_robotiq",
+      "passes_gate": false,
+      "per_seed": [
+        {
+          "both_static": true,
+          "centroid_to_goal": 0.1174,
+          "is_level": false,
+          "is_placed": false,
+          "is_unstressed": false,
+          "max_stress_proxy": 459.3,
+          "max_tilt_deg": 30.322,
+          "seed": 60000,
+          "success": false
+        },
+        {
+          "both_static": false,
+          "centroid_to_goal": 0.149,
+          "is_level": false,
+          "is_placed": false,
+          "is_unstressed": false,
+          "max_stress_proxy": 505.9,
+          "max_tilt_deg": 25.652,
+          "seed": 60001,
+          "success": false
+        },
+        {
+          "both_static": true,
+          "centroid_to_goal": 0.1311,
+          "is_level": false,
+          "is_placed": false,
+          "is_unstressed": false,
+          "max_stress_proxy": 395.7,
+          "max_tilt_deg": 25.305,
+          "seed": 60002,
+          "success": false
+        },
+        {
+          "both_static": true,
+          "centroid_to_goal": 0.0077,
+          "is_level": false,
+          "is_placed": true,
+          "is_unstressed": false,
+          "max_stress_proxy": 485.3,
+          "max_tilt_deg": 36.607,
+          "seed": 60003,
+          "success": false
+        },
+        {
+          "both_static": false,
+          "centroid_to_goal": 0.15,
+          "is_level": false,
+          "is_placed": false,
+          "is_unstressed": false,
+          "max_stress_proxy": 323.7,
+          "max_tilt_deg": 19.439,
+          "seed": 60004,
+          "success": false
+        },
+        {
+          "both_static": true,
+          "centroid_to_goal": 0.1193,
+          "is_level": false,
+          "is_placed": false,
+          "is_unstressed": false,
+          "max_stress_proxy": 336.2,
+          "max_tilt_deg": 26.71,
+          "seed": 60005,
+          "success": false
+        },
+        {
+          "both_static": false,
+          "centroid_to_goal": 0.0096,
+          "is_level": false,
+          "is_placed": true,
+          "is_unstressed": false,
+          "max_stress_proxy": 1196.9,
+          "max_tilt_deg": 82.85,
+          "seed": 60006,
+          "success": false
+        },
+        {
+          "both_static": false,
+          "centroid_to_goal": 0.1605,
+          "is_level": false,
+          "is_placed": false,
+          "is_unstressed": false,
+          "max_stress_proxy": 345.1,
+          "max_tilt_deg": 26.768,
+          "seed": 60007,
+          "success": false
+        },
+        {
+          "both_static": false,
+          "centroid_to_goal": 0.1431,
+          "is_level": false,
+          "is_placed": false,
+          "is_unstressed": false,
+          "max_stress_proxy": 354.8,
+          "max_tilt_deg": 26.027,
+          "seed": 60008,
+          "success": false
+        },
+        {
+          "both_static": false,
+          "centroid_to_goal": 0.1539,
+          "is_level": false,
+          "is_placed": false,
+          "is_unstressed": false,
+          "max_stress_proxy": 367.8,
+          "max_tilt_deg": 20.196,
+          "seed": 60009,
+          "success": false
+        },
+        {
+          "both_static": false,
+          "centroid_to_goal": 0.1762,
+          "is_level": false,
+          "is_placed": false,
+          "is_unstressed": false,
+          "max_stress_proxy": 384.7,
+          "max_tilt_deg": 22.051,
+          "seed": 60010,
+          "success": false
+        },
+        {
+          "both_static": false,
+          "centroid_to_goal": 0.1401,
+          "is_level": false,
+          "is_placed": false,
+          "is_unstressed": false,
+          "max_stress_proxy": 519.8,
+          "max_tilt_deg": 19.229,
+          "seed": 60011,
+          "success": false
+        }
+      ]
+    }
+  ],
+  "cooperative_reference_ego": "cocarry_impedance",
+  "date": "2026-06-19",
+  "directional_bias_caveat": "EXCLUSION biases any EH \u0394 toward zero AND here PRECLUDES the measurement. This result may NOT be read as 'embodiment does not couple to cooperation' \u2014 the opposite: the rigid weld couples embodiment so strongly that no capability-matched cross-embodiment teammate exists. C_min was NOT weakened to force admission.",
+  "excluded": [
+    "cocarry_xarm6_impedance"
+  ],
+  "feasibility_finding": "Capability-matching an embodiment-heterogeneous teammate to this co-carry task with a hand-written controller is INFEASIBLE under the unchanged bar (success predicate, f_max 130 N, 0.10 m radius). The rigid dual-hold weld (20000 N/m) only tolerates embodiment-SYMMETRIC pairs: the matched Panda pair stays at ~75 N internal stress by symmetry, but the xArm6 + Panda-ego pair fight through the bar at 3-5x that (stress p90 well above the 130 N ceiling) and/or tilt it past 15 deg, across a wide compliance/leveling/gain sweep. The measurement does not run; this is the EH result for this rig.",
+  "min_admitted_required": 1,
+  "mixed_embodiment_stability": {
+    "all_telemetry_finite": true,
+    "max_stress_proxy_n": 505.9125061035156,
+    "max_tilt_deg": 30.32208251953125,
+    "note": "Stable = finite, bounded telemetry (no solver blow-up). The rig is physically stable; the issue is CAPABILITY (the stiff rigid weld makes the two different-bodied arms fight), not numerical instability.",
+    "seeds": [
+      60000,
+      60001,
+      60002
+    ],
+    "stable": true
+  },
+  "n_admitted": 0,
+  "notes": [
+    "The cooperative reference ego is the matched cocarry_impedance (a proven cooperative controller), NOT the frozen incumbent, so the gate measures the xArm6's task capability, not how the incumbent reacts to it.",
+    "A wide hand-written-controller sweep (compliant impedance, admittance follower, cooperative bar-leveling, gain/damping/step variations) was explored on throwaway seeds; none cleared placed AND level AND unstressed jointly. The registered controller is the principled compliant + cooperative-leveling configuration."
+  ],
+  "purpose": "Rung-4 mixed-embodiment stability gate + capability calibration for the embodiment-heterogeneity measurement. The xArm6 + Robotiq teammate is paired with the cooperative Panda ego (NOT the frozen incumbent) and gated at C_min. If it cannot be capability-matched it is EXCLUDED and the measurement does not run \u2014 itself the result (ADR-026 \u00a7D4; ADR-005; R-2026-06-B \u00a715 Rung 4).",
+  "schema": "cocarry_rung4_calibration_roster/v1",
+  "stop_triggered": true,
+  "ur_backup": {
+    "available_in_maniskill_3_0_1": "ur_10e (no ur_e)",
+    "reason": "ur_10e ships with NO gripper / TCP link (urdf_path=None, gripper_joint_names=None, ee/tcp_link_name=None), so the dual-hold bar weld has no grip frame to attach to. Structurally unusable as a co-carry teammate \u2014 a documented exclusion, not a tuning gap. xarm6_robotiq is the only ManiSkill 3.0.1 robot with a different body AND a weldable Robotiq gripper.",
+    "requested": "ur_e",
+    "usable": false
+  }
+}
