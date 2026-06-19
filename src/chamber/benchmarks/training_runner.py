@@ -80,6 +80,13 @@ def build_env(env_cfg: EnvConfig, *, root_seed: int) -> EnvLike:
       :class:`TrainedPolicyFactory` invokes this dispatch from its
       ``__call__`` body through the chamber-side
       :func:`run_training` wrapper. Requires SAPIEN + Vulkan.
+    - ``"cocarry"`` → :func:`chamber.envs.cocarry_obs.make_cocarry_training_env`
+      (ADR-026 §Decision 4; R-2026-06-B §15 Rung 2). The two-Panda
+      co-carry env wrapped with the ego-``state`` synthesizer for the
+      trainer. ``EnvConfig.condition_id`` selects the condition (the
+      Rung-2 cell trains ``cocarry_matched_panda_pair``); single-env
+      only (the matched frozen partner reads env 0). Requires SAPIEN +
+      Vulkan.
 
     Args:
         env_cfg: The validated :class:`~concerto.training.config.EnvConfig`.
@@ -152,9 +159,39 @@ def build_env(env_cfg: EnvConfig, *, root_seed: int) -> EnvLike:
                 num_envs=env_cfg.num_envs,
             ),
         )
+    if env_cfg.task == "cocarry":
+        # Lazy import to keep build_env Tier-1-safe — make_cocarry_training_env
+        # defers ManiSkill / SAPIEN imports to the cocarry factory body
+        # (ADR-026 §Decision 1; Tier-1 import-safety on Vulkan-less hosts).
+        # The synthesizer wrapper supplies obs["agent"][ego_uid]["state"]
+        # for the trainer (R-2026-06-B §15 Rung 2).
+        from chamber.envs.cocarry_obs import make_cocarry_training_env
+
+        # The condition_id is required: the matched pair vs the single-arm
+        # positive-control share the agent_uids tuple, so it disambiguates
+        # (see chamber.envs.cocarry.resolve_cocarry_condition). The Rung-2
+        # cell trains only the matched condition; the positive-control is a
+        # measurement condition, never trained.
+        if env_cfg.condition_id is None:
+            msg = (
+                "build_env: task='cocarry' requires EnvConfig.condition_id to be "
+                "set (a co-carry condition_id string; see "
+                "chamber.envs.cocarry.resolve_cocarry_condition). The cfg yaml's "
+                "env.condition_id carries 'cocarry_matched_panda_pair' as default."
+            )
+            raise ValueError(msg)
+        return cast(
+            "EnvLike",
+            make_cocarry_training_env(
+                condition_id=env_cfg.condition_id,
+                episode_length=env_cfg.episode_length,
+                root_seed=root_seed,
+                num_envs=env_cfg.num_envs,
+            ),
+        )
     raise ValueError(
         f"Unknown env task {env_cfg.task!r}; supported: "
-        "'mpe_cooperative_push', 'stage0_smoke', 'stage1_pickplace'."
+        "'mpe_cooperative_push', 'stage0_smoke', 'stage1_pickplace', 'cocarry'."
     )
 
 
