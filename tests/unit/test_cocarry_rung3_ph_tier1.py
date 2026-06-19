@@ -401,9 +401,17 @@ class TestDecisionRule:
 
 
 class TestGlmmConfirmatory:
-    """The cluster-robust binomial confirmatory (R-2026-06-B §15 Rung 3)."""
+    """The cluster-robust binomial confirmatory (R-2026-06-B §15 Rung 3).
+
+    The GEE confirmatory is OPTIONAL (pandas `eval` extra + statsmodels); it is
+    the secondary, non-gate-bearing analysis. These tests skip when the stats
+    stack is absent (e.g. the base CI install) — the cluster bootstrap, which
+    needs only numpy, is the pre-registered headline and is tested above.
+    """
 
     def test_ok_on_separable_but_nondegenerate(self) -> None:
+        pytest.importorskip("pandas")
+        pytest.importorskip("statsmodels")
         # Reference mostly succeeds; teammates mostly fail but with variation
         # on both sides (no perfect separation) -> a fitted negative coef.
         ref = {s: (s != 0) for s in _SEEDS}  # 11/12
@@ -413,8 +421,27 @@ class TestGlmmConfirmatory:
         assert out["coef_shifted_logodds"] < 0.0  # shifted lowers success
 
     def test_degenerate_when_no_outcome_variation(self) -> None:
+        pytest.importorskip("pandas")
+        pytest.importorskip("statsmodels")
         out = ph.cluster_robust_glmm(_const_map(True), {"A": _const_map(True)})
         assert out["status"] == "degenerate"
+
+    def test_unavailable_without_stats_stack(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        # When pandas/statsmodels are absent, the GEE degrades gracefully to
+        # status='unavailable' (never raises) — the verdict is unaffected. The
+        # confirmatory imports via importlib.import_module, so patch that.
+        import importlib
+
+        real = importlib.import_module
+
+        def _no_stats(name: str, *args: object, **kwargs: object):
+            if name in {"pandas", "statsmodels.api", "statsmodels.formula.api"}:
+                raise ImportError(f"blocked {name} for test")
+            return real(name, *args, **kwargs)  # type: ignore[arg-type]
+
+        monkeypatch.setattr(importlib, "import_module", _no_stats)
+        out = ph.cluster_robust_glmm({0: True, 1: False}, {"A": {0: False, 1: True}})
+        assert out["status"] == "unavailable"
 
 
 class TestConjunctSummary:

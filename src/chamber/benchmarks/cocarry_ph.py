@@ -406,9 +406,24 @@ def cluster_robust_glmm(
     rather than raising — the bootstrap remains the headline, the GLMM is
     confirmatory.
     """
-    import pandas as pd
-    import statsmodels.api as sm
-    import statsmodels.formula.api as smf
+    # pandas + statsmodels are OPTIONAL (the `eval` extra + statsmodels) — the
+    # GEE is the confirmatory, NOT the gate (the cluster bootstrap is the
+    # pre-registered headline). Imported dynamically so the base install (and
+    # the static type-check) does not require the heavy stats stack; absent ⇒
+    # the confirmatory is skipped, the verdict is unaffected (R-2026-06-B §15).
+    import importlib
+
+    try:
+        pd = importlib.import_module("pandas")
+        sm = importlib.import_module("statsmodels.api")
+        smf = importlib.import_module("statsmodels.formula.api")
+    except ImportError:
+        return {
+            "status": "unavailable",
+            "reason": "pandas + statsmodels not installed (optional 'eval' extra + "
+            "statsmodels); the GEE confirmatory is skipped. The cluster bootstrap is the "
+            "pre-registered headline, so the verdict is unaffected.",
+        }
 
     rows: list[dict[str, Any]] = []
     for s, v in reference.items():
