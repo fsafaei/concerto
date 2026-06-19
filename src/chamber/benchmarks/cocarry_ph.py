@@ -87,7 +87,8 @@ if TYPE_CHECKING:  # pragma: no cover
 # the matched impedance reference are resolvable when this module drives the
 # measurement (scripts / tests).
 import chamber.partners.cocarry_impedance
-import chamber.partners.cocarry_policy_shift  # noqa: F401
+import chamber.partners.cocarry_policy_shift
+import chamber.partners.cocarry_xarm6  # noqa: F401
 
 # ---------------------------------------------------------------------------
 # Pre-registration-grade constants (R-2026-06-B §15 Rung 3). FIXED before any
@@ -147,6 +148,20 @@ CALIBRATION_SEEDS: tuple[int, ...] = tuple(range(40000, 40012))
 #: 12 clusters (>= the ADR-026 §Validation 10-12 forward-statistics floor).
 #: Disjoint from S, V, and the calibration set.
 MEASUREMENT_SEEDS: tuple[int, ...] = tuple(range(30000, 30012))
+
+# --- Rung-4 embodiment heterogeneity (EH) — the xArm6 + Robotiq teammate
+# (ADR-026 §Decision 4; ADR-005; R-2026-06-B §15 Rung 4). Seeds are disjoint
+# from ALL prior sets (Rung-2 S 10000- / V 20000-, Rung-3 measurement 30000- /
+# calibration 40000-). C_min and Δ_min are reused unchanged from Rung 3.
+XARM6_CONDITION_ID: str = "cocarry_xarm6_partner"
+XARM6_PARTNER_UID: str = "xarm6_robotiq"
+XARM6_PARTNER_CLASS: str = "cocarry_xarm6_impedance"
+
+#: EH calibration seed-clusters (xArm6 + cooperative Panda ego).
+EH_CALIBRATION_SEEDS: tuple[int, ...] = tuple(range(60000, 60012))
+
+#: EH measurement seed-clusters (reference + frozen incumbent vs xArm6).
+EH_MEASUREMENT_SEEDS: tuple[int, ...] = tuple(range(50000, 50012))
 
 #: One-sided confidence level for the CI on Δ (the decision rule reads the
 #: 95% lower confidence bound).
@@ -558,15 +573,28 @@ def rollout_pair(
     )
 
 
-def build_partner_seat(class_name: str, *, seed: int = 0) -> FrozenPartner:
-    """Build a teammate (or the matched partner) on the partner seat (ADR-026 §D4; ADR-009).
+def build_partner_seat(
+    class_name: str, *, seed: int = 0, partner_uid: str = "panda_partner"
+) -> FrozenPartner:
+    """Build a teammate (matched / PH / EH) on the partner seat (ADR-026 §D4).
 
     Every teammate is built from the env's single-source-of-truth partner-seat
     geometry (:func:`chamber.envs.cocarry.cocarry_matched_controller_specs`'s
-    ``panda_partner`` extras), so the policy is the only thing that varies
-    across the matched partner and the policy-shift candidates.
+    ``panda_partner`` extras: base +0.5 m, yaw pi, -x end, half-bar), so the
+    policy / body is the only thing that varies. ``partner_uid`` overrides the
+    spec's ``uid`` so a different-embodiment teammate (Rung-4 EH; e.g. the
+    ``xarm6_robotiq`` seat) reads its own proprioception leaf — the geometry is
+    shared (the xArm6 mounts at the same base as the Panda partner).
     """
-    extra = cocarry_matched_controller_specs()["panda_partner"]
+    if partner_uid == "xarm6_robotiq":
+        # The xArm6 mounts closer than the Panda partner (its shorter reach),
+        # so its controller needs the xArm6 base geometry, not the Panda's.
+        from chamber.envs.cocarry import cocarry_xarm6_controller_spec
+
+        extra = dict(cocarry_xarm6_controller_spec())
+    else:
+        extra = dict(cocarry_matched_controller_specs()["panda_partner"])
+        extra["uid"] = partner_uid
     return load_partner(PartnerSpec(class_name, seed, None, None, extra))
 
 
@@ -588,27 +616,31 @@ def evaluate_calibration(
     seeds: list[int],
     episode_length: int = COCARRY_DEFAULT_EPISODE_LENGTH,
     render_backend: str | None = None,
+    condition_id: str = "cocarry_matched_panda_pair",
+    partner_uid: str = "panda_partner",
 ) -> list[ConjunctMetrics]:
     """Calibrate a candidate: pair it (partner seat) with the cooperative ego (ADR-026 §D4).
 
-    For each seed: build the matched-condition training env, the cooperative
-    reference ego, and the candidate on the partner seat; roll one episode.
-    The resulting :func:`success_rate` is gated against :data:`C_MIN`. A fresh
-    env per seed mirrors the Rung-0/1/2 runners.
+    For each seed: build the env (matched Panda condition, or the
+    ``cocarry_xarm6_partner`` embodiment condition for the Rung-4 xArm6
+    teammate), the cooperative reference ego (always the matched impedance, NOT
+    the frozen incumbent), and the candidate on the partner seat; roll one
+    episode. The resulting :func:`success_rate` is gated against :data:`C_MIN`.
+    A fresh env per seed mirrors the Rung-0/1/2 runners.
     """
     from chamber.envs.cocarry_obs import make_cocarry_training_env
 
     metrics: list[ConjunctMetrics] = []
     for s in seeds:
         env = make_cocarry_training_env(
-            condition_id="cocarry_matched_panda_pair",
+            condition_id=condition_id,
             episode_length=episode_length,
             root_seed=s,
             render_backend=render_backend,
         )
         try:
             coop_ego = build_cooperative_ego(seed=s)
-            candidate = build_partner_seat(candidate_class, seed=s)
+            candidate = build_partner_seat(candidate_class, seed=s, partner_uid=partner_uid)
             coop_ego.reset(seed=s)
             metrics.append(
                 rollout_pair(
@@ -633,11 +665,15 @@ def evaluate_incumbent_vs_partner(
     seeds: list[int],
     episode_length: int = COCARRY_DEFAULT_EPISODE_LENGTH,
     render_backend: str | None = None,
+    condition_id: str = "cocarry_matched_panda_pair",
+    partner_uid: str = "panda_partner",
 ) -> list[ConjunctMetrics]:
     """Evaluate the frozen incumbent (ego) against a teammate (partner seat) (ADR-026 §D4).
 
-    The reference condition uses ``partner_class='cocarry_impedance'``; the
-    shifted conditions use a calibrated policy-shift teammate. The ego seat is
+    The reference condition uses ``partner_class='cocarry_impedance'`` (Panda);
+    the policy-shift (Rung 3) conditions use a calibrated PH teammate; the
+    embodiment-shift (Rung 4) condition uses ``condition_id='cocarry_xarm6_partner'``
+    + ``partner_uid='xarm6_robotiq'`` + the xArm6 controller. The ego seat is
     always the SHA-verified frozen incumbent (never retrained). A fresh env +
     frozen-incumbent load per seed mirrors
     :func:`chamber.benchmarks.cocarry_incumbent.evaluate_incumbent_matched`.
@@ -648,13 +684,13 @@ def evaluate_incumbent_vs_partner(
     metrics: list[ConjunctMetrics] = []
     for s in seeds:
         env = make_cocarry_training_env(
-            condition_id="cocarry_matched_panda_pair",
+            condition_id=condition_id,
             episode_length=episode_length,
             root_seed=s,
             render_backend=render_backend,
         )
         try:
-            partner = build_partner_seat(partner_class, seed=s)
+            partner = build_partner_seat(partner_class, seed=s, partner_uid=partner_uid)
             ego_act = load_frozen_incumbent(
                 cfg=cfg,
                 env=env,
