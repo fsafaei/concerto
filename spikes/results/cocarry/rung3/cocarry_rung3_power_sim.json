@@ -1,0 +1,31 @@
+{
+  "design": {
+    "ci_alpha": 0.05,
+    "decision_rule": "pooled mean \u0394 >= \u0394_min AND one-sided 95% CI lower > 0",
+    "delta_min": 0.2,
+    "n_boot": 1500,
+    "n_seed_clusters": 12,
+    "n_teammates": 3,
+    "n_trials": 400,
+    "reference_model": "deterministic success (incumbent ceiling ~1.0)",
+    "teammate_model": "independent Bernoulli(1 - \u0394) per seed"
+  },
+  "interpretation": "At the pre-registered \u0394_min=0.2, 12 paired seed-clusters over 3 teammates give power ~0.45 to declare a drop; the minimum detectable effect at 80% power is ~0.3. Under the null (\u0394=0) the type-I rate is ~0.00 (the one-sided 95% rule is conservative because the reference is at the 1.0 ceiling). \u0394_min=0.20 is a meaningful cooperation drop that this n can resolve \u2014 n is the precision lever, NOT the effect-size lever (R-2026-06-B \u00a715: treat fewer clusters as exploration).",
+  "mde_at_target_power": 0.3,
+  "power_at_delta_min": 0.4525,
+  "power_by_delta": {
+    "0.00": 0.0,
+    "0.05": 0.0,
+    "0.10": 0.0075,
+    "0.15": 0.1525,
+    "0.20": 0.4525,
+    "0.25": 0.75,
+    "0.30": 0.8625,
+    "0.40": 0.995,
+    "0.50": 1.0
+  },
+  "purpose": "Pre-registration power analysis fixing \u0394_min for the Rung-3 PH measurement. Monte-Carlo over the ACTUAL decision procedure (cluster bootstrap one-sided CI + the pre-committed decision rule) on synthetic Bernoulli outcomes: reference = the ~100% incumbent ceiling, each of K teammates degraded to success 1-\u0394. ADR-026 \u00a7Decision 4; R-2026-06-B \u00a715 Rung 3.",
+  "schema": "cocarry_rung3_power_sim/v1",
+  "target_power": 0.8,
+  "type_i_error_at_delta_0": 0.0
+}

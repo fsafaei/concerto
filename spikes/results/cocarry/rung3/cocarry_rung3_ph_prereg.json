@@ -1,0 +1,85 @@
+{
+  "schema": "cocarry_rung3_ph_prereg/v1",
+  "date": "2026-06-19",
+  "axis": "PH (policy heterogeneity) — different partner POLICY, same Panda embodiment",
+  "purpose": "Pre-register the Rung-3 policy-heterogeneity measurement BEFORE any reference/shifted episode is run, so the result is honest (no forking paths). The frozen, held-out-validated Rung-2 incumbent (freeze manifest, commit 802df94) is held fixed and paired with capability-matched policy-shift teammates (same Panda body, materially different control policies); the question is whether a different partner POLICY degrades cooperation relative to the matched reference. Embodiment is held fixed (the xArm6 teammate is Rung 4). Mirrors the Rung-2 eval-only freeze pre-registration (commit 5fc291b): the teammate set, C_min, Δ_min, seeds, decision rule, pooling, and null rule are fixed and committed here, and the measurement is computed only AFTER this file is committed + git-tagged.",
+  "governance": {
+    "phase": "Phase-2 (the Phase-1/2 scope question is an open founder decision; it does not block running this)",
+    "incumbent_frozen": true,
+    "incumbent_never_retrained": true,
+    "black_box_partner_I3_ADR009": "teammates enter only through the partner interface; they read task leaves (goal_pos / bar_pose / their own qpos) only, never the ego's identity or internals",
+    "no_schema_bump_I9": "reuses the existing serialisation surface with a new co-carry tag (cocarry_rung3_ph_prereg/v1); no bump to any *.SCHEMA_VERSION / PREREG_SCHEMA_VERSION",
+    "no_immutable_archive_edits_I8": true,
+    "do_not_merge": "STOP at the open PR for founder review"
+  },
+  "frozen_incumbent": {
+    "manifest_artifact": "spikes/results/cocarry/rung2/cocarry_rung2_freeze_manifest.json",
+    "checkpoint_uri": "local://artifacts/f6dad85ec9df4d58_step100000.pt",
+    "checkpoint_sha256": "6290e2ae61f5f801bae51fbf602b0d0f456e516465309e93d3db80ffa014bccb",
+    "checkpoint_step": 100000,
+    "training_config": "configs/training/ego_aht_happo/cocarry_matched.yaml"
+  },
+  "unchanged_bar": {
+    "success_predicate": "is_placed & is_level & is_unstressed & both_static & is_settled (cocarry.py evaluate()); UNCHANGED",
+    "fmax_n": 130.56970529556276,
+    "goal_radius_m": 0.10,
+    "tilt_limit_deg": 15.0,
+    "stress_limit_n": 130.0,
+    "matched_reference_success_rate": 1.0,
+    "reference_reconfirm_floor": 0.90,
+    "note": "The matched reference (frozen incumbent + matched cocarry_impedance partner) is the cooperation ceiling. The success predicate, f_max, and the 0.10 m radius are NOT moved for this slice."
+  },
+  "capability_gate": {
+    "rule": "A candidate enters the PH test iff, paired with the cooperative-reference ego (matched cocarry_impedance on the ego seat — NOT the frozen incumbent), its joint success rate over the calibration seeds is >= C_min. Defuses the weaker-teammate confound. A candidate that cannot be capability-matched is EXCLUDED, and the exclusion is archived.",
+    "cooperative_reference_ego": "cocarry_impedance",
+    "c_min": 0.75,
+    "c_min_derivation": "Grounded on the matched cooperative reference (~1.0 joint success; Rung-1 matched competence, Rung-2 24/24 on held-out V). C_min = max(0.75, M - 0.25) with the matched teammate's calibrated score M; M = 1.0 (measured in the roster) gives C_min = 0.75 — a candidate must jointly succeed with the proven cooperative controller on >= 9/12 calibration seeds. The 0.25 margin admits legitimately-different-but-competent policies (so the gate does not truncate the heterogeneity it is meant to admit) while excluding teammates that simply cannot do the task. Fixed at pre-statement; NEVER weakened to pass teammates.",
+    "calibration_band": [0.75, 1.0],
+    "calibration_seeds": [40000, 40001, 40002, 40003, 40004, 40005, 40006, 40007, 40008, 40009, 40010, 40011],
+    "roster_artifact": "spikes/results/cocarry/rung3/cocarry_rung3_calibration_roster.json",
+    "matched_teammate_calibrated_score_M": 1.0
+  },
+  "calibrated_teammate_set": [
+    "cocarry_stiff_impedance",
+    "cocarry_admittance",
+    "cocarry_slew_impedance"
+  ],
+  "teammate_policy_descriptions": {
+    "cocarry_stiff_impedance": "stiffness shift: high-gain, low-damping, no-integral fast tracking (transmits more interaction force, overshoots more than the compliant matched controller)",
+    "cocarry_admittance": "compliance shift: a force-follower that mostly holds station at its current bar end and contributes only a gentle goal-seeking bias, letting the partner arm lead",
+    "cocarry_slew_impedance": "trajectory-timing shift: matched gains but the target is slewed along a rate-limited ramp over a lead-in (same destination, different timing)"
+  },
+  "excluded_roster": {
+    "cocarry_nullspace_impedance": "EXCLUDED at calibration: redundancy-resolution shift (null-space posture term) pulled the arm off the cooperative target — calibration success 0/12, centroid p50 0.146 m (> 0.10 radius, fails placed 12/12) and stress p90 184 N (> 130, fails unstressed 12/12). Not capability-matched (a weaker teammate the gate is designed to catch). Archived; NOT entered into the test."
+  },
+  "delta_min": 0.20,
+  "delta_min_basis": {
+    "value": 0.20,
+    "units": "joint success-rate (paired Δ = reference - shifted)",
+    "power_simulation_artifact": "spikes/results/cocarry/rung3/cocarry_rung3_power_sim.json",
+    "power_at_delta_min": 0.45,
+    "type_i_error_at_delta_0": 0.0,
+    "mde_at_80pct_power": 0.30,
+    "rationale": "0.20 is a meaningful cooperation drop (a fifth of episodes lost to the policy shift). The archived power simulation over the ACTUAL decision procedure (cluster bootstrap one-sided CI + the decision rule) shows the rule is conservative under the null (type-I ~0 at Δ=0) and resolves Δ_min=0.20 (power ~0.45 exactly at the mean-threshold boundary, ~0.86 at Δ=0.30). n (12 clusters) is the precision lever, NOT the effect-size lever (fewer clusters are exploration only)."
+  },
+  "measurement_seeds": [30000, 30001, 30002, 30003, 30004, 30005, 30006, 30007, 30008, 30009, 30010, 30011],
+  "n_seed_clusters": 12,
+  "measurement_design": "Paired within-seed: the SAME 12 measurement seeds drive the reference (frozen incumbent + matched cocarry_impedance partner) and each shifted condition (frozen incumbent + each admitted teammate). One deterministic episode per seed (single-env; the only within-seed variation is the goal jitter). The reference is reconfirmed first; if it does not reach >= 0.90 the run STOPs (something changed) before the shifted arm is trusted.",
+  "pooling_method": "Pooled Δ = reference_rate - mean_over_teammates(shifted_rate), each admitted teammate weighted equally (the pooled estimate the decision rule + power sim use). Per-teammate Δ is also reported. The cluster (seed) bootstrap resamples the 12 paired seed-clusters with replacement and recomputes the pooled Δ each iteration (10000 iterations; RNG via derive_substream, P6).",
+  "decision_rule": {
+    "primary": "Conclude 'policy heterogeneity reduces cooperation' (verdict ph_reduces_cooperation) iff the pooled mean Δ >= Δ_min (0.20) AND the one-sided 95% CI on the pooled Δ excludes 0 (CI lower bound > 0).",
+    "secondary_iqm": "IQM (25%-trimmed mean) of the per-seed success indicators, reference and pooled-shifted, is reported as SECONDARY and is NOT gate-bearing.",
+    "confirmatory_glmm": "A cluster-robust binomial GLM (statsmodels GEE, binomial family, exchangeable working correlation, clustered by seed): success ~ shifted. A significantly negative shifted coefficient confirms the bootstrap drop. Confirmatory, not the headline.",
+    "null_rule": "The coupling positive-control passes (single-arm ~ 0, established at Rung 1) AND Δ ~ 0 (the one-sided 95% CI excludes Δ_min, i.e. the two-sided upper bound < Δ_min) ⇒ a thesis-disconfirming null: no policy-heterogeneity penalty on this axis under this task. Reported as such — NEVER re-described as a coupling failure.",
+    "indeterminate": "Neither the drop nor the null rule met ⇒ indeterminate (collect more seed-clusters or sharpen the teammate set; decision-relevant either way)."
+  },
+  "null_caveat": "EXCLUSIONS OCCURRED (cocarry_nullspace_impedance). The capability gate truncates heterogeneity from above (it excludes teammates the cooperative reference cannot succeed with), biasing Δ toward zero. If the verdict is a null, it may NOT be read as 'the PH axis does not couple to cooperation' — only as 'among capability-matched policies, no qualifying drop was observed'.",
+  "conjunct_reporting": "On drops, the per-conjunct failure breakdown (placed / level / unstressed / static) is reported so the cooperation channel the shifted partner tips over is visible. The reference lands at centroid ~0.099 m vs the 0.10 m radius, so transport precision is the likeliest channel a shifted partner tips over — a legitimate cooperative channel, surfaced not assumed.",
+  "honesty_statement": "As of this committed file, NO reference or shifted episode on the measurement seeds (30000-30011) has been evaluated on the frozen incumbent. Only the capability calibration (seeds 40000-40011, cooperative reference, NOT the incumbent) and a synthetic power simulation (no incumbent) have been run. The reference + shifted measurement is computed only AFTER this pre-registration is committed and git-tagged.",
+  "repro_commands": [
+    "bash scripts/repro/cocarry_rung3_calibrate.sh   # DONE — produced the calibration roster",
+    "git add + commit + tag prereg-cocarry-rung3-ph-2026-06-19  # this file, BEFORE measuring",
+    "bash scripts/repro/cocarry_rung3_ph_measure.sh   # reference + shifted, Δ + CI + GLMM + verdict"
+  ],
+  "git_tag": "prereg-cocarry-rung3-ph-2026-06-19"
+}
