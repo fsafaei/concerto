@@ -23,10 +23,24 @@ ADR-026 §Decision 4; ADR-005 §Decision; ADR-009 §Decision; R-2026-06-B §15 R
 
 from __future__ import annotations
 
+import os
+
 import numpy as np
 import pytest
 
 _XARM6_READY6 = np.array([0.0, -0.084, -0.8, 0.0, 0.692, 0.0])
+
+#: The xArm6 + Robotiq URDF is a separate ManiSkill asset (ADR-005) — unlike
+#: the bundled panda, it is not present until downloaded
+#: (``python -m mani_skill.utils.download_asset xarm6_robotiq``; CI fetches it).
+#: Tests that build the real kinematic chain skip cleanly when it is absent,
+#: so a clean checkout without the asset does not hard-error (mirrors the
+#: Tier-2 ``sapien_gpu_available`` gating pattern).
+_XARM6_URDF = os.path.expanduser("~/.maniskill/data/robots/xarm6/xarm6_robotiq.urdf")
+_needs_xarm6_asset = pytest.mark.skipif(
+    not os.path.exists(_XARM6_URDF),
+    reason="xArm6 URDF asset absent (run: python -m mani_skill.utils.download_asset xarm6_robotiq)",
+)
 
 
 # --------------------------------------------------------------------------
@@ -34,6 +48,7 @@ _XARM6_READY6 = np.array([0.0, -0.084, -0.8, 0.0, 0.692, 0.0])
 # --------------------------------------------------------------------------
 
 
+@_needs_xarm6_asset
 class TestXArm6JacobianProvider:
     """The xArm6 provider parses the URDF and returns the right shapes (ADR-005; ADR-026 §D4)."""
 
@@ -95,6 +110,7 @@ def _bar(center: np.ndarray | None = None, *, tilt_deg: float = 0.0) -> np.ndarr
     return np.concatenate([c, quat])
 
 
+@_needs_xarm6_asset
 class TestXArm6Controller:
     """The xArm6 teammate's action contract + leveling (ADR-026 §D4; ADR-009)."""
 

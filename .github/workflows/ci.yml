@@ -75,6 +75,11 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
       - run: uv sync --group dev
+      # The Rung-4 embodiment-heterogeneity tests build the xArm6 + Robotiq
+      # kinematic chain; unlike the bundled panda, its URDF is a separate
+      # ManiSkill asset (ADR-005), so fetch it on the runner (the EH
+      # provider/controller Tier-1 tests parse it without SAPIEN/Vulkan).
+      - run: uv run python -m mani_skill.utils.download_asset xarm6_robotiq -y
       - run: uv run pytest tests/unit -n auto --no-cov
 
   test-property:
@@ -132,6 +137,9 @@ jobs:
         with:
           python-version: "3.11"
       - run: uv sync --group dev
+      # xArm6 asset for the Rung-4 EH tests (see test-unit) — needed here so
+      # the embodiment provider/controller code is covered for the floors.
+      - run: uv run python -m mani_skill.utils.download_asset xarm6_robotiq -y
       - run: uv run pytest --cov=concerto --cov=chamber --cov-fail-under=80 --cov-report=xml
       - uses: codecov/codecov-action@57e3a136b779b570ffcdbf80b3bdc90e7fab3de2  # v6.0.0
         with:
