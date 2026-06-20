@@ -1,0 +1,51 @@
+{
+  "schema": "cocarry_rung4c_eh_prereg/v1",
+  "date": "2026-06-20",
+  "stage": "Rung-4c — embodiment-invariant stress instrument + the graded EH measurement",
+  "purpose": "Replace the embodiment-biased wrist-incoming-force stress proxy (Rung-4b blocker) with an embodiment-INVARIANT measure — the bar's internal coupling spring force (K_c x deflection of the grip frame from the bar end), the actual force the cooperative coupling bears — re-derive f_max for it from the matched-Panda-pair distribution, and measure the graded embodiment Δ (frozen incumbent + xArm6 vs the matched reference) on the corrected compliant-coupling task. Pre-registered BEFORE the reference/shifted measurement.",
+  "governance": {
+    "phase": "Phase-2 (scope question open; does not block).",
+    "governed_predicate_change": "the stress measure is part of the success predicate; this change is recorded in the ADR-026 open-question + a co-carry spec §4/§8 amendment and pre-registered (this file + git tag) before f_max is re-derived or anything is measured.",
+    "invariant_by_construction": "the measure is the bar coupling spring force (a function of the bar/coupling geometry only), identical physical quantity regardless of which arm body holds the bar — unlike the wrist proxy, which folded in the arm's own link-incoming-joint dynamics (arm self-weight/inertia that never reaches the bar).",
+    "no_goalpost_moving": "f_max re-derived ONLY from the matched-Panda-pair coupling distribution (1.25 x matched-success p99), then held. NOT inflated to admit the xArm6. C_min unchanged (0.75). Predicate logic, 0.10 m radius unchanged.",
+    "frozen_incumbent_eval_only": "the stress measure affects only the success predicate + the training reward penalty, NOT the frozen incumbent's inference-time policy input (the ego state carries no stress term). So the frozen incumbent (step 100000, SHA 6290e2ae) is valid as-is for this EVAL-only measurement — no retraining; it transfers by construction. (A re-freeze would only matter if training under the new reward; not needed here.)",
+    "immutable_prior_results_I8": "rigid ladder (rung1-4) + Rung-4b artifacts untouched; this writes only under rung4c/.",
+    "no_schema_bump_I9": true,
+    "do_not_merge": "founder review."
+  },
+  "compliant_coupling": {"drive_stiffness_Npm": 8000, "variant": "A (linear freed-axis spring; the Rung-4b stiffest C1-C3-valid setting)"},
+  "stress_instrument": {
+    "measure": "coupling (total bar coupling spring force = K_c x ||grip_frame_world - bar_end_world||, max over holding arms)",
+    "env_param": "make_cocarry_*(stress_measure='coupling')",
+    "invariance_investigation_artifact": "spikes/results/cocarry/rung4c/cocarry_rung4c_invariance.json",
+    "invariance_finding": "The coupling measure removes the wrist proxy's arm-self-weight confound (xArm6/Panda active-state ratio 17x -> 7.8x). It does NOT make the values equal, because the xArm6 GENUINELY over-loads the coupling: ~6.4x the matched pair even at a zero-action static hold, not removable by joint actuation (stiffness already 10x Panda; force_limit sweep 100-1000 N does not converge to Panda levels). The residual is a real embodiment load (the xArm6's carry-pose endpoint stiffness is poor -> it sags under the bar and over-tensions the coupling), NOT an instrument artifact. So the Rung-4b 'pure instrument' hypothesis is refuted, and the measure is the correct invariant safety/stress instrument under which the embodiment effect is real."
+  },
+  "fmax_rederivation": {
+    "rule": "f_max_coupling = 1.25 x (matched-Panda-pair coupling-force success p99), measured under stress_measure='coupling' over the f_max seeds, committed as the artifact of record, then held.",
+    "fmax_seeds": [80000, 80001, 80002, 80003, 80004, 80005, 80006, 80007, 80008, 80009, 80010, 80011],
+    "note": "Principled from the matched distribution exactly as the rigid f_max (130.6 N) was; the numeric value differs because the measure differs (coupling force, not wrist force)."
+  },
+  "revalidation": {
+    "matched_reference": "frozen incumbent + matched cocarry_impedance partner under coupling+new f_max must reconfirm >= 0.90 (else STOP).",
+    "single_arm": "positive control ~0 (coupling-validity preserved).",
+    "binding": "the new unstressed conjunct is load-bearing on matched successes."
+  },
+  "ph_floor": {
+    "teammates": ["cocarry_stiff_impedance", "cocarry_admittance", "cocarry_slew_impedance"],
+    "note": "the Rung-3 admitted policy-shift teammates (same Panda body), re-measured under the coupling measure on the compliant task -> the same-task control-style floor for the EH-vs-control-style separation.",
+    "ph_seeds": [80100, 80101, 80102, 80103, 80104, 80105, 80106, 80107, 80108, 80109, 80110, 80111]
+  },
+  "eh_measurement": {
+    "shifted": "frozen incumbent + xArm6 (cocarry_xarm6_impedance) under stress_measure='coupling' + new f_max.",
+    "reference": "frozen incumbent + matched cocarry_impedance partner, same coupling + f_max.",
+    "eh_seeds": [80200, 80201, 80202, 80203, 80204, 80205, 80206, 80207, 80208, 80209, 80210, 80211],
+    "capability_gate": "xArm6 calibration vs the cooperative Panda ego under the coupling measure must clear C_min=0.75 to be admitted; C_min never weakened.",
+    "statistics": "graded Δ = success(reference) - success(shifted), per-seed paired; cluster (seed) bootstrap one-sided 95% CI; IQM secondary; cluster-robust binomial GEE confirmatory; per-conjunct breakdown (placed/level/unstressed/static).",
+    "delta_min": 0.20,
+    "decision_rule": "drop iff pooled mean Δ >= Δ_min AND one-sided 95% CI excludes 0; null iff positive control holds AND CI excludes Δ_min; else indeterminate. Separate embodiment from control-style via the PH floor (an EH drop beyond the PH control-style spread is attributed to embodiment)."
+  },
+  "seeds_disjoint": "f_max 80000-, PH 80100-, EH 80200- — all disjoint from every prior set (rigid S/V 10000-/20000-, Rung-3 30000-/40000-, Rung-4 50000-/60000-, Rung-4b 70010-).",
+  "honesty_statement": "As of commit, no reference/shifted EH episode (seeds 80200-) has been scored under the frozen incumbent on the coupling measure; f_max (80000-) is derived from the matched pair first and held. The invariance investigation (rung4c_invariance.json) used development seeds 70010-.",
+  "git_tag": "prereg-cocarry-rung4c-eh-2026-06-20",
+  "repro_command": "bash scripts/repro/cocarry_rung4c_eh_measure.sh"
+}
