@@ -839,6 +839,7 @@ def make_cocarry_env(
     drive_stiffness: float | None = None,
     drive_damping: float | None = None,
     drive_force_limit: float | None = None,
+    stress_measure: str = "wrist",
 ) -> gym.Env[Any, Any]:
     """Build a :class:`CoCarryEnv` instance (ADR-026 §Decision 1-2; R-2026-06-B Rungs 0-1).
 
@@ -869,6 +870,10 @@ def make_cocarry_env(
             the stiffness at the rig's damping ratio.
         drive_force_limit: Max drive force (N); ``None`` ⇒ unbounded. A finite
             value near f_max selects the Variant-B force-saturated coupling.
+        stress_measure: ``"wrist"`` (default) — the embodiment-biased wrist
+            incoming-joint-force proxy (rigid ladder + Rung-4b; byte-identical);
+            ``"coupling"`` — the embodiment-invariant bar coupling force
+            (Rung-4c corrected task; requires the compliant coupling).
 
     Returns:
         A :class:`CoCarryEnv` ready to ``reset(seed=K)``.
@@ -944,6 +949,14 @@ def make_cocarry_env(
             # calls reset() -> _initialize_episode during super-init.
             self._hand_link_index_by_uid: dict[str, int] = {}
             self._drives: list[Any] = []
+            # Per-uid drive anchors (hand link, grip_in_hand, bar_end_local) for
+            # the Rung-4c embodiment-invariant coupling-force measure.
+            self._weld_anchors: dict[str, tuple[Any, Any, Any]] = {}
+            # Rung-4c stress measure: "wrist" (default, embodiment-biased proxy,
+            # rigid ladder byte-identical) or "coupling" (invariant bar force).
+            self._stress_measure: str = stress_measure
+            self._coupling_stiffness: float = weld_stiffness
+            self._coupling_force_limit: float = weld_force_limit
             try:
                 super().__init__(
                     robot_uids=(_EGO_UID, self._partner_uid),  # type: ignore[arg-type]
@@ -1084,6 +1097,12 @@ def make_cocarry_env(
             weld_link = _WELD_LINK_BY_UID[uid]
             hand = self.agent.agents_dict[uid].robot.links_map[weld_link]  # type: ignore[attr-defined]
             drive = self.scene.create_drive(hand, grip_in_hand, self.bar, bar_end_local)
+            # Record the two drive anchor frames per holding uid so the
+            # embodiment-INVARIANT coupling-force measure (Rung-4c) can compute
+            # the spring deflection = ||grip_frame_world - bar_end_world|| (a
+            # property of the bar/coupling geometry, identical regardless of
+            # which arm body holds it — unlike the wrist incoming-joint force).
+            self._weld_anchors[uid] = (hand, grip_in_hand, bar_end_local)
             for axis in ("x", "y", "z"):
                 if weld_compliant:
                     # Rung-4b COMPLIANT coupling (ADR-026 §D4 Rung 4b): a passive
@@ -1208,6 +1227,100 @@ def make_cocarry_env(
                 per_arm.append(torch.linalg.norm(wrist, axis=1))
             return torch.stack(per_arm, dim=0).amax(dim=0)
 
+        def _coupling_stress_now(self) -> torch.Tensor:
+            """Embodiment-INVARIANT bar coupling force, Newtons, per env (ADR-026 §D4 Rung 4c).
+
+            The internal force the compliant dual-hold spring transmits through
+            the bar: ``F = K_c * deflection``, where the deflection is the gap
+            between each holding gripper's grip frame and the bar end the drive
+            pins it to (``||(hand_pose * grip_in_hand).p - (bar_pose *
+            bar_end_local).p||``), capped at the drive force-limit (Variant B).
+            Reduced by max over the holding arms. This is a property of the
+            bar/coupling **geometry** — identical regardless of which arm body
+            holds the bar — so it is embodiment-invariant, unlike
+            :meth:`_wrist_stress_proxy_now` (which folds in the arm's own
+            link-incoming-joint dynamics and so reads a body-dependent offset).
+            Only meaningful for the compliant coupling (the rigid weld locks the
+            deflection to ~0); the wrist proxy stays the default for the rigid
+            ladder. SAPIEN exposes no free-drive constraint force, so the spring
+            force is computed from the anchor geometry recorded at weld time.
+            """
+            holding = [_EGO_UID] if self._single_arm else [_EGO_UID, self._partner_uid]
+            forces = self._coupling_force_vectors(holding)
+            mags = [torch.linalg.norm(f, axis=1) for f in forces]
+            mags = [torch.clamp(m, max=self._coupling_force_limit) for m in mags]
+            return torch.stack(mags, dim=0).amax(dim=0)
+
+        def _coupling_force_vectors(self, holding: list[str]) -> list[torch.Tensor]:
+            """Per-holding-arm coupling spring force vectors (N), world frame (ADR-026 §D4 4c).
+
+            ``F_uid = K_c * (grip_frame_world - bar_end_world)`` — the restoring
+            spring force the compliant drive transmits, from the anchor geometry
+            recorded at weld time (SAPIEN exposes no free-drive constraint
+            force). Embodiment-invariant by construction (a function of the
+            bar/coupling geometry, not the arm's link dynamics).
+            """
+            bar_pose = self.bar.pose
+            out: list[torch.Tensor] = []
+            for uid in holding:
+                hand, grip_in_hand, bar_end_local = self._weld_anchors[uid]
+                grip_world = hand.pose * grip_in_hand  # (b,) Pose
+                bar_end_world = bar_pose * bar_end_local
+                out.append(self._coupling_stiffness * (grip_world.p - bar_end_world.p))
+            return out
+
+        def _coupling_internal_stress_now(self) -> torch.Tensor:
+            """Embodiment-invariant ANTAGONISTIC internal coupling force, N (ADR-026 §D4 4c).
+
+            The self-stress the two arms impose on the bar by pulling *against
+            each other* along the bar's long axis — the genuine cooperative
+            "fight". Decomposes each arm's coupling force (``_coupling_force_vectors``)
+            onto the bar long axis (``p_ego``, ``p_partner``) and returns the
+            antagonistic scalar ``(|p_ego| + |p_partner| - |p_ego + p_partner|)/2``:
+            **0** when only one arm pulls (station-keeping *sag*, which is
+            vertical — orthogonal to the axis — and produces no net axial pull),
+            and large only when both arms pull oppositely along the bar (a true
+            squeeze/stretch fight). This isolates the cooperative fight from a
+            body's station-keeping stiffness, so it is invariant to which arm
+            holds the bar (the total coupling force is not — a heavier, saggier
+            arm stretches its spring more for the same bar pose). Single-arm:
+            no second arm ⇒ 0 (the positive control is carried by the tilt
+            conjunct). Capped at the drive force-limit.
+            """
+            if self._single_arm:
+                return torch.zeros(self.bar.pose.p.shape[0], device=self.device)
+            f_ego, f_partner = self._coupling_force_vectors([_EGO_UID, self._partner_uid])
+            # Bar long axis (unit) in world: the bar's local x-axis = first
+            # column of its rotation matrix, from the wxyz quaternion.
+            q = self.bar.pose.q  # (b, 4) wxyz
+            w, x, y, z = q[:, 0], q[:, 1], q[:, 2], q[:, 3]
+            axis = torch.stack(
+                [1.0 - 2.0 * (y * y + z * z), 2.0 * (x * y + w * z), 2.0 * (x * z - w * y)], dim=1
+            )
+            axis = axis / torch.clamp(torch.linalg.norm(axis, axis=1, keepdim=True), min=1e-8)
+            p_ego = torch.sum(f_ego * axis, dim=1)
+            p_partner = torch.sum(f_partner * axis, dim=1)
+            internal = 0.5 * (
+                torch.abs(p_ego) + torch.abs(p_partner) - torch.abs(p_ego + p_partner)
+            )
+            return torch.clamp(internal, max=self._coupling_force_limit)
+
+        def _stress_now(self) -> torch.Tensor:
+            """Dispatch the configured stress measure (ADR-026 §D4; Rung 4c).
+
+            ``"wrist"`` (default) — the embodiment-biased wrist incoming-joint
+            force proxy (the rigid ladder + Rung-4b; byte-identical). ``"coupling"``
+            — the total bar coupling spring force. ``"coupling_internal"`` — the
+            antagonistic axial internal force (the embodiment-invariant
+            cooperative-fight measure; Rung-4c). One accessor so the predicate,
+            telemetry, obs, and reward all read the same measure.
+            """
+            if self._stress_measure == "coupling":
+                return self._coupling_stress_now()
+            if self._stress_measure == "coupling_internal":
+                return self._coupling_internal_stress_now()
+            return self._wrist_stress_proxy_now()
+
         def _centroid_to_goal_dist_now(self) -> torch.Tensor:
             """Current bar-centroid-to-goal distance, metres, per env."""
             import torch as _torch
@@ -1227,7 +1340,7 @@ def make_cocarry_env(
             """
             return {
                 "tilt_deg": self._bar_tilt_deg_now(),
-                "stress_proxy": self._wrist_stress_proxy_now(),
+                "stress_proxy": self._stress_now(),
                 "centroid_to_goal": self._centroid_to_goal_dist_now(),
                 "max_tilt_deg": self._max_tilt_deg,
                 "max_stress_proxy": self._max_stress,
@@ -1259,7 +1372,7 @@ def make_cocarry_env(
                 "goal_pos": self.goal_site.pose.p,
                 "bar_pose": self.bar.pose.raw_pose,
                 "bar_tilt_deg": self._bar_tilt_deg_now().reshape(-1, 1),
-                "wrist_stress_proxy": self._wrist_stress_proxy_now().reshape(-1, 1),
+                "wrist_stress_proxy": self._stress_now().reshape(-1, 1),
             }
 
         def evaluate(self) -> dict[str, Any]:
@@ -1273,7 +1386,7 @@ def make_cocarry_env(
             import torch as _torch
 
             tilt = self._bar_tilt_deg_now()
-            stress = self._wrist_stress_proxy_now()
+            stress = self._stress_now()
             # Settle window: ignore the placement-transient ring in the
             # episode maxima + success eligibility (R-2026-06-B settle
             # coefficient). elapsed_steps is a per-env tensor.
@@ -1360,7 +1473,7 @@ def make_cocarry_env(
             # placement ring is not punished. ~0 on the matched cooperative
             # band (stress << f_max); bites the fight. Partner-agnostic: a
             # physical constraint force, never partner identity.
-            stress_now = self._wrist_stress_proxy_now()
+            stress_now = self._stress_now()
             past_settle = _torch.as_tensor(
                 self.elapsed_steps >= COCARRY_SETTLE_WINDOW_STEPS, device=self.device
             ).reshape(-1)

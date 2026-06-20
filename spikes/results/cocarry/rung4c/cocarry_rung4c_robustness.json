@@ -1,0 +1,97 @@
+{
+  "base_pose_sweep": {
+    "over_fmax_all_bases": true,
+    "per_base": [
+      {
+        "base_x_m": 0.3,
+        "coupling_min": 1910.0,
+        "coupling_p90": 2255.0,
+        "over_fmax": true
+      },
+      {
+        "base_x_m": 0.35,
+        "coupling_min": 1309.0,
+        "coupling_p90": 1516.0,
+        "over_fmax": true
+      },
+      {
+        "base_x_m": 0.4,
+        "coupling_min": 818.0,
+        "coupling_p90": 872.0,
+        "over_fmax": true
+      }
+    ]
+  },
+  "controlled_invariance": {
+    "grip_frames_world": {
+      "panda": {
+        "ego_tcp": [
+          0.11501345783472061,
+          -1.1751147610539192e-08,
+          0.1697819083929062
+        ],
+        "partner_tcp": [
+          -0.11501364409923553,
+          6.532115293111929e-08,
+          0.1697818636894226
+        ]
+      },
+      "xarm6": {
+        "ego_tcp": [
+          0.11501345783472061,
+          -1.1751147610539192e-08,
+          0.1697819083929062
+        ],
+        "partner_tcp": [
+          -0.11516697704792023,
+          8.570145837438758e-07,
+          0.1697894036769867
+        ]
+      }
+    },
+    "invariant": true,
+    "max_abs_diff_n": 0.61,
+    "offsets_m": [
+      0.0,
+      0.01,
+      0.02,
+      0.03,
+      0.05
+    ],
+    "panda_coupling_n": [
+      0.11,
+      80.0,
+      160.0,
+      240.0,
+      400.0
+    ],
+    "xarm6_coupling_n": [
+      0.72,
+      80.03,
+      160.03,
+      240.03,
+      400.03
+    ]
+  },
+  "date": "2026-06-20",
+  "endpoint_stiffness_mechanism": {
+    "panda_vertical_compliance": 4.7429102733497315,
+    "xarm6_over_panda": 1.4576748988672423,
+    "xarm6_vertical_compliance": 6.913621253041474
+  },
+  "fmax_coupling_n": 365.6080997467041,
+  "generator": "scripts/repro/_cocarry_rung4c_robustness.py",
+  "schema": "cocarry_rung4c_robustness/v1",
+  "static_hold": {
+    "panda": {
+      "max": 247.3,
+      "p50": 163.1
+    },
+    "xarm6": {
+      "max": 2631.9,
+      "p50": 1040.9
+    },
+    "xarm6_over_panda_p50": 6.38
+  },
+  "summary": "Instrument invariant given the same state (max diff 0.6 N). xArm6 over-loads the coupling 6.38x even at a zero-action static hold, and over f_max at every swept base (True); the xArm6 end-effector is 1.5x more vertically compliant than the Panda at the carry pose. The over-load is a real, pose-robust embodiment effect, not an instrument bias or a single bad spawn."
+}

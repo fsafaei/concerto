@@ -621,6 +621,7 @@ def evaluate_calibration(
     drive_stiffness: float | None = None,
     drive_damping: float | None = None,
     drive_force_limit: float | None = None,
+    stress_measure: str = "wrist",
 ) -> list[ConjunctMetrics]:
     """Calibrate a candidate: pair it (partner seat) with the cooperative ego (ADR-026 §D4).
 
@@ -646,6 +647,7 @@ def evaluate_calibration(
             drive_stiffness=drive_stiffness,
             drive_damping=drive_damping,
             drive_force_limit=drive_force_limit,
+            stress_measure=stress_measure,
         )
         try:
             coop_ego = build_cooperative_ego(seed=s)
@@ -679,6 +681,7 @@ def evaluate_incumbent_vs_partner(
     drive_stiffness: float | None = None,
     drive_damping: float | None = None,
     drive_force_limit: float | None = None,
+    stress_measure: str = "wrist",
 ) -> list[ConjunctMetrics]:
     """Evaluate the frozen incumbent (ego) against a teammate (partner seat) (ADR-026 §D4).
 
@@ -706,6 +709,7 @@ def evaluate_incumbent_vs_partner(
             drive_stiffness=drive_stiffness,
             drive_damping=drive_damping,
             drive_force_limit=drive_force_limit,
+            stress_measure=stress_measure,
         )
         try:
             partner = build_partner_seat(partner_class, seed=s, partner_uid=partner_uid)
