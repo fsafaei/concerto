@@ -1,0 +1,1039 @@
+{
+  "adequacy": {
+    "closest_box_approach_norm": 0.0,
+    "closest_margin": 0.15,
+    "density_ok": true,
+    "frontier_min": 4,
+    "frontier_points": 4,
+    "margin_ok": false,
+    "plateau": true,
+    "plateau_eps": 0.02,
+    "tail_deficit_improvement": 0.0,
+    "tail_frac": 0.4
+  },
+  "best_config": {
+    "admit_bias": 0.7,
+    "base_x": 0.4,
+    "confirm_agg": {
+      "centroid_p90": 0.0106,
+      "joint_success": 1.0,
+      "level_rate": 1.0,
+      "n": 12,
+      "placed_rate": 1.0,
+      "static_rate": 1.0,
+      "stress_p90": 291.3,
+      "tilt_p90": 1.6,
+      "unstressed_rate": 1.0
+    },
+    "level_gain": 0.5,
+    "pose": "minvc_base0.4",
+    "q6": [
+      0.47702,
+      2.094,
+      -3.67598,
+      1.52372,
+      -1.68516,
+      2.54144
+    ],
+    "search_agg": {
+      "centroid_p90": 0.0109,
+      "joint_success": 1.0,
+      "level_rate": 1.0,
+      "n": 4,
+      "placed_rate": 1.0,
+      "static_rate": 1.0,
+      "stress_p90": 292.4,
+      "tilt_p90": 1.7,
+      "unstressed_rate": 1.0
+    },
+    "vcomp": 3.161
+  },
+  "c_min": 0.75,
+  "confirm_seeds": [
+    81100,
+    81101,
+    81102,
+    81103,
+    81104,
+    81105,
+    81106,
+    81107,
+    81108,
+    81109,
+    81110,
+    81111
+  ],
+  "date": "2026-06-20",
+  "deficit_trace": [
+    2.4688,
+    2.2552,
+    2.2552,
+    2.2552,
+    2.2552,
+    2.2552,
+    1.4417,
+    1.4417,
+    1.4417,
+    1.4417,
+    1.4417,
+    1.4417,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+  ],
+  "drive_stiffness_Npm": 8000.0,
+  "finding": "A fairly posed+controlled xArm6 (minvc_base0.4, level_gain 0.5, admit_bias 0.7) reaches joint success 1.0 >= C_min 0.75 on the confirm seeds (stress_p90 291.3 < f_max 366, tilt_p90 1.6 < 15), comparable to the matched Panda anchor (js 1.0). The different body co-carries as well as the matched body under fair pose+control optimisation -> EH ROBUSTLY NOT ESTABLISHED on this task. The Rung-4d candidate (stress<->tilt tradeoff) is RESOLVED by a fair search: a config is in-band on both.",
+  "fmax_coupling_n": 365.6,
+  "generator": "scripts/repro/_cocarry_rung4e_taskfair_search.py",
+  "goal_radius_m": 0.1,
+  "matched_panda_anchor": {
+    "centroid_p90": 0.0055,
+    "joint_success": 1.0,
+    "level_rate": 1.0,
+    "n": 12,
+    "placed_rate": 1.0,
+    "static_rate": 1.0,
+    "stress_p90": 279.3,
+    "tilt_p90": 6.4,
+    "unstressed_rate": 1.0
+  },
+  "panda_vcompliance": 4.743,
+  "pareto_frontier": [
+    {
+      "admit_bias": 0.7,
+      "joint_success": 0.0,
+      "level_gain": 1.5,
+      "pose": "minvc_base0.45",
+      "stress_p90": 253.1,
+      "tilt_p90": 22.6
+    },
+    {
+      "admit_bias": 1.0,
+      "joint_success": 0.0,
+      "level_gain": 1.5,
+      "pose": "minvc_base0.45",
+      "stress_p90": 256.0,
+      "tilt_p90": 22.5
+    },
+    {
+      "admit_bias": 0.7,
+      "joint_success": 1.0,
+      "level_gain": 1.0,
+      "pose": "minvc_base0.4",
+      "stress_p90": 289.9,
+      "tilt_p90": 1.5
+    },
+    {
+      "admit_bias": 1.0,
+      "joint_success": 1.0,
+      "level_gain": 1.0,
+      "pose": "minvc_base0.4",
+      "stress_p90": 294.9,
+      "tilt_p90": 1.4
+    }
+  ],
+  "poses": [
+    {
+      "base_x": 0.3,
+      "label": "minvc_base0.3",
+      "q6": [
+        6.283,
+        1.45071,
+        -2.96137,
+        6.283,
+        2.83057,
+        3.11949
+      ],
+      "vcomp": 4.458
+    },
+    {
+      "base_x": 0.35,
+      "label": "minvc_base0.35",
+      "q6": [
+        6.283,
+        1.56221,
+        -3.45823,
+        0.00044,
+        2.67624,
+        -1.6982
+      ],
+      "vcomp": 3.963
+    },
+    {
+      "base_x": 0.4,
+      "label": "minvc_base0.4",
+      "q6": [
+        0.47702,
+        2.094,
+        -3.67598,
+        1.52372,
+        -1.68516,
+        2.54144
+      ],
+      "vcomp": 3.161
+    },
+    {
+      "base_x": 0.45,
+      "label": "minvc_base0.45",
+      "q6": [
+        -0.07781,
+        2.05096,
+        -2.88955,
+        -3.35003,
+        2.47651,
+        5.19459
+      ],
+      "vcomp": 2.338
+    },
+    {
+      "base_x": 0.35,
+      "label": "default_base0.35",
+      "q6": [
+        0.0,
+        -0.084,
+        -0.8,
+        0.0,
+        0.692,
+        0.0
+      ],
+      "vcomp": 6.914
+    }
+  ],
+  "prereg": "spikes/results/cocarry/rung4e/cocarry_rung4e_taskfair_prereg.json",
+  "schema": "cocarry_rung4e_taskfair_search/v1",
+  "search_configs": [
+    {
+      "admit_bias": 0.7,
+      "agg": {
+        "centroid_p90": 0.1436,
+        "joint_success": 0.0,
+        "level_rate": 0.0,
+        "n": 4,
+        "placed_rate": 0.5,
+        "static_rate": 1.0,
+        "stress_p90": 443.4,
+        "tilt_p90": 42.3,
+        "unstressed_rate": 0.25
+      },
+      "base_x": 0.3,
+      "deficit": 2.4688,
+      "level_gain": 0.5,
+      "pose": "minvc_base0.3",
+      "q6": [
+        6.283,
+        1.45071,
+        -2.96137,
+        6.283,
+        2.83057,
+        3.11949
+      ],
+      "vcomp": 4.458
+    },
+    {
+      "admit_bias": 1.0,
+      "agg": {
+        "centroid_p90": 0.1359,
+        "joint_success": 0.0,
+        "level_rate": 0.0,
+        "n": 4,
+        "placed_rate": 0.5,
+        "static_rate": 1.0,
+        "stress_p90": 461.7,
+        "tilt_p90": 39.5,
+        "unstressed_rate": 0.25
+      },
+      "base_x": 0.3,
+      "deficit": 2.2552,
+      "level_gain": 0.5,
+      "pose": "minvc_base0.3",
+      "q6": [
+        6.283,
+        1.45071,
+        -2.96137,
+        6.283,
+        2.83057,
+        3.11949
+      ],
+      "vcomp": 4.458
+    },
+    {
+      "admit_bias": 0.7,
+      "agg": {
+        "centroid_p90": 0.2101,
+        "joint_success": 0.0,
+        "level_rate": 0.0,
+        "n": 4,
+        "placed_rate": 0.25,
+        "static_rate": 1.0,
+        "stress_p90": 595.6,
+        "tilt_p90": 42.3,
+        "unstressed_rate": 0.0
+      },
+      "base_x": 0.3,
+      "deficit": 3.5501,
+      "level_gain": 1.0,
+      "pose": "minvc_base0.3",
+      "q6": [
+        6.283,
+        1.45071,
+        -2.96137,
+        6.283,
+        2.83057,
+        3.11949
+      ],
+      "vcomp": 4.458
+    },
+    {
+      "admit_bias": 1.0,
+      "agg": {
+        "centroid_p90": 0.2429,
+        "joint_success": 0.0,
+        "level_rate": 0.0,
+        "n": 4,
+        "placed_rate": 0.25,
+        "static_rate": 1.0,
+        "stress_p90": 566.2,
+        "tilt_p90": 39.7,
+        "unstressed_rate": 0.0
+      },
+      "base_x": 0.3,
+      "deficit": 3.6244,
+      "level_gain": 1.0,
+      "pose": "minvc_base0.3",
+      "q6": [
+        6.283,
+        1.45071,
+        -2.96137,
+        6.283,
+        2.83057,
+        3.11949
+      ],
+      "vcomp": 4.458
+    },
+    {
+      "admit_bias": 0.7,
+      "agg": {
+        "centroid_p90": 0.2252,
+        "joint_success": 0.0,
+        "level_rate": 0.0,
+        "n": 4,
+        "placed_rate": 0.25,
+        "static_rate": 1.0,
+        "stress_p90": 728.4,
+        "tilt_p90": 42.0,
+        "unstressed_rate": 0.0
+      },
+      "base_x": 0.3,
+      "deficit": 4.0443,
+      "level_gain": 1.5,
+      "pose": "minvc_base0.3",
+      "q6": [
+        6.283,
+        1.45071,
+        -2.96137,
+        6.283,
+        2.83057,
+        3.11949
+      ],
+      "vcomp": 4.458
+    },
+    {
+      "admit_bias": 1.0,
+      "agg": {
+        "centroid_p90": 0.2564,
+        "joint_success": 0.0,
+        "level_rate": 0.0,
+        "n": 4,
+        "placed_rate": 0.0,
+        "static_rate": 1.0,
+        "stress_p90": 562.7,
+        "tilt_p90": 39.6,
+        "unstressed_rate": 0.0
+      },
+      "base_x": 0.3,
+      "deficit": 3.7431,
+      "level_gain": 1.5,
+      "pose": "minvc_base0.3",
+      "q6": [
+        6.283,
+        1.45071,
+        -2.96137,
+        6.283,
+        2.83057,
+        3.11949
+      ],
+      "vcomp": 4.458
+    },
+    {
+      "admit_bias": 0.7,
+      "agg": {
+        "centroid_p90": 0.1125,
+        "joint_success": 0.0,
+        "level_rate": 0.0,
+        "n": 4,
+        "placed_rate": 0.5,
+        "static_rate": 0.75,
+        "stress_p90": 339.7,
+        "tilt_p90": 31.0,
+        "unstressed_rate": 1.0
+      },
+      "base_x": 0.35,
+      "deficit": 1.4417,
+      "level_gain": 0.5,
+      "pose": "minvc_base0.35",
+      "q6": [
+        6.283,
+        1.56221,
+        -3.45823,
+        0.00044,
+        2.67624,
+        -1.6982
+      ],
+      "vcomp": 3.963
+    },
+    {
+      "admit_bias": 1.0,
+      "agg": {
+        "centroid_p90": 0.165,
+        "joint_success": 0.0,
+        "level_rate": 0.0,
+        "n": 4,
+        "placed_rate": 0.75,
+        "static_rate": 0.75,
+        "stress_p90": 338.2,
+        "tilt_p90": 33.4,
+        "unstressed_rate": 1.0
+      },
+      "base_x": 0.35,
+      "deficit": 2.1267,
+      "level_gain": 0.5,
+      "pose": "minvc_base0.35",
+      "q6": [
+        6.283,
+        1.56221,
+        -3.45823,
+        0.00044,
+        2.67624,
+        -1.6982
+      ],
+      "vcomp": 3.963
+    },
+    {
+      "admit_bias": 0.7,
+      "agg": {
+        "centroid_p90": 0.1107,
+        "joint_success": 0.0,
+        "level_rate": 0.0,
+        "n": 4,
+        "placed_rate": 0.5,
+        "static_rate": 0.5,
+        "stress_p90": 345.5,
+        "tilt_p90": 30.8,
+        "unstressed_rate": 1.0
+      },
+      "base_x": 0.35,
+      "deficit": 1.6603,
+      "level_gain": 1.0,
+      "pose": "minvc_base0.35",
+      "q6": [
+        6.283,
+        1.56221,
+        -3.45823,
+        0.00044,
+        2.67624,
+        -1.6982
+      ],
+      "vcomp": 3.963
+    },
+    {
+      "admit_bias": 1.0,
+      "agg": {
+        "centroid_p90": 0.1352,
+        "joint_success": 0.0,
+        "level_rate": 0.0,
+        "n": 4,
+        "placed_rate": 0.75,
+        "static_rate": 0.75,
+        "stress_p90": 338.9,
+        "tilt_p90": 30.8,
+        "unstressed_rate": 1.0
+      },
+      "base_x": 0.35,
+      "deficit": 1.6553,
+      "level_gain": 1.0,
+      "pose": "minvc_base0.35",
+      "q6": [
+        6.283,
+        1.56221,
+        -3.45823,
+        0.00044,
+        2.67624,
+        -1.6982
+      ],
+      "vcomp": 3.963
+    },
+    {
+      "admit_bias": 0.7,
+      "agg": {
+        "centroid_p90": 0.112,
+        "joint_success": 0.0,
+        "level_rate": 0.0,
+        "n": 4,
+        "placed_rate": 0.25,
+        "static_rate": 0.5,
+        "stress_p90": 341.4,
+        "tilt_p90": 31.1,
+        "unstressed_rate": 1.0
+      },
+      "base_x": 0.35,
+      "deficit": 1.6933,
+      "level_gain": 1.5,
+      "pose": "minvc_base0.35",
+      "q6": [
+        6.283,
+        1.56221,
+        -3.45823,
+        0.00044,
+        2.67624,
+        -1.6982
+      ],
+      "vcomp": 3.963
+    },
+    {
+      "admit_bias": 1.0,
+      "agg": {
+        "centroid_p90": 0.1342,
+        "joint_success": 0.0,
+        "level_rate": 0.0,
+        "n": 4,
+        "placed_rate": 0.75,
+        "static_rate": 0.75,
+        "stress_p90": 334.5,
+        "tilt_p90": 30.5,
+        "unstressed_rate": 1.0
+      },
+      "base_x": 0.35,
+      "deficit": 1.6253,
+      "level_gain": 1.5,
+      "pose": "minvc_base0.35",
+      "q6": [
+        6.283,
+        1.56221,
+        -3.45823,
+        0.00044,
+        2.67624,
+        -1.6982
+      ],
+      "vcomp": 3.963
+    },
+    {
+      "admit_bias": 0.7,
+      "agg": {
+        "centroid_p90": 0.0109,
+        "joint_success": 1.0,
+        "level_rate": 1.0,
+        "n": 4,
+        "placed_rate": 1.0,
+        "static_rate": 1.0,
+        "stress_p90": 292.4,
+        "tilt_p90": 1.7,
+        "unstressed_rate": 1.0
+      },
+      "base_x": 0.4,
+      "deficit": 0.0,
+      "level_gain": 0.5,
+      "pose": "minvc_base0.4",
+      "q6": [
+        0.47702,
+        2.094,
+        -3.67598,
+        1.52372,
+        -1.68516,
+        2.54144
+      ],
+      "vcomp": 3.161
+    },
+    {
+      "admit_bias": 1.0,
+      "agg": {
+        "centroid_p90": 0.0105,
+        "joint_success": 1.0,
+        "level_rate": 1.0,
+        "n": 4,
+        "placed_rate": 1.0,
+        "static_rate": 1.0,
+        "stress_p90": 297.1,
+        "tilt_p90": 1.6,
+        "unstressed_rate": 1.0
+      },
+      "base_x": 0.4,
+      "deficit": 0.0,
+      "level_gain": 0.5,
+      "pose": "minvc_base0.4",
+      "q6": [
+        0.47702,
+        2.094,
+        -3.67598,
+        1.52372,
+        -1.68516,
+        2.54144
+      ],
+      "vcomp": 3.161
+    },
+    {
+      "admit_bias": 0.7,
+      "agg": {
+        "centroid_p90": 0.0112,
+        "joint_success": 1.0,
+        "level_rate": 1.0,
+        "n": 4,
+        "placed_rate": 1.0,
+        "static_rate": 1.0,
+        "stress_p90": 289.9,
+        "tilt_p90": 1.5,
+        "unstressed_rate": 1.0
+      },
+      "base_x": 0.4,
+      "deficit": 0.0,
+      "level_gain": 1.0,
+      "pose": "minvc_base0.4",
+      "q6": [
+        0.47702,
+        2.094,
+        -3.67598,
+        1.52372,
+        -1.68516,
+        2.54144
+      ],
+      "vcomp": 3.161
+    },
+    {
+      "admit_bias": 1.0,
+      "agg": {
+        "centroid_p90": 0.0111,
+        "joint_success": 1.0,
+        "level_rate": 1.0,
+        "n": 4,
+        "placed_rate": 1.0,
+        "static_rate": 1.0,
+        "stress_p90": 294.9,
+        "tilt_p90": 1.4,
+        "unstressed_rate": 1.0
+      },
+      "base_x": 0.4,
+      "deficit": 0.0,
+      "level_gain": 1.0,
+      "pose": "minvc_base0.4",
+      "q6": [
+        0.47702,
+        2.094,
+        -3.67598,
+        1.52372,
+        -1.68516,
+        2.54144
+      ],
+      "vcomp": 3.161
+    },
+    {
+      "admit_bias": 0.7,
+      "agg": {
+        "centroid_p90": 0.0069,
+        "joint_success": 0.0,
+        "level_rate": 1.0,
+        "n": 4,
+        "placed_rate": 1.0,
+        "static_rate": 0.0,
+        "stress_p90": 291.1,
+        "tilt_p90": 2.4,
+        "unstressed_rate": 1.0
+      },
+      "base_x": 0.4,
+      "deficit": 1.0,
+      "level_gain": 1.5,
+      "pose": "minvc_base0.4",
+      "q6": [
+        0.47702,
+        2.094,
+        -3.67598,
+        1.52372,
+        -1.68516,
+        2.54144
+      ],
+      "vcomp": 3.161
+    },
+    {
+      "admit_bias": 1.0,
+      "agg": {
+        "centroid_p90": 0.0084,
+        "joint_success": 0.0,
+        "level_rate": 1.0,
+        "n": 4,
+        "placed_rate": 1.0,
+        "static_rate": 0.0,
+        "stress_p90": 298.8,
+        "tilt_p90": 2.5,
+        "unstressed_rate": 1.0
+      },
+      "base_x": 0.4,
+      "deficit": 1.0,
+      "level_gain": 1.5,
+      "pose": "minvc_base0.4",
+      "q6": [
+        0.47702,
+        2.094,
+        -3.67598,
+        1.52372,
+        -1.68516,
+        2.54144
+      ],
+      "vcomp": 3.161
+    },
+    {
+      "admit_bias": 0.7,
+      "agg": {
+        "centroid_p90": 0.0119,
+        "joint_success": 0.0,
+        "level_rate": 0.0,
+        "n": 4,
+        "placed_rate": 1.0,
+        "static_rate": 1.0,
+        "stress_p90": 257.7,
+        "tilt_p90": 27.8,
+        "unstressed_rate": 1.0
+      },
+      "base_x": 0.45,
+      "deficit": 0.8533,
+      "level_gain": 0.5,
+      "pose": "minvc_base0.45",
+      "q6": [
+        -0.07781,
+        2.05096,
+        -2.88955,
+        -3.35003,
+        2.47651,
+        5.19459
+      ],
+      "vcomp": 2.338
+    },
+    {
+      "admit_bias": 1.0,
+      "agg": {
+        "centroid_p90": 0.0133,
+        "joint_success": 0.0,
+        "level_rate": 0.0,
+        "n": 4,
+        "placed_rate": 1.0,
+        "static_rate": 1.0,
+        "stress_p90": 258.9,
+        "tilt_p90": 26.9,
+        "unstressed_rate": 1.0
+      },
+      "base_x": 0.45,
+      "deficit": 0.7933,
+      "level_gain": 0.5,
+      "pose": "minvc_base0.45",
+      "q6": [
+        -0.07781,
+        2.05096,
+        -2.88955,
+        -3.35003,
+        2.47651,
+        5.19459
+      ],
+      "vcomp": 2.338
+    },
+    {
+      "admit_bias": 0.7,
+      "agg": {
+        "centroid_p90": 0.0114,
+        "joint_success": 0.0,
+        "level_rate": 0.0,
+        "n": 4,
+        "placed_rate": 1.0,
+        "static_rate": 1.0,
+        "stress_p90": 256.6,
+        "tilt_p90": 26.1,
+        "unstressed_rate": 1.0
+      },
+      "base_x": 0.45,
+      "deficit": 0.74,
+      "level_gain": 1.0,
+      "pose": "minvc_base0.45",
+      "q6": [
+        -0.07781,
+        2.05096,
+        -2.88955,
+        -3.35003,
+        2.47651,
+        5.19459
+      ],
+      "vcomp": 2.338
+    },
+    {
+      "admit_bias": 1.0,
+      "agg": {
+        "centroid_p90": 0.0118,
+        "joint_success": 0.0,
+        "level_rate": 0.0,
+        "n": 4,
+        "placed_rate": 1.0,
+        "static_rate": 1.0,
+        "stress_p90": 257.5,
+        "tilt_p90": 25.1,
+        "unstressed_rate": 1.0
+      },
+      "base_x": 0.45,
+      "deficit": 0.6733,
+      "level_gain": 1.0,
+      "pose": "minvc_base0.45",
+      "q6": [
+        -0.07781,
+        2.05096,
+        -2.88955,
+        -3.35003,
+        2.47651,
+        5.19459
+      ],
+      "vcomp": 2.338
+    },
+    {
+      "admit_bias": 0.7,
+      "agg": {
+        "centroid_p90": 0.0116,
+        "joint_success": 0.0,
+        "level_rate": 0.0,
+        "n": 4,
+        "placed_rate": 1.0,
+        "static_rate": 1.0,
+        "stress_p90": 253.1,
+        "tilt_p90": 22.6,
+        "unstressed_rate": 1.0
+      },
+      "base_x": 0.45,
+      "deficit": 0.5067,
+      "level_gain": 1.5,
+      "pose": "minvc_base0.45",
+      "q6": [
+        -0.07781,
+        2.05096,
+        -2.88955,
+        -3.35003,
+        2.47651,
+        5.19459
+      ],
+      "vcomp": 2.338
+    },
+    {
+      "admit_bias": 1.0,
+      "agg": {
+        "centroid_p90": 0.0108,
+        "joint_success": 0.0,
+        "level_rate": 0.0,
+        "n": 4,
+        "placed_rate": 1.0,
+        "static_rate": 1.0,
+        "stress_p90": 256.0,
+        "tilt_p90": 22.5,
+        "unstressed_rate": 1.0
+      },
+      "base_x": 0.45,
+      "deficit": 0.5,
+      "level_gain": 1.5,
+      "pose": "minvc_base0.45",
+      "q6": [
+        -0.07781,
+        2.05096,
+        -2.88955,
+        -3.35003,
+        2.47651,
+        5.19459
+      ],
+      "vcomp": 2.338
+    },
+    {
+      "admit_bias": 0.7,
+      "agg": {
+        "centroid_p90": 0.0195,
+        "joint_success": 0.0,
+        "level_rate": 1.0,
+        "n": 4,
+        "placed_rate": 1.0,
+        "static_rate": 1.0,
+        "stress_p90": 1733.9,
+        "tilt_p90": 6.7,
+        "unstressed_rate": 0.0
+      },
+      "base_x": 0.35,
+      "deficit": 3.7426,
+      "level_gain": 0.5,
+      "pose": "default_base0.35",
+      "q6": [
+        0.0,
+        -0.084,
+        -0.8,
+        0.0,
+        0.692,
+        0.0
+      ],
+      "vcomp": 6.914
+    },
+    {
+      "admit_bias": 1.0,
+      "agg": {
+        "centroid_p90": 0.0105,
+        "joint_success": 0.0,
+        "level_rate": 1.0,
+        "n": 4,
+        "placed_rate": 1.0,
+        "static_rate": 1.0,
+        "stress_p90": 1735.2,
+        "tilt_p90": 8.2,
+        "unstressed_rate": 0.0
+      },
+      "base_x": 0.35,
+      "deficit": 3.7462,
+      "level_gain": 0.5,
+      "pose": "default_base0.35",
+      "q6": [
+        0.0,
+        -0.084,
+        -0.8,
+        0.0,
+        0.692,
+        0.0
+      ],
+      "vcomp": 6.914
+    },
+    {
+      "admit_bias": 0.7,
+      "agg": {
+        "centroid_p90": 0.0114,
+        "joint_success": 0.0,
+        "level_rate": 1.0,
+        "n": 4,
+        "placed_rate": 1.0,
+        "static_rate": 1.0,
+        "stress_p90": 1752.9,
+        "tilt_p90": 7.7,
+        "unstressed_rate": 0.0
+      },
+      "base_x": 0.35,
+      "deficit": 3.7946,
+      "level_gain": 1.0,
+      "pose": "default_base0.35",
+      "q6": [
+        0.0,
+        -0.084,
+        -0.8,
+        0.0,
+        0.692,
+        0.0
+      ],
+      "vcomp": 6.914
+    },
+    {
+      "admit_bias": 1.0,
+      "agg": {
+        "centroid_p90": 0.0129,
+        "joint_success": 0.0,
+        "level_rate": 1.0,
+        "n": 4,
+        "placed_rate": 1.0,
+        "static_rate": 1.0,
+        "stress_p90": 1748.0,
+        "tilt_p90": 8.0,
+        "unstressed_rate": 0.0
+      },
+      "base_x": 0.35,
+      "deficit": 3.7812,
+      "level_gain": 1.0,
+      "pose": "default_base0.35",
+      "q6": [
+        0.0,
+        -0.084,
+        -0.8,
+        0.0,
+        0.692,
+        0.0
+      ],
+      "vcomp": 6.914
+    },
+    {
+      "admit_bias": 0.7,
+      "agg": {
+        "centroid_p90": 0.0183,
+        "joint_success": 0.0,
+        "level_rate": 1.0,
+        "n": 4,
+        "placed_rate": 1.0,
+        "static_rate": 0.25,
+        "stress_p90": 1753.7,
+        "tilt_p90": 7.9,
+        "unstressed_rate": 0.0
+      },
+      "base_x": 0.35,
+      "deficit": 4.5468,
+      "level_gain": 1.5,
+      "pose": "default_base0.35",
+      "q6": [
+        0.0,
+        -0.084,
+        -0.8,
+        0.0,
+        0.692,
+        0.0
+      ],
+      "vcomp": 6.914
+    },
+    {
+      "admit_bias": 1.0,
+      "agg": {
+        "centroid_p90": 0.0095,
+        "joint_success": 0.0,
+        "level_rate": 1.0,
+        "n": 4,
+        "placed_rate": 1.0,
+        "static_rate": 0.25,
+        "stress_p90": 1752.9,
+        "tilt_p90": 7.8,
+        "unstressed_rate": 0.0
+      },
+      "base_x": 0.35,
+      "deficit": 4.5446,
+      "level_gain": 1.5,
+      "pose": "default_base0.35",
+      "q6": [
+        0.0,
+        -0.084,
+        -0.8,
+        0.0,
+        0.692,
+        0.0
+      ],
+      "vcomp": 6.914
+    }
+  ],
+  "search_seeds": [
+    81000,
+    81001,
+    81002,
+    81003
+  ],
+  "tilt_max_deg": 15.0,
+  "verdict": "EH_ROBUSTLY_NOT_ESTABLISHED"
+}

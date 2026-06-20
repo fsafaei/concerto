@@ -1,5 +1,13 @@
 # Co-carry Rung 4d — Stage-A1 correction: the Rung-4c EH headline is a pose artifact
 
+> **RESOLVED by Rung-4e (2026-06-20).** The "honest residual" below — the
+> stress↔tilt pose tradeoff flagged as a *candidate* embodiment difficulty — was
+> itself a two-pose snapshot. The Rung-4e task-fair pose×controller search found
+> base 0.40 (vcompliance 3.16) carries the bar in-band on **both** stress (291 N
+> < 366) and tilt (1.6° < 15°), joint success 1.0 — comparable to the matched
+> Panda. The candidate is **resolved**, the EH axis closes as a **robust null**.
+> See [`../rung4e/COCARRY_RUNG4E_EH_REPORT.md`](../rung4e/COCARRY_RUNG4E_EH_REPORT.md).
+
 **Bottom line.** The Rung-4c embodiment headline — *"a different body (xArm6)
 genuinely over-loads the cooperative coupling ~5× f_max"* (PR #252) — **does
 not survive a fair carry-pose optimisation.** When the xArm6 is given its best
