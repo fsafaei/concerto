@@ -1,5 +1,44 @@
 # Co-carry Rung 4c — embodiment-invariant stress instrument → the embodiment result
 
+> **Audit-hardening addendum (2026-06-20, PR-#252 follow-up).** The headline
+> below is now reproducible from **committed code** and the construct crux is
+> closed with **committed data** (replacing the original `/tmp` script + prose):
+>
+> - **Headline floor reproduced from committed code** —
+>   `scripts/repro/cocarry_rung4c_sameego_floor.sh` regenerates
+>   `cocarry_rung4c_sameego_floor.json` exactly: matched 267 / stiff 289 /
+>   admittance 317 / slew 334 / **xArm6 1867 N** (control-style floor 267–334 N;
+>   xArm6 ~5.6× the ceiling).
+> - **1867-vs-1773 N discrepancy reconciled** — same condition, different
+>   pre-registered seed sets (floor 80100– → 1867; EH 80200– → 1773); both now
+>   reproduced from committed code; the ~5% gap is n=12 sampling, the over-load
+>   is seed-robust.
+> - **Controlled invariance — committed proof** (`cocarry_rung4c_robustness.json`):
+>   with the bar teleported to the *same* world pose, Panda- vs xArm6-held
+>   coupling agrees within **0.61 N** across a 0→0.05 m deflection sweep → the
+>   instrument is embodiment-invariant *given the same state*; the high xArm6
+>   reading is a real state difference, **not** a measurement bias.
+> - **Static-hold committed** — zero-action, gravity only: Panda p50 163 / max
+>   247 N vs xArm6 p50 1041 / max 2632 N (**6.4×**, previously prose-only).
+> - **Pose/base robustness — committed** — the xArm6 coupling is over f_max at
+>   **every** swept base (min 818–1910 N vs f_max 366 N at base x = 0.30/0.35/0.40);
+>   it is **not** a single geometrically-bad spawn (the AS-axis failure mode).
+>   Magnitude is pose-sensitive (872–2255 N) but over-loaded everywhere.
+> - **Mechanism (partial)** — the xArm6 end-effector is **1.46×** more
+>   vertically compliant than the Panda at the carry pose (Jacobian (JJᵀ)_zz
+>   6.91 vs 4.74); a contributing factor, not the sole cause of the 6.4× static
+>   sag (joint PD/force-limit + link inertia under load also contribute).
+> - **Precise framing:** the cooperative-ego xArm6 fails **unstressed 12/12;
+>   placed + level pass; static fails on 2/12** — not "only unstressed". The
+>   claim is **"this xArm6 controller/pose on this task over-loads the
+>   coupling"**, not a universal embodiment law.
+>
+> All Stage-1/2 hardening gates passed (reproduced + invariant + pose-robust),
+> so the cooperative-ego headline is **audit-ready**; no committed check
+> contradicted it. The incumbent-specific Δ (Stage 3) still needs a
+> compliant-coupling re-freeze. Generators: `cocarry_rung4c_sameego_floor.sh`,
+> `_cocarry_rung4c_robustness.py`. Seeds: floor 80100–80111, EH 80200–80211.
+
 **The convergence slice, and the thesis-bearing payoff.** Rung-4b solved the
 *physics* blocker (a compliant coupling lets a different body transport+level
 the bar) but isolated an *instrument* one: the "unstressed" conjunct read the
@@ -101,7 +140,7 @@ instrument + f_max = 366 N, 12 seeds (`cocarry_rung4c_sameego_floor.json`):
 | `cocarry_stiff_impedance` | control-style (PH) | 289 | 100% |
 | `cocarry_admittance` | control-style (PH) | 317 | 100% |
 | `cocarry_slew_impedance` | control-style (PH) | 334 | 0%* |
-| **`cocarry_xarm6_impedance`** | **embodiment (EH)** | **1867** | **0%** (unstressed 12/12) |
+| **`cocarry_xarm6_impedance`** | **embodiment (EH)** | **1867** | **0%** (unstressed 12/12; placed+level pass; static 2/12) |
 
 \* slew's coupling load is **in-band (334 N < f_max)**; its 0% is a *non-stress*
 conjunct (placement/timing under the compliant coupling — a control-style
@@ -114,10 +153,12 @@ blocker lives on, all four Panda-bodied teammates are 267–334 N.
 baseline, ~5× f_max.** The embodiment effect is unambiguously beyond the
 control-style spread → attributable to **embodiment**, not control style.
 
-**Mechanism (per-conjunct):** the xArm6 fails purely on `unstressed`
-(12/12); under the compliant coupling it places+levels, but its poor carry-pose
-endpoint stiffness makes it sag and over-tension the coupling far past any
-matched/Panda level.
+**Mechanism (per-conjunct):** the xArm6 fails **`unstressed` 12/12; placed +
+level pass on all 12; `static` fails on 2/12** (the over-tensioned coupling
+also disturbs settling on 2 seeds). Under the compliant coupling it transports
+and levels, but this xArm6 controller/pose sags and over-tensions the coupling
+far past any matched/Panda level — the dominant failure is the coupling
+over-stress, with a secondary settle effect.
 
 ## 4. Verdict
 

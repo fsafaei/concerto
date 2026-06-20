@@ -1,22 +1,105 @@
 {
-  "cocarry_admittance": {
-    "coupling_p90": 316.53736267089846,
-    "rate": 1.0
+  "control_style_floor_p90_range_n": [
+    266.9873718261719,
+    333.55299682617186
+  ],
+  "date": "2026-06-20",
+  "discrepancy_reconciliation": "PR-#252 floor xArm6 (1867 N) used the pre-registered FLOOR seeds (80100-); the measurement JSON xarm6_capability (1773 N) used the EH seeds (80200-) \u2014 same condition (cooperative ego + xArm6, coupling, f_max), different pre-registered seed sets. This generator reproduces both from committed code: floor-seed p90=1867 N, EH-seed p90=1773 N. The ~5% difference is n=12 seed sampling; the over-load (~5x f_max, ~6x the control-style floor) is seed-robust. The headline cites the floor-seed value consistently with the other floor rows (all on 80100-).",
+  "drive_stiffness_Npm": 8000.0,
+  "eh_seeds": [
+    80200,
+    80201,
+    80202,
+    80203,
+    80204,
+    80205,
+    80206,
+    80207,
+    80208,
+    80209,
+    80210,
+    80211
+  ],
+  "embodiment_over_control_style_ratio": 5.5986359794429665,
+  "embodiment_xarm6_p90_n": 1867.4418090820313,
+  "floor_seeds": [
+    80100,
+    80101,
+    80102,
+    80103,
+    80104,
+    80105,
+    80106,
+    80107,
+    80108,
+    80109,
+    80110,
+    80111
+  ],
+  "fmax_coupling_n": 365.6080997467041,
+  "generator": "scripts/repro/_cocarry_rung4c_sameego_floor.py",
+  "prereg_artifact": "spikes/results/cocarry/rung4c/cocarry_rung4c_eh_prereg.json",
+  "rows": {
+    "cocarry_admittance": {
+      "coupling_max": 318.6353759765625,
+      "coupling_p90": 316.53736267089846,
+      "fail_level": 0,
+      "fail_placed": 0,
+      "fail_static": 0,
+      "fail_unstressed": 0,
+      "kind": "control_style_PH",
+      "success_rate_at_fmax": 1.0
+    },
+    "cocarry_impedance": {
+      "coupling_max": 293.2475891113281,
+      "coupling_p90": 266.9873718261719,
+      "fail_level": 0,
+      "fail_placed": 0,
+      "fail_static": 0,
+      "fail_unstressed": 0,
+      "kind": "matched_panda",
+      "success_rate_at_fmax": 1.0
+    },
+    "cocarry_slew_impedance": {
+      "coupling_max": 357.05230712890625,
+      "coupling_p90": 333.55299682617186,
+      "fail_level": 12,
+      "fail_placed": 0,
+      "fail_static": 0,
+      "fail_unstressed": 0,
+      "kind": "control_style_PH",
+      "success_rate_at_fmax": 0.0
+    },
+    "cocarry_stiff_impedance": {
+      "coupling_max": 290.4280090332031,
+      "coupling_p90": 289.39619140625,
+      "fail_level": 0,
+      "fail_placed": 0,
+      "fail_static": 0,
+      "fail_unstressed": 0,
+      "kind": "control_style_PH",
+      "success_rate_at_fmax": 1.0
+    },
+    "cocarry_xarm6_impedance": {
+      "coupling_max": 2129.7275390625,
+      "coupling_p90": 1867.4418090820313,
+      "fail_level": 0,
+      "fail_placed": 0,
+      "fail_static": 2,
+      "fail_unstressed": 12,
+      "kind": "embodiment_EH",
+      "success_rate_at_fmax": 0.0
+    }
   },
-  "cocarry_impedance": {
-    "coupling_p90": 266.9873718261719,
-    "rate": 1.0
-  },
-  "cocarry_slew_impedance": {
-    "coupling_p90": 333.55299682617186,
-    "rate": 0.0
-  },
-  "cocarry_stiff_impedance": {
-    "coupling_p90": 289.39619140625,
-    "rate": 1.0
-  },
-  "cocarry_xarm6_impedance": {
-    "coupling_p90": 1867.4418090820313,
-    "rate": 0.0
+  "schema": "cocarry_rung4c_sameego_floor/v2",
+  "stress_measure": "coupling",
+  "xarm6_eh_seeds_crosscheck": {
+    "coupling_max": 1848.33056640625,
+    "coupling_p90": 1773.0539428710938,
+    "fail_level": 0,
+    "fail_placed": 0,
+    "fail_static": 2,
+    "fail_unstressed": 12,
+    "success_rate_at_fmax": 0.0
   }
 }
