@@ -1,0 +1,76 @@
+{
+  "date": "2026-06-20",
+  "default_pose": {
+    "active": {
+      "coupling_p90": 1842.0,
+      "tilt_p90": 9.1
+    },
+    "base_x": 0.35,
+    "q6": [
+      0.0,
+      -0.084,
+      -0.8,
+      0.0,
+      0.692,
+      0.0
+    ],
+    "static": {
+      "max": 2632.0,
+      "p50": 1041.0
+    }
+  },
+  "drive_stiffness_Npm": 8000.0,
+  "finding": "A fairly-posed xArm6 (endpoint vcompliance 2.338 < the Panda's 4.743) stays IN-BAND on coupling (static max 159.0 N, active p90 264.0 N, both < f_max 366). The Rung-4c coupling-over-stress EH headline (default-pose active 1842.0 N) is a POSE ARTIFACT of the unoptimised default carry pose, not an embodiment law. STOP per Stage-A1 \u2014 do NOT re-freeze. NOTE: the stiffness-optimal pose then fails the LEVEL conjunct (tilt p90 26.3 deg); a stress-vs-tilt pose tradeoff is a CANDIDATE genuine difficulty but is NOT established (a task-fair pose+controller search is the next slice). The EH axis is NOT established by the committed coupling-over-stress result.",
+  "fmax_coupling_n": 365.6,
+  "generator": "scripts/repro/_cocarry_rung4d_pose_falsification.py",
+  "kinematic_search": {
+    "panda_vcompliance": 4.743,
+    "per_base_best": {
+      "0.3": 4.458,
+      "0.35": 3.963,
+      "0.4": 3.161,
+      "0.45": 2.338
+    },
+    "xarm6_best_base_x": 0.45,
+    "xarm6_best_over_panda": 0.49,
+    "xarm6_best_q6": [
+      -0.07781,
+      2.05096,
+      -2.88955,
+      -3.35003,
+      2.47651,
+      5.19459
+    ],
+    "xarm6_best_vcompliance": 2.338,
+    "xarm6_default_vcompliance": 6.914
+  },
+  "optimised_pose": {
+    "active": {
+      "coupling_p90": 264.0,
+      "tilt_p90": 26.3
+    },
+    "base_x": 0.45,
+    "q6": [
+      -0.07781,
+      2.05096,
+      -2.88955,
+      -3.35003,
+      2.47651,
+      5.19459
+    ],
+    "static": {
+      "max": 159.0,
+      "p50": 152.0
+    }
+  },
+  "schema": "cocarry_rung4d_pose_falsification/v1",
+  "seeds": [
+    80100,
+    80101,
+    80102,
+    80103,
+    80104,
+    80105
+  ],
+  "verdict": "POSE_ARTIFACT"
+}

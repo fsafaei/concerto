@@ -840,6 +840,8 @@ def make_cocarry_env(
     drive_damping: float | None = None,
     drive_force_limit: float | None = None,
     stress_measure: str = "wrist",
+    xarm6_base_x: float | None = None,
+    xarm6_ready_qpos: list[float] | None = None,
 ) -> gym.Env[Any, Any]:
     """Build a :class:`CoCarryEnv` instance (ADR-026 §Decision 1-2; R-2026-06-B Rungs 0-1).
 
@@ -874,6 +876,12 @@ def make_cocarry_env(
             incoming-joint-force proxy (rigid ladder + Rung-4b; byte-identical);
             ``"coupling"`` — the embodiment-invariant bar coupling force
             (Rung-4c corrected task; requires the compliant coupling).
+        xarm6_base_x: Optional override of the xArm6 partner base x (m); ``None``
+            uses :data:`_XARM6_BASE_X_M`. For the Rung-4d carry-pose
+            falsification (vary the xArm6 configuration fairly; ADR-026 §D4 4d).
+        xarm6_ready_qpos: Optional override of the xArm6 12-D ready qpos;
+            ``None`` uses :data:`_XARM6_READY_QPOS`. Pair with ``xarm6_base_x``
+            (and a matching controller ``base_xyz``) for a fair carry pose.
 
     Returns:
         A :class:`CoCarryEnv` ready to ``reset(seed=K)``.
@@ -916,6 +924,18 @@ def make_cocarry_env(
     weld_stiffness, weld_damping, weld_force_limit = cocarry_coupling(
         drive_stiffness, drive_damping, drive_force_limit
     )
+    # Per-build base/ready-qpos tables: the module defaults, with the xArm6
+    # entry optionally overridden (Rung-4d fair-pose falsification). None ⇒
+    # byte-identical to the committed behaviour.
+    base_pose_by_uid = dict(_BASE_POSE_BY_UID)
+    ready_qpos_by_uid = dict(_READY_QPOS_BY_UID)
+    if xarm6_base_x is not None:
+        base_pose_by_uid[_XARM6_PARTNER_UID] = (
+            (float(xarm6_base_x), 0.0, 0.0),
+            (0.0, 0.0, 0.0, 1.0),
+        )
+    if xarm6_ready_qpos is not None:
+        ready_qpos_by_uid[_XARM6_PARTNER_UID] = np.asarray(xarm6_ready_qpos, dtype=np.float64)
 
     class CoCarryEnv(BaseEnv):  # type: ignore[misc, valid-type]
         """Two-arm rigid-bar co-carry env (ADR-026 §Decision 1-2; R-2026-06-B Rungs 0-1).
@@ -996,7 +1016,7 @@ def make_cocarry_env(
             if initial_agent_poses is None:
                 poses: list[object] = []
                 for uid in self.robot_uids:  # type: ignore[union-attr]
-                    xyz, quat = _BASE_POSE_BY_UID[uid]
+                    xyz, quat = base_pose_by_uid[uid]
                     poses.append(sapien.Pose(p=list(xyz), q=list(quat)))
                 initial_agent_poses = poses
             load_agent_with_bare_uids(
@@ -1146,7 +1166,7 @@ def make_cocarry_env(
                     if uid == self._partner_uid and self._single_arm:
                         ready = _PANDA_RETRACTED_QPOS
                     else:
-                        ready = _READY_QPOS_BY_UID[uid]
+                        ready = ready_qpos_by_uid[uid]
                     qpos = torch.from_numpy(np.tile(ready, (b, 1)).astype(np.float32)).to(
                         self.device
                     )

@@ -476,6 +476,8 @@ def make_cocarry_training_env(
     drive_damping: float | None = None,
     drive_force_limit: float | None = None,
     stress_measure: str = "wrist",
+    xarm6_base_x: float | None = None,
+    xarm6_ready_qpos: list[float] | None = None,
 ) -> gym.Env[Any, Any]:
     """Build a co-carry env wrapped for ego-AHT training (ADR-026 §Decision 1; R-2026-06-B §15).
 
@@ -503,6 +505,8 @@ def make_cocarry_training_env(
             value near f_max selects the Variant-B coupling; ADR-026 §D4 4b).
         stress_measure: ``"wrist"`` (default) or ``"coupling"`` (the Rung-4c
             embodiment-invariant bar coupling force; ADR-026 §D4 4c).
+        xarm6_base_x: Optional xArm6 base-x override (Rung-4d fair-pose).
+        xarm6_ready_qpos: Optional xArm6 12-D ready-qpos override (Rung-4d).
 
     Returns:
         The synthesizer-wrapped co-carry env, ready to ``reset(seed=K)``.
@@ -529,6 +533,8 @@ def make_cocarry_training_env(
         drive_damping=drive_damping,
         drive_force_limit=drive_force_limit,
         stress_measure=stress_measure,
+        xarm6_base_x=xarm6_base_x,
+        xarm6_ready_qpos=xarm6_ready_qpos,
     )
     # Rung 2 trains on the env's dense reward (Rungs 0-1 discarded it), so the
     # reward mode is now load-bearing: fail loudly if a host resolves to a
