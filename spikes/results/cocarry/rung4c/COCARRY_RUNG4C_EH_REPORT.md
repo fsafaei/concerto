@@ -1,5 +1,24 @@
 # Co-carry Rung 4c — embodiment-invariant stress instrument → the embodiment result
 
+> **⚠ CORRECTION — RETRACTED AS A POSE ARTIFACT (2026-06-20, Rung-4d Stage-A1).**
+> The headline below — *"a different body (xArm6) genuinely over-loads the
+> cooperative coupling ~5× f_max, separated from control style"* — **does not
+> survive a fair carry-pose optimisation and is retracted.** A joint-limit-clamped
+> kinematic search found a *feasible* xArm6 carry configuration with vertical
+> endpoint compliance **2.34 (0.49× the Panda's 4.74 — i.e. *stiffer*)**, and at
+> that pose the xArm6 holds and carries the bar **in-band** on coupling (static
+> max 159 N, active p90 264 N — both < f_max 366; ≈ the matched 267 baseline),
+> versus 1842 N at the unoptimised default pose. The over-load was an artifact of
+> the **default pose**, not embodiment. Per the pre-committed Stage-A1 stop rule
+> the heavy incumbent re-freeze was **not** run. **The EH axis is NOT established
+> by this report.** A residual stress↔tilt pose tradeoff (the stiffness-optimal
+> pose then over-tilts, p90 26.3°) is a *candidate* difficulty, not a finding —
+> it needs a task-fair pose+controller search. Full correction +
+> committed-from-code reproduction:
+> [`../rung4d/COCARRY_RUNG4D_EH_CORRECTION.md`](../rung4d/COCARRY_RUNG4D_EH_CORRECTION.md)
+> (`scripts/repro/cocarry_rung4d_pose_falsification.sh`, seeds 80100–80105).
+> Everything below is preserved as the superseded record.
+
 > **Audit-hardening addendum (2026-06-20, PR-#252 follow-up).** The headline
 > below is now reproducible from **committed code** and the construct crux is
 > closed with **committed data** (replacing the original `/tmp` script + prose):

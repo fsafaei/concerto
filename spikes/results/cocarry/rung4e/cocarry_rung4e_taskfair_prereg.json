@@ -1,0 +1,63 @@
+{
+  "schema": "cocarry_rung4e_taskfair_prereg/v1",
+  "date": "2026-06-20",
+  "stage": "Rung-4e - the task-fair embodiment search (the bounded, conclusive last EH shot)",
+  "purpose": "Rung-4c's embodiment headline was retracted as a pose artifact (Rung-4d): a stiffness-optimised xArm6 carries the bar IN-BAND on coupling (264 N < f_max 366), so the over-load was an unoptimised default pose, not embodiment. But that same optimisation revealed a CANDIDATE: the stiffness-optimal pose then over-tilts (active tilt p90 26.3 deg > 15). This slice runs ONE bounded, task-fair search over the xArm6's POSE x CONTROLLER against the FULL joint-success criterion (not a single proxy) and decides by a pre-committed, falsifiable-both-ways rule arbitrated by the stress<->tilt Pareto frontier with a search-adequacy criterion. Pre-registered (this file + git tag) BEFORE any search episode is scored.",
+  "hypothesis": "The 6-DOF xArm6 lacks the redundant DOF the 7-DOF Panda uses to satisfy stiffness AND leveling simultaneously, so no xArm6 configuration meets all co-carry conjuncts (placed AND level AND unstressed AND static) at once. The matched Panda pair gets both for free by symmetry (no leveling term needed); the xArm6 must trade off stress vs tilt via pose/level_gain/admit_bias. The search must be able to FALSIFY this (find an in-band config).",
+  "governance": {
+    "phase": "Phase-2 (scope question open; does not block). This is the LAST EH iteration - synthesis + scope/M7 decision follows regardless of outcome.",
+    "isolation_one_factor": "everything except the xArm6 pose x controller is held FIXED: same compliant coupling (drive_stiffness=8000, Variant A), same invariant coupling stress measure, same f_max (365.6 N), same predicate logic, same 0.10 m goal radius, same 15 deg tilt ceiling, same fixed cooperative reference ego (matched cocarry_impedance on the ego seat) across the matched-Panda and xArm6 conditions. Only the embodiment side (xArm6 pose x controller) is varied.",
+    "fair_both_ways": "The xArm6 is given at least the optimisation effort the Panda's matched controller got (a documented pose x controller search, budget below) so a NULL is not an under-search artifact; AND a positive (EH established) requires DEMONSTRATED search adequacy (the Pareto frontier sampled densely enough that 'no in-band point' is a frontier property, not under-sampling) so a positive is not an under-search artifact - the exact error Rung-4d just retracted.",
+    "no_goalpost_moving": "C_min (0.75), f_max (365.6 N), the success predicate, the 0.10 m radius, and the 15 deg tilt ceiling are REUSED verbatim from the prior rungs - none weakened. The controller search stays in the compliant / matched-timing control-style family (kp fixed at the matched 2.5; ONLY the leveling/yielding levers level_gain and admit_bias and the pose are varied) so a drop cannot be manufactured by stiffening the partner (which would confound embodiment with control style - the Rung-3 stiff-teammate effect).",
+    "frozen_incumbent_not_used": "This search uses the fixed COOPERATIVE REFERENCE EGO (matched impedance), not the frozen incumbent - it measures whether a fairly posed+controlled different BODY can co-carry at all (a capability/feasibility question, ego-independent). The incumbent-faithful EH delta (re-freeze on the compliant+invariant task) is unlocked ONLY if this search establishes EH (see decision -> unlocks).",
+    "immutable_prior_results_I8": "rigid ladder (rung1-4) + Rung-4b/4c/4d artifacts untouched; this writes only under rung4e/.",
+    "no_schema_bump_I9": true,
+    "do_not_merge": "founder review."
+  },
+  "fixed_task": {
+    "drive_stiffness_Npm": 8000,
+    "coupling_variant": "A (linear freed-axis spring; Rung-4b stiffest C1-C3-valid)",
+    "stress_measure": "coupling (K_c x ||grip_frame_world - bar_end_world||, max over holding arms)",
+    "fmax_coupling_n": 365.6,
+    "tilt_max_deg": 15.0,
+    "goal_radius_m": 0.10,
+    "episode_length": 320,
+    "ego": "fixed cooperative reference ego = matched cocarry_impedance on the ego seat (ph.build_cooperative_ego), identical across matched-Panda and xArm6 conditions"
+  },
+  "search_space": {
+    "pose": "xArm6 base placement x carry pose (the position-weld-redundant 3-DOF IK manifold). Per base x in {0.30, 0.35, 0.40, 0.45} m, a joint-limit-clamped IK search (80 random feasible restarts) yields the minimum-vertical-endpoint-compliance feasible carry pose; the default Rung-4c pose (base 0.35, q6=[0,-0.084,-0.8,0,0.692,0]) is included as the over-stressed anchor. ~5 poses spanning endpoint vcompliance ~2.3-6.9.",
+    "controller": "the matched-family compliant xArm6 controller (chamber.partners.cocarry_xarm6) varying ONLY the leveling/yielding levers: level_gain in {0.5, 1.0, 1.5} (bar-tilt-nulling) x admit_bias in {0.7, 1.0} (yield-to-ego, reduces internal fight/stress). kp=2.5, ki=0.6, step_max=0.03, damping=0.04 held at the matched compliant values (NOT stiffened).",
+    "grid": "poses x controllers = ~5 x 6 = ~30 configurations, each evaluated on the search seed set.",
+    "budget_fairness": "~30 configs x 4 search seeds = ~120 scored episodes of pose x controller search - at least the deliberate tuning effort the matched Panda controller received; documented as the search trace."
+  },
+  "objective": {
+    "search_guide": "minimise the JOINT-success deficit (a smooth combined margin over ALL conjuncts, NOT a single proxy): deficit = relu(stress_p90/365.6 - 1) + relu(tilt_p90/15 - 1) + relu(centroid_p90/0.10 - 1) + (1 - static_rate). Zero deficit = every conjunct's p90 within band.",
+    "primary_gate": "joint success rate = per-seed AND of {placed(<0.10m), level(<15deg), unstressed(coupling<365.6N), static}, judged EXTERNALLY (the env predicate hardcodes the 130 N wrist f_max; the coupling f_max 365.6 is applied here). The matched Panda pair scores ~1.0; C_min=0.75 is the 'comparable to the matched body' bar (reused, never weakened)."
+  },
+  "seeds": {
+    "search_seeds": [81000, 81001, 81002, 81003],
+    "confirm_seeds": [81100, 81101, 81102, 81103, 81104, 81105, 81106, 81107, 81108, 81109, 81110, 81111],
+    "disjoint": "81000- / 81100- are disjoint from every prior set (rigid 10000-/20000-, Rung-3 30000-/40000-, Rung-4 50000-/60000-, Rung-4b 70010-, Rung-4c 80000-/80100-/80200-, Rung-4d falsification 80100-80105)."
+  },
+  "decision_rule": {
+    "null_eh_robustly_not_established": "if the best-deficit xArm6 config reaches joint success >= C_min (0.75) on the CONFIRM seeds (all conjuncts in-band together, comparable to the matched pair) -> EH ROBUSTLY NOT ESTABLISHED: a fairly posed+controlled different body co-carries as well as the matched body on this task. A strong, honest null.",
+    "established_eh_via_multiobjective_infeasibility": "if NO xArm6 config gets in-band on all conjuncts at once (best confirm joint success < C_min) AND the stress<->tilt Pareto frontier over the (placed AND static) xArm6 configs contains NO point in-band on both (stress_p90 < 365.6 AND tilt_p90 < 15) AND the search-adequacy criterion below is met -> EH ESTABLISHED via a multi-objective infeasibility: the 6-DOF arm cannot trade off stress vs tilt the way the 7-DOF Panda can (whose matched operating point sits in the in-band box). The Panda's in-band anchor (matched pair, confirm seeds) substantiates that the box is reachable by the matched body.",
+    "indeterminate": "anything else (e.g. adequacy not met, or near-miss) -> INDETERMINATE: the search did not converge; report honestly and do not claim either way."
+  },
+  "search_adequacy_criterion": {
+    "why": "this is what stops a repeat of the retracted false positive: 'no in-band point' only counts if emptiness is a frontier property, not under-sampling.",
+    "plateau": "the best joint-deficit over configs-evaluated must plateau: no improvement > 0.02 in the deficit over the final 40% of the search budget (the search stopped finding better configs).",
+    "frontier_density": "the stress<->tilt Pareto frontier (non-dominated placed+static configs) must have >= 4 distinct points spanning a meaningful range of both axes.",
+    "closest_approach_margin": "the minimum normalised L2 distance from any (placed AND static) xArm6 config to the in-band box {stress_p90/365.6 <= 1, tilt_p90/15 <= 1} must be > 0.15 for 'no in-band point' to count as ESTABLISHED (a genuine gap, not a near-miss denser sampling would close). If <= 0.15 and not in-band -> INDETERMINATE."
+  },
+  "comparison_anchor": {
+    "panda": "the matched Panda pair (cocarry_impedance both seats, same cooperative ego, same coupling+measure) evaluated on the confirm seeds is the matched-body in-band anchor (expected stress_p90 << 365.6, tilt_p90 << 15, ~1.0 joint success) - it demonstrates the in-band box IS reachable by the matched body. The Panda is symmetric so needs no leveling tradeoff; the asymmetry (Panda gets both free, xArm6 must trade off) is the mechanism under test."
+  },
+  "unlocks": {
+    "if_established": "the ADR-026-faithful incumbent EH delta is warranted: re-freeze the incumbent on the compliant + invariant-stress task (Rung-4d Stage B/C) and measure the incumbent-based EH delta; build the validated substrate for the remaining axes.",
+    "if_null": "the embodiment axis is honestly closed on this task; the strategic call (pursue OM/CM vs change the task regime) is a founder decision, not a mechanical next run."
+  },
+  "honesty_statement": "As of commit, no Rung-4e search or confirm episode (seeds 81000- / 81100-) has been scored. The search space, the joint-deficit objective, the budget, the decision rule, and the adequacy criterion above are fixed before any measurement. The pose search is FK/Jacobian-only and deterministic (seeded). The result will be reported by whichever pre-committed branch fires - including INDETERMINATE.",
+  "git_tag": "prereg-cocarry-rung4e-taskfair-2026-06-20",
+  "repro_command": "bash scripts/repro/cocarry_rung4e_taskfair_search.sh"
+}
