@@ -1,0 +1,208 @@
+{
+  "c_min": 0.75,
+  "chosen_setting": null,
+  "constraints_summary": {
+    "any_C1_C3_satisfied": true,
+    "any_C4_satisfied": false,
+    "chosen_setting": null,
+    "xarm6_static_wrist_over_fmax": true
+  },
+  "date": "2026-06-20",
+  "f_max_n": 130.0,
+  "gate": "C1-C3 satisfiable (the compliant coupling resolves the Rung-4 over-coupling fight: the xArm6 transports + levels), but C4 is UNSATISFIABLE. The xArm6's wrist-incoming-force stress proxy reads >= f_max even at a zero-action static hold (no cooperative fight), so the proxy is EMBODIMENT-DEPENDENT and the Panda-calibrated f_max rejects the xArm6 on a body artifact, not a fight. Fixing it needs an embodiment-invariant proxy / per-body f_max calibration \u2014 a predicate/f_max change the rules forbid here. HONEST FALLBACK: a sharper finding than Rung-4 (the over-coupling wall is removed; the blocker is now the measurement instrument).",
+  "goal_radius_m": 0.1,
+  "prereg_artifact": "spikes/results/cocarry/rung4b/cocarry_rung4b_coupling_prereg.json",
+  "schema": "cocarry_rung4b_coupling_sweep/v1",
+  "seeds": [
+    70010,
+    70011,
+    70012,
+    70013,
+    70014,
+    70015,
+    70016,
+    70017
+  ],
+  "settings": [
+    {
+      "C1_matched_clean": true,
+      "C2_single_arm_near_zero": true,
+      "C3_coupling_binds": true,
+      "C4_xarm6_admitted": false,
+      "all_satisfied": false,
+      "force_limit_N": null,
+      "label": "A_K8000",
+      "matched_C1_C3": {
+        "centroid_p90": 0.04905698336660862,
+        "fail_level": 0,
+        "fail_placed": 0,
+        "fail_unstressed": 0,
+        "stress_max": 28.064037322998047,
+        "stress_p90": 27.62405662536621,
+        "success_rate": 1.0,
+        "tilt_p90": 5.451973581314086
+      },
+      "single_arm_C2": {
+        "centroid_p90": 0.204022054374218,
+        "fail_level": 8,
+        "fail_placed": 8,
+        "fail_unstressed": 0,
+        "stress_max": 26.119382858276367,
+        "stress_p90": 25.395901679992676,
+        "success_rate": 0.0,
+        "tilt_p90": 89.91284942626953
+      },
+      "stiffness_Npm": 8000.0,
+      "xarm6_C4": {
+        "centroid_p90": 0.02981615960597992,
+        "fail_level": 0,
+        "fail_placed": 0,
+        "fail_unstressed": 8,
+        "stress_max": 511.09869384765625,
+        "stress_p90": 477.66717834472655,
+        "success_rate": 0.0,
+        "tilt_p90": 10.196813297271728
+      }
+    },
+    {
+      "C1_matched_clean": false,
+      "C2_single_arm_near_zero": true,
+      "C3_coupling_binds": true,
+      "C4_xarm6_admitted": false,
+      "all_satisfied": false,
+      "force_limit_N": null,
+      "label": "A_K4000",
+      "matched_C1_C3": {
+        "centroid_p90": 0.09889576584100723,
+        "fail_level": 0,
+        "fail_placed": 0,
+        "fail_unstressed": 0,
+        "stress_max": 95.57039642333984,
+        "stress_p90": 95.20745620727538,
+        "success_rate": 1.0,
+        "tilt_p90": 7.462116527557373
+      },
+      "single_arm_C2": {
+        "centroid_p90": 0.1965028762817383,
+        "fail_level": 8,
+        "fail_placed": 8,
+        "fail_unstressed": 0,
+        "stress_max": 24.478370666503906,
+        "stress_p90": 24.450945472717287,
+        "success_rate": 0.0,
+        "tilt_p90": 89.53814086914062
+      },
+      "stiffness_Npm": 4000.0,
+      "xarm6_C4": {
+        "centroid_p90": 0.026058687828481197,
+        "fail_level": 0,
+        "fail_placed": 0,
+        "fail_unstressed": 8,
+        "stress_max": 317.68988037109375,
+        "stress_p90": 312.31800842285156,
+        "success_rate": 0.0,
+        "tilt_p90": 10.65500898361206
+      }
+    },
+    {
+      "C1_matched_clean": false,
+      "C2_single_arm_near_zero": true,
+      "C3_coupling_binds": true,
+      "C4_xarm6_admitted": false,
+      "all_satisfied": false,
+      "force_limit_N": null,
+      "label": "A_K2000",
+      "matched_C1_C3": {
+        "centroid_p90": 0.09846871346235275,
+        "fail_level": 0,
+        "fail_placed": 0,
+        "fail_unstressed": 0,
+        "stress_max": 128.71823120117188,
+        "stress_p90": 128.61282958984376,
+        "success_rate": 1.0,
+        "tilt_p90": 8.774705505371093
+      },
+      "single_arm_C2": {
+        "centroid_p90": 0.20478955507278443,
+        "fail_level": 8,
+        "fail_placed": 8,
+        "fail_unstressed": 0,
+        "stress_max": 30.87236213684082,
+        "stress_p90": 25.654078483581543,
+        "success_rate": 0.0,
+        "tilt_p90": 89.30079498291016
+      },
+      "stiffness_Npm": 2000.0,
+      "xarm6_C4": {
+        "centroid_p90": 0.019214712083339688,
+        "fail_level": 0,
+        "fail_placed": 0,
+        "fail_unstressed": 8,
+        "stress_max": 253.16038513183594,
+        "stress_p90": 252.23177642822264,
+        "success_rate": 0.0,
+        "tilt_p90": 11.567442607879638
+      }
+    },
+    {
+      "C1_matched_clean": true,
+      "C2_single_arm_near_zero": true,
+      "C3_coupling_binds": true,
+      "C4_xarm6_admitted": false,
+      "all_satisfied": false,
+      "force_limit_N": 110.0,
+      "label": "B_K8000_FL110",
+      "matched_C1_C3": {
+        "centroid_p90": 0.04905698336660862,
+        "fail_level": 0,
+        "fail_placed": 0,
+        "fail_unstressed": 0,
+        "stress_max": 28.064037322998047,
+        "stress_p90": 27.62405662536621,
+        "success_rate": 1.0,
+        "tilt_p90": 5.451973581314086
+      },
+      "single_arm_C2": {
+        "centroid_p90": 0.204022054374218,
+        "fail_level": 8,
+        "fail_placed": 8,
+        "fail_unstressed": 0,
+        "stress_max": 26.119382858276367,
+        "stress_p90": 25.395901679992676,
+        "success_rate": 0.0,
+        "tilt_p90": 89.91284942626953
+      },
+      "stiffness_Npm": 8000.0,
+      "xarm6_C4": {
+        "centroid_p90": 0.02981615960597992,
+        "fail_level": 0,
+        "fail_placed": 0,
+        "fail_unstressed": 8,
+        "stress_max": 511.09869384765625,
+        "stress_p90": 477.66717834472655,
+        "success_rate": 0.0,
+        "tilt_p90": 10.196813297271728
+      }
+    }
+  ],
+  "static_wrist_baseline": {
+    "panda_partner_K20000_rigidish": {
+      "max": 209.8939971923828,
+      "p50": 26.96295738220215
+    },
+    "panda_partner_K8000": {
+      "max": 81.65817260742188,
+      "p50": 39.977333068847656
+    },
+    "xarm6_partner_K20000_rigidish": {
+      "max": 512.4149169921875,
+      "p50": 81.37798309326172
+    },
+    "xarm6_partner_K8000": {
+      "max": 514.30908203125,
+      "p50": 138.0830535888672
+    }
+  },
+  "static_wrist_diagnosis": "Zero-action static hold (no cooperative motion). xArm6 wrist stress p50=138/max=514 N vs Panda p50=40/max=82 N \u2014 the xArm6 (Robotiq) wrist reads ~3-6x the Panda for the same rest hold, already over f_max (130 N) BEFORE any fight. The wrist-incoming-joint-force proxy is embodiment-dependent.",
+  "verdict": "STOP_PROXY_ARTIFACT"
+}

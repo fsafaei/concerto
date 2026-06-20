@@ -618,6 +618,9 @@ def evaluate_calibration(
     render_backend: str | None = None,
     condition_id: str = "cocarry_matched_panda_pair",
     partner_uid: str = "panda_partner",
+    drive_stiffness: float | None = None,
+    drive_damping: float | None = None,
+    drive_force_limit: float | None = None,
 ) -> list[ConjunctMetrics]:
     """Calibrate a candidate: pair it (partner seat) with the cooperative ego (ADR-026 §D4).
 
@@ -626,7 +629,10 @@ def evaluate_calibration(
     teammate), the cooperative reference ego (always the matched impedance, NOT
     the frozen incumbent), and the candidate on the partner seat; roll one
     episode. The resulting :func:`success_rate` is gated against :data:`C_MIN`.
-    A fresh env per seed mirrors the Rung-0/1/2 runners.
+    A fresh env per seed mirrors the Rung-0/1/2 runners. ``drive_stiffness`` /
+    ``drive_damping`` select the coupling (``None`` ⇒ rigid; lower ⇒ the
+    Rung-4b compliant variant — the calibration must use the SAME coupling the
+    measurement will, ADR-026 §D4 Rung 4b).
     """
     from chamber.envs.cocarry_obs import make_cocarry_training_env
 
@@ -637,6 +643,9 @@ def evaluate_calibration(
             episode_length=episode_length,
             root_seed=s,
             render_backend=render_backend,
+            drive_stiffness=drive_stiffness,
+            drive_damping=drive_damping,
+            drive_force_limit=drive_force_limit,
         )
         try:
             coop_ego = build_cooperative_ego(seed=s)
@@ -667,6 +676,9 @@ def evaluate_incumbent_vs_partner(
     render_backend: str | None = None,
     condition_id: str = "cocarry_matched_panda_pair",
     partner_uid: str = "panda_partner",
+    drive_stiffness: float | None = None,
+    drive_damping: float | None = None,
+    drive_force_limit: float | None = None,
 ) -> list[ConjunctMetrics]:
     """Evaluate the frozen incumbent (ego) against a teammate (partner seat) (ADR-026 §D4).
 
@@ -677,6 +689,9 @@ def evaluate_incumbent_vs_partner(
     always the SHA-verified frozen incumbent (never retrained). A fresh env +
     frozen-incumbent load per seed mirrors
     :func:`chamber.benchmarks.cocarry_incumbent.evaluate_incumbent_matched`.
+    ``drive_stiffness`` / ``drive_damping`` select the coupling (``None`` ⇒
+    rigid; lower ⇒ the Rung-4b compliant variant — reference and shifted MUST
+    use the same coupling, ADR-026 §D4 Rung 4b).
     """
     from chamber.benchmarks.cocarry_incumbent import load_frozen_incumbent
     from chamber.envs.cocarry_obs import make_cocarry_training_env
@@ -688,6 +703,9 @@ def evaluate_incumbent_vs_partner(
             episode_length=episode_length,
             root_seed=s,
             render_backend=render_backend,
+            drive_stiffness=drive_stiffness,
+            drive_damping=drive_damping,
+            drive_force_limit=drive_force_limit,
         )
         try:
             partner = build_partner_seat(partner_class, seed=s, partner_uid=partner_uid)

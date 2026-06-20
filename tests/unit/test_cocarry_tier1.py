@@ -294,3 +294,55 @@ class TestImpedanceControllerTier1:
         tcp1 = prov.fk_tcp_position(q + delta)
         target_base = goal + np.array([0.5, 0.0, 0.0]) + np.array([0.115, 0.0, 0.0])
         assert np.linalg.norm(tcp1 - target_base) < np.linalg.norm(tcp0 - target_base)
+
+
+class TestCoCarryCouplingTier1:
+    """The Rung-4b compliant-coupling resolver (ADR-026 §Decision 4; R-2026-06-B §15 Rung 4b).
+
+    Pure Tier-1: :func:`chamber.envs.cocarry.cocarry_coupling` resolves the
+    dual-hold drive (stiffness, damping, force_limit) for the rigid default and
+    the compliant Variant-A/B overrides, without any SAPIEN dependency.
+    """
+
+    @staticmethod
+    def _coupling():
+        from chamber.envs.cocarry import cocarry_coupling
+
+        return cocarry_coupling
+
+    def test_rigid_default_matches_module_constants(self) -> None:
+        from chamber.envs.cocarry import (
+            COCARRY_DRIVE_FORCE_LIMIT_UNBOUNDED,
+            COCARRY_DRIVE_LINEAR_DAMPING,
+            COCARRY_DRIVE_LINEAR_STIFFNESS,
+        )
+
+        k, c, fl = self._coupling()()
+        assert k == COCARRY_DRIVE_LINEAR_STIFFNESS
+        assert c == COCARRY_DRIVE_LINEAR_DAMPING
+        assert fl == COCARRY_DRIVE_FORCE_LIMIT_UNBOUNDED
+
+    def test_variant_a_lower_stiffness_derives_damping(self) -> None:
+        from chamber.envs.cocarry import COCARRY_DRIVE_DAMPING_RATIO
+
+        k, c, fl = self._coupling()(5000.0)
+        assert k == 5000.0
+        assert c == pytest.approx(5000.0 * COCARRY_DRIVE_DAMPING_RATIO)
+        # Variant A: unbounded force (no cap).
+        assert fl > 1e30
+
+    def test_explicit_damping_and_force_limit_override(self) -> None:
+        k, c, fl = self._coupling()(8000.0, 123.0, 110.0)
+        assert (k, c, fl) == (8000.0, 123.0, 110.0)
+
+    def test_damping_ratio_is_rigid_ratio(self) -> None:
+        from chamber.envs.cocarry import (
+            COCARRY_DRIVE_DAMPING_RATIO,
+            COCARRY_DRIVE_LINEAR_DAMPING,
+            COCARRY_DRIVE_LINEAR_STIFFNESS,
+        )
+
+        assert (
+            pytest.approx(COCARRY_DRIVE_LINEAR_DAMPING / COCARRY_DRIVE_LINEAR_STIFFNESS)
+            == COCARRY_DRIVE_DAMPING_RATIO
+        )
