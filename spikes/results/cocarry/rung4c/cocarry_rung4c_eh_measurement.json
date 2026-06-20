@@ -1,0 +1,153 @@
+{
+  "date": "2026-06-20",
+  "drive_stiffness_Npm": 8000.0,
+  "eh": {
+    "conjunct": {
+      "coupling_max": 2289.104248046875,
+      "coupling_p90": 2235.5459228515624,
+      "fail_level": 12,
+      "fail_placed": 7,
+      "fail_static": 4,
+      "fail_unstressed": 12,
+      "n": 12,
+      "success_rate": 0.0
+    },
+    "decision": {
+      "delta_min": 0.2,
+      "drop_rule_met": false,
+      "null_rule_met": true,
+      "pooled_ci_lower_one_sided": 0.0,
+      "pooled_mean_delta": 0.0,
+      "positive_control_holds": true,
+      "verdict": "thesis_disconfirming_null"
+    },
+    "eh_vs_ph_floor": "EH \u0394=+0.000 vs PH control-style floor \u0394=+0.000; an EH drop beyond the PH spread is attributed to embodiment.",
+    "glmm": {
+      "n_rows": 24,
+      "reason": "no outcome variation or no reference/shifted contrast; GLM not identifiable (the bootstrap remains the headline)",
+      "status": "degenerate"
+    },
+    "pooled_ci_lower_one_sided": 0.0,
+    "pooled_ci_two_sided": [
+      0.0,
+      0.0
+    ],
+    "pooled_mean_delta": 0.0,
+    "shifted_rate": 0.0
+  },
+  "fmax_coupling_n": 365.6080997467041,
+  "fmax_matched_success_p99_n": 292.4864797973633,
+  "fmax_multiplier": 1.25,
+  "invariance": {
+    "coupling": {
+      "matched_p90": 260.67831268310545,
+      "ratio": 7.809742530618412,
+      "xarm6_p90": 2035.8305053710938
+    },
+    "wrist": {
+      "matched_p90": 26.94183940887451,
+      "ratio": 17.093716330542076,
+      "xarm6_p90": 460.5361602783203
+    }
+  },
+  "matched_controller_pair_rate_at_fmax": 1.0,
+  "ph_floor": {
+    "per_teammate": {
+      "cocarry_admittance": {
+        "ci_lower_one_sided": 0.0,
+        "mean_delta": 0.0,
+        "reference_rate": 0.0,
+        "shifted_rate": 0.0
+      },
+      "cocarry_slew_impedance": {
+        "ci_lower_one_sided": 0.0,
+        "mean_delta": 0.0,
+        "reference_rate": 0.0,
+        "shifted_rate": 0.0
+      },
+      "cocarry_stiff_impedance": {
+        "ci_lower_one_sided": 0.0,
+        "mean_delta": 0.0,
+        "reference_rate": 0.0,
+        "shifted_rate": 0.0
+      }
+    },
+    "pooled_mean_delta": 0.0
+  },
+  "prereg_artifact": "spikes/results/cocarry/rung4c/cocarry_rung4c_eh_prereg.json",
+  "reference": {
+    "conjunct": {
+      "coupling_max": 313.7071533203125,
+      "coupling_p90": 313.43983764648436,
+      "fail_level": 12,
+      "fail_placed": 6,
+      "fail_static": 0,
+      "fail_unstressed": 0,
+      "n": 12,
+      "success_rate": 0.0
+    },
+    "reconfirms": false,
+    "success_rate": 0.0
+  },
+  "schema": "cocarry_rung4c_eh_measurement/v1",
+  "seeds": {
+    "eh": [
+      80200,
+      80201,
+      80202,
+      80203,
+      80204,
+      80205,
+      80206,
+      80207,
+      80208,
+      80209,
+      80210,
+      80211
+    ],
+    "fmax": [
+      80000,
+      80001,
+      80002,
+      80003,
+      80004,
+      80005,
+      80006,
+      80007,
+      80008,
+      80009,
+      80010,
+      80011
+    ],
+    "ph": [
+      80100,
+      80101,
+      80102,
+      80103,
+      80104,
+      80105,
+      80106,
+      80107,
+      80108,
+      80109,
+      80110,
+      80111
+    ]
+  },
+  "single_arm_rate": 0.0,
+  "stress_measure": "coupling",
+  "xarm6_capability": {
+    "admitted": false,
+    "conjunct": {
+      "coupling_max": 1848.33056640625,
+      "coupling_p90": 1773.0539428710938,
+      "fail_level": 0,
+      "fail_placed": 0,
+      "fail_static": 2,
+      "fail_unstressed": 12,
+      "n": 12,
+      "success_rate": 0.0
+    },
+    "rate": 0.0
+  }
+}

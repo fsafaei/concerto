@@ -1,0 +1,22 @@
+{
+  "cocarry_admittance": {
+    "coupling_p90": 316.53736267089846,
+    "rate": 1.0
+  },
+  "cocarry_impedance": {
+    "coupling_p90": 266.9873718261719,
+    "rate": 1.0
+  },
+  "cocarry_slew_impedance": {
+    "coupling_p90": 333.55299682617186,
+    "rate": 0.0
+  },
+  "cocarry_stiff_impedance": {
+    "coupling_p90": 289.39619140625,
+    "rate": 1.0
+  },
+  "cocarry_xarm6_impedance": {
+    "coupling_p90": 1867.4418090820313,
+    "rate": 0.0
+  }
+}
