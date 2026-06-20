@@ -1,0 +1,39 @@
+{
+  "schema": "cocarry_rung4b_coupling_prereg/v1",
+  "date": "2026-06-20",
+  "stage": "Rung-4b Stage 1 — compliant-coupling implementation + tuning (the Rung-0/1 re-validation)",
+  "purpose": "Pre-register the compliant-coupling parameter sweep + selection rule BEFORE the formal gate sweep. The rigid dual-hold weld (20000 N/m, hard-locked axes) over-couples embodiment: a different-bodied xArm6 partner cannot be capability-matched (Rung-4 feasibility wall, spikes/results/cocarry/rung4 — fight 518 N vs matched ~75 N, fails placed+level+unstressed). This slice implements a PASSIVE compliant coupling (a freed-axis spring-damper; Variant A linear, Variant B force-saturated) and tunes it against four binding constraints, selecting the stiffest setting that satisfies all four with margin. If none does, STOP with the honest fallback.",
+  "governance": {
+    "phase": "Phase-2 (scope question open; does not block)",
+    "only_deliberate_task_change": "the dual-hold coupling stiffness/force law (a freed-axis passive spring-damper). Action/obs spaces, success predicate, f_max (130.6 N), 0.10 m radius, bar, goal, geometry are UNCHANGED.",
+    "no_grasp_no_learning": "passive spring-damper attach only; no gripper-force action, no friction grasp, no new training.",
+    "rigid_artifacts_immutable_I8": "the committed rigid ladder (rung1..rung4) is NOT edited; this writes only under rung4b/.",
+    "no_schema_bump_I9": true,
+    "c_min_never_weakened": "C_min stays 0.75; f_max/predicate/radius never moved.",
+    "do_not_merge": "founder review."
+  },
+  "coupling_implementation": {
+    "parameter": "make_cocarry_env(drive_stiffness, drive_damping, drive_force_limit) -> chamber.envs.cocarry.cocarry_coupling; rigid default (None) = hard-locked axis (byte-identical to the committed ladder).",
+    "variant_A": "freed axis (wide +-1 m limit) + linear drive at lower stiffness K_c, damping = K_c * 0.1 (the rig's damping ratio, conservatively overdamped), force unbounded. Force = K_c x deflection.",
+    "variant_B": "freed axis + STIFF drive + finite force_limit near f_max (the passive progressive/bilinear knee): near-rigid for the small-force matched pair, force-saturated for a large kinematic mismatch.",
+    "damping_note": "damping scaled with stiffness at the rig ratio keeps the rig's stable, no-blow-up character at every K_c (well above critical c=2*sqrt(K*m_eff) for the ~0.2 kg per-hold effective mass)."
+  },
+  "binding_constraints": {
+    "C1": "matched Panda pair joint success ~100% with small deflection (matched centroid-to-goal p90 << the 0.10 m radius).",
+    "C2": "single-arm positive control ~0 (coupling-validity preserved — softening must NOT let one arm succeed).",
+    "C3": "the coupling still binds on matched successes (tilt / stress load-bearing, not slack).",
+    "C4": "the xArm6 + Robotiq teammate is ADMITTED — capability calibration vs the cooperative Panda ego clears C_min=0.75 (the fight is cooperatively feasible; success predicate UNCHANGED, incl. the unstressed conjunct at f_max=130.6 N)."
+  },
+  "selection_rule": "Among settings satisfying C1-C4 with margin, choose the STIFFEST (closest to the rigid 20000 N/m) — it is the least task-altering compliant coupling. Commit + tag the chosen setting + the sweep evidence, then proceed to Stage 2.",
+  "gate_rule": "If no Variant-A setting satisfies C1-C4, escalate to Variant B and repeat. If Variant B also fails, STOP and report the honest fallback (a real finding); do NOT weaken C_min or move the bar/predicate/f_max to force a pass.",
+  "sweep_grid": {
+    "variant_A_stiffness_Npm": [8000, 4000, 2000],
+    "variant_B": [{"stiffness_Npm": 8000, "force_limit_N": 110}],
+    "damping": "derived (0.1 x stiffness) unless noted",
+    "seeds": [70010, 70011, 70012, 70013, 70014, 70015, 70016, 70017],
+    "diagnostic": "zero-action static-hold wrist-stress baseline (Panda partner vs xArm6 partner) to attribute any C4 failure to a cooperative fight vs an embodiment-dependent proxy."
+  },
+  "decision_inputs_fixed_before_sweep": "The C1-C4 criteria, f_max (130.6 N), C_min (0.75), the success predicate, and the selection/gate rules are fixed by the Rung-4b design and this pre-registration. The K grid + variant approach were chosen during implementation (development scouting); the binding thresholds were not weakened.",
+  "git_tag": "prereg-cocarry-rung4b-coupling-2026-06-20",
+  "repro_command": "bash scripts/repro/cocarry_rung4b_coupling_sweep.sh"
+}

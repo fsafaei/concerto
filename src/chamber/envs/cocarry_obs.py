@@ -472,6 +472,9 @@ def make_cocarry_training_env(
     render_mode: str | None = None,
     render_backend: str | None = None,
     goal_centroid: tuple[float, float, float] | None = None,
+    drive_stiffness: float | None = None,
+    drive_damping: float | None = None,
+    drive_force_limit: float | None = None,
 ) -> gym.Env[Any, Any]:
     """Build a co-carry env wrapped for ego-AHT training (ADR-026 §Decision 1; R-2026-06-B §15).
 
@@ -492,6 +495,11 @@ def make_cocarry_training_env(
         render_mode: ManiSkill ``render_mode``, forwarded to the inner factory.
         render_backend: ManiSkill ``render_backend``, forwarded to the inner factory.
         goal_centroid: Optional goal-centroid override.
+        drive_stiffness: Dual-hold drive stiffness (N/m); ``None`` ⇒ rigid
+            default. Lower ⇒ the Rung-4b compliant coupling (ADR-026 §D4 4b).
+        drive_damping: Dual-hold drive damping (N*s/m); ``None`` ⇒ derived.
+        drive_force_limit: Max drive force (N); ``None`` ⇒ unbounded (a finite
+            value near f_max selects the Variant-B coupling; ADR-026 §D4 4b).
 
     Returns:
         The synthesizer-wrapped co-carry env, ready to ``reset(seed=K)``.
@@ -514,6 +522,9 @@ def make_cocarry_training_env(
         render_mode=render_mode,
         render_backend=render_backend,
         goal_centroid=goal_centroid,
+        drive_stiffness=drive_stiffness,
+        drive_damping=drive_damping,
+        drive_force_limit=drive_force_limit,
     )
     # Rung 2 trains on the env's dense reward (Rungs 0-1 discarded it), so the
     # reward mode is now load-bearing: fail loudly if a host resolves to a

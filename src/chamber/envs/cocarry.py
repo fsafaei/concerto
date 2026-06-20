@@ -225,11 +225,87 @@ COCARRY_SETTLE_WINDOW_STEPS: int = 15
 # enough that the Rung-0 stability smoke shows no solver blow-up.
 # ---------------------------------------------------------------------------
 
-#: Linear drive stiffness for the dual-hold attach, in N/m.
+#: Linear drive stiffness for the dual-hold attach, in N/m. The Rung-0..4
+#: **rigid** coupling (the committed ladder on ``main``). The Rung-4b
+#: compliant-coupling variant overrides this per-build via
+#: ``make_cocarry_env(drive_stiffness=...)`` — see :func:`cocarry_coupling`.
 COCARRY_DRIVE_LINEAR_STIFFNESS: float = 2.0e4
 
-#: Linear drive damping for the dual-hold attach, in N*s/m.
+#: Linear drive damping for the dual-hold attach, in N*s/m (the rigid ladder).
 COCARRY_DRIVE_LINEAR_DAMPING: float = 2.0e3
+
+# ---------------------------------------------------------------------------
+# Rung-4b compliant-coupling parameter (ADR-026 §Decision 4; R-2026-06-B §15
+# Rung 4b; design COCARRY_RUNG4B_COMPLIANT_COUPLING). The rigid weld
+# (20000 N/m) over-couples embodiment — a different-bodied partner fights the
+# bar at ~518 N (Rung-4 feasibility wall, spikes/results/cocarry/rung4). The
+# compliant variant LOWERS the linear-drive stiffness (Variant A) so the
+# kinematic-mismatch fight force (= K_c x deflection) drops below f_max while
+# the matched pair's tiny gravity deflection (~weight/2/K_c) stays << the
+# 0.10 m radius. It is a PASSIVE spring-damper (no grasp, no learning); the
+# action/obs spaces, success predicate, f_max, radius, bar, and goal are
+# UNCHANGED. The chosen value is recorded in the rung4b freeze manifest, not
+# frozen as a module constant (so the rigid ladder's constants are untouched).
+# ---------------------------------------------------------------------------
+
+#: Damping/stiffness ratio of the rigid attach (2000/20000 = 0.1, N*s/m per
+#: N/m). The compliant sweep scales damping with stiffness at this ratio so a
+#: lower-stiffness drive keeps the rig's proven overdamped, no-blow-up
+#: character (the design's "damping scaled to ~critical" — this overdamped
+#: ratio is conservative, well above the critical c=2*sqrt(K*m_eff) for the
+#: ~0.2 kg per-hold effective mass at every swept K_c).
+COCARRY_DRIVE_DAMPING_RATIO: float = COCARRY_DRIVE_LINEAR_DAMPING / COCARRY_DRIVE_LINEAR_STIFFNESS
+
+
+#: PhysX default drive force-limit (effectively unbounded), N. The rigid
+#: ladder + the Variant-A linear compliant sweep use this (no force cap).
+COCARRY_DRIVE_FORCE_LIMIT_UNBOUNDED: float = 3.4028234663852886e38
+
+
+def cocarry_coupling(
+    drive_stiffness: float | None = None,
+    drive_damping: float | None = None,
+    drive_force_limit: float | None = None,
+) -> tuple[float, float, float]:
+    """Resolve the (stiffness, damping, force_limit) of the dual-hold drive (ADR-026 §D4; Rung 4b).
+
+    Pure Tier-1 helper — the single source of truth for the coupling the env's
+    :meth:`_add_weld` applies. ``drive_stiffness=None`` selects the **rigid**
+    ladder default (:data:`COCARRY_DRIVE_LINEAR_STIFFNESS`, hard-locked axis);
+    a float selects a Rung-4b **compliant** (freed-axis spring) variant.
+    ``drive_damping=None`` derives damping as ``drive_stiffness *
+    COCARRY_DRIVE_DAMPING_RATIO`` (keeps the rig's stable overdamped character
+    at any stiffness); a float overrides it.
+
+    Two compliant variants share this surface:
+
+    - **Variant A** (linear): a lower stiffness, ``drive_force_limit=None``
+      (unbounded) — the force is ``K_c x deflection`` throughout.
+    - **Variant B** (force-saturated / bilinear): a stiff ``drive_stiffness``
+      with a finite ``drive_force_limit`` near f_max — near-rigid for the
+      small-force matched pair (stiff slope below the cap → small deflection,
+      good placement) but the force SATURATES at ``drive_force_limit`` for a
+      large kinematic mismatch (the cross-embodiment fight), so it cannot
+      exceed the cap. This is the passive progressive law the design names; the
+      force-limit is the knee.
+
+    Args:
+        drive_stiffness: Drive stiffness (N/m); ``None`` ⇒ rigid.
+        drive_damping: Drive damping (N*s/m); ``None`` ⇒ derived.
+        drive_force_limit: Max drive force (N); ``None`` ⇒ unbounded.
+
+    Returns:
+        ``(stiffness, damping, force_limit)`` for ``set_drive_property``.
+    """
+    k = COCARRY_DRIVE_LINEAR_STIFFNESS if drive_stiffness is None else float(drive_stiffness)
+    c = float(k * COCARRY_DRIVE_DAMPING_RATIO) if drive_damping is None else float(drive_damping)
+    fl = (
+        COCARRY_DRIVE_FORCE_LIMIT_UNBOUNDED
+        if drive_force_limit is None
+        else float(drive_force_limit)
+    )
+    return k, c, fl
+
 
 # ---------------------------------------------------------------------------
 # Dense-reward shaping coefficients (R-2026-06-B "reward coefficients are
@@ -760,6 +836,9 @@ def make_cocarry_env(
     render_mode: str | None = None,
     render_backend: str | None = None,
     goal_centroid: tuple[float, float, float] | None = None,
+    drive_stiffness: float | None = None,
+    drive_damping: float | None = None,
+    drive_force_limit: float | None = None,
 ) -> gym.Env[Any, Any]:
     """Build a :class:`CoCarryEnv` instance (ADR-026 §Decision 1-2; R-2026-06-B Rungs 0-1).
 
@@ -783,6 +862,13 @@ def make_cocarry_env(
             the headless URDF-material strip.
         goal_centroid: Optional override of the goal centroid xyz (before
             jitter). ``None`` uses :data:`COCARRY_GOAL_CENTROID_XYZ`.
+        drive_stiffness: Dual-hold drive stiffness (N/m); ``None`` ⇒ the rigid
+            ladder default. A lower value selects the Rung-4b compliant
+            coupling (:func:`cocarry_coupling`; ADR-026 §D4 Rung 4b).
+        drive_damping: Dual-hold drive damping (N*s/m); ``None`` ⇒ derived from
+            the stiffness at the rig's damping ratio.
+        drive_force_limit: Max drive force (N); ``None`` ⇒ unbounded. A finite
+            value near f_max selects the Variant-B force-saturated coupling.
 
     Returns:
         A :class:`CoCarryEnv` ready to ``reset(seed=K)``.
@@ -817,6 +903,14 @@ def make_cocarry_env(
         patch_sapien_urdf_no_visual_material()
 
     goal_xyz = COCARRY_GOAL_CENTROID_XYZ if goal_centroid is None else goal_centroid
+    # Resolve the dual-hold coupling once (rigid default, or the Rung-4b
+    # compliant override); _add_weld closes over these (ADR-026 §D4 Rung 4b).
+    # A stiffness override selects the compliant (freed-axis spring) weld; the
+    # default keeps the rigid (hard-locked) weld byte-identical.
+    weld_compliant = drive_stiffness is not None
+    weld_stiffness, weld_damping, weld_force_limit = cocarry_coupling(
+        drive_stiffness, drive_damping, drive_force_limit
+    )
 
     class CoCarryEnv(BaseEnv):  # type: ignore[misc, valid-type]
         """Two-arm rigid-bar co-carry env (ADR-026 §Decision 1-2; R-2026-06-B Rungs 0-1).
@@ -991,10 +1085,28 @@ def make_cocarry_env(
             hand = self.agent.agents_dict[uid].robot.links_map[weld_link]  # type: ignore[attr-defined]
             drive = self.scene.create_drive(hand, grip_in_hand, self.bar, bar_end_local)
             for axis in ("x", "y", "z"):
-                getattr(drive, f"set_drive_property_{axis}")(
-                    COCARRY_DRIVE_LINEAR_STIFFNESS, COCARRY_DRIVE_LINEAR_DAMPING
-                )
-                getattr(drive, f"set_limit_{axis}")(0.0, 0.0)
+                if weld_compliant:
+                    # Rung-4b COMPLIANT coupling (ADR-026 §D4 Rung 4b): a passive
+                    # linear spring-damper. The axis is freed (a wide ±1 m limit,
+                    # far beyond any real deflection) so the drive — toward its
+                    # default zero target (the bar end rests at the grip frame) —
+                    # acts as a restoring spring of stiffness ``weld_stiffness``.
+                    # A hard set_limit(0,0) would LOCK the axis (rigid) and make
+                    # the drive stiffness inert, so it is deliberately NOT used.
+                    getattr(drive, f"set_limit_{axis}")(-1.0, 1.0)
+                    # force_limit caps the drive force (Variant B's knee): the
+                    # spring is stiff below the cap (near-rigid for the matched
+                    # pair) but saturates at weld_force_limit for a large
+                    # mismatch, so the cross-embodiment fight cannot exceed it.
+                    getattr(drive, f"set_drive_property_{axis}")(
+                        weld_stiffness, weld_damping, weld_force_limit
+                    )
+                else:
+                    # Rigid weld (the committed Rung-0..4 ladder): the axis is
+                    # hard-locked to zero displacement; the high drive stiffness
+                    # is belt-and-braces. Byte-identical to the shipped behaviour.
+                    getattr(drive, f"set_drive_property_{axis}")(weld_stiffness, weld_damping)
+                    getattr(drive, f"set_limit_{axis}")(0.0, 0.0)
             self._drives.append(drive)
 
         def _initialize_episode(self, env_idx: torch.Tensor, options: dict[str, Any]) -> None:
@@ -1304,6 +1416,9 @@ def make_cocarry_env(
 __all__ = [
     "COCARRY_BAR_LENGTH_M",
     "COCARRY_BAR_MASS_KG",
+    "COCARRY_DRIVE_DAMPING_RATIO",
+    "COCARRY_DRIVE_LINEAR_DAMPING",
+    "COCARRY_DRIVE_LINEAR_STIFFNESS",
     "COCARRY_GOAL_THRESH_M",
     "COCARRY_REWARD_NORMALIZER",
     "COCARRY_REWARD_STRESS_COEFF",
@@ -1313,6 +1428,7 @@ __all__ = [
     "COCARRY_STRESS_MAX_PROXY_N",
     "COCARRY_TILT_MAX_DEG",
     "CoCarryCondition",
+    "cocarry_coupling",
     "cocarry_excess_stress_penalty",
     "evaluate_cocarry_success",
     "make_cocarry_env",
