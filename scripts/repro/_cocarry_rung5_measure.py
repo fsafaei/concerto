@@ -70,8 +70,23 @@ def _partner(partner_class: str, seed: int) -> Any:  # noqa: ANN401
     )
 
 
-def _rollout(ego_act: Any, partner_class: str, seed: int) -> ph.ConjunctMetrics:  # noqa: ANN401
-    """One episode: frozen residual incumbent (ego) + a partner, judged at f_max 365.6."""
+def _rollout(
+    ego_act: Any,  # noqa: ANN401
+    partner_class: str,
+    seed: int,
+    *,
+    residual: bool = True,
+    ego_obj: Any = None,  # noqa: ANN401
+) -> ph.ConjunctMetrics:
+    """One episode: ego (residual incumbent or base) + a partner, judged at f_max 365.6.
+
+    ``ego_obj`` (when given) is reset per episode: rollout_pair resets the partner
+    but NOT the ego, and the hand-built base controller is STATEFUL (cached
+    start-target / step), so the base control MUST reset it each episode. The
+    frozen incumbent is a stateless policy closure (ego_obj=None).
+    """
+    if ego_obj is not None:
+        ego_obj.reset(seed=seed)
     env = make_cocarry_training_env(
         condition_id="cocarry_matched_panda_pair",
         episode_length=_EPISODE,
@@ -80,7 +95,8 @@ def _rollout(ego_act: Any, partner_class: str, seed: int) -> ph.ConjunctMetrics:
         drive_stiffness=_K,
         stress_measure=_MEASURE,
         stress_max=_FMAX,
-        residual_base_ego=True,  # the incumbent IS base + residual
+        # True: incumbent = base + residual; False: base alone (the control).
+        residual_base_ego=residual,
     )
     try:
         return ph.rollout_pair(
@@ -94,8 +110,16 @@ def _rollout(ego_act: Any, partner_class: str, seed: int) -> ph.ConjunctMetrics:
         env.close()
 
 
-def _measure_partner(ego_act: Any, partner_class: str) -> tuple[dict[int, bool], dict[str, Any]]:  # noqa: ANN401
-    metrics = [_rollout(ego_act, partner_class, s) for s in _M_SEEDS]
+def _measure_partner(
+    ego_act: Any,  # noqa: ANN401
+    partner_class: str,
+    *,
+    residual: bool = True,
+    ego_obj: Any = None,  # noqa: ANN401
+) -> tuple[dict[int, bool], dict[str, Any]]:
+    metrics = [
+        _rollout(ego_act, partner_class, s, residual=residual, ego_obj=ego_obj) for s in _M_SEEDS
+    ]
     success = {m.seed: bool(m.success) for m in metrics}
     summary = ph.conjunct_failure_summary(metrics)
     print(
@@ -139,7 +163,7 @@ def _measure_arm(
     }
 
 
-def main() -> int:
+def main() -> int:  # noqa: PLR0915 - linear measurement+control pipeline, kept auditable in one place
     out_path = os.environ.get(
         "OUT_JSON", "spikes/results/cocarry/rung5/cocarry_rung5_cd_measurement.json"
     )
@@ -199,29 +223,69 @@ def main() -> int:
     print(f"    [Arm B] non-co-designed ({len(arm_b)} partners)...")
     b = _measure_arm(ego_act, reference, arm_b)
 
+    # BASE-ROBUSTNESS CONTROL (added after the per-teammate breakdown revealed a
+    # confound): run the structured BASE cooperative ego (no residual) vs every
+    # partner on the SAME measurement seeds. A partner's incumbent-drop is a
+    # GENUINE heterogeneity effect only if the base ALSO drops with it; if the
+    # base holds (>= reach) but the incumbent drops, the drop is an incumbent
+    # RESIDUAL-BRITTLENESS artifact, NOT a co-design penalty.
+    print("    [base control] structured cooperative ego (no residual) vs all partners...")
+    base_ego = ph.build_cooperative_ego(seed=0)
+    base_rate: dict[str, float] = {}
+    base_summaries: dict[str, Any] = {}
+    for pc in [_MATCHED, *arm_a, *arm_b]:
+        base_success, base_summaries[pc] = _measure_partner(
+            lambda o, _e=base_ego: _e.act(o), pc, residual=False, ego_obj=base_ego
+        )
+        base_rate[pc] = ph.success_rate(base_success)
+
+    inc_rate = {pc: s["success_rate"] for arm in (a, b) for pc, s in arm["summaries"].items()}
+    inc_rate[_MATCHED] = ref_rate
+
+    def _genuine(pc: str) -> bool:
+        # incumbent drops >= Δ_min AND the base ALSO drops (the partner is genuinely hard).
+        return (ref_rate - inc_rate[pc]) >= _DELTA_MIN and base_rate[pc] < _REACH
+
+    base_robust_all = all(base_rate[pc] >= _REACH for pc in [_MATCHED, *arm_a, *arm_b])
+    n_genuine_b = sum(1 for pc in arm_b if _genuine(pc))
     arm_a_drop = a["decision"]["verdict"] == ph.VERDICT_DROP
     arm_b_qualifies = (
         b["decision"]["verdict"] == ph.VERDICT_DROP and b["n_variants_drop"] >= _MIN_REPLICATION
     )
-    if arm_a_drop:
-        matrix = "ARM_A_DROP_INVESTIGATE_SUBSTRATE"
+    arm_a_clean_null = a["decision"]["verdict"] == ph.VERDICT_NULL
+
+    if arm_b_qualifies and n_genuine_b < _MIN_REPLICATION and base_robust_all:
+        matrix = "CONFOUNDED_BY_INCUMBENT_BRITTLENESS"
         matrix_note = (
-            "Unexpected: a co-designed control-style drop most likely signals a "
-            "substrate/incumbent regression -> re-check Stage-1/Stage-3 before any CD claim."
+            "The structured base cooperative ego succeeds >= reach with EVERY capability-matched "
+            "partner (co-designed AND non-co-designed) on the SAME measurement seeds; the "
+            "incumbent's drops (admittance/selfish) are RESIDUAL training-brittleness artifacts, "
+            "NOT a co-design penalty. The measurement does NOT isolate co-design: the task is "
+            "robustly solvable by the structured controller with all matched partners. The CD axis "
+            "is NOT established with this learned incumbent. Strategic read: corroborates that a "
+            "learned (even residual) cooperator overfits its training partner where the structured "
+            "controller is robust; a harder TASK alone will not fix the incumbent-construction gap."
         )
-    elif arm_b_qualifies:
+    elif arm_a_drop:
+        matrix = "ARM_A_DROP_INVESTIGATE_SUBSTRATE"
+        matrix_note = "A co-designed drop signals a substrate/incumbent regression -> investigate."
+    elif arm_b_qualifies and n_genuine_b >= _MIN_REPLICATION and arm_a_clean_null:
         matrix = "THESIS_LANDS_CODESIGN_LOAD_BEARING"
         matrix_note = (
-            "Arm A null AND Arm B qualifying replicated drop: co-design / shared cooperation "
-            "is the load-bearing variable; the matched arm is the control."
+            "Arm A null AND Arm B replicated drop that SURVIVES the base control (base drops too): "
+            "co-design is the load-bearing variable."
+        )
+    elif arm_b_qualifies and n_genuine_b >= _MIN_REPLICATION and not arm_a_clean_null:
+        matrix = "HETEROGENEITY_BITES_CODESIGN_NOT_CLEANLY_ISOLATED"
+        matrix_note = (
+            "Arm B drops survive the base control, but Arm A is not a clean null (a co-designed "
+            "partner also drops): degradation tracks active co-leveling, not co-design per se."
         )
     else:
         matrix = "CONCLUSIVE_NEGATIVE_ROUTE_HARDER_TASK"
         matrix_note = (
-            "Arm A null AND Arm B null. Read WITH the incumbent caveat: the residual incumbent "
-            "is a ROBUST cooperator (success delta=0 vs base, even MORE stress-robust), so this "
-            "is 'the task is too forgiving for a robust trained incumbent' -> the pre-committed "
-            "harder-task regime, NOT 'co-design is inert'. A rigorous publishable negative."
+            "Arm A null AND Arm B null: heterogeneity does not bite even without co-design -> the "
+            "pre-committed harder-task regime. NOT 'co-design is inert'."
         )
 
     out = {
@@ -260,6 +324,19 @@ def main() -> int:
             "replicated_drop": arm_b_qualifies,
             "summaries": b["summaries"],
         },
+        "base_robustness_control": {
+            "why": (
+                "Structured base cooperative ego (cocarry_impedance, no residual) vs every partner "
+                "on the SAME measurement seeds. Separates a genuine co-design/heterogeneity effect "
+                "(base also drops) from an incumbent residual-brittleness artifact (base holds)."
+            ),
+            "base_success_rate": base_rate,
+            "incumbent_success_rate": inc_rate,
+            "base_robust_all_partners": base_robust_all,
+            "genuine_drop_arm_b": {pc: _genuine(pc) for pc in arm_b},
+            "n_genuine_drop_arm_b": n_genuine_b,
+            "base_summaries": base_summaries,
+        },
         "comparative_verdict": matrix,
         "comparative_note": matrix_note,
         "null_caveat": (
@@ -268,9 +345,10 @@ def main() -> int:
             "qualifying drop', never 'co-design is inert'."
         ),
         "incumbent_caveat": (
-            "The frozen incumbent is a robust cooperator (base+residual; success delta=0 vs base, "
-            "~13% lower coupling stress): an A-null AND B-null routes to the harder-task regime, "
-            "per the verdict matrix."
+            "Base-robustness control RE-READS the freeze-time diagnostic: the residual lowered "
+            "stress with the matched partner but is BRITTLE off-distribution (the structured base "
+            "cooperates with every partner; the incumbent does not). The 'trained incumbent' is "
+            "partner-overfit, not a robust cooperator."
         ),
     }
     Path(out_path).write_text(json.dumps(out, sort_keys=True, indent=2), encoding="utf-8")

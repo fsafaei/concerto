@@ -1,0 +1,312 @@
+{
+  "arm_a": {
+    "decision": {
+      "delta_min": 0.2,
+      "drop_rule_met": false,
+      "null_caveat": "The capability gate truncates heterogeneity from above (it excludes teammates the cooperative reference cannot succeed with), which biases \u0394 toward zero. When exclusions occurred, a \u0394\u22480 result may NOT be read as 'the PH axis does not couple to cooperation' \u2014 only as 'among capability-matched policies, no qualifying drop was observed'.",
+      "null_rule_met": false,
+      "pooled_ci_lower_one_sided": 0.1071428571428571,
+      "pooled_mean_delta": 0.15476190476190477,
+      "positive_control_holds": true,
+      "verdict": "indeterminate"
+    },
+    "label": "co-designed control-style (the control)",
+    "partners": [
+      "cocarry_stiff_impedance",
+      "cocarry_admittance",
+      "cocarry_nullspace_impedance"
+    ],
+    "per_teammate": {
+      "cocarry_admittance": {
+        "ci_lower_one_sided": 0.3214285714285714,
+        "mean_delta": 0.4642857142857143,
+        "reference_rate": 1.0,
+        "shifted_rate": 0.5357142857142857
+      },
+      "cocarry_nullspace_impedance": {
+        "ci_lower_one_sided": 0.0,
+        "mean_delta": 0.0,
+        "reference_rate": 1.0,
+        "shifted_rate": 1.0
+      },
+      "cocarry_stiff_impedance": {
+        "ci_lower_one_sided": 0.0,
+        "mean_delta": 0.0,
+        "reference_rate": 1.0,
+        "shifted_rate": 1.0
+      }
+    },
+    "pooled_ci_lower_one_sided": 0.1071428571428571,
+    "pooled_ci_two_sided": [
+      0.09523809523809523,
+      0.2142857142857143
+    ],
+    "pooled_mean_delta": 0.15476190476190477,
+    "summaries": {
+      "cocarry_admittance": {
+        "centroid_to_goal_max": 0.05728335306048393,
+        "centroid_to_goal_p50": 0.0330944424495101,
+        "fail_level": 13,
+        "fail_placed": 0,
+        "fail_static": 0,
+        "fail_unstressed": 1,
+        "max_tilt_p90": 16.96592311859131,
+        "n": 28,
+        "stress_p90": 358.41839294433595,
+        "success_rate": 0.5357142857142857
+      },
+      "cocarry_nullspace_impedance": {
+        "centroid_to_goal_max": 0.08473615348339081,
+        "centroid_to_goal_p50": 0.05946803092956543,
+        "fail_level": 0,
+        "fail_placed": 0,
+        "fail_static": 0,
+        "fail_unstressed": 0,
+        "max_tilt_p90": 5.753638505935669,
+        "n": 28,
+        "stress_p90": 291.29961853027345,
+        "success_rate": 1.0
+      },
+      "cocarry_stiff_impedance": {
+        "centroid_to_goal_max": 0.04271388798952103,
+        "centroid_to_goal_p50": 0.03325739502906799,
+        "fail_level": 0,
+        "fail_placed": 0,
+        "fail_static": 0,
+        "fail_unstressed": 0,
+        "max_tilt_p90": 8.268007755279541,
+        "n": 28,
+        "stress_p90": 267.1345458984375,
+        "success_rate": 1.0
+      }
+    },
+    "verdict": "indeterminate"
+  },
+  "arm_b": {
+    "decision": {
+      "delta_min": 0.2,
+      "drop_rule_met": true,
+      "null_caveat": "The capability gate truncates heterogeneity from above (it excludes teammates the cooperative reference cannot succeed with), which biases \u0394 toward zero. When exclusions occurred, a \u0394\u22480 result may NOT be read as 'the PH axis does not couple to cooperation' \u2014 only as 'among capability-matched policies, no qualifying drop was observed'.",
+      "null_rule_met": false,
+      "pooled_ci_lower_one_sided": 0.6785714285714286,
+      "pooled_mean_delta": 0.75,
+      "positive_control_holds": true,
+      "verdict": "ph_reduces_cooperation"
+    },
+    "label": "non-co-designed self-interested (the decisive arm)",
+    "n_variants_drop": 2,
+    "partners": [
+      "cocarry_selfish_goal",
+      "cocarry_selfish_effort"
+    ],
+    "per_teammate": {
+      "cocarry_selfish_effort": {
+        "ci_lower_one_sided": 1.0,
+        "mean_delta": 1.0,
+        "reference_rate": 1.0,
+        "shifted_rate": 0.0
+      },
+      "cocarry_selfish_goal": {
+        "ci_lower_one_sided": 0.3571428571428571,
+        "mean_delta": 0.5,
+        "reference_rate": 1.0,
+        "shifted_rate": 0.5
+      }
+    },
+    "per_variant_drop": {
+      "cocarry_selfish_effort": true,
+      "cocarry_selfish_goal": true
+    },
+    "pooled_ci_lower_one_sided": 0.6785714285714286,
+    "pooled_ci_two_sided": [
+      0.6607142857142857,
+      0.8392857142857143
+    ],
+    "pooled_mean_delta": 0.75,
+    "replicated_drop": true,
+    "replication_required": 2,
+    "summaries": {
+      "cocarry_selfish_effort": {
+        "centroid_to_goal_max": 0.08653712272644043,
+        "centroid_to_goal_p50": 0.08131710812449455,
+        "fail_level": 28,
+        "fail_placed": 0,
+        "fail_static": 0,
+        "fail_unstressed": 17,
+        "max_tilt_p90": 28.17240104675293,
+        "n": 28,
+        "stress_p90": 393.1297271728516,
+        "success_rate": 0.0
+      },
+      "cocarry_selfish_goal": {
+        "centroid_to_goal_max": 0.11560104042291641,
+        "centroid_to_goal_p50": 0.10136379301548004,
+        "fail_level": 10,
+        "fail_placed": 14,
+        "fail_static": 0,
+        "fail_unstressed": 0,
+        "max_tilt_p90": 20.410202980041504,
+        "n": 28,
+        "stress_p90": 280.93279724121095,
+        "success_rate": 0.5
+      }
+    },
+    "verdict": "ph_reduces_cooperation"
+  },
+  "base_robustness_control": {
+    "base_robust_all_partners": true,
+    "base_success_rate": {
+      "cocarry_admittance": 1.0,
+      "cocarry_impedance": 1.0,
+      "cocarry_nullspace_impedance": 1.0,
+      "cocarry_selfish_effort": 1.0,
+      "cocarry_selfish_goal": 1.0,
+      "cocarry_stiff_impedance": 1.0
+    },
+    "base_summaries": {
+      "cocarry_admittance": {
+        "centroid_to_goal_max": 0.06913657486438751,
+        "centroid_to_goal_p50": 0.06417468562722206,
+        "fail_level": 0,
+        "fail_placed": 0,
+        "fail_static": 0,
+        "fail_unstressed": 0,
+        "max_tilt_p90": 5.128665590286255,
+        "n": 28,
+        "stress_p90": 320.0953887939453,
+        "success_rate": 1.0
+      },
+      "cocarry_impedance": {
+        "centroid_to_goal_max": 0.05338034778833389,
+        "centroid_to_goal_p50": 0.04705335013568401,
+        "fail_level": 0,
+        "fail_placed": 0,
+        "fail_static": 0,
+        "fail_unstressed": 0,
+        "max_tilt_p90": 7.86369948387146,
+        "n": 28,
+        "stress_p90": 276.2605010986328,
+        "success_rate": 1.0
+      },
+      "cocarry_nullspace_impedance": {
+        "centroid_to_goal_max": 0.09661826491355896,
+        "centroid_to_goal_p50": 0.07093709707260132,
+        "fail_level": 0,
+        "fail_placed": 0,
+        "fail_static": 0,
+        "fail_unstressed": 0,
+        "max_tilt_p90": 5.459324550628662,
+        "n": 28,
+        "stress_p90": 355.5571014404297,
+        "success_rate": 1.0
+      },
+      "cocarry_selfish_effort": {
+        "centroid_to_goal_max": 0.08465208113193512,
+        "centroid_to_goal_p50": 0.06261903792619705,
+        "fail_level": 0,
+        "fail_placed": 0,
+        "fail_static": 0,
+        "fail_unstressed": 0,
+        "max_tilt_p90": 9.182409191131592,
+        "n": 28,
+        "stress_p90": 316.747705078125,
+        "success_rate": 1.0
+      },
+      "cocarry_selfish_goal": {
+        "centroid_to_goal_max": 0.06908074766397476,
+        "centroid_to_goal_p50": 0.06522179767489433,
+        "fail_level": 0,
+        "fail_placed": 0,
+        "fail_static": 0,
+        "fail_unstressed": 0,
+        "max_tilt_p90": 9.434296798706054,
+        "n": 28,
+        "stress_p90": 279.11932983398435,
+        "success_rate": 1.0
+      },
+      "cocarry_stiff_impedance": {
+        "centroid_to_goal_max": 0.03499120846390724,
+        "centroid_to_goal_p50": 0.026078499853610992,
+        "fail_level": 0,
+        "fail_placed": 0,
+        "fail_static": 0,
+        "fail_unstressed": 0,
+        "max_tilt_p90": 8.74873743057251,
+        "n": 28,
+        "stress_p90": 293.1577545166016,
+        "success_rate": 1.0
+      }
+    },
+    "genuine_drop_arm_b": {
+      "cocarry_selfish_effort": false,
+      "cocarry_selfish_goal": false
+    },
+    "incumbent_success_rate": {
+      "cocarry_admittance": 0.5357142857142857,
+      "cocarry_impedance": 1.0,
+      "cocarry_nullspace_impedance": 1.0,
+      "cocarry_selfish_effort": 0.0,
+      "cocarry_selfish_goal": 0.5,
+      "cocarry_stiff_impedance": 1.0
+    },
+    "n_genuine_drop_arm_b": 0,
+    "why": "Structured base cooperative ego (cocarry_impedance, no residual) vs every partner on the SAME measurement seeds. Separates a genuine co-design/heterogeneity effect (base also drops) from an incumbent residual-brittleness artifact (base holds)."
+  },
+  "comparative_note": "The structured base cooperative ego succeeds >= reach with EVERY capability-matched partner (co-designed AND non-co-designed) on the SAME measurement seeds; the incumbent's drops (admittance/selfish) are RESIDUAL training-brittleness artifacts, NOT a co-design penalty. The measurement does NOT isolate co-design: the task is robustly solvable by the structured controller with all matched partners. The CD axis is NOT established with this learned incumbent. Strategic read: corroborates that a learned (even residual) cooperator overfits its training partner where the structured controller is robust; a harder TASK alone will not fix the incumbent-construction gap.",
+  "comparative_verdict": "CONFOUNDED_BY_INCUMBENT_BRITTLENESS",
+  "delta_min": 0.2,
+  "incumbent_caveat": "Base-robustness control RE-READS the freeze-time diagnostic: the residual lowered stress with the matched partner but is BRITTLE off-distribution (the structured base cooperates with every partner; the incumbent does not). The 'trained incumbent' is partner-overfit, not a robust cooperator.",
+  "incumbent_sha256": "152bdb3f45e70f57ff1a2d33fdfba720cec8262ce791bd3d6936f0568c76bbaa",
+  "incumbent_uri": "local://artifacts/86b5f8ddf7a3a2da_step150000.pt",
+  "measurement_seeds": [
+    54000,
+    54001,
+    54002,
+    54003,
+    54004,
+    54005,
+    54006,
+    54007,
+    54008,
+    54009,
+    54010,
+    54011,
+    54012,
+    54013,
+    54014,
+    54015,
+    54016,
+    54017,
+    54018,
+    54019,
+    54020,
+    54021,
+    54022,
+    54023,
+    54024,
+    54025,
+    54026,
+    54027
+  ],
+  "n_seed_clusters": 28,
+  "null_caveat": "Calibration excluded slew (A) + selfish_station (B), truncating heterogeneity from above (biases delta toward zero): a null is 'among capability-matched partners, no qualifying drop', never 'co-design is inert'.",
+  "reference": {
+    "partner": "cocarry_impedance",
+    "success_rate": 1.0,
+    "summary": {
+      "centroid_to_goal_max": 0.05236207693815231,
+      "centroid_to_goal_p50": 0.039937153458595276,
+      "fail_level": 0,
+      "fail_placed": 0,
+      "fail_static": 0,
+      "fail_unstressed": 0,
+      "max_tilt_p90": 7.862310934066772,
+      "n": 28,
+      "stress_p90": 245.92825469970703,
+      "success_rate": 1.0
+    }
+  },
+  "reference_reconfirms": true,
+  "schema": "cocarry_rung5_cd_measurement/v1",
+  "stage": "Rung-5 Stage 4-5 co-design (CD) measurement"
+}
