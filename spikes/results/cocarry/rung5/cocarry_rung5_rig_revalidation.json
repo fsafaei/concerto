@@ -1,0 +1,120 @@
+{
+  "constants": {
+    "drive_stiffness": 8000.0,
+    "episode_length": 320,
+    "fmax_coupling_n": 365.6,
+    "fmax_reconfirm_band_n": [
+      234.0,
+      318.0
+    ],
+    "stress_measure": "coupling"
+  },
+  "controlled_invariance": {
+    "grip_frames_world": {
+      "panda": {
+        "ego_tcp": [
+          0.11501345783472061,
+          -1.1751147610539192e-08,
+          0.1697819083929062
+        ],
+        "partner_tcp": [
+          -0.11501364409923553,
+          6.532115293111929e-08,
+          0.1697818636894226
+        ]
+      },
+      "xarm6": {
+        "ego_tcp": [
+          0.11501345783472061,
+          -1.1751147610539192e-08,
+          0.1697819083929062
+        ],
+        "partner_tcp": [
+          -0.11516697704792023,
+          8.570145837438758e-07,
+          0.1697894036769867
+        ]
+      }
+    },
+    "invariant": true,
+    "max_abs_diff_n": 0.61,
+    "offsets_m": [
+      0.0,
+      0.01,
+      0.02,
+      0.03,
+      0.05
+    ],
+    "panda_coupling_n": [
+      0.11,
+      80.0,
+      160.0,
+      240.0,
+      400.0
+    ],
+    "xarm6_coupling_n": [
+      0.72,
+      80.03,
+      160.03,
+      240.03,
+      400.03
+    ]
+  },
+  "gates": {
+    "invariance_holds": true,
+    "matched_reconfirms": true,
+    "p99_in_band": true,
+    "single_arm_near_zero": true
+  },
+  "matched_reference": {
+    "p99_in_band": true,
+    "penalty_grounding": {
+      "rule": "threshold = round(1.05 x p99); scale = f_max - threshold",
+      "scale_n": 62.60000000000002,
+      "threshold_n": 303
+    },
+    "seeds": [
+      52000,
+      52001,
+      52002,
+      52003,
+      52004,
+      52005,
+      52006,
+      52007,
+      52008,
+      52009,
+      52010,
+      52011
+    ],
+    "success_rate": 1.0,
+    "success_stress_p99_n": 288.7411233520508,
+    "summary": {
+      "centroid_to_goal_max": 0.053226061165332794,
+      "centroid_to_goal_p50": 0.046096036210656166,
+      "fail_level": 0,
+      "fail_placed": 0,
+      "fail_static": 0,
+      "fail_unstressed": 0,
+      "max_tilt_p90": 6.86667127609253,
+      "n": 12,
+      "stress_p90": 278.988623046875,
+      "success_rate": 1.0
+    }
+  },
+  "schema": "cocarry_rung5_rig_revalidation/v1",
+  "single_arm_positive_control": {
+    "seeds": [
+      52000,
+      52001,
+      52002,
+      52003,
+      52004,
+      52005
+    ],
+    "success_rate": 0.0
+  },
+  "stage": "Rung-5 Stage-1 rig re-validation",
+  "stops": [],
+  "verdict": "PASS"
+}

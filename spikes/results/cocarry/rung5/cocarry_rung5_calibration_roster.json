@@ -1,0 +1,689 @@
+{
+  "arm_a": {
+    "admitted": [
+      "cocarry_stiff_impedance",
+      "cocarry_admittance",
+      "cocarry_nullspace_impedance"
+    ],
+    "excluded": [
+      "cocarry_slew_impedance"
+    ],
+    "roster": [
+      {
+        "calibration_success_rate": 1.0,
+        "class_name": "cocarry_stiff_impedance",
+        "conjunct_summary": {
+          "centroid_to_goal_max": 0.03885296732187271,
+          "centroid_to_goal_p50": 0.029070795513689518,
+          "fail_level": 0,
+          "fail_placed": 0,
+          "fail_static": 0,
+          "fail_unstressed": 0,
+          "max_tilt_p90": 7.082290935516357,
+          "n": 12,
+          "stress_p90": 298.92919921875,
+          "success_rate": 1.0
+        },
+        "passes_gate": true,
+        "per_seed": [
+          {
+            "seed": 53000,
+            "stress": 283.131591796875,
+            "success": true,
+            "tilt": 9.226841926574707
+          },
+          {
+            "seed": 53001,
+            "stress": 293.1501159667969,
+            "success": true,
+            "tilt": 2.8909854888916016
+          },
+          {
+            "seed": 53002,
+            "stress": 252.68931579589844,
+            "success": true,
+            "tilt": 7.121484756469727
+          },
+          {
+            "seed": 53003,
+            "stress": 252.1769256591797,
+            "success": true,
+            "tilt": 6.729546546936035
+          },
+          {
+            "seed": 53004,
+            "stress": 269.23699951171875,
+            "success": true,
+            "tilt": 4.672491550445557
+          },
+          {
+            "seed": 53005,
+            "stress": 264.9053955078125,
+            "success": true,
+            "tilt": 6.507696628570557
+          },
+          {
+            "seed": 53006,
+            "stress": 275.2306823730469,
+            "success": true,
+            "tilt": 4.417380332946777
+          },
+          {
+            "seed": 53007,
+            "stress": 299.5713195800781,
+            "success": true,
+            "tilt": 0.5370673537254333
+          },
+          {
+            "seed": 53008,
+            "stress": 254.90484619140625,
+            "success": true,
+            "tilt": 4.80471658706665
+          },
+          {
+            "seed": 53009,
+            "stress": 273.5049743652344,
+            "success": true,
+            "tilt": 5.855788707733154
+          },
+          {
+            "seed": 53010,
+            "stress": 300.0251770019531,
+            "success": true,
+            "tilt": 0.4922492206096649
+          },
+          {
+            "seed": 53011,
+            "stress": 174.90464782714844,
+            "success": true,
+            "tilt": 1.7080239057540894
+          }
+        ]
+      },
+      {
+        "calibration_success_rate": 1.0,
+        "class_name": "cocarry_admittance",
+        "conjunct_summary": {
+          "centroid_to_goal_max": 0.06713412702083588,
+          "centroid_to_goal_p50": 0.06562549620866776,
+          "fail_level": 0,
+          "fail_placed": 0,
+          "fail_static": 0,
+          "fail_unstressed": 0,
+          "max_tilt_p90": 6.1757008075714115,
+          "n": 12,
+          "stress_p90": 312.86011657714846,
+          "success_rate": 1.0
+        },
+        "passes_gate": true,
+        "per_seed": [
+          {
+            "seed": 53000,
+            "stress": 225.22413635253906,
+            "success": true,
+            "tilt": 3.204491376876831
+          },
+          {
+            "seed": 53001,
+            "stress": 309.0533142089844,
+            "success": true,
+            "tilt": 4.51460075378418
+          },
+          {
+            "seed": 53002,
+            "stress": 310.9237976074219,
+            "success": true,
+            "tilt": 3.5501863956451416
+          },
+          {
+            "seed": 53003,
+            "stress": 305.69036865234375,
+            "success": true,
+            "tilt": 3.417893886566162
+          },
+          {
+            "seed": 53004,
+            "stress": 316.97674560546875,
+            "success": true,
+            "tilt": 2.8706490993499756
+          },
+          {
+            "seed": 53005,
+            "stress": 243.9853057861328,
+            "success": true,
+            "tilt": 7.246822357177734
+          },
+          {
+            "seed": 53006,
+            "stress": 311.9552917480469,
+            "success": true,
+            "tilt": 6.336671352386475
+          },
+          {
+            "seed": 53007,
+            "stress": 312.8864440917969,
+            "success": true,
+            "tilt": 4.72696590423584
+          },
+          {
+            "seed": 53008,
+            "stress": 298.4121398925781,
+            "success": true,
+            "tilt": 2.1830716133117676
+          },
+          {
+            "seed": 53009,
+            "stress": 303.38372802734375,
+            "success": true,
+            "tilt": 3.0914530754089355
+          },
+          {
+            "seed": 53010,
+            "stress": 305.26654052734375,
+            "success": true,
+            "tilt": 3.803354263305664
+          },
+          {
+            "seed": 53011,
+            "stress": 312.6231689453125,
+            "success": true,
+            "tilt": 2.8430416584014893
+          }
+        ]
+      },
+      {
+        "calibration_success_rate": 0.25,
+        "class_name": "cocarry_slew_impedance",
+        "conjunct_summary": {
+          "centroid_to_goal_max": 0.09940660744905472,
+          "centroid_to_goal_p50": 0.008909463882446289,
+          "fail_level": 9,
+          "fail_placed": 0,
+          "fail_static": 0,
+          "fail_unstressed": 0,
+          "max_tilt_p90": 28.851017189025878,
+          "n": 12,
+          "stress_p90": 344.7172058105469,
+          "success_rate": 0.25
+        },
+        "passes_gate": false,
+        "per_seed": [
+          {
+            "seed": 53000,
+            "stress": 319.2303466796875,
+            "success": false,
+            "tilt": 30.93033790588379
+          },
+          {
+            "seed": 53001,
+            "stress": 263.43060302734375,
+            "success": true,
+            "tilt": 12.902731895446777
+          },
+          {
+            "seed": 53002,
+            "stress": 344.8359375,
+            "success": false,
+            "tilt": 28.92832374572754
+          },
+          {
+            "seed": 53003,
+            "stress": 343.0419921875,
+            "success": false,
+            "tilt": 28.155258178710938
+          },
+          {
+            "seed": 53004,
+            "stress": 340.8699951171875,
+            "success": false,
+            "tilt": 22.496511459350586
+          },
+          {
+            "seed": 53005,
+            "stress": 352.3702087402344,
+            "success": false,
+            "tilt": 23.583040237426758
+          },
+          {
+            "seed": 53006,
+            "stress": 273.0495910644531,
+            "success": false,
+            "tilt": 25.278162002563477
+          },
+          {
+            "seed": 53007,
+            "stress": 288.9561462402344,
+            "success": false,
+            "tilt": 21.983190536499023
+          },
+          {
+            "seed": 53008,
+            "stress": 328.39666748046875,
+            "success": false,
+            "tilt": 25.509824752807617
+          },
+          {
+            "seed": 53009,
+            "stress": 309.5588684082031,
+            "success": true,
+            "tilt": 14.692367553710938
+          },
+          {
+            "seed": 53010,
+            "stress": 318.14251708984375,
+            "success": true,
+            "tilt": 14.245640754699707
+          },
+          {
+            "seed": 53011,
+            "stress": 343.64862060546875,
+            "success": false,
+            "tilt": 26.292348861694336
+          }
+        ]
+      },
+      {
+        "calibration_success_rate": 1.0,
+        "class_name": "cocarry_nullspace_impedance",
+        "conjunct_summary": {
+          "centroid_to_goal_max": 0.09879766404628754,
+          "centroid_to_goal_p50": 0.07042407244443893,
+          "fail_level": 0,
+          "fail_placed": 0,
+          "fail_static": 0,
+          "fail_unstressed": 0,
+          "max_tilt_p90": 4.923315191268921,
+          "n": 12,
+          "stress_p90": 354.564013671875,
+          "success_rate": 1.0
+        },
+        "passes_gate": true,
+        "per_seed": [
+          {
+            "seed": 53000,
+            "stress": 342.7761535644531,
+            "success": true,
+            "tilt": 5.915775299072266
+          },
+          {
+            "seed": 53001,
+            "stress": 245.89431762695312,
+            "success": true,
+            "tilt": 2.9938371181488037
+          },
+          {
+            "seed": 53002,
+            "stress": 351.824951171875,
+            "success": true,
+            "tilt": 4.946778774261475
+          },
+          {
+            "seed": 53003,
+            "stress": 352.1288146972656,
+            "success": true,
+            "tilt": 4.7121429443359375
+          },
+          {
+            "seed": 53004,
+            "stress": 354.5798034667969,
+            "success": true,
+            "tilt": 4.328098773956299
+          },
+          {
+            "seed": 53005,
+            "stress": 354.0851135253906,
+            "success": true,
+            "tilt": 4.592094898223877
+          },
+          {
+            "seed": 53006,
+            "stress": 245.98968505859375,
+            "success": true,
+            "tilt": 1.8336544036865234
+          },
+          {
+            "seed": 53007,
+            "stress": 246.10855102539062,
+            "success": true,
+            "tilt": 2.1988353729248047
+          },
+          {
+            "seed": 53008,
+            "stress": 354.4219055175781,
+            "success": true,
+            "tilt": 4.4041523933410645
+          },
+          {
+            "seed": 53009,
+            "stress": 247.67239379882812,
+            "success": true,
+            "tilt": 3.350818157196045
+          },
+          {
+            "seed": 53010,
+            "stress": 360.9779968261719,
+            "success": true,
+            "tilt": 2.845526695251465
+          },
+          {
+            "seed": 53011,
+            "stress": 248.3076629638672,
+            "success": true,
+            "tilt": 2.756976842880249
+          }
+        ]
+      }
+    ]
+  },
+  "arm_b": {
+    "admitted": [
+      "cocarry_selfish_goal",
+      "cocarry_selfish_effort"
+    ],
+    "excluded": [
+      "cocarry_selfish_station"
+    ],
+    "roster": [
+      {
+        "calibration_success_rate": 1.0,
+        "class_name": "cocarry_selfish_goal",
+        "conjunct_summary": {
+          "centroid_to_goal_max": 0.07185620814561844,
+          "centroid_to_goal_p50": 0.06689823418855667,
+          "fail_level": 0,
+          "fail_placed": 0,
+          "fail_static": 0,
+          "fail_unstressed": 0,
+          "max_tilt_p90": 9.302197742462159,
+          "n": 12,
+          "stress_p90": 276.9554870605469,
+          "success_rate": 1.0
+        },
+        "passes_gate": true,
+        "per_seed": [
+          {
+            "seed": 53000,
+            "stress": 264.972900390625,
+            "success": true,
+            "tilt": 10.245147705078125
+          },
+          {
+            "seed": 53001,
+            "stress": 270.54150390625,
+            "success": true,
+            "tilt": 5.71534538269043
+          },
+          {
+            "seed": 53002,
+            "stress": 267.1662292480469,
+            "success": true,
+            "tilt": 9.30408763885498
+          },
+          {
+            "seed": 53003,
+            "stress": 267.0061950683594,
+            "success": true,
+            "tilt": 9.285188674926758
+          },
+          {
+            "seed": 53004,
+            "stress": 268.2171325683594,
+            "success": true,
+            "tilt": 7.601503849029541
+          },
+          {
+            "seed": 53005,
+            "stress": 266.83880615234375,
+            "success": true,
+            "tilt": 8.446135520935059
+          },
+          {
+            "seed": 53006,
+            "stress": 281.7731628417969,
+            "success": true,
+            "tilt": 7.057074069976807
+          },
+          {
+            "seed": 53007,
+            "stress": 254.32435607910156,
+            "success": true,
+            "tilt": 5.475655555725098
+          },
+          {
+            "seed": 53008,
+            "stress": 277.66815185546875,
+            "success": true,
+            "tilt": 7.872225284576416
+          },
+          {
+            "seed": 53009,
+            "stress": 242.01895141601562,
+            "success": true,
+            "tilt": 7.157107830047607
+          },
+          {
+            "seed": 53010,
+            "stress": 253.6313934326172,
+            "success": true,
+            "tilt": 5.1010823249816895
+          },
+          {
+            "seed": 53011,
+            "stress": 226.30938720703125,
+            "success": true,
+            "tilt": 5.319029331207275
+          }
+        ]
+      },
+      {
+        "calibration_success_rate": 1.0,
+        "class_name": "cocarry_selfish_effort",
+        "conjunct_summary": {
+          "centroid_to_goal_max": 0.09630610048770905,
+          "centroid_to_goal_p50": 0.06681674346327782,
+          "fail_level": 0,
+          "fail_placed": 0,
+          "fail_static": 0,
+          "fail_unstressed": 0,
+          "max_tilt_p90": 9.386462497711182,
+          "n": 12,
+          "stress_p90": 324.4163116455078,
+          "success_rate": 1.0
+        },
+        "passes_gate": true,
+        "per_seed": [
+          {
+            "seed": 53000,
+            "stress": 324.84344482421875,
+            "success": true,
+            "tilt": 7.740084648132324
+          },
+          {
+            "seed": 53001,
+            "stress": 297.1852722167969,
+            "success": true,
+            "tilt": 7.567285537719727
+          },
+          {
+            "seed": 53002,
+            "stress": 309.38421630859375,
+            "success": true,
+            "tilt": 7.280470371246338
+          },
+          {
+            "seed": 53003,
+            "stress": 306.8857116699219,
+            "success": true,
+            "tilt": 7.028533935546875
+          },
+          {
+            "seed": 53004,
+            "stress": 324.7960510253906,
+            "success": true,
+            "tilt": 8.520378112792969
+          },
+          {
+            "seed": 53005,
+            "stress": 320.9986572265625,
+            "success": true,
+            "tilt": 7.987387180328369
+          },
+          {
+            "seed": 53006,
+            "stress": 300.9469299316406,
+            "success": true,
+            "tilt": 7.929255485534668
+          },
+          {
+            "seed": 53007,
+            "stress": 308.2297668457031,
+            "success": true,
+            "tilt": 9.394460678100586
+          },
+          {
+            "seed": 53008,
+            "stress": 296.3483581542969,
+            "success": true,
+            "tilt": 6.092716217041016
+          },
+          {
+            "seed": 53009,
+            "stress": 299.8706970214844,
+            "success": true,
+            "tilt": 7.404897689819336
+          },
+          {
+            "seed": 53010,
+            "stress": 295.3177185058594,
+            "success": true,
+            "tilt": 9.715126991271973
+          },
+          {
+            "seed": 53011,
+            "stress": 296.675048828125,
+            "success": true,
+            "tilt": 9.314478874206543
+          }
+        ]
+      },
+      {
+        "calibration_success_rate": 0.0,
+        "class_name": "cocarry_selfish_station",
+        "conjunct_summary": {
+          "centroid_to_goal_max": 0.1014961376786232,
+          "centroid_to_goal_p50": 0.08185216784477234,
+          "fail_level": 12,
+          "fail_placed": 1,
+          "fail_static": 0,
+          "fail_unstressed": 0,
+          "max_tilt_p90": 34.16297645568848,
+          "n": 12,
+          "stress_p90": 342.3953857421875,
+          "success_rate": 0.0
+        },
+        "passes_gate": false,
+        "per_seed": [
+          {
+            "seed": 53000,
+            "stress": 313.7348327636719,
+            "success": false,
+            "tilt": 32.08917999267578
+          },
+          {
+            "seed": 53001,
+            "stress": 338.70281982421875,
+            "success": false,
+            "tilt": 21.107826232910156
+          },
+          {
+            "seed": 53002,
+            "stress": 324.1129455566406,
+            "success": false,
+            "tilt": 34.39339828491211
+          },
+          {
+            "seed": 53003,
+            "stress": 325.6876525878906,
+            "success": false,
+            "tilt": 34.475040435791016
+          },
+          {
+            "seed": 53004,
+            "stress": 305.6405029296875,
+            "success": false,
+            "tilt": 23.760211944580078
+          },
+          {
+            "seed": 53005,
+            "stress": 305.6435241699219,
+            "success": false,
+            "tilt": 25.612152099609375
+          },
+          {
+            "seed": 53006,
+            "stress": 308.4189453125,
+            "success": false,
+            "tilt": 22.748538970947266
+          },
+          {
+            "seed": 53007,
+            "stress": 350.1051025390625,
+            "success": false,
+            "tilt": 26.871461868286133
+          },
+          {
+            "seed": 53008,
+            "stress": 342.45562744140625,
+            "success": false,
+            "tilt": 28.601375579833984
+          },
+          {
+            "seed": 53009,
+            "stress": 341.85321044921875,
+            "success": false,
+            "tilt": 30.488237380981445
+          },
+          {
+            "seed": 53010,
+            "stress": 314.734619140625,
+            "success": false,
+            "tilt": 24.19444465637207
+          },
+          {
+            "seed": 53011,
+            "stress": 328.2515869140625,
+            "success": false,
+            "tilt": 27.442089080810547
+          }
+        ]
+      }
+    ]
+  },
+  "constants": {
+    "c_min": 0.75,
+    "calibration_seeds": [
+      53000,
+      53001,
+      53002,
+      53003,
+      53004,
+      53005,
+      53006,
+      53007,
+      53008,
+      53009,
+      53010,
+      53011
+    ],
+    "drive_stiffness": 8000.0,
+    "fmax_coupling_n": 365.6,
+    "min_arm_b_competent": 2,
+    "stress_measure": "coupling"
+  },
+  "directional_bias_caveat": "The capability gate truncates heterogeneity from above (excludes teammates the cooperative reference cannot succeed with), biasing \u0394 toward zero. On a null, report 'among capability-matched partners, no qualifying drop' \u2014 never 'co-design is inert'.",
+  "pairing": "candidate (partner seat) vs cooperative-reference ego (cocarry_impedance, NOT the incumbent \u2014 non-circular)",
+  "schema": "cocarry_rung5_calibration_roster/v1",
+  "stage": "Rung-5 Stage-2 capability calibration",
+  "stops": [],
+  "verdict": "PROCEED"
+}
