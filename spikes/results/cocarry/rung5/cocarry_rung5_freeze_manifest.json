@@ -2,16 +2,16 @@
   "base_vs_incumbent": {
     "base_class": "cocarry_impedance (cooperative reference ego), base alone (no residual)",
     "base_v_summary": {
-      "centroid_to_goal_p50": 0.039204347878694534,
-      "max_tilt_p50": 3.5870441198349,
-      "max_tilt_p90": 4.115359687805176,
-      "stress_p50": 241.49649810791016,
-      "stress_p90": 277.89586486816404,
+      "centroid_to_goal_p50": 0.04447973147034645,
+      "max_tilt_p50": 3.9303078651428223,
+      "max_tilt_p90": 4.7654246330261225,
+      "stress_p50": 238.07005310058594,
+      "stress_p90": 273.30870666503904,
       "success_rate": 1.0
     },
     "behavioral_delta": {
-      "d_max_tilt_p90": 3.5645972251892086,
-      "d_stress_p90": -36.88043975830075,
+      "d_max_tilt_p90": 2.9145322799682623,
+      "d_stress_p90": -32.29328155517575,
       "d_success_rate": 0.0
     },
     "incumbent_v_summary": {
@@ -107,7 +107,7 @@
     "date": "2026-06-21",
     "from_scratch": false,
     "from_scratch_early_stop": "fired at 300k (transport-but-tilted) -> residual escalation",
-    "git_commit": "946ec0626ee84f0de10be5b07c1e784cfa2ce15d",
+    "git_commit": "9fe82805776e8707ffc0290547a7fb73e3ad0f30",
     "mode": "residual_on_impedance",
     "residual_base": "cocarry_impedance frozen base; applied = base + residual",
     "run_id": "86b5f8ddf7a3a2da",

@@ -58,7 +58,13 @@ _V_SEEDS = list(range(51000, 51024))  # held-out validation set
 _MATCHED_P99 = 288.7  # Stage-1 matched-coupling success-stress p99 (grounds f_max + penalty)
 
 
-def _eval_ego(ego_act: Any, seeds: list[int], *, residual: bool = False) -> list[EpisodeMetrics]:  # noqa: ANN401
+def _eval_ego(  # noqa: ANN401
+    ego_act: Any,
+    seeds: list[int],
+    *,
+    residual: bool = False,
+    ego_obj: Any = None,
+) -> list[EpisodeMetrics]:
     """Roll the given ego closure on the matched condition at stress_max=365.6, per seed.
 
     ``residual=True`` applies the residual-base wrapper (the incumbent ego = base
@@ -66,6 +72,11 @@ def _eval_ego(ego_act: Any, seeds: list[int], *, residual: bool = False) -> list
     """
     out: list[EpisodeMetrics] = []
     for seed in seeds:
+        # rollout_incumbent_episode resets the partner, not the ego; the hand-built
+        # base controller is stateful, so reset it per episode (the frozen incumbent
+        # policy is stateless -> ego_obj=None). ADR-026 §D4.
+        if ego_obj is not None:
+            ego_obj.reset(seed=seed)
         env = make_cocarry_training_env(
             condition_id="cocarry_matched_panda_pair",
             episode_length=_EPISODE,
@@ -239,7 +250,9 @@ def main() -> int:  # noqa: PLR0915 - linear freeze pipeline, kept in one place 
     print("    [5] base-vs-incumbent diagnostic on V...")
     base_ego = ph.build_cooperative_ego(seed=0)
     base_ego.reset(seed=0)
-    base_metrics = _eval_ego(lambda o, _e=base_ego: _e.act(o), _V_SEEDS, residual=False)
+    base_metrics = _eval_ego(
+        lambda o, _e=base_ego: _e.act(o), _V_SEEDS, residual=False, ego_obj=base_ego
+    )
     base_summ = summarize(base_metrics)
     print(
         f"      base (cooperative-impedance) V success={base_summ['success_rate']:.3f}  "
