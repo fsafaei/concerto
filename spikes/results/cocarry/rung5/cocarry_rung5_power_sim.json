@@ -1,0 +1,232 @@
+{
+  "adequacy_rule": {
+    "basis": "equivalence-null (the \u0394_min-scoped null is an equivalence test, NOT a power claim)",
+    "drop_power_anchor_delta": "0.25",
+    "drop_power_floor": 0.85,
+    "null_false_rate_at_delta_min_ceiling": 0.1,
+    "null_specificity_floor": 0.95,
+    "rule": "Lock the smallest n meeting ALL THREE: P[null|\u0394=0]>=0.95 (specificity), P[null|\u0394=\u0394_min]<=0.10 (null does NOT fire at a real \u0394_min effect, so a declared null confidently excludes effects >=\u0394_min via the CI upper bound), AND power[drop|\u0394=0.25]>=0.85. Power AT exactly \u0394=\u0394_min caps ~0.5 by construction (mean-\u2265-\u0394_min boundary), so it is NOT the adequacy lens; the equivalence calibration is. \u0394_min stays 0.20 (consistent with Rung-3)."
+  },
+  "bare_equivalence_minimum_n": 28,
+  "by_n": {
+    "12": {
+      "adequate": false,
+      "drop_power_at_delta_min_plus": 0.7266666666666667,
+      "mde_at_target_power": 0.3,
+      "null_by_delta": {
+        "0.00": 1.0,
+        "0.05": 0.9166666666666666,
+        "0.10": 0.5833333333333334,
+        "0.15": 0.24333333333333335,
+        "0.20": 0.12,
+        "0.25": 0.023333333333333334,
+        "0.30": 0.013333333333333334,
+        "0.40": 0.0033333333333333335
+      },
+      "null_false_rate_at_delta_min": 0.12,
+      "null_specificity_at_delta_0": 1.0,
+      "power_at_delta_min": 0.45,
+      "power_by_delta": {
+        "0.00": 0.0,
+        "0.05": 0.0,
+        "0.10": 0.02,
+        "0.15": 0.12,
+        "0.20": 0.45,
+        "0.25": 0.7266666666666667,
+        "0.30": 0.9033333333333333,
+        "0.40": 0.9833333333333333
+      }
+    },
+    "16": {
+      "adequate": false,
+      "drop_power_at_delta_min_plus": 0.81,
+      "mde_at_target_power": 0.25,
+      "null_by_delta": {
+        "0.00": 1.0,
+        "0.05": 0.9433333333333334,
+        "0.10": 0.62,
+        "0.15": 0.22,
+        "0.20": 0.03666666666666667,
+        "0.25": 0.006666666666666667,
+        "0.30": 0.0,
+        "0.40": 0.0
+      },
+      "null_false_rate_at_delta_min": 0.03666666666666667,
+      "null_specificity_at_delta_0": 1.0,
+      "power_at_delta_min": 0.52,
+      "power_by_delta": {
+        "0.00": 0.0,
+        "0.05": 0.0,
+        "0.10": 0.02,
+        "0.15": 0.2,
+        "0.20": 0.52,
+        "0.25": 0.81,
+        "0.30": 0.95,
+        "0.40": 1.0
+      }
+    },
+    "20": {
+      "adequate": false,
+      "drop_power_at_delta_min_plus": 0.8366666666666667,
+      "mde_at_target_power": 0.25,
+      "null_by_delta": {
+        "0.00": 1.0,
+        "0.05": 0.9766666666666667,
+        "0.10": 0.6,
+        "0.15": 0.22666666666666666,
+        "0.20": 0.02666666666666667,
+        "0.25": 0.0033333333333333335,
+        "0.30": 0.0,
+        "0.40": 0.0
+      },
+      "null_false_rate_at_delta_min": 0.02666666666666667,
+      "null_specificity_at_delta_0": 1.0,
+      "power_at_delta_min": 0.55,
+      "power_by_delta": {
+        "0.00": 0.0,
+        "0.05": 0.0,
+        "0.10": 0.016666666666666666,
+        "0.15": 0.15333333333333332,
+        "0.20": 0.55,
+        "0.25": 0.8366666666666667,
+        "0.30": 0.9766666666666667,
+        "0.40": 0.9966666666666667
+      }
+    },
+    "24": {
+      "adequate": false,
+      "drop_power_at_delta_min_plus": 0.82,
+      "mde_at_target_power": 0.25,
+      "null_by_delta": {
+        "0.00": 1.0,
+        "0.05": 0.9966666666666667,
+        "0.10": 0.7733333333333333,
+        "0.15": 0.28,
+        "0.20": 0.04666666666666667,
+        "0.25": 0.0,
+        "0.30": 0.0,
+        "0.40": 0.0
+      },
+      "null_false_rate_at_delta_min": 0.04666666666666667,
+      "null_specificity_at_delta_0": 1.0,
+      "power_at_delta_min": 0.49333333333333335,
+      "power_by_delta": {
+        "0.00": 0.0,
+        "0.05": 0.0,
+        "0.10": 0.0,
+        "0.15": 0.13666666666666666,
+        "0.20": 0.49333333333333335,
+        "0.25": 0.82,
+        "0.30": 0.9866666666666667,
+        "0.40": 1.0
+      }
+    },
+    "28": {
+      "adequate": true,
+      "drop_power_at_delta_min_plus": 0.8766666666666667,
+      "mde_at_target_power": 0.25,
+      "null_by_delta": {
+        "0.00": 1.0,
+        "0.05": 0.9966666666666667,
+        "0.10": 0.7833333333333333,
+        "0.15": 0.27,
+        "0.20": 0.04666666666666667,
+        "0.25": 0.006666666666666667,
+        "0.30": 0.0,
+        "0.40": 0.0
+      },
+      "null_false_rate_at_delta_min": 0.04666666666666667,
+      "null_specificity_at_delta_0": 1.0,
+      "power_at_delta_min": 0.54,
+      "power_by_delta": {
+        "0.00": 0.0,
+        "0.05": 0.0,
+        "0.10": 0.0,
+        "0.15": 0.12333333333333334,
+        "0.20": 0.54,
+        "0.25": 0.8766666666666667,
+        "0.30": 0.99,
+        "0.40": 1.0
+      }
+    },
+    "32": {
+      "adequate": true,
+      "drop_power_at_delta_min_plus": 0.8733333333333333,
+      "mde_at_target_power": 0.25,
+      "null_by_delta": {
+        "0.00": 1.0,
+        "0.05": 1.0,
+        "0.10": 0.8433333333333334,
+        "0.15": 0.38,
+        "0.20": 0.05333333333333334,
+        "0.25": 0.006666666666666667,
+        "0.30": 0.0,
+        "0.40": 0.0
+      },
+      "null_false_rate_at_delta_min": 0.05333333333333334,
+      "null_specificity_at_delta_0": 1.0,
+      "power_at_delta_min": 0.44333333333333336,
+      "power_by_delta": {
+        "0.00": 0.0,
+        "0.05": 0.0,
+        "0.10": 0.0,
+        "0.15": 0.07,
+        "0.20": 0.44333333333333336,
+        "0.25": 0.8733333333333333,
+        "0.30": 0.9766666666666667,
+        "0.40": 1.0
+      }
+    },
+    "40": {
+      "adequate": true,
+      "drop_power_at_delta_min_plus": 0.9066666666666666,
+      "mde_at_target_power": 0.25,
+      "null_by_delta": {
+        "0.00": 1.0,
+        "0.05": 1.0,
+        "0.10": 0.8633333333333333,
+        "0.15": 0.36333333333333334,
+        "0.20": 0.016666666666666666,
+        "0.25": 0.0,
+        "0.30": 0.0,
+        "0.40": 0.0
+      },
+      "null_false_rate_at_delta_min": 0.016666666666666666,
+      "null_specificity_at_delta_0": 1.0,
+      "power_at_delta_min": 0.54,
+      "power_by_delta": {
+        "0.00": 0.0,
+        "0.05": 0.0,
+        "0.10": 0.0,
+        "0.15": 0.056666666666666664,
+        "0.20": 0.54,
+        "0.25": 0.9066666666666666,
+        "0.30": 0.99,
+        "0.40": 1.0
+      }
+    }
+  },
+  "design": {
+    "ci_alpha": 0.05,
+    "decision_rule": "pooled mean \u0394 >= \u0394_min AND one-sided 95% CI lower > 0",
+    "delta_min": 0.2,
+    "n_boot": 1200,
+    "n_sweep": [
+      12,
+      16,
+      20,
+      24,
+      28,
+      32,
+      40
+    ],
+    "n_trials": 300,
+    "n_variants": 3,
+    "partner_model": "independent Bernoulli(1 - \u0394) per seed",
+    "reference_model": "deterministic success (incumbent ceiling ~1.0; must reconfirm >= 0.90)"
+  },
+  "lock_note": "Locked n=28. Under the equivalence-null adequacy rule the smallest adequate n IS 28 (the drop-power@0.25>=0.85 condition binds: n<=24 give 0.81-0.84; n=28 gives 0.88), coinciding with the founder's pre-stated 24-30 robustness band. Operating characteristics at n=28: null specificity 1.00, false-null at \u0394_min 0.05, drop-power 0.88@0.25 / 0.99@0.30. The sweep is the committed run; a re-run reproduces within Monte-Carlo noise.",
+  "locked_n_measure_clusters": 28,
+  "purpose": "Pre-registration power analysis SIZING the Rung-5 co-design (CD) measurement seed-cluster count. Monte-Carlo over the ACTUAL decision procedure (cluster bootstrap one-sided CI + the committed decision rule) on synthetic Bernoulli outcomes: reference = the ~100% frozen-incumbent ceiling, each of K admitted partners degraded to success 1-\u0394. ADR-026 \u00a7Decision 4; ADR-007.",
+  "schema": "cocarry_rung5_power_sim/v1"
+}

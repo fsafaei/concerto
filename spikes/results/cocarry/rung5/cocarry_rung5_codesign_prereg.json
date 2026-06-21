@@ -1,0 +1,176 @@
+{
+  "schema": "cocarry_rung5_codesign_prereg/v1",
+  "status": "DRAFT — NOT YET COMMITTED OR TAGGED (founder final read-through pending; then de-DRAFT + tag).",
+  "date": "2026-06-20",
+  "axis": "CD (co-design / objective-sharing) — partner varies ONLY in whether it was co-designed with the ego; same Panda embodiment on every partner (embodiment is the established null, NOT re-introduced).",
+  "purpose": "One pre-registered, falsifiable-both-ways measurement that settles the heterogeneity axis on co-carry properly: (1) re-freeze a genuinely TRAINED learned incumbent on the FIXED task (compliant coupling K=8000 + the embodiment-invariant coupling-stress instrument + the corrected reward), replacing the hand-written cooperative-impedance stand-in every prior compliant-coupling headline (Rung-4b..4e) used; and (2) measure that frozen incumbent against two partner sets differing in EXACTLY ONE factor — co-design. Arm A = capability-matched CO-designed control-style partners (expected null, the control). Arm B = independently-competent but NON-co-designed partners (the regime the thesis is about). The Rung-2 STOP (854 N internal stress vs a frozen non-cooperating partner on this same task) is in-kit evidence the non-co-designed regime bites where the matched one does not; this run tests that directly, on the existing harness, against a trained incumbent.",
+
+  "governance": {
+    "phase": "Phase-2. Adds NO Phase-1 gate work (invariant I1). Informs the M7 / M10-narrative / D-046 Phase-1/2 scope call but does NOT decide it — that remains the founder's, post-results.",
+    "incumbent_frozen": true,
+    "incumbent_never_retrained_per_partner": true,
+    "black_box_partner_I3_ADR009": "Partners enter only through the FrozenPartner interface; the _FORBIDDEN_ATTRS shield (interface.py) blocks train/learn/update/load_state_dict/named_parameters; the incumbent is an eval-only obs->action closure and never consumes partner internals. The reward is partner-agnostic: it penalises a physical coupling-stress force, never partner identity/class/objective (spec §11 anti-leakage).",
+    "no_comm_schema_bump_I9": "chamber.comm.SCHEMA_VERSION (ADR-003 wire format), chamber.evaluation.results.SCHEMA_VERSION (results/leaderboard), and the prereg-validator schema — the three I9-named schema constants — are ALL UNCHANGED. The freeze-manifest artifact version (cocarry_freeze.MANIFEST_SCHEMA: 'cocarry_freeze_manifest/v1' -> '/v2') is a SEPARATE module constant, not named SCHEMA_VERSION, not one of the three, and written as its own JSON artifact (not via chamber.evaluation.results) — so it is NOT transitively part of the results schema and bumping it triggers no new ADR. Confirmed against source.",
+    "no_immutable_archive_edits_I8": "Rung-2..4e archives untouched. The frozen Rung-2 rigid+wrist incumbent (artifacts/.../f6dad85ec9df4d58_step100000.pt) is preserved; this run produces a SEPARATE re-frozen incumbent on the fixed task.",
+    "adr_traceability_I7": ["ADR-026 §Decision 2 (positive control)", "ADR-026 §Validation criteria", "ADR-026 §Open-questions", "ADR-005", "ADR-007 §Pre-registration", "ADR-009 (partner zoo)", "ADR-010 (FM partner — Arm-B escalation tiers)"],
+    "authored": "fsafaei",
+    "ai_attribution": "none (scanned by make verify-no-ai-mentions across history)",
+    "do_not_merge": "STOP at the open PR for founder review."
+  },
+
+  "ceiling_consistency_fix": {
+    "why": "BLOCKER resolved before lock. The committed env predicate hardcodes COCARRY_STRESS_MAX_PROXY_N=130 N (wrist) and the reward penalty defaults to threshold 110 / scale 20 (wrist-grounded). Under stress_measure='coupling' (matched coupling stress ~260-290 N) both are wrong: is_unstressed/success would never fire (so the training success bonus is dead) and the penalty saturates across the whole cooperative band — 'train against one constraint, judge against another'. The Rung-4c..4e eval-only scripts side-stepped this by recomputing success in the driver at f_max 365.6, which is fine for a search but FATAL for a training run whose reward reads info['success'].",
+    "implementation": "Additive, byte-identical-preserving params on make_cocarry_env + make_cocarry_training_env: stress_max, stress_penalty_threshold, stress_penalty_scale, all default None -> the wrist constants (130/110/20), so the entire rigid+wrist ladder stays byte-identical (I8/P6). evaluate() judges is_unstressed against self._stress_max; the reward threads the grounded threshold/scale into cocarry_excess_stress_penalty. Tier-1 contract tests added (test_cocarry_tier1.py::TestSuccessPredicate::test_stress_max_param_selects_the_ceiling; test_cocarry_rung2_remediation_tier1.py::TestCouplingGroundedPenalty). ruff + pyright(strict) green.",
+    "training_and_eval_run_on_coupling_at_fmax": "CONFIRMED. Stage-3 training AND ALL Stage-4/5 eval run with stress_measure='coupling', drive_stiffness=8000.0, stress_max=365.6, and the coupling-grounded penalty. No code path judges the coupling task against the 130 N wrist ceiling."
+  },
+
+  "fixed_task_substrate": {
+    "coupling": "compliant dual-hold, drive_stiffness=8000.0 N/m (Rung-4b K=8000; damping/force-limit at the rig defaults; drive_force_limit -> Variant-B saturation as in Rung-4c).",
+    "stress_measure": "coupling — F = K_c * ||grip_frame_world - bar_end_world|| (cocarry.py::_coupling_stress_now), embodiment-invariant. The controlled same-deflection invariance check (Rung-4c, <=~1 N Panda-vs-other) stands and is re-confirmed in Stage 1.",
+    "fmax_coupling_n": 365.6,
+    "fmax_status": "HELD FIXED at the established Rung-4c/4e value (= 1.25 x matched-coupling success-stress p99 ~ 292.5 N). NOT re-derived per-incumbent. Stage 1 re-measures the matched-coupling distribution and REQUIRES f_max 365.6 to reconfirm consistent (measured matched success-stress p99 in the band below) else STOP.",
+    "fmax_consistency_band_n": [234.0, 318.0],
+    "fmax_consistency_band_basis": "Centered on p99 = 292.5 N (the value that produced the fixed f_max 365.6 = 1.25 x p99). Lower bound 234 = p99 -20%. Upper bound CLOSED at 318 (asymmetric, by the grounding math, NOT a symmetric +20% which would be 351): at p99 > ~318 the fixed f_max and the grounding rule CROSS — threshold = 1.05 x p99 would exceed f_max (scale = 365.6 - threshold goes negative/degenerate, silently corrupting the Stage-3 training reward) AND f_max/p99 falls below 1.15 (matched episodes routinely fail the stress conjunct, collapsing the positive control). The upper bound 318 keeps f_max >= 1.15 x p99 AND penalty scale >= ~30 N. If the Stage-1 measured matched-coupling p99 lands outside [234, 318] -> STOP (substrate drift that invalidates the fixed f_max); do not re-derive f_max to fit.",
+    "success_predicate": "is_placed & is_level & is_unstressed & both_static & is_settled (cocarry.py::evaluate) — the FULL joint conjunct, UNCHANGED. is_unstressed uses stress_max=365.6 on the coupling measure.",
+    "goal_radius_m": 0.10,
+    "tilt_limit_deg": 15.0,
+    "settle_window_steps": 15,
+    "episode_length": 320,
+    "penalty_grounding_rule": "Pre-registered RULE (numbers measured post-tag in Stage 1, frozen in the manifest): stress_penalty_threshold = round(1.05 x measured matched-coupling success-stress p99); stress_penalty_scale = 365.6 - threshold. Mirrors the wrist grounding (threshold 110 ~ 1.05 x p99 104.5; scale 20 ~ f_max 130.6 - 110). The fmax_consistency_band upper bound (318) guarantees scale >= ~30 N and f_max >= 1.15 x p99, so the rule and the fixed f_max cannot cross. NEVER weakened to admit a result."
+  },
+
+  "refreeze": {
+    "manifest_schema": "cocarry_freeze_manifest/v2",
+    "manifest_new_fields": ["coupling_grounding (stress_measure, stress_max=365.6, grounded threshold/scale, measured matched-coupling p99)", "provenance (from_scratch | residual_on_impedance; early_stop fired?)", "base_vs_incumbent_diagnostic"],
+    "matched_cell": "matched Panda pair (panda_wristcam ego + panda_partner), compliant K=8000, stress_measure=coupling, stress_max=365.6, coupling-grounded penalty, transport PBRS on (coeff=1.0, parity with env constant).",
+    "stage3_init_conditional": {
+      "primary": "FROM SCRATCH HAPPO on the fixed matched cell (reuses training_runner unchanged). Cleanest 'learned cooperation' provenance — defeats the hostile read that an Arm-A null is the robust impedance BASE rather than learned cooperation, since the incumbent shares NO machinery with the Arm-A control-style partners. Budget cap 900k steps; checkpoint cadence 50k.",
+      "early_stop_milestone": "HARD CUTOFF at the 300k checkpoint (no soft trend — Rung-2's failure was non-monotonic wandering, so trend-detection is unreliable): CONTINUE iff >= 1 saved checkpoint by 300k is constraint-clean (all-seed max tilt < 15 deg AND all-seed max coupling stress < 365.6 N) AND reaches matched joint-success >= C_min (0.75) on the selection set S. Else STOP the from-scratch primary and trigger the escalation. The residual escalation catches the genuine slow-converger case. Caps wasted from-scratch spend at ~300k.",
+      "escalation": "residual-on-impedance — a learned residual policy anchored on the hand-built cooperative-impedance ego (chamber.benchmarks.cocarry_ph.build_cooperative_ego / CoCarryImpedancePartner on the ego seat) that already solves the fixed task.",
+      "escalation_acceptance_criterion_LOCKED_NOW": "If triggered, the escalation MUST conform to this committed spec (so the later build is not shaped post-hoc): anchor = the cooperative-impedance base; the learned component is a residual on the anchor's action; SAME selection rule (earliest constraint-clean max-success checkpoint on S); SAME held-out validation bar (V >= 0.90 with comfortable margins); SAME freeze manifest v2 + SHA reload. The base-vs-incumbent diagnostic is MANDATORY on the residual path (quantifies the residual's added value over the base).",
+      "escalation_build_note": "The training loop currently exposes NO base/residual hook (verified). The build is DEFERRED until the 300k early-STOP fires AND the founder has given the Stage-3 go-ahead. The METHOD is pre-registered here, so building the plumbing later does not violate the prereg (it conforms to the locked acceptance criterion above).",
+      "encoded_as": "primary + hard-cutoff early-stop + escalation are ONE conditional in this single locked tag. No goalpost-moving: the branch is fixed before any training step."
+    },
+    "selection_rule": "Among the constraint-clean checkpoints (all-seed max tilt < 15 deg AND all-seed max coupling stress < 365.6 N) at MAXIMUM matched joint-success on the disjoint selection set S, pick the EARLIEST. Deterministic eval (P6).",
+    "selection_seed_set_S": [50000, 50001, 50002, 50003, 50004, 50005, 50006, 50007, 50008, 50009, 50010, 50011],
+    "validation_seed_set_V": [51000, 51001, 51002, 51003, 51004, 51005, 51006, 51007, 51008, 51009, 51010, 51011, 51012, 51013, 51014, 51015, 51016, 51017, 51018, 51019, 51020, 51021, 51022, 51023],
+    "validation_acceptance": "matched joint-success on the disjoint V >= 0.90 (reach band) AND comfortable margins (max tilt strictly < 15 deg without edge-riding; coupling stress p90 + max comfortably < 365.6 N). SHA-256 byte-identical reload verified.",
+    "stop_gate": "If NEITHER path reaches the matched reference (V >= 0.90) -> STOP: substrate not ready (an AS-class training failure caught cheaply). Report; do NOT fabricate an incumbent and do NOT proceed to the arms.",
+    "training_root_seed": 0
+  },
+
+  "base_vs_incumbent_diagnostic": {
+    "why": "Quantifies what the learning actually adds and directly defuses the 'is it really a learned incumbent' critique (mandatory on the residual escalation). Founder-requested.",
+    "what": "On the matched fixed task, paired with the matched cocarry_impedance partner, compare (a) the hand-built cooperative-impedance ego ALONE vs (b) the learned frozen incumbent. Report both joint-success rates + per-conjunct breakdown on the validation set V.",
+    "interpretation": "Recorded as a diagnostic, not a gate. A learned incumbent that merely matches the base controller is honestly reported as such (and strengthens the case for from-scratch over residual)."
+  },
+
+  "capability_gate": {
+    "rule": "Every partner (Arm A AND Arm B) must clear an INDEPENDENT competence check: paired with the COOPERATIVE-REFERENCE EGO (matched cocarry_impedance on the ego seat — NOT the frozen incumbent), joint success on the calibration seeds >= C_min. A JOINT drop in the measurement is then attributable to mismatch / non-co-design, not to a weak teammate.",
+    "pairing_is_cooperative_reference_NOT_incumbent": "Calibrating against the frozen incumbent would gate on the very outcome being measured (it would exclude precisely the partners that reveal the effect — circular). The pairing is the cooperative reference; the gate is incumbent-INDEPENDENT by design.",
+    "re_run_fresh_this_rung": "Calibration is RE-MEASURED fresh under THIS rung's substrate (compliant K=8000, stress_measure=coupling, f_max 365.6). Rung-3's admitted/excluded roster does NOT transfer.",
+    "cooperative_reference_ego": "cocarry_impedance (build_cooperative_ego)",
+    "c_min": 0.75,
+    "c_min_derivation": "C_min = max(0.75, M - 0.25) with M = the matched teammate's calibrated score (~1.0). Fixed at pre-statement; NEVER weakened.",
+    "calibration_seeds": [53000, 53001, 53002, 53003, 53004, 53005, 53006, 53007, 53008, 53009, 53010, 53011],
+    "arm_b_min_competent_variants": "At least 2 of the 3 Arm-B variants must clear the C_min independent-competence gate to PROCEED to a CD-axis claim (the >= 2-variant replication requirement cannot be satisfied otherwise). If 0 competent -> STOP (cannot test non-co-design with an incompetent partner). If exactly 1 competent -> STOP / feasibility-note: a single competent variant can neither support a replicated drop nor a strong null; report as a feasibility finding, do NOT issue a CD-axis verdict. >= 2 competent -> proceed.",
+    "exclusion_caveat": "The gate truncates heterogeneity from above (biases Δ toward zero). On a null, report 'among capability-matched partners, no qualifying drop was observed' — never 'co-design does not couple to cooperation'. The excluded roster is archived with this directional-bias caveat."
+  },
+
+  "arms": {
+    "isolation_statement": "Arm A and Arm B partners are IDENTICAL in body (Panda), impedance class, and ALL physical/dynamical parameters (gains, damping, step limit), differing ONLY in the COORDINATION OBJECTIVE. With that, an Arm-B drop is attributable to co-design BY CONSTRUCTION — this isolation IS the mediation guarantee (see cooperation_mediation). Held byte-identical across both arms and the matched reference: same frozen incumbent, same compliant coupling K=8000, same invariant coupling-stress instrument, same f_max 365.6, same success predicate + 0.10 m radius, same 320-tick horizon, same Panda body.",
+    "arm_a_control": {
+      "label": "capability-matched, CO-DESIGNED control-style partners (vary control STYLE within the shared cooperative objective).",
+      "partners": ["cocarry_stiff_impedance", "cocarry_admittance", "cocarry_slew_impedance"],
+      "also_gate_tested": ["cocarry_nullspace_impedance (re-run through the gate this rung; expected EXCLUDED at C_min as in Rung-3)"],
+      "expectation": "null. The ADR-026-faithful matched/policy-style result, now against the TRAINED incumbent rather than the stand-in.",
+      "body": "Panda (panda_partner)"
+    },
+    "arm_b_decisive": {
+      "label": "independently-competent but NON-co-designed partners — the matched-impedance controller with the cooperative joint objective REPLACED by a self-interested own-objective (a partner you cannot co-optimise).",
+      "construction": "Each variant is the matched cocarry_impedance class with MATCHED gains/dynamics, differing ONLY in its reference/objective. Same body, same seat, same FrozenPartner interface; reads only its own qpos + the task goal/bar leaves (I3); BLIND to the joint internal coupling stress (never observes or optimises it). This is the Rung-2-STOP regime.",
+      "variants_T1": [
+        {"class": "cocarry_selfish_goal", "objective": "tracks its OWN bar end to a self-referenced goal, ignoring the partner / the joint task."},
+        {"class": "cocarry_selfish_effort", "objective": "minimises its OWN control effort while nominally holding its end (a lazy-but-competent contributor)."},
+        {"class": "cocarry_selfish_station", "objective": "keeps its OWN end at a self-referenced setpoint regardless of joint transport (a station-keeper)."}
+      ],
+      "variant_competence_note": "each variant is tuned to PASS C_min when paired with the cooperative reference (so a measured drop is non-co-design, not incompetence) — tuned UP on its OWN-objective competence ONLY, never toward joint-stress awareness (that would re-introduce co-design). A variant that cannot clear C_min is EXCLUDED with the directional-bias caveat.",
+      "replication_requirement": "A CD-axis DROP is claimed ONLY if the pooled drop qualifies AND it REPLICATES across >= 2 admitted variants (per-variant Δ >= Δ_min with CI excluding 0 for at least two variants). A single-variant drop is reported as a single-partner signal, NOT an axis claim (guards against a single hand-built-adversary artifact; restores symmetry with Arm A's family).",
+      "escalation_tiers_FOUNDER_GATED": {
+        "T2": "a learned partner trained against a DIFFERENT ego/objective, then frozen and transferred in without retuning.",
+        "T3": "a foundation-model / general capable policy per ADR-009/010.",
+        "gate": "Escalation past the T1 hand-built variants requires a founder checkpoint (R-PPL-01 capacity guard). NOT pre-spent; NOT a within-run lever. Run only if the T1 set is null."
+      },
+      "body": "Panda (same as Arm A — embodiment, the established null, is NOT re-introduced; the only thing varying vs Arm A is the coordination objective)."
+    }
+  },
+
+  "delta_min": 0.20,
+  "delta_min_basis": "joint success-rate paired Δ = reference - shifted. Δ_min stays 0.20 (consistent with Rung-3). Adequacy is sized by the committed power sim (cocarry_rung5_power_sim.json), NOT by a naive 'power at Δ_min' claim — see power_and_null_scoping.",
+  "power_and_null_scoping": {
+    "power_sim_artifact": "spikes/results/cocarry/rung5/cocarry_rung5_power_sim.json",
+    "locked_n": 28,
+    "structural_note": "Under the committed rule (pooled mean Δ >= Δ_min AND one-sided 95% CI lower > 0), power AT a true effect exactly = Δ_min asymptotes near ~0.5 (the sample mean clears its own mean ~half the time). So '80% power at Δ_min' is unreachable by adding n; the Δ_min-scoped null is judged as an EQUIVALENCE test instead.",
+    "n_28_operating_characteristics": {"null_specificity_P_null_given_delta0": 1.00, "false_null_P_null_given_delta_min": 0.05, "drop_power_at_0.25": 0.88, "drop_power_at_0.30": 0.99},
+    "adequacy_rule_met": "P[null|Δ=0] >= 0.95 (=1.00) AND P[null|Δ=Δ_min] <= 0.10 (=0.05) AND power[drop|Δ=0.25] >= 0.85 (=0.88). n=28 is the smallest n meeting all three AND sits in the pre-stated 24-30 robustness band.",
+    "null_claim_scoping": "A declared null is stated as an EQUIVALENCE bound, NOT a power claim: 'the measurement decisively excludes effects >= 25 pp (0.88 power) AND, when a null is declared, the two-sided 95% CI upper bound places the effect below 20 pp' — never 'powered to 80% at 0.20' (structurally ~0.5).",
+    "drop_claim_scoping": "The DROP side is unchanged: pooled mean Δ >= Δ_min (0.20) AND one-sided 95% CI lower > 0; magnitude-primary."
+  },
+
+  "measurement_seeds": [54000, 54001, 54002, 54003, 54004, 54005, 54006, 54007, 54008, 54009, 54010, 54011, 54012, 54013, 54014, 54015, 54016, 54017, 54018, 54019, 54020, 54021, 54022, 54023, 54024, 54025, 54026, 54027],
+  "n_seed_clusters": 28,
+  "matched_coupling_distribution_seeds": [52000, 52001, 52002, 52003, 52004, 52005, 52006, 52007, 52008, 52009, 52010, 52011],
+  "seed_disjointness": "Train root_seed=0; selection S=50000-50011; validation V=51000-51023; matched-coupling distribution=52000-52011; calibration=53000-53011; measurement=54000-54027. All disjoint from each other AND from every prior rung (Rung-2 S=10000s/V=20000s; Rung-3 measure=30000s/calib=40000s).",
+
+  "measurement_design": "Eval-only, paired within-seed on the SAME 28 measurement seeds: the reference (frozen incumbent + matched cocarry_impedance) and each shifted condition (frozen incumbent + each admitted partner). The reference is reconfirmed first; if it does not reach >= 0.90 the run STOPs (something changed) before any shifted arm is trusted. One deterministic episode per seed.",
+  "pooling_method": "Pooled Δ = reference_rate - mean_over_partners(shifted_rate), each admitted partner weighted equally; per-partner Δ also reported (for the Arm-B replication check). Cluster (seed) bootstrap resamples the 28 paired seed-clusters with replacement, recomputes pooled Δ each iteration (n_boot=10000; one-sided 95%; RNG via concerto.training.seeding.derive_substream, P6). Arm A and Arm B are pooled SEPARATELY.",
+
+  "decision_rule": {
+    "arm_a": "qualifying drop iff pooled mean Δ >= 0.20 AND the one-sided 95% CI lower bound > 0; else NULL (scoped per power_and_null_scoping). Expected null — the control.",
+    "arm_b": "qualifying CD-axis drop iff pooled mean Δ >= 0.20 AND the one-sided 95% CI lower bound > 0 AND it REPLICATES across >= 2 admitted variants; else NULL. Isolation (arms identical except objective) is the mediation guarantee; the coupling-stress timecourse is a reported diagnostic, not a gate.",
+    "secondary": "IQM (25%-trimmed) secondary, non-gate-bearing; cluster-robust binomial GLMM (statsmodels GEE, clustered by seed) confirmatory.",
+    "comparative_verdict_matrix": {
+      "A_null_AND_B_null": "CONCLUSIVE NEGATIVE on co-carry: heterogeneity does not bite even without co-design -> the cost, if it exists, requires a harder TASK regime. Pre-committed next (DOCUMENTED, NOT run this round): a contact-rich, asymmetric-role task. A rigorous, publishable null + benchmark.",
+      "A_null_AND_B_drop": "THE THESIS LANDS WHERE PREDICTED: co-design / shared cooperation is the load-bearing variable; the matched arm is the control proving the effect is specifically the un-co-optimisable asymmetry.",
+      "A_drop": "UNEXPECTED given priors. Pre-specified branch: report per rule, then INVESTIGATE a substrate regression (re-check Stage 1 rig re-validation + Stage 3 re-freeze validation) BEFORE any claim — a matched-control drop most likely signals the incumbent or substrate changed, not a real co-design effect.",
+      "no_goalpost_moving": "An Arm-B null routes to the PRE-COMMITTED contact-rich task as a FUTURE regime; it does NOT license swapping in a harder partner mid-run to chase an effect (T2/T3 are founder-gated, not a within-run lever)."
+    }
+  },
+
+  "cooperation_mediation_check": {
+    "primary_guarantee_ISOLATION": "By construction Arm A and Arm B partners are identical in body, impedance class, and all physical/dynamical parameters, differing ONLY in the coordination objective. An Arm-B drop is therefore attributable to co-design (the objective), not to any static/physical property — this isolation IS the mediation. The zeroed-static-hold control is DROPPED (a dead-weight baseline confounded by non-transport).",
+    "timecourse_diagnostic_REPORTED_not_gate": "Pre-specified quantitative diagnostic (reported, never verdict-flipping): partition each episode into the ACTIVE-TRANSPORT window (settle_window <= step < placement) and the POST-SETTLE window (after is_placed). Compute the partner-attributable coupling-stress excess = (Arm-B p90 - matched-reference p90) in each window. EXPECTATION for a genuine cooperation-mediated drop: active-window excess > post-settle-window excess by a factor >= 1.5x (the conflict concentrates where active cooperation is demanded). Reported alongside the per-conjunct breakdown; a deviation is flagged and interpreted, not used to flip the verdict.",
+    "reporting": "magnitude-primary (coupling-stress + Δ), binary secondary."
+  },
+
+  "claim_scoping": {
+    "null": "'no effect >= Δ_min (20 pp)' among capability-matched partners — stated via the equivalence bound (CI upper < 20 pp when declared; effects >= 25 pp decisively excluded). NOT 'co-design is inert' and NOT 'powered to 80% at 0.20'.",
+    "arm_b_positive": "'a COMPETENT partner that does NOT share the joint-stress objective degrades cooperation by >= Δ_min, replicated across >= 2 variants' — NOT 'any non-co-designed partner'.",
+    "scope_of_the_run": "Phase-2 co-carry, this task, this incumbent, capability-matched partners. The M7 / M10-narrative / D-046 decision is the founder's, post-results."
+  },
+
+  "stop_guards": [
+    "Fewer than 2 Arm-B variants independently competent (C_min) -> STOP / feasibility-note (the >= 2-variant replication requirement cannot be met; no CD-axis verdict).",
+    "Re-freeze cannot reach the matched reference on V -> STOP (substrate not ready).",
+    "Matched reference fails to reconfirm at any stage -> STOP.",
+    "Stage-1 matched-coupling p99 outside [234, 318] N (f_max 365.6 not consistent: upper edge closed at 318 so the grounding rule + fixed f_max cannot cross) -> STOP.",
+    "A new confound isolated -> STOP + principled fix + report (never move f_max / C_min / predicate / the measure).",
+    "Never retrain the incumbent mid-measurement; never let the reward see partner identity; never mix couplings or stress measures across a comparison."
+  ],
+
+  "honesty_statement": "As of this committed file, NO measurement on any of the seed sets 50000-54027 has been run, and the re-freeze has not been trained. Only the byte-identical-preserving env ceiling-consistency fix (Tier-1 verified) and the Stage-0 power simulation (no incumbent) are in place. Stages 1-7 run only AFTER this pre-registration is committed and git-tagged. Stages 1-2 (rig re-validation + partner competence checks) run AFTER the tag precisely so the C_min partner gate is not tuned before locking.",
+
+  "repro_commands": [
+    "(Stage 0) python -m scripts.repro._cocarry_rung5_power_sim   # DONE — sized n=28 (committed)",
+    "(Stage 0) commit + git tag prereg-cocarry-rung5-codesign-2026-06-20  # THIS file (de-DRAFT), the env fix, the Arm-B partner variants, the power sim — BEFORE any measurement",
+    "(Stage 1) python -m scripts.repro._cocarry_rung5_rig_revalidate     # matched ref ~1.0, single-arm ~0, coupling binds, invariance <=~1 N, matched-coupling p99 + f_max 365.6 reconfirm + penalty grounding",
+    "(Stage 2) python -m scripts.repro._cocarry_rung5_calibrate          # Arm A + Arm B independent-competence C_min gate (vs cooperative reference); admitted/excluded roster",
+    "(Stage 3) python -m scripts.repro._cocarry_rung5_refreeze           # HEAVY — from-scratch primary + hard 300k early-stop + (escalation) ; selection on S, validation on V, SHA reload, manifest v2  [HARD STOP for founder go-ahead before launch]",
+    "(Stage 4) python -m scripts.repro._cocarry_rung5_arm_a              # eval-only Arm-A Δ + CI + per-conjunct vs the frozen incumbent (n=28)",
+    "(Stage 5) python -m scripts.repro._cocarry_rung5_arm_b              # eval-only Arm-B Δ + CI + per-conjunct + replication + timecourse diagnostic (n=28)",
+    "(Stage 6/7) python -m scripts.repro._cocarry_rung5_verdict          # comparative verdict matrix + synthesis"
+  ],
+
+  "git_tag": "prereg-cocarry-rung5-codesign-2026-06-20",
+  "premortem_register": "R-RES-01 (cooperation-proof risk): Arm B either un-arms this risk (a real, predicted positive) or definitively closes it (a conclusive negative routing to the harder-task regime). Named in the Stage-7 synthesis. This is the last large axis-measurement spend before the founder's M7 / M10 / D-046 call."
+}

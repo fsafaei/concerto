@@ -476,6 +476,9 @@ def make_cocarry_training_env(
     drive_damping: float | None = None,
     drive_force_limit: float | None = None,
     stress_measure: str = "wrist",
+    stress_max: float | None = None,
+    stress_penalty_threshold: float | None = None,
+    stress_penalty_scale: float | None = None,
     xarm6_base_x: float | None = None,
     xarm6_ready_qpos: list[float] | None = None,
 ) -> gym.Env[Any, Any]:
@@ -505,6 +508,16 @@ def make_cocarry_training_env(
             value near f_max selects the Variant-B coupling; ADR-026 §D4 4b).
         stress_measure: ``"wrist"`` (default) or ``"coupling"`` (the Rung-4c
             embodiment-invariant bar coupling force; ADR-026 §D4 4c).
+        stress_max: Over-stress success ceiling (N); ``None`` ⇒ the wrist
+            default (130 N, byte-identical). Drive to the grounded coupling
+            f_max (365.6 N) with ``stress_measure="coupling"`` so the trained
+            incumbent's reward + success predicate share one measure
+            (ADR-026 §D4 4c; the re-freeze ceiling-consistency fix).
+        stress_penalty_threshold: Excess-stress penalty soft threshold (N);
+            ``None`` ⇒ wrist-grounded 110 N (byte-identical). Re-ground to the
+            matched-coupling band for the coupling measure (ADR-026 §Decision 4).
+        stress_penalty_scale: Excess-stress penalty tanh scale (N); ``None`` ⇒
+            wrist-grounded 20 N (byte-identical).
         xarm6_base_x: Optional xArm6 base-x override (Rung-4d fair-pose).
         xarm6_ready_qpos: Optional xArm6 12-D ready-qpos override (Rung-4d).
 
@@ -533,6 +546,9 @@ def make_cocarry_training_env(
         drive_damping=drive_damping,
         drive_force_limit=drive_force_limit,
         stress_measure=stress_measure,
+        stress_max=stress_max,
+        stress_penalty_threshold=stress_penalty_threshold,
+        stress_penalty_scale=stress_penalty_scale,
         xarm6_base_x=xarm6_base_x,
         xarm6_ready_qpos=xarm6_ready_qpos,
     )

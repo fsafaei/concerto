@@ -209,3 +209,53 @@ class TestConfigParity:
         cfg = load_config(config_path=Path("configs/training/ego_aht_happo/cocarry_matched.yaml"))
         assert cfg.shaping.transport_pbrs_coeff == COCARRY_REWARD_TRANSPORT_PBRS_COEFF
         assert cfg.shaping.transport_pbrs_coeff > 0.0  # the remediation is ON for this cell
+
+
+class TestCouplingGroundedPenalty:
+    """Coupling-measure penalty re-grounding contract (ADR-026 §D4 4c re-freeze).
+
+    Under ``stress_measure="coupling"`` the env threads a coupling-grounded
+    threshold + scale into :func:`cocarry_excess_stress_penalty` so the penalty
+    is ~0 across the matched-coupling cooperative band (~240-290 N) and carries a
+    real cost by the coupling f_max (365.6 N) — the SAME shape the wrist
+    grounding has, on the invariant measure. Without it the wrist-grounded
+    default (threshold 110 N) saturates across the whole cooperative coupling
+    band and would punish cooperation ("train against one constraint, judge
+    against another"). The exact threshold is grounded from the Stage-1
+    matched-coupling distribution under the locked rule; these representative
+    values pin only the CONTRACT — the penalty honours caller threshold/scale.
+    """
+
+    # Representative coupling grounding (illustrative; Stage-1 measures the exact
+    # p99 and f_max 365.6 N is held fixed per the locked re-freeze protocol).
+    _COUPLING_THRESHOLD_N = 300.0
+    _COUPLING_SCALE_N = 65.6
+    _COUPLING_FMAX_N = 365.6
+    _COUPLING_BAND_N = (240.0, 270.0, 290.0)
+
+    def _pen(self, s: float) -> float:
+        return float(
+            cocarry_excess_stress_penalty(
+                np.array([s]),
+                threshold=self._COUPLING_THRESHOLD_N,
+                scale=self._COUPLING_SCALE_N,
+            )[0]
+        )
+
+    def test_zero_across_matched_coupling_band(self) -> None:
+        for s in self._COUPLING_BAND_N:
+            assert self._pen(s) == pytest.approx(0.0, abs=1e-9)
+
+    def test_real_cost_by_coupling_fmax(self) -> None:
+        # At the coupling f_max the excess ~ scale, so tanh(1) ~ 0.76 coeff — a
+        # real gradient holding stress inside the cooperative regime (mirrors the
+        # wrist grounding's behaviour at its 130 N limit).
+        at_fmax = self._pen(self._COUPLING_FMAX_N)
+        assert at_fmax > 0.5 * COCARRY_REWARD_STRESS_COEFF
+        assert at_fmax < COCARRY_REWARD_STRESS_COEFF
+
+    def test_default_wrist_grounding_saturates_on_coupling_band(self) -> None:
+        # The motivation for the fix: the DEFAULT (wrist) grounding saturates
+        # across the cooperative coupling band, which would punish cooperation.
+        default_pen = float(cocarry_excess_stress_penalty(np.array([270.0]))[0])
+        assert default_pen > 0.9 * COCARRY_REWARD_STRESS_COEFF

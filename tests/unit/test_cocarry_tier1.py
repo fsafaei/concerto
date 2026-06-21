@@ -144,6 +144,34 @@ class TestEvaluateSuccess:
         # Exactly at the limit must fail (predicate uses strict <).
         assert not bool(self._ok(max_tilt_deg=COCARRY_TILT_MAX_DEG))
 
+    def test_stress_max_param_selects_the_ceiling(self) -> None:
+        # ADR-026 §D4 4c ceiling-consistency (trained-incumbent re-freeze): a
+        # mid-range stress (200 N) is OVER the default wrist ceiling (130 N) but
+        # UNDER the grounded coupling f_max (365.6 N). The predicate's stress_max
+        # parameter selects which ceiling judges `is_unstressed`, so the coupling
+        # measure is judged on its OWN f_max — one measure, one ceiling, the fix
+        # the heavy re-freeze depends on.
+        assert not bool(self._ok(max_stress_proxy=200.0))  # default 130 N ceiling
+        assert bool(
+            evaluate_cocarry_success(
+                centroid_to_goal_dist=0.02,
+                max_tilt_deg=5.0,
+                max_stress_proxy=200.0,
+                both_static=True,
+                stress_max=365.6,
+            )
+        )
+        # The coupling f_max is itself a strict ceiling (over it still fails).
+        assert not bool(
+            evaluate_cocarry_success(
+                centroid_to_goal_dist=0.02,
+                max_tilt_deg=5.0,
+                max_stress_proxy=400.0,
+                both_static=True,
+                stress_max=365.6,
+            )
+        )
+
 
 class TestConstants:
     """Pre-registration-grade constants present + typed (R-2026-06-B)."""

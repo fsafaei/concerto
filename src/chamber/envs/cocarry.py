@@ -840,6 +840,9 @@ def make_cocarry_env(
     drive_damping: float | None = None,
     drive_force_limit: float | None = None,
     stress_measure: str = "wrist",
+    stress_max: float | None = None,
+    stress_penalty_threshold: float | None = None,
+    stress_penalty_scale: float | None = None,
     xarm6_base_x: float | None = None,
     xarm6_ready_qpos: list[float] | None = None,
 ) -> gym.Env[Any, Any]:
@@ -876,6 +879,23 @@ def make_cocarry_env(
             incoming-joint-force proxy (rigid ladder + Rung-4b; byte-identical);
             ``"coupling"`` — the embodiment-invariant bar coupling force
             (Rung-4c corrected task; requires the compliant coupling).
+        stress_max: Over-stress success ceiling (N) applied in
+            :meth:`evaluate` (the ``is_unstressed`` conjunct). ``None`` ⇒
+            :data:`COCARRY_STRESS_MAX_PROXY_N` (130 N, the wrist ladder;
+            byte-identical). Pair with ``stress_measure="coupling"`` and the
+            grounded coupling ceiling (f_max 365.6 N) so the success predicate
+            judges on the SAME measure the reward shapes (ADR-026 §D4 4c; the
+            ceiling-consistency fix for the trained-incumbent re-freeze).
+        stress_penalty_threshold: Soft threshold (N) of the excess-stress
+            reward penalty (:func:`cocarry_excess_stress_penalty`). ``None`` ⇒
+            :data:`COCARRY_REWARD_STRESS_SOFT_THRESHOLD_N` (110 N, wrist-grounded;
+            byte-identical). Re-ground to the matched-coupling cooperative band
+            when ``stress_measure="coupling"`` so the penalty does not saturate
+            across the cooperative regime (ADR-026 §Decision 4).
+        stress_penalty_scale: tanh scale (N) of the excess-stress reward
+            penalty. ``None`` ⇒ :data:`COCARRY_REWARD_STRESS_TANH_SCALE_N`
+            (20 N, wrist-grounded; byte-identical). Re-ground alongside
+            ``stress_penalty_threshold`` for the coupling measure.
         xarm6_base_x: Optional override of the xArm6 partner base x (m); ``None``
             uses :data:`_XARM6_BASE_X_M`. For the Rung-4d carry-pose
             falsification (vary the xArm6 configuration fairly; ADR-026 §D4 4d).
@@ -977,6 +997,24 @@ def make_cocarry_env(
             self._stress_measure: str = stress_measure
             self._coupling_stiffness: float = weld_stiffness
             self._coupling_force_limit: float = weld_force_limit
+            # Ceiling-consistency (ADR-026 §D4 4c): the success ceiling + the
+            # excess-stress penalty grounding default to the wrist-ladder
+            # constants (byte-identical) and are re-grounded to the coupling
+            # band only when the caller drives stress_measure="coupling", so
+            # the reward shapes and the predicate judges on the SAME measure.
+            self._stress_max: float = (
+                COCARRY_STRESS_MAX_PROXY_N if stress_max is None else float(stress_max)
+            )
+            self._stress_penalty_threshold: float = (
+                COCARRY_REWARD_STRESS_SOFT_THRESHOLD_N
+                if stress_penalty_threshold is None
+                else float(stress_penalty_threshold)
+            )
+            self._stress_penalty_scale: float = (
+                COCARRY_REWARD_STRESS_TANH_SCALE_N
+                if stress_penalty_scale is None
+                else float(stress_penalty_scale)
+            )
             try:
                 super().__init__(
                     robot_uids=(_EGO_UID, self._partner_uid),  # type: ignore[arg-type]
@@ -1423,7 +1461,7 @@ def make_cocarry_env(
             dist = self._centroid_to_goal_dist_now()
             is_placed = dist <= COCARRY_GOAL_THRESH_M
             is_level = self._max_tilt_deg < COCARRY_TILT_MAX_DEG
-            is_unstressed = self._max_stress < COCARRY_STRESS_MAX_PROXY_N
+            is_unstressed = self._max_stress < self._stress_max
             is_settled = past_settle
             ego_static = self.agent.agents_dict[_EGO_UID].is_static(COCARRY_STATIC_QVEL_THRESH)  # type: ignore[attr-defined]
             if self._single_arm:
@@ -1497,7 +1535,14 @@ def make_cocarry_env(
             past_settle = _torch.as_tensor(
                 self.elapsed_steps >= COCARRY_SETTLE_WINDOW_STEPS, device=self.device
             ).reshape(-1)
-            stress_penalty = cocarry_excess_stress_penalty(stress_now) * past_settle
+            stress_penalty = (
+                cocarry_excess_stress_penalty(
+                    stress_now,
+                    threshold=self._stress_penalty_threshold,
+                    scale=self._stress_penalty_scale,
+                )
+                * past_settle
+            )
             reward = transport + level + settle * info["is_placed"] - stress_penalty
             reward = _torch.where(
                 info["success"],
