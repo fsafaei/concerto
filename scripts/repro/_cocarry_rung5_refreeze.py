@@ -26,10 +26,10 @@ from pathlib import Path
 
 
 def main() -> int:
-    from chamber.benchmarks.training_runner import run_training
-    from concerto.training.config import load_config
+    from chamber.benchmarks.training_runner import run_training  # noqa: PLC0415 - lazy (GPU-only)
+    from concerto.training.config import load_config  # noqa: PLC0415 - lazy (GPU-only)
 
-    config = "configs/training/ego_aht_happo/cocarry_rung5_compliant.yaml"
+    config = os.environ.get("CONFIG", "configs/training/ego_aht_happo/cocarry_rung5_compliant.yaml")
     total_frames = int(os.environ.get("TOTAL_FRAMES", "300000"))
     seed = int(os.environ.get("SEED", "0"))
     out_path = os.environ.get(

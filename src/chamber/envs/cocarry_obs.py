@@ -481,6 +481,7 @@ def make_cocarry_training_env(
     stress_penalty_scale: float | None = None,
     xarm6_base_x: float | None = None,
     xarm6_ready_qpos: list[float] | None = None,
+    residual_base_ego: bool = False,
 ) -> gym.Env[Any, Any]:
     """Build a co-carry env wrapped for ego-AHT training (ADR-026 §Decision 1; R-2026-06-B §15).
 
@@ -520,6 +521,10 @@ def make_cocarry_training_env(
             wrist-grounded 20 N (byte-identical).
         xarm6_base_x: Optional xArm6 base-x override (Rung-4d fair-pose).
         xarm6_ready_qpos: Optional xArm6 12-D ready-qpos override (Rung-4d).
+        residual_base_ego: When ``True``, wrap the env so the ego seat's applied
+            action is the frozen cooperative-impedance base + the learned
+            residual (the Rung-5 escalation; ADR-026 §Decision 4). ``False``
+            (default) ⇒ byte-identical from-scratch behaviour.
 
     Returns:
         The synthesizer-wrapped co-carry env, ready to ``reset(seed=K)``.
@@ -571,7 +576,90 @@ def make_cocarry_training_env(
     # a no-op for the Panda partner (the matched reference stays byte-identical).
     partner_uid = str(inner.get_wrapper_attr("partner_uid"))
     partner_arm_dof = 6 if partner_uid == "xarm6_robotiq" else _PARTNER_EGO_ARM_DOF
-    return CoCarryEgoStateSynthesizer(inner, partner_arm_dof=partner_arm_dof)
+    synthesized = CoCarryEgoStateSynthesizer(inner, partner_arm_dof=partner_arm_dof)
+    if not residual_base_ego:
+        return synthesized
+    # Rung-5 residual-on-impedance escalation (ADR-026 §D4; the locked prereg
+    # conditional): the EGO seat's applied action = the frozen cooperative-
+    # impedance base + the learned residual. Built from the env's
+    # single-source-of-truth ego-seat geometry so the base matches the matched
+    # reference. The base reads only task leaves (I3 anti-leakage).
+    from chamber.envs.cocarry import (  # noqa: PLC0415 - lazy: Tier-1/SAPIEN import safety
+        cocarry_matched_controller_specs,
+    )
+    from chamber.partners.api import PartnerSpec  # noqa: PLC0415 - lazy: Tier-1 import safety
+    from chamber.partners.registry import load_partner  # noqa: PLC0415 - lazy
+
+    ego_uid = str(synthesized.get_wrapper_attr("ego_uid"))
+    ego_spec = dict(cocarry_matched_controller_specs()[ego_uid])
+    base_ego = load_partner(PartnerSpec("cocarry_impedance", 0, None, None, ego_spec))
+    return CoCarryResidualBaseEgoWrapper(synthesized, base_ego=base_ego, ego_uid=ego_uid)
 
 
-__all__ = ["CoCarryEgoStateSynthesizer", "make_cocarry_training_env"]
+class CoCarryResidualBaseEgoWrapper(gym.Wrapper):  # type: ignore[type-arg]
+    r"""Residual-on-impedance ego wrapper for the Rung-5 escalation (ADR-026 §D4).
+
+    The EGO seat's APPLIED action is the frozen cooperative-impedance base
+    controller's action plus the learned policy's residual:
+    ``a_ego = clip(base(obs) + residual, -1, 1)``. The trainer's ego action IS
+    the residual; with the near-zero PPO actor init, training starts at the
+    competent base behaviour (the base already keeps the bar level) and learns a
+    correction — removing the from-scratch transport-but-tilted local optimum
+    (the saturated leveling gradient). The base reads only task leaves
+    (``obs["agent"][ego_uid]["qpos"]`` + ``obs["extra"]["goal_pos"]``) — it is
+    partner-agnostic (I3; ADR-009). Obs/action spaces are unchanged, so the
+    trainer + the frozen-incumbent loader size identically with or without this
+    wrapper; EVAL MUST apply the same wrapper (the incumbent IS base + residual).
+    """
+
+    def __init__(self, env: gym.Env[Any, Any], *, base_ego: Any, ego_uid: str) -> None:  # noqa: ANN401
+        """Bind the frozen base controller + the ego seat uid (ADR-026 §D4)."""
+        super().__init__(env)
+        self._base_ego = base_ego
+        self._ego_uid = ego_uid
+        self._last_obs: Any = None
+
+    def __getattr__(self, name: str) -> Any:  # noqa: ANN401 - mirrors the synthesizer forwarding
+        """Forward inner-env attributes (gym 1.3 dropped implicit forwarding; ADR-026 §Decision 4).
+
+        The trainer's transport-PBRS wrapper reads the inner env's
+        ``privileged_transport_distance()`` / ``get_telemetry`` through this
+        wrapper, so attribute access is delegated to the wrapped env.
+        """
+        if name == "env":
+            raise AttributeError(name)
+        return getattr(self.env, name)
+
+    def reset(self, **kwargs: Any) -> tuple[Any, dict[str, Any]]:  # noqa: ANN401
+        """Reset inner env + frozen base; cache the obs the base reads (ADR-026 §Decision 4)."""
+        obs, info = self.env.reset(**kwargs)
+        self._base_ego.reset(seed=kwargs.get("seed"))
+        self._last_obs = obs
+        return obs, info
+
+    def step(self, action: Any) -> tuple[Any, Any, Any, Any, dict[str, Any]]:  # noqa: ANN401
+        """Apply base+residual on the ego seat; partner passes through (ADR-026 §Decision 4)."""
+        base_a = np.asarray(self._base_ego.act(self._last_obs), dtype=np.float32)
+        resid = action[self._ego_uid]
+        new_action = dict(action)
+        if hasattr(resid, "detach"):  # torch tensor (the training path)
+            import torch  # noqa: PLC0415 - lazy: Tier-1 import safety
+
+            base_t = torch.as_tensor(base_a, device=resid.device, dtype=resid.dtype).reshape(
+                *([1] * (resid.ndim - 1)), -1
+            )
+            new_action[self._ego_uid] = torch.clamp(base_t + resid, -1.0, 1.0)
+        else:
+            r = np.asarray(resid, dtype=np.float32)
+            base_b = base_a.reshape(*([1] * (r.ndim - 1)), -1)
+            new_action[self._ego_uid] = np.clip(base_b + r, -1.0, 1.0).astype(np.float32)
+        obs, reward, terminated, truncated, info = self.env.step(new_action)
+        self._last_obs = obs
+        return obs, reward, terminated, truncated, info
+
+
+__all__ = [
+    "CoCarryEgoStateSynthesizer",
+    "CoCarryResidualBaseEgoWrapper",
+    "make_cocarry_training_env",
+]

@@ -47,15 +47,23 @@ _C_MIN = 0.75
 _REACH = 0.90
 _TILT_LIMIT = 15.0
 _RENDER = "none"
-_CONFIG = "configs/training/ego_aht_happo/cocarry_rung5_compliant.yaml"
+_CONFIG = os.environ.get("CONFIG", "configs/training/ego_aht_happo/cocarry_rung5_compliant.yaml")
+# Residual-on-impedance escalation: when set, the incumbent eval envs apply the
+# residual-base wrapper (the incumbent IS base + residual). The base-vs-incumbent
+# diagnostic still runs the cooperative ego WITHOUT the wrapper (base alone).
+_RESIDUAL = os.environ.get("RESIDUAL", "") == "1"
 _ARTIFACTS = Path("./artifacts")
 _S_SEEDS = list(range(50000, 50012))  # selection set
 _V_SEEDS = list(range(51000, 51024))  # held-out validation set
 _MATCHED_P99 = 288.7  # Stage-1 matched-coupling success-stress p99 (grounds f_max + penalty)
 
 
-def _eval_ego(ego_act: Any, seeds: list[int]) -> list[EpisodeMetrics]:  # noqa: ANN401
-    """Roll the given ego closure on the matched condition at stress_max=365.6, per seed."""
+def _eval_ego(ego_act: Any, seeds: list[int], *, residual: bool = False) -> list[EpisodeMetrics]:  # noqa: ANN401
+    """Roll the given ego closure on the matched condition at stress_max=365.6, per seed.
+
+    ``residual=True`` applies the residual-base wrapper (the incumbent ego = base
+    + residual); ``False`` runs the raw ego action (the base-alone diagnostic).
+    """
     out: list[EpisodeMetrics] = []
     for seed in seeds:
         env = make_cocarry_training_env(
@@ -66,6 +74,7 @@ def _eval_ego(ego_act: Any, seeds: list[int]) -> list[EpisodeMetrics]:  # noqa: 
             drive_stiffness=_K,
             stress_measure=_MEASURE,
             stress_max=_FMAX,
+            residual_base_ego=residual,
         )
         try:
             partner = build_matched_controllers()[env.get_wrapper_attr("partner_uid")]
@@ -138,7 +147,7 @@ def main() -> int:  # noqa: PLR0915 - linear freeze pipeline, kept in one place 
         # local://artifacts/<name>.pt (NOT the full on-disk path).
         uri = f"local://artifacts/{Path(path).name}"
         ego = _load_ego(uri)
-        metrics = _eval_ego(ego, _S_SEEDS)
+        metrics = _eval_ego(ego, _S_SEEDS, residual=_RESIDUAL)
         summ = summarize(metrics)
         clean = _clean(summ)
         per_ckpt.append({"step": step, "uri": uri, "path": path, "summary": summ, "clean": clean})
@@ -152,15 +161,22 @@ def main() -> int:  # noqa: PLR0915 - linear freeze pipeline, kept in one place 
     clean_ckpts = [c for c in per_ckpt if c["clean"]]
     best_clean = max((c["summary"]["success_rate"] for c in clean_ckpts), default=0.0)
     if not clean_ckpts or best_clean < _C_MIN:
-        verdict = "STOP_ESCALATE_RESIDUAL"
+        verdict = "STOP_SUBSTRATE_NOT_READY" if _RESIDUAL else "STOP_ESCALATE_RESIDUAL"
+        reason_tail = (
+            "the residual escalation ALSO cannot reach the bar -> STOP (the locked stop-gate; "
+            "substrate not ready). Informative, not hidden."
+            if _RESIDUAL
+            else "from-scratch primary STOPs; route to the residual-on-impedance escalation "
+            "(locked prereg conditional)."
+        )
         selection = {
             "schema": "cocarry_rung5_freeze_selection/v1",
+            "mode": "residual_on_impedance" if _RESIDUAL else "from_scratch",
             "verdict": verdict,
             "reason": (
                 f"no constraint-clean checkpoint reaches C_min {_C_MIN} on S by step "
-                f"{max((c['step'] for c in per_ckpt), default=0)} (best clean {best_clean:.3f}) "
-                "-> from-scratch primary STOPs; route to the residual-on-impedance escalation "
-                "(locked prereg conditional)."
+                f"{max((c['step'] for c in per_ckpt), default=0)} (best clean {best_clean:.3f}) -> "
+                + reason_tail
             ),
             "run_id": run_id,
             "per_checkpoint": per_ckpt,
@@ -181,7 +197,7 @@ def main() -> int:  # noqa: PLR0915 - linear freeze pipeline, kept in one place 
     # [3] Held-out validation on V.
     print(f"    [3] held-out validation on V ({len(_V_SEEDS)} seeds)...")
     inc_ego = _load_ego(sel_uri)
-    v_metrics = _eval_ego(inc_ego, _V_SEEDS)
+    v_metrics = _eval_ego(inc_ego, _V_SEEDS, residual=_RESIDUAL)
     v_summ = summarize(v_metrics)
     holds = bool(
         v_summ["success_rate"] >= _REACH
@@ -218,7 +234,7 @@ def main() -> int:  # noqa: PLR0915 - linear freeze pipeline, kept in one place 
     print("    [5] base-vs-incumbent diagnostic on V...")
     base_ego = ph.build_cooperative_ego(seed=0)
     base_ego.reset(seed=0)
-    base_metrics = _eval_ego(lambda o, _e=base_ego: _e.act(o), _V_SEEDS)
+    base_metrics = _eval_ego(lambda o, _e=base_ego: _e.act(o), _V_SEEDS, residual=False)
     base_summ = summarize(base_metrics)
     print(
         f"      base (cooperative-impedance) V success={base_summ['success_rate']:.3f}  "
@@ -277,9 +293,16 @@ def main() -> int:  # noqa: PLR0915 - linear freeze pipeline, kept in one place 
     }
     d["provenance"] = {
         "run_id": run_id,
-        "from_scratch": True,
-        "early_stop_fired": False,
+        "mode": "residual_on_impedance" if _RESIDUAL else "from_scratch",
+        "from_scratch": not _RESIDUAL,
+        "residual_base": "cocarry_impedance frozen base; applied = base + residual"
+        if _RESIDUAL
+        else None,
+        "from_scratch_early_stop": "fired at 300k (transport-but-tilted) -> residual escalation"
+        if _RESIDUAL
+        else "n/a",
         "selected_step": sel_step,
+        "config": _CONFIG,
         "git_commit": git_commit,
         "date": "2026-06-21",
         "author": "fsafaei",

@@ -1,0 +1,83 @@
+# SPDX-License-Identifier: Apache-2.0
+# Hydra config for the Rung-5 co-design (CD) RESIDUAL-ON-IMPEDANCE incumbent
+# re-freeze (ADR-026 §Decision 4; the locked prereg escalation conditional).
+#
+# The from-scratch primary (cocarry_rung5_compliant.yaml) STOPPED at the
+# pre-registered 300k early-gate: the learned policy found a transport-but-
+# tilted local optimum (tilt_p90 34-82 deg vs the 15 deg limit) because the
+# leveling reward saturates past ~20 deg. This is the LOCKED escalation: the
+# ego seat's applied action = the frozen cooperative-impedance base (which
+# already keeps the bar level) + a learned residual, so the residual learns a
+# small correction near the competent base rather than discovering leveling
+# from scratch. Everything else is byte-identical to the from-scratch attempt
+# (coupling-grounded reward 303/62.6, K=8000, f_max 365.6, same seeds, same
+# selection rule + V>=0.90 bar). Acceptance: same locked criterion; if the
+# residual also cannot reach V>=0.90 -> STOP (the locked stop-gate).
+#
+# Governance: residual partner-agnostic (I3); Rung-2 + cocarry_rung5_compliant
+# UNTOUCHED; no schema bump (I9).
+#
+# Validates against concerto.training.config.EgoAHTConfig.
+
+algo: ego_aht_happo
+seed: 0
+total_frames: 900000
+checkpoint_every: 50000
+artifacts_root: ./artifacts
+log_dir: ./logs
+
+wandb:
+  enabled: false
+  project: concerto-chamber
+
+env:
+  task: cocarry
+  episode_length: 320
+  agent_uids: [panda_wristcam, panda_partner]
+  condition_id: cocarry_matched_panda_pair
+  num_envs: 1
+  # Fixed-task substrate (identical to the from-scratch attempt).
+  drive_stiffness: 8000.0
+  stress_measure: coupling
+  stress_max: 365.6
+  stress_penalty_threshold: 303.0
+  stress_penalty_scale: 62.6
+  # THE escalation: ego applied action = frozen cooperative-impedance base +
+  # learned residual (ADR-026 §D4; the locked prereg conditional).
+  residual_base_ego: true
+
+partner:
+  class_name: cocarry_impedance
+  seed: 0
+  checkpoint_step: null
+  weights_uri: null
+  extra:
+    uid: panda_partner
+    base_xyz: "0.5,0.0,0.0"
+    base_yaw_deg: "180"
+    end_sign: "-1"
+    bar_half_len: "0.115"
+
+happo:
+  lr: 1.5e-4
+  gamma: 0.9
+  gae_lambda: 0.95
+  clip_eps: 0.1
+  n_epochs: 4
+  rollout_length: 320
+  batch_size: 320
+  hidden_dim: 256
+
+runtime:
+  device: cuda
+  deterministic_torch: false
+
+safety:
+  enabled: false
+
+shaping:
+  settle_alpha: 0.0
+  transport_pbrs_coeff: 1.0
+
+exploratory:
+  partner_static_override: false

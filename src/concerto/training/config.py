@@ -120,6 +120,10 @@ class EnvConfig(_FrozenModel):
     stress_penalty_scale: float | None = None
     xarm6_base_x: float | None = None
     xarm6_ready_qpos: list[float] | None = None
+    # Rung-5 residual-on-impedance escalation: when True, the ego seat's applied
+    # action is the frozen cooperative-impedance base + the learned residual
+    # (ADR-026 §D4). Default False ⇒ byte-identical from-scratch behaviour.
+    residual_base_ego: bool = False
 
     @field_validator("agent_uids", mode="before")
     @classmethod

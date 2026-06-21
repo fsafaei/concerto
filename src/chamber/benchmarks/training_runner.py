@@ -199,6 +199,7 @@ def build_env(env_cfg: EnvConfig, *, root_seed: int) -> EnvLike:
                 stress_penalty_scale=env_cfg.stress_penalty_scale,
                 xarm6_base_x=env_cfg.xarm6_base_x,
                 xarm6_ready_qpos=env_cfg.xarm6_ready_qpos,
+                residual_base_ego=env_cfg.residual_base_ego,
             ),
         )
     raise ValueError(
