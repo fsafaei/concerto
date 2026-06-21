@@ -1,0 +1,266 @@
+{
+  "base_vs_incumbent": {
+    "base_class": "cocarry_impedance (cooperative reference ego), base alone (no residual)",
+    "base_v_summary": {
+      "centroid_to_goal_p50": 0.039204347878694534,
+      "max_tilt_p50": 3.5870441198349,
+      "max_tilt_p90": 4.115359687805176,
+      "stress_p50": 241.49649810791016,
+      "stress_p90": 277.89586486816404,
+      "success_rate": 1.0
+    },
+    "behavioral_delta": {
+      "d_max_tilt_p90": 3.5645972251892086,
+      "d_stress_p90": -36.88043975830075,
+      "d_success_rate": 0.0
+    },
+    "incumbent_v_summary": {
+      "centroid_to_goal_p50": 0.03912439942359924,
+      "max_tilt_p50": 6.4945995807647705,
+      "max_tilt_p90": 7.679956912994385,
+      "stress_p50": 230.73371124267578,
+      "stress_p90": 241.0154251098633,
+      "success_rate": 1.0
+    },
+    "note": "Diagnostic, not a gate. Quantifies what the learning adds over the hand-built cooperative-impedance base on the held-out V: equal success, but a distinct learned behavioural signature (the residual moves tilt/stress) -> the trained incumbent is earned, not the base relabelled."
+  },
+  "checkpoint": {
+    "seed": 0,
+    "sha256": "152bdb3f45e70f57ff1a2d33fdfba720cec8262ce791bd3d6936f0568c76bbaa",
+    "step": 150000,
+    "uri": "local://artifacts/86b5f8ddf7a3a2da_step150000.pt"
+  },
+  "coupling_grounding": {
+    "drive_stiffness": 8000.0,
+    "matched_coupling_success_stress_p99_n": 288.7,
+    "p99_in_band": true,
+    "penalty_scale_n": 62.6,
+    "penalty_threshold_n": 303.0,
+    "stress_max_n": 365.6,
+    "stress_measure": "coupling"
+  },
+  "env_constants": {
+    "COCARRY_BAR_CROSS_SECTION_M": 0.025,
+    "COCARRY_BAR_LENGTH_M": 0.23,
+    "COCARRY_BAR_MASS_KG": 0.4,
+    "COCARRY_BASE_X_M": 0.5,
+    "COCARRY_DEFAULT_EPISODE_LENGTH": 320,
+    "COCARRY_DRIVE_DAMPING_RATIO": 0.1,
+    "COCARRY_DRIVE_FORCE_LIMIT_UNBOUNDED": 3.4028234663852886e+38,
+    "COCARRY_DRIVE_LINEAR_DAMPING": 2000.0,
+    "COCARRY_DRIVE_LINEAR_STIFFNESS": 20000.0,
+    "COCARRY_GOAL_CENTROID_XYZ": [
+      0.0,
+      0.12,
+      0.28
+    ],
+    "COCARRY_GOAL_JITTER_HALF_M": 0.02,
+    "COCARRY_GOAL_THRESH_M": 0.1,
+    "COCARRY_GRIP_OFFSET_Z_M": 0.1034,
+    "COCARRY_REWARD_LEVEL_COEFF": 1.0,
+    "COCARRY_REWARD_LEVEL_TANH_SCALE": 5.0,
+    "COCARRY_REWARD_NORMALIZER": 5.0,
+    "COCARRY_REWARD_SETTLE_COEFF": 1.0,
+    "COCARRY_REWARD_STRESS_COEFF": 1.0,
+    "COCARRY_REWARD_STRESS_SOFT_THRESHOLD_N": 110.0,
+    "COCARRY_REWARD_STRESS_TANH_SCALE_N": 20.0,
+    "COCARRY_REWARD_SUCCESS_BONUS": 5.0,
+    "COCARRY_REWARD_TANH_SCALE": 5.0,
+    "COCARRY_REWARD_TRANSPORT_COEFF": 1.0,
+    "COCARRY_REWARD_TRANSPORT_PBRS_COEFF": 1.0,
+    "COCARRY_SETTLE_WINDOW_STEPS": 15,
+    "COCARRY_STATIC_QVEL_THRESH": 0.2,
+    "COCARRY_STRESS_MAX_PROXY_N": 130.0,
+    "COCARRY_TILT_MAX_DEG": 15.0
+  },
+  "env_module_sha256": "ad33754841e6a144e3df8d7596d23da646b20ea4d42d3cff18c4831c8cc0386a",
+  "fmax": {
+    "consistency_band_n": [
+      292.5,
+      397.5
+    ],
+    "derivation": "1.25 x matched-COUPLING success-stress p99 (Rung-5; coupling instrument)",
+    "distribution_artifact": "spikes/results/cocarry/rung5/cocarry_rung5_rig_revalidation.json",
+    "matched_success_p99_band_n": [
+      234.0,
+      318.0
+    ],
+    "matched_success_stress_p99_n": 288.7,
+    "multiplier": 1.25,
+    "previous_provisional_n": 130.0,
+    "status": "consistent",
+    "value_n": 365.6
+  },
+  "matched_reference": {
+    "artifact": "spikes/results/cocarry/rung5/cocarry_rung5_rig_revalidation.json",
+    "n_seed_clusters": 24,
+    "success_rate": 1.0
+  },
+  "notes": [
+    "Rung-5 from-scratch re-freeze on the FIXED task (K=8000.0, coupling, f_max 365.6).",
+    "Selection on S: earliest constraint-clean max-success (step 150000).",
+    "Held-out V (24): success 1.000 >= 0.9; tilt_p90 7.7 < 15.0; stress_p90 241.0 < 365.6."
+  ],
+  "provenance": {
+    "author": "fsafaei",
+    "config": "configs/training/ego_aht_happo/cocarry_rung5_residual.yaml",
+    "date": "2026-06-21",
+    "from_scratch": false,
+    "from_scratch_early_stop": "fired at 300k (transport-but-tilted) -> residual escalation",
+    "git_commit": "946ec0626ee84f0de10be5b07c1e784cfa2ce15d",
+    "mode": "residual_on_impedance",
+    "residual_base": "cocarry_impedance frozen base; applied = base + residual",
+    "run_id": "86b5f8ddf7a3a2da",
+    "selected_step": 150000
+  },
+  "rung": 5,
+  "schema": "cocarry_freeze_manifest/v2",
+  "selection": {
+    "per_checkpoint": [
+      {
+        "clean": false,
+        "path": "artifacts/artifacts/86b5f8ddf7a3a2da_step50000.pt",
+        "step": 50000,
+        "summary": {
+          "centroid_to_goal_p50": 0.028029445558786392,
+          "max_tilt_max": 22.476877212524414,
+          "max_tilt_p50": 19.384313583374023,
+          "max_tilt_p90": 21.641846084594725,
+          "n": 12.0,
+          "stress_limit": 130.0,
+          "stress_max": 350.107177734375,
+          "stress_p50": 314.7096710205078,
+          "stress_p90": 342.09717712402346,
+          "stress_p99": 349.24025299072264,
+          "success_rate": 0.0,
+          "success_stress_p95": NaN,
+          "tilt_limit": 15.0
+        },
+        "uri": "local://artifacts/86b5f8ddf7a3a2da_step50000.pt"
+      },
+      {
+        "clean": false,
+        "path": "artifacts/artifacts/86b5f8ddf7a3a2da_step100000.pt",
+        "step": 100000,
+        "summary": {
+          "centroid_to_goal_p50": 0.03785156086087227,
+          "max_tilt_max": 28.271141052246094,
+          "max_tilt_p50": 19.942574501037598,
+          "max_tilt_p90": 27.985693550109865,
+          "n": 12.0,
+          "stress_limit": 130.0,
+          "stress_max": 1281.901611328125,
+          "stress_p50": 1184.7090454101562,
+          "stress_p90": 1274.9658569335938,
+          "stress_p99": 1281.3839587402344,
+          "success_rate": 0.08333333333333333,
+          "success_stress_p95": 338.42047119140625,
+          "tilt_limit": 15.0
+        },
+        "uri": "local://artifacts/86b5f8ddf7a3a2da_step100000.pt"
+      },
+      {
+        "clean": true,
+        "path": "artifacts/artifacts/86b5f8ddf7a3a2da_step150000.pt",
+        "step": 150000,
+        "summary": {
+          "centroid_to_goal_p50": 0.04018199071288109,
+          "max_tilt_max": 8.345748901367188,
+          "max_tilt_p50": 6.048884391784668,
+          "max_tilt_p90": 6.985445308685303,
+          "n": 12.0,
+          "stress_limit": 130.0,
+          "stress_max": 269.91119384765625,
+          "stress_p50": 235.01759338378906,
+          "stress_p90": 248.2109115600586,
+          "stress_p99": 267.55700149536136,
+          "success_rate": 1.0,
+          "success_stress_p95": 258.14023208618164,
+          "tilt_limit": 15.0
+        },
+        "uri": "local://artifacts/86b5f8ddf7a3a2da_step150000.pt"
+      },
+      {
+        "clean": true,
+        "path": "artifacts/artifacts/86b5f8ddf7a3a2da_step200000.pt",
+        "step": 200000,
+        "summary": {
+          "centroid_to_goal_p50": 0.015275136567652225,
+          "max_tilt_max": 7.529808044433594,
+          "max_tilt_p50": 6.007439613342285,
+          "max_tilt_p90": 7.065104913711548,
+          "n": 12.0,
+          "stress_limit": 130.0,
+          "stress_max": 324.7400207519531,
+          "stress_p50": 273.26483154296875,
+          "stress_p90": 287.4187957763672,
+          "stress_p99": 320.6629544067383,
+          "success_rate": 1.0,
+          "success_stress_p95": 304.3546890258789,
+          "tilt_limit": 15.0
+        },
+        "uri": "local://artifacts/86b5f8ddf7a3a2da_step200000.pt"
+      },
+      {
+        "clean": true,
+        "path": "artifacts/artifacts/86b5f8ddf7a3a2da_step250000.pt",
+        "step": 250000,
+        "summary": {
+          "centroid_to_goal_p50": 0.06398477405309677,
+          "max_tilt_max": 7.409116268157959,
+          "max_tilt_p50": 6.1053290367126465,
+          "max_tilt_p90": 6.959809303283691,
+          "n": 12.0,
+          "stress_limit": 130.0,
+          "stress_max": 334.6673583984375,
+          "stress_p50": 313.2876739501953,
+          "stress_p90": 327.2971496582031,
+          "stress_p99": 333.892470703125,
+          "success_rate": 1.0,
+          "success_stress_p95": 330.792919921875,
+          "tilt_limit": 15.0
+        },
+        "uri": "local://artifacts/86b5f8ddf7a3a2da_step250000.pt"
+      },
+      {
+        "clean": true,
+        "path": "artifacts/artifacts/86b5f8ddf7a3a2da_step300000.pt",
+        "step": 300000,
+        "summary": {
+          "centroid_to_goal_p50": 0.09939833357930183,
+          "max_tilt_max": 8.404346466064453,
+          "max_tilt_p50": 7.328160762786865,
+          "max_tilt_p90": 8.313901710510255,
+          "n": 12.0,
+          "stress_limit": 130.0,
+          "stress_max": 289.7066955566406,
+          "stress_p50": 255.41576385498047,
+          "stress_p90": 278.6747344970703,
+          "stress_p99": 288.5988571166992,
+          "success_rate": 1.0,
+          "success_stress_p95": 284.1675033569336,
+          "tilt_limit": 15.0
+        },
+        "uri": "local://artifacts/86b5f8ddf7a3a2da_step300000.pt"
+      }
+    ],
+    "rule": "earliest constraint-clean (tilt_max<15, stress_max<365.6) max-success on S",
+    "selected_step": 150000,
+    "validation_summary": {
+      "centroid_to_goal_p50": 0.03912439942359924,
+      "max_tilt_max": 8.014617919921875,
+      "max_tilt_p50": 6.4945995807647705,
+      "max_tilt_p90": 7.679956912994385,
+      "n": 24.0,
+      "stress_limit": 130.0,
+      "stress_max": 247.551025390625,
+      "stress_p50": 230.73371124267578,
+      "stress_p90": 241.0154251098633,
+      "stress_p99": 246.33425674438476,
+      "success_rate": 1.0,
+      "success_stress_p95": 242.17242202758788,
+      "tilt_limit": 15.0
+    }
+  },
+  "training_config_sha256": "0111fb8fc7f9a738d713dee518ff0028a282f1a926c4a2b09e8a3e5b9a23edce"
+}

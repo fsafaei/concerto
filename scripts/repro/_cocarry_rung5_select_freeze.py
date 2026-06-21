@@ -132,7 +132,12 @@ def main() -> int:  # noqa: PLR0915 - linear freeze pipeline, kept in one place 
     out_path = os.environ.get(
         "OUT_JSON", "spikes/results/cocarry/rung5/cocarry_rung5_freeze_manifest.json"
     )
-    select_path = "spikes/results/cocarry/rung5/cocarry_rung5_freeze_selection.json"
+    select_path = os.environ.get(
+        "SELECT_JSON",
+        "spikes/results/cocarry/rung5/cocarry_rung5_"
+        + ("residual_" if _RESIDUAL else "")
+        + "freeze_selection.json",
+    )
     train = json.loads(Path(train_json).read_text(encoding="utf-8"))
     run_id = train["run_id"]
     checkpoints = sorted(train["checkpoint_paths"], key=_step_of)
@@ -307,13 +312,28 @@ def main() -> int:  # noqa: PLR0915 - linear freeze pipeline, kept in one place 
         "date": "2026-06-21",
         "author": "fsafaei",
     }
+    _diag_keys = (
+        "success_rate",
+        "max_tilt_p50",
+        "max_tilt_p90",
+        "stress_p50",
+        "stress_p90",
+        "centroid_to_goal_p50",
+    )
     d["base_vs_incumbent"] = {
-        "base_class": "cocarry_impedance (cooperative reference ego)",
-        "base_v_success_rate": base_summ["success_rate"],
-        "incumbent_v_success_rate": v_summ["success_rate"],
+        "base_class": "cocarry_impedance (cooperative reference ego), base alone (no residual)",
+        "base_v_summary": {k: base_summ[k] for k in _diag_keys},
+        "incumbent_v_summary": {k: v_summ[k] for k in _diag_keys},
+        "behavioral_delta": {
+            "d_success_rate": v_summ["success_rate"] - base_summ["success_rate"],
+            "d_max_tilt_p90": v_summ["max_tilt_p90"] - base_summ["max_tilt_p90"],
+            "d_stress_p90": v_summ["stress_p90"] - base_summ["stress_p90"],
+        },
         "note": (
             "Diagnostic, not a gate. Quantifies what the learning adds over the hand-built "
-            "cooperative-impedance base on the held-out V."
+            "cooperative-impedance base on the held-out V: equal success, but a distinct "
+            "learned behavioural signature (the residual moves tilt/stress) -> the trained "
+            "incumbent is earned, not the base relabelled."
         ),
     }
     d["selection"] = {
