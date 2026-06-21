@@ -133,7 +133,10 @@ def main() -> int:  # noqa: PLR0915 - linear freeze pipeline, kept in one place 
     per_ckpt: list[dict[str, Any]] = []
     for path in checkpoints:
         step = _step_of(path)
-        uri = f"local://{path}"
+        # resolve_uri does artifacts_root / (uri after local://), and the files
+        # live at <artifacts_root>/artifacts/<name>.pt, so the URI is
+        # local://artifacts/<name>.pt (NOT the full on-disk path).
+        uri = f"local://artifacts/{Path(path).name}"
         ego = _load_ego(uri)
         metrics = _eval_ego(ego, _S_SEEDS)
         summ = summarize(metrics)

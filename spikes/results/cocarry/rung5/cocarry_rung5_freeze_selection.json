@@ -1,0 +1,134 @@
+{
+  "per_checkpoint": [
+    {
+      "clean": false,
+      "path": "artifacts/artifacts/a6bb287c78c1b31f_step50000.pt",
+      "step": 50000,
+      "summary": {
+        "centroid_to_goal_p50": 0.13879536464810371,
+        "max_tilt_max": 35.71689987182617,
+        "max_tilt_p50": 25.57653522491455,
+        "max_tilt_p90": 34.7879020690918,
+        "n": 12.0,
+        "stress_limit": 130.0,
+        "stress_max": 246.38079833984375,
+        "stress_p50": 219.3877944946289,
+        "stress_p90": 242.44155883789062,
+        "stress_p99": 245.9510285949707,
+        "success_rate": 0.0,
+        "success_stress_p95": NaN,
+        "tilt_limit": 15.0
+      },
+      "uri": "local://artifacts/a6bb287c78c1b31f_step50000.pt"
+    },
+    {
+      "clean": false,
+      "path": "artifacts/artifacts/a6bb287c78c1b31f_step100000.pt",
+      "step": 100000,
+      "summary": {
+        "centroid_to_goal_p50": 0.04511453956365585,
+        "max_tilt_max": 43.37333297729492,
+        "max_tilt_p50": 26.768047332763672,
+        "max_tilt_p90": 42.08379402160645,
+        "n": 12.0,
+        "stress_limit": 130.0,
+        "stress_max": 272.9892272949219,
+        "stress_p50": 238.70762634277344,
+        "stress_p90": 252.7843032836914,
+        "stress_p99": 270.8053036499023,
+        "success_rate": 0.0,
+        "success_stress_p95": NaN,
+        "tilt_limit": 15.0
+      },
+      "uri": "local://artifacts/a6bb287c78c1b31f_step100000.pt"
+    },
+    {
+      "clean": false,
+      "path": "artifacts/artifacts/a6bb287c78c1b31f_step150000.pt",
+      "step": 150000,
+      "summary": {
+        "centroid_to_goal_p50": 0.13406962901353836,
+        "max_tilt_max": 84.40619659423828,
+        "max_tilt_p50": 69.82593154907227,
+        "max_tilt_p90": 82.08056030273438,
+        "n": 12.0,
+        "stress_limit": 130.0,
+        "stress_max": 395.9742431640625,
+        "stress_p50": 359.30528259277344,
+        "stress_p90": 372.1090026855469,
+        "stress_p99": 393.36742980957035,
+        "success_rate": 0.08333333333333333,
+        "success_stress_p95": 249.21530151367188,
+        "tilt_limit": 15.0
+      },
+      "uri": "local://artifacts/a6bb287c78c1b31f_step150000.pt"
+    },
+    {
+      "clean": false,
+      "path": "artifacts/artifacts/a6bb287c78c1b31f_step200000.pt",
+      "step": 200000,
+      "summary": {
+        "centroid_to_goal_p50": 0.1542368233203888,
+        "max_tilt_max": 47.453739166259766,
+        "max_tilt_p50": 31.90176486968994,
+        "max_tilt_p90": 35.568970108032225,
+        "n": 12.0,
+        "stress_limit": 130.0,
+        "stress_max": 469.03515625,
+        "stress_p50": 262.9107360839844,
+        "stress_p90": 278.9394500732422,
+        "stress_p99": 448.1857754516603,
+        "success_rate": 0.0,
+        "success_stress_p95": NaN,
+        "tilt_limit": 15.0
+      },
+      "uri": "local://artifacts/a6bb287c78c1b31f_step200000.pt"
+    },
+    {
+      "clean": false,
+      "path": "artifacts/artifacts/a6bb287c78c1b31f_step250000.pt",
+      "step": 250000,
+      "summary": {
+        "centroid_to_goal_p50": 0.07349050417542458,
+        "max_tilt_max": 44.321083068847656,
+        "max_tilt_p50": 30.350116729736328,
+        "max_tilt_p90": 42.270856094360354,
+        "n": 12.0,
+        "stress_limit": 130.0,
+        "stress_max": 504.0504150390625,
+        "stress_p50": 452.3514709472656,
+        "stress_p90": 496.3491912841797,
+        "stress_p99": 503.2167608642578,
+        "success_rate": 0.0,
+        "success_stress_p95": NaN,
+        "tilt_limit": 15.0
+      },
+      "uri": "local://artifacts/a6bb287c78c1b31f_step250000.pt"
+    },
+    {
+      "clean": false,
+      "path": "artifacts/artifacts/a6bb287c78c1b31f_step300000.pt",
+      "step": 300000,
+      "summary": {
+        "centroid_to_goal_p50": 0.06599776819348335,
+        "max_tilt_max": 73.07694244384766,
+        "max_tilt_p50": 68.13699340820312,
+        "max_tilt_p90": 72.98355102539062,
+        "n": 12.0,
+        "stress_limit": 130.0,
+        "stress_max": 385.8497619628906,
+        "stress_p50": 349.9909973144531,
+        "stress_p90": 376.4211181640625,
+        "stress_p99": 384.84803619384763,
+        "success_rate": 0.0,
+        "success_stress_p95": NaN,
+        "tilt_limit": 15.0
+      },
+      "uri": "local://artifacts/a6bb287c78c1b31f_step300000.pt"
+    }
+  ],
+  "reason": "no constraint-clean checkpoint reaches C_min 0.75 on S by step 300000 (best clean 0.000) -> from-scratch primary STOPs; route to the residual-on-impedance escalation (locked prereg conditional).",
+  "run_id": "a6bb287c78c1b31f",
+  "schema": "cocarry_rung5_freeze_selection/v1",
+  "verdict": "STOP_ESCALATE_RESIDUAL"
+}

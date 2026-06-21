@@ -1,0 +1,18 @@
+{
+  "checkpoint_paths": [
+    "artifacts/artifacts/a6bb287c78c1b31f_step50000.pt",
+    "artifacts/artifacts/a6bb287c78c1b31f_step100000.pt",
+    "artifacts/artifacts/a6bb287c78c1b31f_step150000.pt",
+    "artifacts/artifacts/a6bb287c78c1b31f_step200000.pt",
+    "artifacts/artifacts/a6bb287c78c1b31f_step250000.pt",
+    "artifacts/artifacts/a6bb287c78c1b31f_step300000.pt"
+  ],
+  "config": "configs/training/ego_aht_happo/cocarry_rung5_compliant.yaml",
+  "n_checkpoints": 6,
+  "note": "Training only \u2014 no selection/validation/freeze here. Stage-3b (_cocarry_rung5_select_freeze) evaluates these checkpoints on S/V, applies the earliest-constraint-clean-max-success selection rule, and builds the freeze manifest v2.",
+  "run_id": "a6bb287c78c1b31f",
+  "schema": "cocarry_rung5_refreeze_train/v1",
+  "seed": 0,
+  "stage": "Rung-5 Stage-3 from-scratch re-freeze (training only)",
+  "total_frames": 300000
+}
