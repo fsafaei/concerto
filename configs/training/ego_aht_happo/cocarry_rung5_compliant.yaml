@@ -1,0 +1,101 @@
+# SPDX-License-Identifier: Apache-2.0
+# Hydra config for the Rung-5 co-design (CD) from-scratch incumbent re-freeze
+# on the FIXED task (ADR-026 §Decision 1-2 + §Decision 4; ADR-002; ADR-009;
+# ADR-007; the locked prereg cocarry_rung5_codesign_prereg.json).
+#
+# Phase-2 / post-M10 forward design. Trains a learned Panda ego FROM SCRATCH
+# against the frozen matched hand-written `cocarry_impedance` partner on the
+# co-carry env with the FIXED-task overrides: compliant coupling K=8000, the
+# embodiment-invariant coupling-stress instrument (stress_measure=coupling),
+# the coupling-grounded success ceiling (stress_max=365.6) and excess-stress
+# penalty (threshold 303 / scale 62.6, grounded by Stage-1 from the matched-
+# coupling success-stress p99 288.7 N), and the transport PBRS. This is the
+# substrate every prior compliant-coupling rung (4b..4e) papered over with the
+# hand-written stand-in; the re-frozen incumbent is the shared substrate for
+# the Arm-A / Arm-B co-design measurement.
+#
+# Governance: nothing on the Phase-1 / Stage-1 gate or M10 calendar (I1);
+# partner frozen during ego training (I3); no schema bump (I9). The Rung-2
+# cocarry_matched.yaml is UNTOUCHED (the rigid+wrist incumbent stays frozen).
+#
+# Validates against concerto.training.config.EgoAHTConfig.
+
+algo: ego_aht_happo
+seed: 0
+# From-scratch budget cap (prereg): 900k frames, checkpoint every 50k. The
+# pre-registered HARD early-STOP at the 300k checkpoint (driver-side, not a
+# config flag): CONTINUE iff >=1 constraint-clean checkpoint by 300k reaches
+# matched joint-success >= C_min (0.75) on S; else STOP the from-scratch
+# primary and trigger the residual-on-impedance escalation.
+total_frames: 900000
+checkpoint_every: 50000
+artifacts_root: ./artifacts
+log_dir: ./logs
+
+wandb:
+  enabled: false
+  project: concerto-chamber
+
+env:
+  task: cocarry
+  episode_length: 320
+  agent_uids: [panda_wristcam, panda_partner]
+  condition_id: cocarry_matched_panda_pair
+  num_envs: 1
+  # --- Rung-5 fixed-task overrides (ADR-026 §D4; the locked prereg) ---
+  # Compliant dual-hold coupling (Rung-4b K=8000): the rigid weld did not
+  # survive a learned ego; the compliant spring is the physically forgiving
+  # substrate the matched cooperative controllers carry in-band on.
+  drive_stiffness: 8000.0
+  # Embodiment-invariant bar coupling force F = K_c * ||grip - bar_end||
+  # (Rung-4c), the fair stress instrument. The reward + success predicate BOTH
+  # judge on this measure (the env ceiling-consistency fix), so training is not
+  # "shaped against one constraint, judged against another".
+  stress_measure: coupling
+  # Coupling success ceiling f_max 365.6 N (held fixed; reconfirmed in Stage-1,
+  # matched-coupling p99 288.7 N in band [234,318]).
+  stress_max: 365.6
+  # Excess-stress penalty grounded to the matched-coupling band (Stage-1):
+  # threshold = round(1.05 x p99 288.7) = 303 N; scale = 365.6 - 303 = 62.6 N.
+  # ~0 across the cooperative band, a real gradient toward f_max.
+  stress_penalty_threshold: 303.0
+  stress_penalty_scale: 62.6
+
+partner:
+  class_name: cocarry_impedance
+  seed: 0
+  checkpoint_step: null
+  weights_uri: null
+  extra:
+    uid: panda_partner
+    base_xyz: "0.5,0.0,0.0"
+    base_yaw_deg: "180"
+    end_sign: "-1"
+    bar_half_len: "0.115"
+
+# PPO stability hygiene (the banked Rung-2 keeper: halved step-size levers that
+# damp the single-env policy oscillation). entropy_coef / max_grad_norm live in
+# _HARL_FIXED_DEFAULTS (shared with Stage-1; unchanged).
+happo:
+  lr: 1.5e-4
+  gamma: 0.9
+  gae_lambda: 0.95
+  clip_eps: 0.1
+  n_epochs: 4
+  rollout_length: 320
+  batch_size: 320
+  hidden_dim: 256
+
+runtime:
+  device: cuda
+  deterministic_torch: false
+
+safety:
+  enabled: false
+
+shaping:
+  settle_alpha: 0.0
+  transport_pbrs_coeff: 1.0
+
+exploratory:
+  partner_static_override: false

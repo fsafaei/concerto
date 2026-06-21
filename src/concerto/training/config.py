@@ -106,6 +106,20 @@ class EnvConfig(_FrozenModel):
     agent_uids: tuple[str, str] = ("ego", "partner")
     condition_id: str | None = None
     num_envs: int = Field(default=1, ge=1)
+    # Co-carry env-factory overrides (ADR-026 §D4; the Rung-5 re-freeze on the
+    # fixed compliant-coupling + invariant-coupling-stress task). Each defaults
+    # to the make_cocarry_training_env default, so a config that omits them is
+    # byte-identical to the historical rigid + wrist cell (P6 / ADR-002).
+    # Only consumed by the task=="cocarry" branch of build_env.
+    drive_stiffness: float | None = None
+    drive_damping: float | None = None
+    drive_force_limit: float | None = None
+    stress_measure: str = "wrist"
+    stress_max: float | None = None
+    stress_penalty_threshold: float | None = None
+    stress_penalty_scale: float | None = None
+    xarm6_base_x: float | None = None
+    xarm6_ready_qpos: list[float] | None = None
 
     @field_validator("agent_uids", mode="before")
     @classmethod

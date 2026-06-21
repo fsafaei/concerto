@@ -187,6 +187,18 @@ def build_env(env_cfg: EnvConfig, *, root_seed: int) -> EnvLike:
                 episode_length=env_cfg.episode_length,
                 root_seed=root_seed,
                 num_envs=env_cfg.num_envs,
+                # Co-carry task overrides (ADR-026 §D4; Rung-5 re-freeze). Each
+                # defaults to the factory default, so the historical rigid +
+                # wrist cell stays byte-identical (P6 / ADR-002).
+                drive_stiffness=env_cfg.drive_stiffness,
+                drive_damping=env_cfg.drive_damping,
+                drive_force_limit=env_cfg.drive_force_limit,
+                stress_measure=env_cfg.stress_measure,
+                stress_max=env_cfg.stress_max,
+                stress_penalty_threshold=env_cfg.stress_penalty_threshold,
+                stress_penalty_scale=env_cfg.stress_penalty_scale,
+                xarm6_base_x=env_cfg.xarm6_base_x,
+                xarm6_ready_qpos=env_cfg.xarm6_ready_qpos,
             ),
         )
     raise ValueError(
