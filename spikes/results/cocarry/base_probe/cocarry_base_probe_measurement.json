@@ -1,0 +1,1053 @@
+{
+  "env_module_sha256": "60a0c44083db7c8dd3580f37acf27234e67c4fd6f696592a04bb819e3b263596",
+  "fmax_coupling_n": 365.6080997467041,
+  "governance": "Eval-only; no training/residual/heterogeneity; matched pair; predicate never weakened. Phase-2, NON-gating. Prior artifacts immutable (I8); no schema bump (I9).",
+  "hard_but_feasible_bands": [
+    {
+      "kind": "precision-tolerance",
+      "knob": "tilt_limit",
+      "setting": "tilt=5 deg",
+      "success_rate": 0.6666666666666666
+    }
+  ],
+  "n_seeds": 12,
+  "prereg": "spikes/results/cocarry/base_probe/cocarry_base_probe_prereg.json",
+  "prereg_sha256": "894f92370c6466d1ec0dcff1e8c67e8f2f146cd4d036705095455c47aa0f4225",
+  "prereg_tag": "prereg-cocarry-base-probe-2026-06-22",
+  "primary_stiffness_sweep": {
+    "128000": {
+      "all_finite": true,
+      "classification": "NUMERICAL_ARTIFACT",
+      "drive_stiffness_npm": 128000.0,
+      "per_seed": [
+        {
+          "both_static": true,
+          "centroid_to_goal": 0.00249,
+          "max_stress_proxy": 3198.89,
+          "max_tilt_deg": 14.923,
+          "n_steps": 320,
+          "seed": 70000,
+          "success": false
+        },
+        {
+          "both_static": true,
+          "centroid_to_goal": 0.00439,
+          "max_stress_proxy": 3476.04,
+          "max_tilt_deg": 14.89,
+          "n_steps": 320,
+          "seed": 70001,
+          "success": false
+        },
+        {
+          "both_static": true,
+          "centroid_to_goal": 0.00386,
+          "max_stress_proxy": 3548.25,
+          "max_tilt_deg": 14.366,
+          "n_steps": 320,
+          "seed": 70002,
+          "success": false
+        },
+        {
+          "both_static": true,
+          "centroid_to_goal": 0.00345,
+          "max_stress_proxy": 3243.82,
+          "max_tilt_deg": 14.463,
+          "n_steps": 320,
+          "seed": 70003,
+          "success": false
+        },
+        {
+          "both_static": true,
+          "centroid_to_goal": 0.00397,
+          "max_stress_proxy": 3286.38,
+          "max_tilt_deg": 14.832,
+          "n_steps": 320,
+          "seed": 70004,
+          "success": false
+        },
+        {
+          "both_static": true,
+          "centroid_to_goal": 0.00441,
+          "max_stress_proxy": 3342.26,
+          "max_tilt_deg": 14.027,
+          "n_steps": 320,
+          "seed": 70005,
+          "success": false
+        },
+        {
+          "both_static": true,
+          "centroid_to_goal": 0.00351,
+          "max_stress_proxy": 3333.65,
+          "max_tilt_deg": 14.958,
+          "n_steps": 320,
+          "seed": 70006,
+          "success": false
+        },
+        {
+          "both_static": true,
+          "centroid_to_goal": 0.00212,
+          "max_stress_proxy": 3106.98,
+          "max_tilt_deg": 14.924,
+          "n_steps": 320,
+          "seed": 70007,
+          "success": false
+        },
+        {
+          "both_static": true,
+          "centroid_to_goal": 0.00286,
+          "max_stress_proxy": 3160.55,
+          "max_tilt_deg": 13.495,
+          "n_steps": 320,
+          "seed": 70008,
+          "success": false
+        },
+        {
+          "both_static": true,
+          "centroid_to_goal": 0.00438,
+          "max_stress_proxy": 3335.62,
+          "max_tilt_deg": 14.164,
+          "n_steps": 320,
+          "seed": 70009,
+          "success": false
+        },
+        {
+          "both_static": true,
+          "centroid_to_goal": 0.00341,
+          "max_stress_proxy": 3396.12,
+          "max_tilt_deg": 14.952,
+          "n_steps": 320,
+          "seed": 70010,
+          "success": false
+        },
+        {
+          "both_static": true,
+          "centroid_to_goal": 0.0055,
+          "max_stress_proxy": 3612.33,
+          "max_tilt_deg": 14.898,
+          "n_steps": 320,
+          "seed": 70011,
+          "success": false
+        }
+      ],
+      "physics_stable": false,
+      "reasons": [
+        "median episode-max stress 3335 N >= 1097 N (3x f_max)"
+      ],
+      "summary": {
+        "centroid_to_goal_max": 0.005502135492861271,
+        "centroid_to_goal_p50": 0.003688311669975519,
+        "centroid_to_goal_p90": 0.004406187031418085,
+        "fail_level_at_15": 0,
+        "fail_placed_at_010": 0,
+        "fail_static": 0,
+        "fail_unstressed_at_fmax": 12,
+        "max_tilt_deg_max": 14.957858085632324,
+        "max_tilt_deg_p50": 14.86098051071167,
+        "max_tilt_deg_p90": 14.94968900680542,
+        "n": 12,
+        "n_success": 0,
+        "stress_max": 3612.326416015625,
+        "stress_median_of_episode_max": 3334.6348876953125,
+        "stress_p50": 3334.6348876953125,
+        "stress_p90": 3541.030859375,
+        "success_rate": 0.0,
+        "tilt_median_of_episode_max": 14.86098051071167
+      }
+    },
+    "16000": {
+      "all_finite": true,
+      "classification": "STABLE_INFEASIBLE",
+      "drive_stiffness_npm": 16000.0,
+      "per_seed": [
+        {
+          "both_static": true,
+          "centroid_to_goal": 0.07064,
+          "max_stress_proxy": 583.38,
+          "max_tilt_deg": 9.844,
+          "n_steps": 320,
+          "seed": 70000,
+          "success": false
+        },
+        {
+          "both_static": true,
+          "centroid_to_goal": 0.04526,
+          "max_stress_proxy": 607.49,
+          "max_tilt_deg": 9.666,
+          "n_steps": 320,
+          "seed": 70001,
+          "success": false
+        },
+        {
+          "both_static": true,
+          "centroid_to_goal": 0.03438,
+          "max_stress_proxy": 569.59,
+          "max_tilt_deg": 8.551,
+          "n_steps": 320,
+          "seed": 70002,
+          "success": false
+        },
+        {
+          "both_static": true,
+          "centroid_to_goal": 0.05712,
+          "max_stress_proxy": 568.35,
+          "max_tilt_deg": 8.834,
+          "n_steps": 320,
+          "seed": 70003,
+          "success": false
+        },
+        {
+          "both_static": true,
+          "centroid_to_goal": 0.06659,
+          "max_stress_proxy": 619.35,
+          "max_tilt_deg": 8.734,
+          "n_steps": 320,
+          "seed": 70004,
+          "success": false
+        },
+        {
+          "both_static": true,
+          "centroid_to_goal": 0.06352,
+          "max_stress_proxy": 583.92,
+          "max_tilt_deg": 9.157,
+          "n_steps": 320,
+          "seed": 70005,
+          "success": false
+        },
+        {
+          "both_static": true,
+          "centroid_to_goal": 0.06352,
+          "max_stress_proxy": 619.35,
+          "max_tilt_deg": 8.51,
+          "n_steps": 320,
+          "seed": 70006,
+          "success": false
+        },
+        {
+          "both_static": true,
+          "centroid_to_goal": 0.0762,
+          "max_stress_proxy": 619.35,
+          "max_tilt_deg": 8.259,
+          "n_steps": 320,
+          "seed": 70007,
+          "success": false
+        },
+        {
+          "both_static": true,
+          "centroid_to_goal": 0.04837,
+          "max_stress_proxy": 579.67,
+          "max_tilt_deg": 6.811,
+          "n_steps": 320,
+          "seed": 70008,
+          "success": false
+        },
+        {
+          "both_static": false,
+          "centroid_to_goal": 0.07045,
+          "max_stress_proxy": 570.7,
+          "max_tilt_deg": 6.958,
+          "n_steps": 320,
+          "seed": 70009,
+          "success": false
+        },
+        {
+          "both_static": true,
+          "centroid_to_goal": 0.0518,
+          "max_stress_proxy": 619.35,
+          "max_tilt_deg": 10.084,
+          "n_steps": 320,
+          "seed": 70010,
+          "success": false
+        },
+        {
+          "both_static": true,
+          "centroid_to_goal": 0.05569,
+          "max_stress_proxy": 573.89,
+          "max_tilt_deg": 9.255,
+          "n_steps": 320,
+          "seed": 70011,
+          "success": false
+        }
+      ],
+      "physics_stable": true,
+      "reasons": [],
+      "summary": {
+        "centroid_to_goal_max": 0.07620406895875931,
+        "centroid_to_goal_p50": 0.06032048538327217,
+        "centroid_to_goal_p90": 0.07062042728066445,
+        "fail_level_at_15": 0,
+        "fail_placed_at_010": 0,
+        "fail_static": 1,
+        "fail_unstressed_at_fmax": 12,
+        "max_tilt_deg_max": 10.08383846282959,
+        "max_tilt_deg_p50": 8.783865928649902,
+        "max_tilt_deg_p90": 9.825901317596436,
+        "n": 12,
+        "n_success": 0,
+        "stress_max": 619.3536987304688,
+        "stress_median_of_episode_max": 583.6469421386719,
+        "stress_p50": 583.6469421386719,
+        "stress_p90": 619.3536987304688,
+        "success_rate": 0.0,
+        "tilt_median_of_episode_max": 8.783865928649902
+      }
+    },
+    "256000": {
+      "all_finite": true,
+      "classification": "NUMERICAL_ARTIFACT",
+      "drive_stiffness_npm": 256000.0,
+      "per_seed": [
+        {
+          "both_static": true,
+          "centroid_to_goal": 0.00265,
+          "max_stress_proxy": 6362.5,
+          "max_tilt_deg": 12.416,
+          "n_steps": 320,
+          "seed": 70000,
+          "success": false
+        },
+        {
+          "both_static": true,
+          "centroid_to_goal": 0.00195,
+          "max_stress_proxy": 6924.49,
+          "max_tilt_deg": 12.419,
+          "n_steps": 320,
+          "seed": 70001,
+          "success": false
+        },
+        {
+          "both_static": true,
+          "centroid_to_goal": 0.0018,
+          "max_stress_proxy": 6969.74,
+          "max_tilt_deg": 12.468,
+          "n_steps": 320,
+          "seed": 70002,
+          "success": false
+        },
+        {
+          "both_static": true,
+          "centroid_to_goal": 0.00177,
+          "max_stress_proxy": 6440.4,
+          "max_tilt_deg": 12.389,
+          "n_steps": 320,
+          "seed": 70003,
+          "success": false
+        },
+        {
+          "both_static": true,
+          "centroid_to_goal": 0.00343,
+          "max_stress_proxy": 6189.32,
+          "max_tilt_deg": 12.498,
+          "n_steps": 320,
+          "seed": 70004,
+          "success": false
+        },
+        {
+          "both_static": true,
+          "centroid_to_goal": 0.00509,
+          "max_stress_proxy": 6445.86,
+          "max_tilt_deg": 12.664,
+          "n_steps": 320,
+          "seed": 70005,
+          "success": false
+        },
+        {
+          "both_static": true,
+          "centroid_to_goal": 0.00281,
+          "max_stress_proxy": 6162.25,
+          "max_tilt_deg": 11.936,
+          "n_steps": 320,
+          "seed": 70006,
+          "success": false
+        },
+        {
+          "both_static": true,
+          "centroid_to_goal": 0.00219,
+          "max_stress_proxy": 5994.11,
+          "max_tilt_deg": 12.681,
+          "n_steps": 320,
+          "seed": 70007,
+          "success": false
+        },
+        {
+          "both_static": true,
+          "centroid_to_goal": 0.00127,
+          "max_stress_proxy": 6082.64,
+          "max_tilt_deg": 12.724,
+          "n_steps": 320,
+          "seed": 70008,
+          "success": false
+        },
+        {
+          "both_static": true,
+          "centroid_to_goal": 0.00182,
+          "max_stress_proxy": 6616.28,
+          "max_tilt_deg": 12.639,
+          "n_steps": 320,
+          "seed": 70009,
+          "success": false
+        },
+        {
+          "both_static": true,
+          "centroid_to_goal": 0.00208,
+          "max_stress_proxy": 6118.5,
+          "max_tilt_deg": 12.145,
+          "n_steps": 320,
+          "seed": 70010,
+          "success": false
+        },
+        {
+          "both_static": true,
+          "centroid_to_goal": 0.0027,
+          "max_stress_proxy": 6862.86,
+          "max_tilt_deg": 12.725,
+          "n_steps": 320,
+          "seed": 70011,
+          "success": false
+        }
+      ],
+      "physics_stable": false,
+      "reasons": [
+        "median episode-max stress 6401 N >= 1097 N (3x f_max)"
+      ],
+      "summary": {
+        "centroid_to_goal_max": 0.00508721312507987,
+        "centroid_to_goal_p50": 0.002137214527465403,
+        "centroid_to_goal_p90": 0.003363016527146101,
+        "fail_level_at_15": 0,
+        "fail_placed_at_010": 0,
+        "fail_static": 0,
+        "fail_unstressed_at_fmax": 12,
+        "max_tilt_deg_max": 12.725135803222656,
+        "max_tilt_deg_p50": 12.482937335968018,
+        "max_tilt_deg_p90": 12.71976833343506,
+        "n": 12,
+        "n_success": 0,
+        "stress_max": 6969.740234375,
+        "stress_median_of_episode_max": 6401.4501953125,
+        "stress_p50": 6401.4501953125,
+        "stress_p90": 6918.325927734375,
+        "success_rate": 0.0,
+        "tilt_median_of_episode_max": 12.482937335968018
+      }
+    },
+    "32000": {
+      "all_finite": true,
+      "classification": "NUMERICAL_ARTIFACT",
+      "drive_stiffness_npm": 32000.0,
+      "per_seed": [
+        {
+          "both_static": true,
+          "centroid_to_goal": 0.01568,
+          "max_stress_proxy": 1206.52,
+          "max_tilt_deg": 18.514,
+          "n_steps": 320,
+          "seed": 70000,
+          "success": false
+        },
+        {
+          "both_static": true,
+          "centroid_to_goal": 0.00978,
+          "max_stress_proxy": 1256.39,
+          "max_tilt_deg": 15.205,
+          "n_steps": 320,
+          "seed": 70001,
+          "success": false
+        },
+        {
+          "both_static": true,
+          "centroid_to_goal": 0.01993,
+          "max_stress_proxy": 1117.21,
+          "max_tilt_deg": 13.139,
+          "n_steps": 320,
+          "seed": 70002,
+          "success": false
+        },
+        {
+          "both_static": true,
+          "centroid_to_goal": 0.01593,
+          "max_stress_proxy": 1112.98,
+          "max_tilt_deg": 16.417,
+          "n_steps": 320,
+          "seed": 70003,
+          "success": false
+        },
+        {
+          "both_static": true,
+          "centroid_to_goal": 0.00898,
+          "max_stress_proxy": 1247.7,
+          "max_tilt_deg": 16.358,
+          "n_steps": 320,
+          "seed": 70004,
+          "success": false
+        },
+        {
+          "both_static": true,
+          "centroid_to_goal": 0.01729,
+          "max_stress_proxy": 1164.67,
+          "max_tilt_deg": 18.49,
+          "n_steps": 320,
+          "seed": 70005,
+          "success": false
+        },
+        {
+          "both_static": true,
+          "centroid_to_goal": 0.00847,
+          "max_stress_proxy": 1270.46,
+          "max_tilt_deg": 15.002,
+          "n_steps": 320,
+          "seed": 70006,
+          "success": false
+        },
+        {
+          "both_static": true,
+          "centroid_to_goal": 0.0078,
+          "max_stress_proxy": 1215.21,
+          "max_tilt_deg": 17.717,
+          "n_steps": 320,
+          "seed": 70007,
+          "success": false
+        },
+        {
+          "both_static": true,
+          "centroid_to_goal": 0.00619,
+          "max_stress_proxy": 1135.89,
+          "max_tilt_deg": 16.586,
+          "n_steps": 320,
+          "seed": 70008,
+          "success": false
+        },
+        {
+          "both_static": true,
+          "centroid_to_goal": 0.01992,
+          "max_stress_proxy": 1205.4,
+          "max_tilt_deg": 18.112,
+          "n_steps": 320,
+          "seed": 70009,
+          "success": false
+        },
+        {
+          "both_static": true,
+          "centroid_to_goal": 0.00787,
+          "max_stress_proxy": 1282.71,
+          "max_tilt_deg": 13.847,
+          "n_steps": 320,
+          "seed": 70010,
+          "success": false
+        },
+        {
+          "both_static": true,
+          "centroid_to_goal": 0.01524,
+          "max_stress_proxy": 1197.14,
+          "max_tilt_deg": 13.693,
+          "n_steps": 320,
+          "seed": 70011,
+          "success": false
+        }
+      ],
+      "physics_stable": false,
+      "reasons": [
+        "median episode-max stress 1206 N >= 1097 N (3x f_max)"
+      ],
+      "summary": {
+        "centroid_to_goal_max": 0.019931698217988014,
+        "centroid_to_goal_p50": 0.012508478481322527,
+        "centroid_to_goal_p90": 0.019658387266099454,
+        "fail_level_at_15": 9,
+        "fail_placed_at_010": 0,
+        "fail_static": 0,
+        "fail_unstressed_at_fmax": 12,
+        "max_tilt_deg_max": 18.513839721679688,
+        "max_tilt_deg_p50": 16.387557983398438,
+        "max_tilt_deg_p90": 18.45179138183594,
+        "n": 12,
+        "n_success": 0,
+        "stress_max": 1282.7071533203125,
+        "stress_median_of_episode_max": 1205.9627685546875,
+        "stress_p50": 1205.9627685546875,
+        "stress_p90": 1269.0496215820312,
+        "success_rate": 0.0,
+        "tilt_median_of_episode_max": 16.387557983398438
+      }
+    },
+    "512000": {
+      "all_finite": true,
+      "classification": "NUMERICAL_ARTIFACT",
+      "drive_stiffness_npm": 512000.0,
+      "per_seed": [
+        {
+          "both_static": true,
+          "centroid_to_goal": 0.00335,
+          "max_stress_proxy": 12630.33,
+          "max_tilt_deg": 15.533,
+          "n_steps": 320,
+          "seed": 70000,
+          "success": false
+        },
+        {
+          "both_static": true,
+          "centroid_to_goal": 0.00202,
+          "max_stress_proxy": 14362.32,
+          "max_tilt_deg": 15.428,
+          "n_steps": 320,
+          "seed": 70001,
+          "success": false
+        },
+        {
+          "both_static": true,
+          "centroid_to_goal": 0.00155,
+          "max_stress_proxy": 13824.43,
+          "max_tilt_deg": 15.691,
+          "n_steps": 320,
+          "seed": 70002,
+          "success": false
+        },
+        {
+          "both_static": true,
+          "centroid_to_goal": 0.00223,
+          "max_stress_proxy": 12448.57,
+          "max_tilt_deg": 15.76,
+          "n_steps": 320,
+          "seed": 70003,
+          "success": false
+        },
+        {
+          "both_static": true,
+          "centroid_to_goal": 0.00361,
+          "max_stress_proxy": 12418.13,
+          "max_tilt_deg": 15.385,
+          "n_steps": 320,
+          "seed": 70004,
+          "success": false
+        },
+        {
+          "both_static": true,
+          "centroid_to_goal": 0.00131,
+          "max_stress_proxy": 12881.04,
+          "max_tilt_deg": 15.49,
+          "n_steps": 320,
+          "seed": 70005,
+          "success": false
+        },
+        {
+          "both_static": true,
+          "centroid_to_goal": 0.00336,
+          "max_stress_proxy": 10231.64,
+          "max_tilt_deg": 15.086,
+          "n_steps": 320,
+          "seed": 70006,
+          "success": false
+        },
+        {
+          "both_static": true,
+          "centroid_to_goal": 0.00128,
+          "max_stress_proxy": 12257.33,
+          "max_tilt_deg": 15.47,
+          "n_steps": 320,
+          "seed": 70007,
+          "success": false
+        },
+        {
+          "both_static": true,
+          "centroid_to_goal": 0.00167,
+          "max_stress_proxy": 12091.25,
+          "max_tilt_deg": 15.585,
+          "n_steps": 320,
+          "seed": 70008,
+          "success": false
+        },
+        {
+          "both_static": true,
+          "centroid_to_goal": 0.00275,
+          "max_stress_proxy": 12919.42,
+          "max_tilt_deg": 15.67,
+          "n_steps": 320,
+          "seed": 70009,
+          "success": false
+        },
+        {
+          "both_static": true,
+          "centroid_to_goal": 0.00242,
+          "max_stress_proxy": 12680.08,
+          "max_tilt_deg": 15.652,
+          "n_steps": 320,
+          "seed": 70010,
+          "success": false
+        },
+        {
+          "both_static": true,
+          "centroid_to_goal": 0.00221,
+          "max_stress_proxy": 14105.3,
+          "max_tilt_deg": 15.611,
+          "n_steps": 320,
+          "seed": 70011,
+          "success": false
+        }
+      ],
+      "physics_stable": false,
+      "reasons": [
+        "median episode-max stress 12655 N >= 1097 N (3x f_max)"
+      ],
+      "summary": {
+        "centroid_to_goal_max": 0.003606571815907955,
+        "centroid_to_goal_p50": 0.0022225118009373546,
+        "centroid_to_goal_p90": 0.0033601220464333894,
+        "fail_level_at_15": 12,
+        "fail_placed_at_010": 0,
+        "fail_static": 0,
+        "fail_unstressed_at_fmax": 12,
+        "max_tilt_deg_max": 15.760347366333008,
+        "max_tilt_deg_p50": 15.558839797973633,
+        "max_tilt_deg_p90": 15.689197635650634,
+        "n": 12,
+        "n_success": 0,
+        "stress_max": 14362.32421875,
+        "stress_median_of_episode_max": 12655.20849609375,
+        "stress_p50": 12655.20849609375,
+        "stress_p90": 14077.20888671875,
+        "success_rate": 0.0,
+        "tilt_median_of_episode_max": 15.558839797973633
+      }
+    },
+    "64000": {
+      "all_finite": true,
+      "classification": "NUMERICAL_ARTIFACT",
+      "drive_stiffness_npm": 64000.0,
+      "per_seed": [
+        {
+          "both_static": true,
+          "centroid_to_goal": 0.01167,
+          "max_stress_proxy": 2268.65,
+          "max_tilt_deg": 16.299,
+          "n_steps": 320,
+          "seed": 70000,
+          "success": false
+        },
+        {
+          "both_static": true,
+          "centroid_to_goal": 0.00809,
+          "max_stress_proxy": 2375.79,
+          "max_tilt_deg": 13.388,
+          "n_steps": 320,
+          "seed": 70001,
+          "success": false
+        },
+        {
+          "both_static": true,
+          "centroid_to_goal": 0.00922,
+          "max_stress_proxy": 2360.23,
+          "max_tilt_deg": 13.956,
+          "n_steps": 320,
+          "seed": 70002,
+          "success": false
+        },
+        {
+          "both_static": true,
+          "centroid_to_goal": 0.00269,
+          "max_stress_proxy": 2274.15,
+          "max_tilt_deg": 16.829,
+          "n_steps": 320,
+          "seed": 70003,
+          "success": false
+        },
+        {
+          "both_static": true,
+          "centroid_to_goal": 0.00681,
+          "max_stress_proxy": 2307.42,
+          "max_tilt_deg": 13.894,
+          "n_steps": 320,
+          "seed": 70004,
+          "success": false
+        },
+        {
+          "both_static": true,
+          "centroid_to_goal": 0.01102,
+          "max_stress_proxy": 2299.46,
+          "max_tilt_deg": 18.376,
+          "n_steps": 320,
+          "seed": 70005,
+          "success": false
+        },
+        {
+          "both_static": true,
+          "centroid_to_goal": 0.00667,
+          "max_stress_proxy": 2348.48,
+          "max_tilt_deg": 12.502,
+          "n_steps": 320,
+          "seed": 70006,
+          "success": false
+        },
+        {
+          "both_static": true,
+          "centroid_to_goal": 0.00523,
+          "max_stress_proxy": 2232.11,
+          "max_tilt_deg": 15.131,
+          "n_steps": 320,
+          "seed": 70007,
+          "success": false
+        },
+        {
+          "both_static": true,
+          "centroid_to_goal": 0.00875,
+          "max_stress_proxy": 2248.23,
+          "max_tilt_deg": 17.045,
+          "n_steps": 320,
+          "seed": 70008,
+          "success": false
+        },
+        {
+          "both_static": true,
+          "centroid_to_goal": 0.00425,
+          "max_stress_proxy": 2287.42,
+          "max_tilt_deg": 16.969,
+          "n_steps": 320,
+          "seed": 70009,
+          "success": false
+        },
+        {
+          "both_static": true,
+          "centroid_to_goal": 0.00591,
+          "max_stress_proxy": 2381.88,
+          "max_tilt_deg": 11.516,
+          "n_steps": 320,
+          "seed": 70010,
+          "success": false
+        },
+        {
+          "both_static": true,
+          "centroid_to_goal": 0.00784,
+          "max_stress_proxy": 2399.11,
+          "max_tilt_deg": 14.421,
+          "n_steps": 320,
+          "seed": 70011,
+          "success": false
+        }
+      ],
+      "physics_stable": false,
+      "reasons": [
+        "median episode-max stress 2303 N >= 1097 N (3x f_max)"
+      ],
+      "summary": {
+        "centroid_to_goal_max": 0.011674362234771252,
+        "centroid_to_goal_p50": 0.007327064173296094,
+        "centroid_to_goal_p90": 0.010836491826921701,
+        "fail_level_at_15": 6,
+        "fail_placed_at_010": 0,
+        "fail_static": 0,
+        "fail_unstressed_at_fmax": 12,
+        "max_tilt_deg_max": 18.375776290893555,
+        "max_tilt_deg_p50": 14.775676727294922,
+        "max_tilt_deg_p90": 17.036977195739745,
+        "n": 12,
+        "n_success": 0,
+        "stress_max": 2399.10546875,
+        "stress_median_of_episode_max": 2303.4381103515625,
+        "stress_p50": 2303.4381103515625,
+        "stress_p90": 2381.2755615234373,
+        "success_rate": 0.0,
+        "tilt_median_of_episode_max": 14.775676727294922
+      }
+    },
+    "8000": {
+      "all_finite": true,
+      "classification": "FEASIBLE_TRIVIAL",
+      "drive_stiffness_npm": 8000.0,
+      "per_seed": [
+        {
+          "both_static": true,
+          "centroid_to_goal": 0.0049,
+          "max_stress_proxy": 237.05,
+          "max_tilt_deg": 4.45,
+          "n_steps": 320,
+          "seed": 70000,
+          "success": true
+        },
+        {
+          "both_static": true,
+          "centroid_to_goal": 0.00297,
+          "max_stress_proxy": 253.18,
+          "max_tilt_deg": 4.754,
+          "n_steps": 320,
+          "seed": 70001,
+          "success": true
+        },
+        {
+          "both_static": true,
+          "centroid_to_goal": 0.00562,
+          "max_stress_proxy": 283.12,
+          "max_tilt_deg": 1.858,
+          "n_steps": 320,
+          "seed": 70002,
+          "success": true
+        },
+        {
+          "both_static": true,
+          "centroid_to_goal": 0.00537,
+          "max_stress_proxy": 269.81,
+          "max_tilt_deg": 5.882,
+          "n_steps": 320,
+          "seed": 70003,
+          "success": true
+        },
+        {
+          "both_static": true,
+          "centroid_to_goal": 0.00349,
+          "max_stress_proxy": 244.37,
+          "max_tilt_deg": 4.183,
+          "n_steps": 320,
+          "seed": 70004,
+          "success": true
+        },
+        {
+          "both_static": true,
+          "centroid_to_goal": 0.00478,
+          "max_stress_proxy": 274.35,
+          "max_tilt_deg": 8.242,
+          "n_steps": 320,
+          "seed": 70005,
+          "success": true
+        },
+        {
+          "both_static": true,
+          "centroid_to_goal": 0.00342,
+          "max_stress_proxy": 241.4,
+          "max_tilt_deg": 3.923,
+          "n_steps": 320,
+          "seed": 70006,
+          "success": true
+        },
+        {
+          "both_static": true,
+          "centroid_to_goal": 0.00327,
+          "max_stress_proxy": 234.56,
+          "max_tilt_deg": 4.104,
+          "n_steps": 320,
+          "seed": 70007,
+          "success": true
+        },
+        {
+          "both_static": true,
+          "centroid_to_goal": 0.00496,
+          "max_stress_proxy": 268.26,
+          "max_tilt_deg": 5.185,
+          "n_steps": 320,
+          "seed": 70008,
+          "success": true
+        },
+        {
+          "both_static": true,
+          "centroid_to_goal": 0.0052,
+          "max_stress_proxy": 274.83,
+          "max_tilt_deg": 5.985,
+          "n_steps": 320,
+          "seed": 70009,
+          "success": true
+        },
+        {
+          "both_static": true,
+          "centroid_to_goal": 0.00576,
+          "max_stress_proxy": 244.14,
+          "max_tilt_deg": 3.917,
+          "n_steps": 320,
+          "seed": 70010,
+          "success": true
+        },
+        {
+          "both_static": true,
+          "centroid_to_goal": 0.00542,
+          "max_stress_proxy": 207.5,
+          "max_tilt_deg": 3.059,
+          "n_steps": 320,
+          "seed": 70011,
+          "success": true
+        }
+      ],
+      "physics_stable": true,
+      "reasons": [],
+      "summary": {
+        "centroid_to_goal_max": 0.005761591251939535,
+        "centroid_to_goal_p50": 0.0049346075393259525,
+        "centroid_to_goal_p90": 0.005600902484729886,
+        "fail_level_at_15": 0,
+        "fail_placed_at_010": 0,
+        "fail_static": 0,
+        "fail_unstressed_at_fmax": 0,
+        "max_tilt_deg_max": 8.242188453674316,
+        "max_tilt_deg_p50": 4.316691160202026,
+        "max_tilt_deg_p90": 5.974778938293457,
+        "n": 12,
+        "n_success": 12,
+        "stress_max": 283.12213134765625,
+        "stress_median_of_episode_max": 248.77373504638672,
+        "stress_p50": 248.77373504638672,
+        "stress_p90": 274.78661193847654,
+        "success_rate": 1.0,
+        "tilt_median_of_episode_max": 4.316691160202026
+      }
+    }
+  },
+  "schema": "cocarry_base_probe_measurement/v1",
+  "secondary_goal_radius_sweep": {
+    "0.02": {
+      "classification": "FEASIBLE_TRIVIAL",
+      "goal_thresh_m": 0.02,
+      "n_success": 12,
+      "physics_stable": true,
+      "success_rate": 1.0
+    },
+    "0.05": {
+      "classification": "FEASIBLE_TRIVIAL",
+      "goal_thresh_m": 0.05,
+      "n_success": 12,
+      "physics_stable": true,
+      "success_rate": 1.0
+    },
+    "0.10": {
+      "classification": "FEASIBLE_TRIVIAL",
+      "goal_thresh_m": 0.1,
+      "n_success": 12,
+      "physics_stable": true,
+      "success_rate": 1.0
+    }
+  },
+  "secondary_tilt_sweep": {
+    "10": {
+      "classification": "FEASIBLE_TRIVIAL",
+      "n_success": 12,
+      "physics_stable": true,
+      "success_rate": 1.0,
+      "tilt_max_deg": 10.0
+    },
+    "15": {
+      "classification": "FEASIBLE_TRIVIAL",
+      "n_success": 12,
+      "physics_stable": true,
+      "success_rate": 1.0,
+      "tilt_max_deg": 15.0
+    },
+    "5": {
+      "classification": "HARD_BUT_FEASIBLE",
+      "n_success": 8,
+      "physics_stable": true,
+      "success_rate": 0.6666666666666666,
+      "tilt_max_deg": 5.0
+    }
+  },
+  "seeds": [
+    70000,
+    70001,
+    70002,
+    70003,
+    70004,
+    70005,
+    70006,
+    70007,
+    70008,
+    70009,
+    70010,
+    70011
+  ],
+  "stage": "Phase-2 co-carry base-difficulty probe (the cheap 'is there a hard regime?' check)",
+  "trajectories_artifact": "spikes/results/cocarry/base_probe/cocarry_base_probe_trajectories.json",
+  "verdict": "HARD_BUT_FEASIBLE_BAND_EXISTS",
+  "verdict_note": "1 hard-but-feasible (graceful, success in [0.10,0.90], stable) setting(s) found: ['tilt=5 deg']. A genuinely-hard regime exists; testing heterogeneity there is meaningful (the full Option-2 test, properly instrumented per R-2026-06-C). Band kind(s): precision-tolerance. NOTE: the coupling-STIFFNESS knob itself did NOT produce a graceful band -- the band(s) come only from tightening the success-predicate tolerance (precision), not from the coupling physics getting harder."
+}

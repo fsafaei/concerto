@@ -1,0 +1,86 @@
+{
+  "by_drive_stiffness_npm": {
+    "10000": {
+      "dominant_failing_conjunct": "over_coupling(unstressed)",
+      "drive_stiffness_npm": 10000.0,
+      "fail_level": 0,
+      "fail_placed": 0,
+      "fail_unstressed": 1,
+      "stress_p50": 335.2369079589844,
+      "stress_p90": 344.42120971679685,
+      "success_rate": 0.9166666666666666
+    },
+    "11000": {
+      "dominant_failing_conjunct": "over_coupling(unstressed)",
+      "drive_stiffness_npm": 11000.0,
+      "fail_level": 0,
+      "fail_placed": 0,
+      "fail_unstressed": 12,
+      "stress_p50": 497.1960906982422,
+      "stress_p90": 521.1589721679687,
+      "success_rate": 0.0
+    },
+    "12000": {
+      "dominant_failing_conjunct": "over_coupling(unstressed)",
+      "drive_stiffness_npm": 12000.0,
+      "fail_level": 3,
+      "fail_placed": 0,
+      "fail_unstressed": 12,
+      "stress_p50": 421.5744323730469,
+      "stress_p90": 468.70876159667966,
+      "success_rate": 0.0
+    },
+    "13000": {
+      "dominant_failing_conjunct": "over_coupling(unstressed)",
+      "drive_stiffness_npm": 13000.0,
+      "fail_level": 2,
+      "fail_placed": 0,
+      "fail_unstressed": 12,
+      "stress_p50": 432.8556823730469,
+      "stress_p90": 465.0992828369141,
+      "success_rate": 0.0
+    },
+    "14000": {
+      "dominant_failing_conjunct": "over_coupling(unstressed)",
+      "drive_stiffness_npm": 14000.0,
+      "fail_level": 2,
+      "fail_placed": 0,
+      "fail_unstressed": 12,
+      "stress_p50": 464.03196716308594,
+      "stress_p90": 476.94056091308596,
+      "success_rate": 0.0
+    },
+    "9000": {
+      "dominant_failing_conjunct": "none",
+      "drive_stiffness_npm": 9000.0,
+      "fail_level": 0,
+      "fail_placed": 0,
+      "fail_unstressed": 0,
+      "stress_p50": 258.56044006347656,
+      "stress_p90": 269.69402770996095,
+      "success_rate": 1.0
+    }
+  },
+  "coordination_strain_settings": [],
+  "finding": "NO_SUB1_BAND_IN_GAP",
+  "finding_note": "No sub-1.0 setting in the gap at this resolution.",
+  "fmax_coupling_n": 365.6080997467041,
+  "graceful_settings": [],
+  "note": "EXPLORATORY addendum to the locked base-difficulty probe; does NOT change the pre-registered verdict. Characterises the geometric-grid gap (8000<K<16000) to classify the stiffness knob's degradation mechanism.",
+  "pre_registered": false,
+  "schema": "cocarry_base_probe_stiffness_boundary_exploratory/v1",
+  "seeds": [
+    70000,
+    70001,
+    70002,
+    70003,
+    70004,
+    70005,
+    70006,
+    70007,
+    70008,
+    70009,
+    70010,
+    70011
+  ]
+}
