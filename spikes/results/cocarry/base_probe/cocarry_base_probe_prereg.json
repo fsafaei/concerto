@@ -1,0 +1,88 @@
+{
+  "schema": "cocarry_base_probe_prereg/v1",
+  "stage": "Phase-2 co-carry base-difficulty probe (the cheap 'is there a hard regime?' check)",
+  "purpose": "Eval-only, no-training probe: does a HARDER co-carry regime exist where the competent hand-built MATCHED pair (cooperative-impedance ego + matched impedance partner) itself stops trivially solving the task, AND degrades for coordination reasons (graceful coordination-strain) rather than numerical blow-up? Decides between (Option 2) building the full heterogeneity test in a genuinely-hard regime and (Option 3) concluding heterogeneity is not a cooperation-breaker on co-carry-class tasks. Board-endorsed base-failure criterion (Convening R-2026-06-C). Phase-2, NON-gating; does not touch Phase-1 or the M10 gate.",
+  "governance": {
+    "no_training": true,
+    "no_residual": true,
+    "no_heterogeneity": true,
+    "matched_pair_only": "cooperative-impedance ego + matched impedance partner (the 'base' config of the Rung-5 base_robustness_control); the ONLY thing varied is task difficulty.",
+    "success_predicate_unchanged": "The frozen joint predicate (placed AND level AND unstressed AND static AND settled) is NEVER weakened. Secondary sweeps only TIGHTEN it; the artifact-vs-real test classifies failures.",
+    "eval_only": true,
+    "do_not_merge": "Founder review.",
+    "immutability": "Prior artifacts under spikes/results/** are immutable (I8); no schema bump of chamber.comm.SCHEMA_VERSION (I9) — this is a new JSON artifact type.",
+    "reuses": "Existing harness (chamber.benchmarks.cocarry_ph.build_cooperative_ego / build_partner_seat / rollout_pair), the embodiment-invariant coupling-stress instrument (chamber.envs.cocarry stress_measure='coupling'), and the existing difficulty knobs (drive_stiffness / goal radius / tilt limit). No new task class is built."
+  },
+  "provenance": {
+    "author": "fsafaei",
+    "date": "2026-06-22",
+    "base_branch": "main",
+    "adr": ["ADR-026 §Decision 1-2 (coupling-validity + the joint success predicate)", "ADR-026 §Open-questions ('Coupling stiffness is a task parameter, not a fixed constant')", "ADR-026 §Validation-criteria (re-operationalization, not an axis cut, is the corrective)"],
+    "convening": "R-2026-06-C (board base-failure criterion)",
+    "fmax_grounding": "spikes/results/cocarry/rung4c/cocarry_rung4c_eh_measurement.json (fmax_coupling_n = 365.608 = 1.25 x matched-Panda-pair coupling success-stress p99; matched pair rate at f_max = 1.0)."
+  },
+  "fixed_base_config": {
+    "condition_id": "cocarry_matched_panda_pair",
+    "ego": "cocarry_impedance (cooperative-reference ego seat; chamber.benchmarks.cocarry_ph.build_cooperative_ego)",
+    "partner": "cocarry_impedance (matched partner seat; build_partner_seat, panda_partner)",
+    "episode_length": 320,
+    "stress_measure": "coupling",
+    "fmax_coupling_n": 365.6080997467041,
+    "goal_thresh_m_frozen": 0.10,
+    "tilt_max_deg_frozen": 15.0,
+    "baseline_drive_stiffness": 8000.0,
+    "note": "On main, make_cocarry_training_env has no stress_max param (a Rung-5 addition), so the env-internal success flag gates at the wrist ceiling 130 N and is IGNORED. Success is computed POST-HOC for every setting via the pure chamber.envs.cocarry.evaluate_cocarry_success(...) on the recorded raw metrics (centroid, max_tilt, max_stress=coupling force, both_static) at the f_max above. The matched hand-built controllers ignore reward, so rollout physics are byte-identical regardless of the (unused) stress_max/penalty params."
+  },
+  "seeds": [70000, 70001, 70002, 70003, 70004, 70005, 70006, 70007, 70008, 70009, 70010, 70011],
+  "n_seeds": 12,
+  "seed_disjointness": "Disjoint from ALL prior co-carry seed sets (Rung-2 S 10000- / V 20000-, Rung-3 measurement 30000- / calibration 40000-, Rung-4 EH 50000- / 60000-, Rung-5 measurement 54000-).",
+  "sweeps": {
+    "primary_stiffness": {
+      "knob": "drive_stiffness (N/m) of the compliant freed-axis spring coupling; swept up from the K=8000 base toward rigid behaviour (K->inf approaches the rigid hard-locked weld). Damping scales at the rig's fixed 0.1 ratio.",
+      "grid": [8000.0, 16000.0, 32000.0, 64000.0, 128000.0, 256000.0, 512000.0],
+      "method": "Real rollouts of the matched pair at each K (12 seeds), recording per-step instantaneous trajectories (tilt_deg, coupling stress, centroid) for the artifact-vs-real test, plus per-episode metrics.",
+      "note": "The Rung-0..4 RIGID weld is drive_stiffness=None (a hard axis-lock, a different mechanism). This sweep stays in the compliant-spring regime and cranks K; it is NOT the rigid hard-lock."
+    },
+    "secondary_goal_radius": {
+      "knob": "goal_thresh (m) tightened in the success predicate (post-hoc re-evaluation on the K=8000 base rollouts; physics unchanged => cannot be numerically unstable).",
+      "grid": [0.10, 0.05, 0.02],
+      "fixed": {"tilt_max_deg": 15.0, "stress_max": 365.6080997467041}
+    },
+    "secondary_tilt": {
+      "knob": "tilt_max (deg) tightened in the success predicate (post-hoc re-evaluation on the K=8000 base rollouts).",
+      "grid": [15.0, 10.0, 5.0],
+      "fixed": {"goal_thresh": 0.10, "stress_max": 365.6080997467041}
+    },
+    "force_limit_variantB": {
+      "status": "NOT RUN in this probe (optional per the probe scope; keep it light). Recorded so the omission is explicit, not a silent cap."
+    }
+  },
+  "artifact_vs_real_classification": {
+    "fmax_coupling_n": 365.6080997467041,
+    "stress_artifact_multiple": 3.0,
+    "stress_artifact_n": 1096.8242992401123,
+    "tilt_artifact_deg": 60.0,
+    "rule_numerically_unstable_artifact": "A setting is NUMERICAL_ARTIFACT (over-coupling / blow-up, the Rung-4 wall) iff ANY of: (a) any non-finite (NaN/Inf) tilt or coupling stress in any episode; (b) median-over-seeds of episode-max coupling stress >= stress_artifact_n (3 x f_max = 1096.8 N -- cf the learned-incumbent fight 854-1281 N); (c) median-over-seeds of episode-max tilt >= tilt_artifact_deg (60 deg -- the bar pendulums/drops, cf single-arm 72-89 deg). Such a setting is a numerical blow-up, NEVER a 'hard regime'.",
+    "success_bands_for_stable_settings": {
+      "FEASIBLE_TRIVIAL": "success_rate >= 0.95 (base still trivially solves).",
+      "MARGINAL": "0.90 < success_rate < 0.95 (near-trivial; noted, not a band).",
+      "HARD_BUT_FEASIBLE": "0.10 <= success_rate <= 0.90 AND physics stable -- meaningfully below ~1.0 via graceful coordination-strain. THE TARGET.",
+      "STABLE_INFEASIBLE": "success_rate < 0.10 AND physics stable (bar held, predicate unmet) -- a stable hard failure, distinct from numerical blow-up; reported, but NOT a hard-but-feasible band."
+    }
+  },
+  "decision_rule": {
+    "HARD_BUT_FEASIBLE_BAND_EXISTS": "iff >= 1 setting (primary stiffness OR secondary radius/tilt) classifies HARD_BUT_FEASIBLE (graceful, success in [0.10, 0.90], physics stable). => A genuinely-hard regime exists; testing heterogeneity there is meaningful. Next step = the full Option-2 heterogeneity test in that regime, properly instrumented (diversity-trained / partner-robust incumbent + the R-2026-06-C conditions). Report the setting(s) that define the band.",
+    "NO_FEASIBLE_HARD_REGIME_VIA_THESE_KNOBS": "iff NO setting is HARD_BUT_FEASIBLE: the matched base stays >= 0.95 on every stable setting, and stiffness only ever transitions trivial -> NUMERICAL_ARTIFACT (no graceful band). => No buildable co-carry regime makes coordination strain a competent controller via these knobs -> supports concluding + reframing (a contact-rich DIFFERENT task class is a separate, bigger, gated decision -- NOT more stiffness).",
+    "report_distinction": "The synthesis MUST distinguish WHICH knob defines any band: a coupling-stiffness (physics-gets-hard) band vs a predicate-tightening (precision-tolerance) band have different implications for a downstream heterogeneity test. Both satisfy the rule, but the distinction is reported honestly.",
+    "guard": "If raising stiffness only ever yields NUMERICAL_ARTIFACT (never a graceful band), that IS the 'no feasible hard regime via stiffness' result -- report it; do not force it. Never call a numerical blow-up a 'hard regime'."
+  },
+  "repro": {
+    "driver": "scripts/repro/_cocarry_base_probe.py",
+    "shell": "scripts/repro/cocarry_base_probe.sh",
+    "command": "uv run --no-sync python scripts/repro/_cocarry_base_probe.py",
+    "outputs": [
+      "spikes/results/cocarry/base_probe/cocarry_base_probe_measurement.json",
+      "spikes/results/cocarry/base_probe/cocarry_base_probe_trajectories.json"
+    ]
+  }
+}
