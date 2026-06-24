@@ -46,6 +46,10 @@ spikes/results/*
 # spikes/results/cocarry/ are the auditable record the frozen incumbent is
 # pinned to — they MUST be committed (the manifest is pre-registration-grade).
 !spikes/results/cocarry/
+# Carve-out: the co-insert ladder's committed evidence (ADR-026 §Decision 4).
+# The S1 contact-fidelity spike artifacts under spikes/results/coinsert/ are the
+# auditable record of the migrate-vs-stay decision and MUST be committed.
+!spikes/results/coinsert/
 .local/
 sbom.spdx.json
 licences.json

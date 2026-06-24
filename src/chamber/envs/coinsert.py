@@ -126,12 +126,57 @@ COINSERT_RECEPTACLE_MASS_KG: float = 0.5
 
 #: Declared friction coefficient at the peg-socket pair. Jamming is
 #: friction-mediated, so this is a **frozen, load-bearing** parameter (the
-#: Stage-2 friction caveat makes it load-bearing). The numeric value is set at S1 from the
-#: contact-fidelity spike + oracle cross-check (SAPIEN's GPU contact-pair force
-#: excludes friction — the inter-robot wrench is read via the friction-inclusive
-#: ``get_link_incoming_joint_forces`` path); ``None`` until then so no
-#: unmeasured number is asserted.
-COINSERT_PEG_SOCKET_FRICTION: float | None = None
+#: Stage-2 friction caveat makes it load-bearing). **Declared at S1** as a
+#: single, frozen Coulomb coefficient (0.5 — a representative dry steel-on-steel
+#: assembly value; the same number is applied to BOTH the SAPIEN physical
+#: material and the MuJoCo oracle so the two sims share one declared contact
+#: model). The trustworthy force readout is the friction-inclusive
+#: ``get_link_incoming_joint_forces`` path, NOT the SAPIEN GPU contact-pair
+#: impulse (which excludes friction); the S1 spike validates that the SAPIEN
+#: signal is monotone in misalignment and agrees with the MuJoCo oracle.
+COINSERT_PEG_SOCKET_FRICTION: float = 0.5
+
+#: Socket outer half-width, metres — the receptacle is a square blind socket
+#: (four walls + a floor around a central cavity), built from convex boxes (a
+#: cavity is non-convex, so it is composed; ADR-001 §Risks wrapper-only — no
+#: mesh asset). Held only by the holder (NOT table-fixed).
+COINSERT_SOCKET_OUTER_HALF_M: float = 0.030
+
+#: Socket wall height (depth of the blind cavity), metres — deeper than
+#: :data:`COINSERT_DEPTH_TARGET_M` so the peg can seat with margin.
+COINSERT_SOCKET_DEPTH_M: float = 0.050
+
+#: Fixed world pose (xyz) of the kinematic socket in the S1 fidelity-probe rig.
+#: The socket opening points world +z (identity orientation), so the sweep
+#: drives the peg straight down in world axes; floats above the table (it is
+#: kinematic — "the holder scripted to a fixed pose").
+COINSERT_PROBE_SOCKET_XYZ: tuple[float, float, float] = (0.0, 0.0, 0.30)
+
+
+def coinsert_socket_inner_half_width(
+    clearance_m: float,
+    *,
+    peg_diameter_m: float = COINSERT_PEG_DIAMETER_M,
+) -> float:
+    """Square-socket inner half-width for a given diametral clearance (S1; ADR-026 §Decision 1).
+
+    The socket is a square cavity around a cylindrical peg; the per-side gap is
+    half the diametral ``clearance_m``, so the inner half-width is
+    ``peg_radius + clearance_m / 2``. Lateral wall contact therefore onsets at a
+    peg lateral offset of ``clearance_m / 2`` — the physically meaningful,
+    monotone difficulty knob the S1 fidelity sweep exercises. Pure Tier-1
+    function (no SAPIEN); the SAPIEN socket builder and the MuJoCo oracle both
+    derive their geometry from it so the two sims are dimensionally identical.
+
+    Args:
+        clearance_m: Diametral clearance (hole - peg), metres.
+        peg_diameter_m: Peg diameter (default :data:`COINSERT_PEG_DIAMETER_M`).
+
+    Returns:
+        The square-socket inner half-width, metres.
+    """
+    return float(peg_diameter_m) / 2.0 + float(clearance_m) / 2.0
+
 
 #: Ego control rate, Hz (the co-insert design). The control mode is
 #: :data:`COINSERT_CONTROL_MODE`.
@@ -549,8 +594,11 @@ def make_coinsert_env(
     num_envs: int = 1,
     render_mode: str | None = None,
     render_backend: str | None = None,
+    peg_clearance_m: float = COINSERT_CLEARANCE_SET_M[0],
+    peg_socket_friction: float = COINSERT_PEG_SOCKET_FRICTION,
+    fidelity_probe: bool = False,
 ) -> gym.Env[Any, Any]:
-    """Build a :class:`CoInsertEnv` instance (S0 skeleton; ADR-026 §Decision 1-4).
+    """Build a :class:`CoInsertEnv` instance (ADR-026 §Decision 1-4).
 
     Factory entry point. SAPIEN / ManiSkill imports are deferred to the body so
     ``python -c "import chamber.envs.coinsert"`` works on a Vulkan-less host
@@ -558,12 +606,15 @@ def make_coinsert_env(
     factory body — the same pattern as
     :func:`chamber.envs.cocarry.make_cocarry_env`.
 
-    **S0 scope:** scene (table + peg welded to the ego inserter + free
-    receptacle welded to the holder + goal site), spaces, deterministic reset,
-    and a **stubbed** :meth:`evaluate` / reward. There is **no contact logic
-    yet** — the blind-socket cavity, the chamfer, the clearance contact, the
-    friction-inclusive force readout, and the workpiece-frame interaction-wrench
-    instrument land at S1; the structured base inserter + reward land at S2.
+    **S1 scope:** the receptacle is now a real **blind square socket** (four
+    walls + a floor around a cavity sized by ``peg_clearance_m``, composed from
+    convex boxes — ADR-001 §Risks, no mesh asset) with a declared, frozen
+    **friction** material on the peg-socket pair (jamming is friction-mediated).
+    The trustworthy cooperation-cost readout is the friction-inclusive
+    workpiece-frame interaction wrench via the holder articulation's
+    ``get_link_incoming_joint_forces`` (NOT the SAPIEN GPU contact-pair impulse,
+    which excludes friction). Reward / success contact logic + the structured
+    base inserter remain S2 work; ``evaluate`` stays stubbed.
 
     Args:
         condition_id: ``"coinsert_matched_reference"`` (the matched reference
@@ -577,6 +628,16 @@ def make_coinsert_env(
         render_mode: ManiSkill ``render_mode`` (``None`` disables).
         render_backend: ManiSkill ``render_backend``; ``"none"`` enables the
             headless URDF-material strip.
+        peg_clearance_m: Diametral socket clearance (hole - peg), metres; one of
+            :data:`COINSERT_CLEARANCE_SET_M` (default the loosest, 1.0 mm).
+        peg_socket_friction: Coulomb friction on the peg-socket pair (default
+            :data:`COINSERT_PEG_SOCKET_FRICTION`).
+        fidelity_probe: When ``True``, build the **S1 contact-fidelity probe**
+            rig: the ego is retracted and the peg is a **kinematic** body the
+            caller poses directly (``set_peg_pose``) while the holder holds the
+            socket at a fixed pose — a controlled lateral-misalignment sweep that
+            isolates the peg-socket contact for the SAPIEN-vs-oracle check.
+            ``False`` (default) keeps the peg welded to the ego inserter.
 
     Returns:
         A :class:`CoInsertEnv` ready to ``reset(seed=K)``.
@@ -637,10 +698,15 @@ def make_coinsert_env(
             self._root_seed: int = int(root_seed)
             self._single_inserter: bool = config.single_inserter
             self._partner_uid: str = config.agent_uids[1]
+            self._clearance_m: float = float(peg_clearance_m)
+            self._socket_inner_half: float = coinsert_socket_inner_half_width(self._clearance_m)
+            self._friction: float = float(peg_socket_friction)
+            self._fidelity_probe: bool = bool(fidelity_probe)
             self._rng: np.random.Generator = derive_substream(
                 _SUBSTREAM_NAME, root_seed=self._root_seed
             ).default_rng()
             self._drives: list[Any] = []
+            self._hand_link_index_by_uid: dict[str, int] = {}
             self._goal_xyz: NDArray[np.float64] = np.zeros((num_envs, 3), dtype=np.float64)
             try:
                 super().__init__(
@@ -692,54 +758,82 @@ def make_coinsert_env(
             )
 
         def _load_scene(self, options: dict[str, Any]) -> None:
-            """Build table + peg (on the inserter) + free receptacle (on the holder) + goal.
+            """Build table + peg + blind-socket receptacle + goal, with frozen friction (S1).
 
-            **S0 skeleton scene only.** The peg is a placeholder cylinder welded
-            rigidly into the ego inserter's gripper; the receptacle is a
-            placeholder block welded to the holder's gripper (free-floating —
-            NOT fixed to the table — the two-robot-necessity choice).
-            The **blind-socket cavity, the chamfer lead-in, the graded
-            clearance, and all peg-socket contact** are deliberately deferred to
-            S1 (the contact-fidelity spike) — this method stands up the bodies
-            and the welds so the scene constructs and resets; it does not model
-            the insertion contact. The welds are specified in each body's
-            **local** grip frame so they hold across arm configurations (the
-            co-carry dual-hold pattern).
+            **S1 contact scene.** The receptacle is a real **blind square
+            socket** — four walls + a floor around a central cavity of inner
+            half-width :func:`coinsert_socket_inner_half_width` (sized by the
+            diametral clearance), composed from convex boxes because a cavity is
+            non-convex (ADR-001 §Risks: wrapper-only, no mesh asset). A declared,
+            frozen Coulomb friction material is applied to the peg and the socket
+            (jamming is friction-mediated). The peg is a cylinder; it is welded
+            to the ego inserter in the normal rig, or built **kinematic** in the
+            :data:`fidelity_probe` rig so the S1 sweep poses it directly while
+            the holder holds the socket at a fixed pose.
             """
             del options
             self.table_scene = TableSceneBuilder(self)
             self.table_scene.build()
 
-            # Peg: placeholder cylinder (diameter COINSERT_PEG_DIAMETER_M). The
-            # true peg-tip + chamfered socket geometry is an S1 deliverable.
+            # Frozen Coulomb friction material shared by the peg + socket pair —
+            # the same coefficient handed to the MuJoCo oracle (one declared
+            # contact model across both sims). Restitution 0 (quasi-static).
+            contact_mat = sapien.physx.PhysxMaterial(self._friction, self._friction, 0.0)
+
+            # Peg: a square-section box whose long axis is local +z (so it drops
+            # straight into the +z socket opening). A box peg in a square socket
+            # gives flat-face wall contact — numerically stable in both sims and
+            # free of the corner-wedging a cylinder-in-square cavity suffers
+            # (SAPIEN cylinder primitives also lie along local x, not z). The
+            # probe rig uses a SHORT peg (half-length ~0.4x the cavity depth) so a
+            # shallow lateral press engages the WALLS without bottoming on the
+            # floor; the welded rig uses the full peg.
             peg_radius = COINSERT_PEG_DIAMETER_M / 2.0
-            peg_half_len = COINSERT_DEPTH_TARGET_M  # generous; refined at S1
+            peg_half_len = (
+                0.4 * COINSERT_SOCKET_DEPTH_M if self._fidelity_probe else COINSERT_DEPTH_TARGET_M
+            )
+            self._peg_half_len: float = peg_half_len
+            peg_half = (peg_radius, peg_radius, peg_half_len)
             peg_builder = self.scene.create_actor_builder()
-            peg_builder.add_cylinder_collision(radius=peg_radius, half_length=peg_half_len)
-            peg_builder.add_cylinder_visual(
-                radius=peg_radius,
-                half_length=peg_half_len,
+            # The probe peg gets a high density (real inertia) so a contact
+            # impulse does not fling the near-massless body out of the socket
+            # (numerical ejection); the welded rig uses the default density.
+            peg_density = 8000.0 if self._fidelity_probe else 1000.0
+            peg_builder.add_box_collision(
+                half_size=peg_half,  # type: ignore[arg-type]
+                material=contact_mat,
+                density=peg_density,
+            )
+            peg_builder.add_box_visual(
+                half_size=peg_half,  # type: ignore[arg-type]
                 material=sapien.render.RenderMaterial(base_color=[0.30, 0.30, 0.35, 1.0]),
             )
-            peg_builder.initial_pose = sapien.Pose(p=[-_BASE_X_M + 0.2, 0.0, 0.2])  # type: ignore[assignment]
+            peg_builder.initial_pose = sapien.Pose(p=[-_BASE_X_M + 0.2, 0.0, 0.3])  # type: ignore[assignment]
+            if self._fidelity_probe:
+                # Kinematic peg: the sweep teleports it to a controlled lateral
+                # penetration and reads the resulting peg-socket contact force.
+                peg_builder.set_physx_body_type("kinematic")
             self.peg = peg_builder.build(name="coinsert_peg")
 
-            # Receptacle: placeholder block of mass COINSERT_RECEPTACLE_MASS_KG,
-            # FREE (held only by the holder). The blind socket cavity is added
-            # at S1.
-            recep_half = [0.04, 0.04, 0.04]
-            recep_volume = (2 * recep_half[0]) * (2 * recep_half[1]) * (2 * recep_half[2])
-            recep_builder = self.scene.create_actor_builder()
-            recep_builder.add_box_collision(
-                half_size=recep_half,  # type: ignore[arg-type]
-                density=COINSERT_RECEPTACLE_MASS_KG / recep_volume,
-            )
-            recep_builder.add_box_visual(
-                half_size=recep_half,  # type: ignore[arg-type]
-                material=sapien.render.RenderMaterial(base_color=[0.55, 0.42, 0.20, 1.0]),
-            )
-            recep_builder.initial_pose = sapien.Pose(p=[_BASE_X_M - 0.2, 0.0, 0.2])  # type: ignore[assignment]
-            self.receptacle = recep_builder.build(name="coinsert_receptacle")
+            # Receptacle: a blind square socket (4 walls + floor). In the normal
+            # rig it is FREE (held only by the holder). In the fidelity-probe rig
+            # it is KINEMATIC at a fixed pose ("holder scripted to a fixed pose"
+            # — the socket is held immovable so the peg-socket contact is read
+            # cleanly off the peg drive, free of holder-arm dynamics). The cavity
+            # opens at the actor +z; the peg descends into it.
+            # Normal rig: free dynamic socket (held by the holder). Probe rig:
+            # a DYNAMIC socket rigidly welded to a fixed kinematic anchor — it
+            # stays put ("holder scripted to a fixed pose") yet, being dynamic,
+            # generates contacts against the kinematic peg (SAPIEN computes NO
+            # contact between two kinematic bodies, so the socket cannot also be
+            # kinematic).
+            self.receptacle = self._build_socket_receptacle(contact_mat, kinematic=False)
+            self._socket_anchor = None
+            if self._fidelity_probe:
+                anchor_builder = self.scene.create_actor_builder()
+                anchor_builder.initial_pose = sapien.Pose(p=list(COINSERT_PROBE_SOCKET_XYZ))  # type: ignore[assignment]
+                anchor_builder.set_physx_body_type("kinematic")
+                self._socket_anchor = anchor_builder.build(name="coinsert_socket_anchor")
 
             self.goal_site = actors.build_sphere(
                 self.scene,
@@ -752,14 +846,81 @@ def make_coinsert_env(
             )
             self._hidden_objects.append(self.goal_site)  # type: ignore[attr-defined]
 
-            # Welds: peg → ego inserter gripper (always); receptacle → holder
-            # gripper (only when the holder participates — the single-inserter
-            # positive control leaves the receptacle unheld so a lone inserter
-            # has nothing to stabilise the socket; positive control 1).
+            # Cache the holder's wrist-link index for the friction-inclusive
+            # interaction-wrench instrument (get_link_incoming_joint_forces).
+            self._hand_link_index_by_uid = {}
+            for uid in self.robot_uids:  # type: ignore[union-attr]
+                links = self.agent.agents_dict[uid].robot.links  # type: ignore[attr-defined]
+                self._hand_link_index_by_uid[uid] = [ln.name for ln in links].index(_HAND_LINK_NAME)
+
+            # Welds. Probe rig welds nothing (kinematic peg + kinematic socket,
+            # both posed directly by the sweep). Normal rig: peg → ego inserter;
+            # socket → holder (unless the single-inserter positive control, which
+            # leaves the socket unheld so a lone inserter cannot stabilise it).
             self._drives = []
-            self._add_weld(_EGO_UID, self.peg)
-            if not self._single_inserter:
-                self._add_weld(self._partner_uid, self.receptacle)
+            if self._fidelity_probe:
+                # Rigid-weld the dynamic socket to the fixed kinematic anchor so
+                # it holds its pose; the contact-pair impulse against the
+                # kinematic peg is then the clean fidelity signal.
+                assert self._socket_anchor is not None  # noqa: S101 - built above in probe mode
+                drive = self.scene.create_drive(
+                    self._socket_anchor, sapien.Pose(), self.receptacle, sapien.Pose()
+                )
+                for axis in ("x", "y", "z"):
+                    getattr(drive, f"set_drive_property_{axis}")(2.0e5, 2.0e4)
+                    getattr(drive, f"set_limit_{axis}")(0.0, 0.0)
+                self._drives.append(drive)
+            else:
+                self._add_weld(_EGO_UID, self.peg)
+                if not self._single_inserter:
+                    self._add_weld(self._partner_uid, self.receptacle)
+
+        def _build_socket_receptacle(
+            self,
+            contact_mat: Any,  # noqa: ANN401 - sapien material
+            *,
+            kinematic: bool = False,
+        ) -> Any:  # noqa: ANN401 - sapien actor
+            """Compose a blind square socket from convex boxes (S1; ADR-001 §Risks).
+
+            Four walls + a floor enclose a central cavity of inner half-width
+            :attr:`_socket_inner_half` (a cavity is non-convex, so it is built
+            from convex primitives — no mesh asset). The cavity opens at +z and
+            descends ``COINSERT_SOCKET_DEPTH_M``; the floor caps it (a *blind*
+            socket). Friction is applied to every wall + floor collision.
+            ``kinematic=True`` (the fidelity-probe rig) fixes the socket immovable
+            so the contact reads cleanly off the peg drive.
+            """
+            w_in = self._socket_inner_half
+            w_out = COINSERT_SOCKET_OUTER_HALF_M
+            depth = COINSERT_SOCKET_DEPTH_M
+            t_floor = 0.010
+            wall = (w_out - w_in) / 2.0  # half-thickness of each wall slab
+            # (half_size, center) for floor + 4 walls in the actor's local frame.
+            boxes: list[tuple[list[float], list[float]]] = [
+                ([w_out, w_out, t_floor / 2.0], [0.0, 0.0, -depth - t_floor / 2.0]),
+                ([wall, w_out, depth / 2.0], [w_in + wall, 0.0, -depth / 2.0]),
+                ([wall, w_out, depth / 2.0], [-(w_in + wall), 0.0, -depth / 2.0]),
+                ([w_in, wall, depth / 2.0], [0.0, w_in + wall, -depth / 2.0]),
+                ([w_in, wall, depth / 2.0], [0.0, -(w_in + wall), -depth / 2.0]),
+            ]
+            volume = sum(8.0 * h[0] * h[1] * h[2] for h, _ in boxes)
+            density = COINSERT_RECEPTACLE_MASS_KG / volume
+            builder = self.scene.create_actor_builder()
+            colour = sapien.render.RenderMaterial(base_color=[0.55, 0.42, 0.20, 1.0])
+            for half, centre in boxes:
+                pose = sapien.Pose(p=centre)
+                builder.add_box_collision(
+                    pose=pose,
+                    half_size=tuple(half),  # type: ignore[arg-type]
+                    material=contact_mat,
+                    density=density,
+                )
+                builder.add_box_visual(pose=pose, half_size=tuple(half), material=colour)  # type: ignore[arg-type]
+            builder.initial_pose = sapien.Pose(p=[_BASE_X_M - 0.2, 0.0, 0.3])  # type: ignore[assignment]
+            if kinematic:
+                builder.set_physx_body_type("kinematic")
+            return builder.build(name="coinsert_receptacle")
 
         def _add_weld(self, uid: str, body: Any) -> None:  # noqa: ANN401 - sapien actor
             """Rigidly weld a held body into a gripper grip frame (ADR-026; co-carry pattern).
@@ -794,17 +955,49 @@ def make_coinsert_env(
                 b = len(env_idx)
                 self.table_scene.initialize(env_idx)
                 for uid in self.robot_uids:  # type: ignore[union-attr]
-                    if uid == self._partner_uid and self._single_inserter:
-                        ready = _PANDA_RETRACTED_QPOS
-                    else:
-                        ready = _PANDA_READY_QPOS
+                    # Retract the holder for the single-inserter positive
+                    # control, and retract the EGO in the fidelity-probe rig (the
+                    # peg is kinematic there, posed by the sweep — the ego is not
+                    # involved). Everyone else holds the ready pose.
+                    retract_holder = uid == self._partner_uid and self._single_inserter
+                    retract_ego = uid == _EGO_UID and self._fidelity_probe
+                    ready = (
+                        _PANDA_RETRACTED_QPOS
+                        if (retract_holder or retract_ego)
+                        else _PANDA_READY_QPOS
+                    )
                     qpos = torch.from_numpy(np.tile(ready, (b, 1)).astype(np.float32)).to(
                         self.device
                     )
                     self.agent.agents_dict[uid].reset(qpos)  # type: ignore[attr-defined]
 
+                if self._fidelity_probe:
+                    # Probe rig: fix the KINEMATIC socket at a known world pose
+                    # with the opening pointing world +z (identity orientation),
+                    # so the sweep teleports the kinematic peg straight down in
+                    # world axes — no holder-arm dynamics in the contact reading.
+                    # Park the peg above the opening.
+                    socket = torch.tensor(
+                        COINSERT_PROBE_SOCKET_XYZ, dtype=torch.float32, device=self.device
+                    ).reshape(1, 3)
+                    self.receptacle.set_pose(Pose.create_from_pq(socket.expand(b, 3)))
+                    above = socket + torch.tensor([0.0, 0.0, 0.10], device=self.device)
+                    self.peg.set_pose(Pose.create_from_pq(above.expand(b, 3)))
+                elif not self._single_inserter:
+                    # Normal rig: warm-start the socket AT the holder grip frame so
+                    # the weld starts at ~zero stress (the co-carry zero-initial-
+                    # stress discipline — a socket initialised away from the grip
+                    # frame would make the weld yank it in with a large preload).
+                    hand = self.agent.agents_dict[self._partner_uid].robot.links_map[  # type: ignore[attr-defined]
+                        _HAND_LINK_NAME
+                    ]
+                    grip = hand.pose * Pose.create_from_pq(
+                        p=torch.tensor([0.0, 0.0, _GRIP_OFFSET_Z_M], device=self.device)
+                    )
+                    self.receptacle.set_pose(grip)
+
                 # Placeholder goal (the seated socket pose); refined at S2 once
-                # the contact geometry exists. Tiny P6 jitter for a
+                # the success contact logic exists. Tiny P6 jitter for a
                 # non-degenerate distribution.
                 jitter = self._rng.uniform(-0.01, 0.01, size=(b, 3))
                 goal = np.array([0.0, 0.0, 0.2], dtype=np.float64)[None, :] + jitter
@@ -868,6 +1061,84 @@ def make_coinsert_env(
 
             return _torch.zeros(self.peg.pose.p.shape[0], device=self.device)
 
+        # ----- S1 contact instrument + fidelity-probe rig -----
+
+        def workpiece_interaction_wrench(self) -> Any:  # noqa: ANN401 - torch.Tensor
+            """Friction-inclusive workpiece-frame interaction-wrench magnitude, N (S1; ADR-026).
+
+            The embodiment-invariant cooperation-cost signal: the holder
+            articulation's wrist (``panda_hand``) **incoming joint force** read
+            via ``get_link_incoming_joint_forces`` — the full reduced-coordinate
+            solver force, which IS friction-inclusive (unlike the SAPIEN GPU
+            contact-pair impulse, which excludes friction; the Stage-2 friction
+            caveat). This is the proven co-carry instrument generalised to the
+            held workpiece: the force the peg transmits through the socket to the
+            holder. Returns the linear-force norm per env (frame-invariant
+            magnitude). The S1 fidelity sweep subtracts the no-contact baseline
+            to isolate the contact-attributable interaction force, and validates
+            it is monotone in misalignment and agrees with the MuJoCo oracle.
+            """
+            import torch as _torch
+
+            robot = self.agent.agents_dict[self._partner_uid].robot  # type: ignore[attr-defined]
+            forces = robot.get_link_incoming_joint_forces()  # (b, n_links, 6)
+            idx = self._hand_link_index_by_uid[self._partner_uid]
+            return _torch.linalg.norm(forces[:, idx, :3], axis=1)
+
+        def peg_socket_contact_force(self) -> float:
+            """Peg-socket contact-force magnitude, N (S1 fidelity signal; ADR-026 §Decision 1).
+
+            Sums the SAPIEN contact-pair impulses between the peg and the socket
+            and divides by the PhysX timestep to get a force. For the S1
+            lateral-misalignment sweep the contact is a peg face pressing a socket
+            **wall** — a NORMAL contact, so the friction-excluded contact-pair
+            impulse (SAPIEN issue #281) captures the lateral force faithfully
+            (friction here is tangential / vertical, not lateral). The friction
+            caveat bites the axial jam force, which the experiment's
+            cooperation-cost instrument (:meth:`workpiece_interaction_wrench`,
+            the friction-inclusive joint force) covers; the S1 spike compares
+            this contact force against the MuJoCo oracle's native contact sensor.
+            Returns 0.0 when there is no peg-socket contact.
+            """
+            import torch as _torch
+
+            impulses = self.scene.get_pairwise_contact_impulses(self.peg, self.receptacle)  # type: ignore[attr-defined]
+            imp = _torch.as_tensor(impulses)
+            return float(_torch.linalg.norm(imp).item()) / float(self.sim_timestep)
+
+        def set_peg_pose(self, xyz: Any, quat_wxyz: Any) -> None:  # noqa: ANN401 - array-like
+            """Teleport the kinematic probe peg (S1 fidelity-probe rig only; ADR-026 §Decision 1).
+
+            Only valid when the env was built with ``fidelity_probe=True`` (the
+            peg is a kinematic body). The S1 sweep teleports the peg to a
+            controlled lateral penetration into the fixed socket wall and reads
+            the resulting :meth:`peg_socket_contact_force`. A kinematic peg holds
+            its commanded pose exactly, so the lateral offset (and hence the wall
+            penetration) is set precisely — the cleanest controllable contact for
+            the SAPIEN-vs-oracle fidelity comparison.
+            """
+            import torch as _torch
+            from mani_skill.utils.structs.pose import Pose as _Pose
+
+            if not self._fidelity_probe:
+                msg = "set_peg_pose requires fidelity_probe=True (the peg is welded otherwise)."
+                raise RuntimeError(msg)
+            p = _torch.from_numpy(np.asarray(xyz, dtype=np.float32).reshape(-1, 3)).to(self.device)
+            q = _torch.from_numpy(np.asarray(quat_wxyz, dtype=np.float32).reshape(-1, 4)).to(
+                self.device
+            )
+            self.peg.set_pose(_Pose.create_from_pq(p, q))
+
+        @property
+        def socket_inner_half_width(self) -> float:
+            """Square-socket inner half-width, metres (S1; ADR-026 §Decision 1)."""
+            return self._socket_inner_half
+
+        @property
+        def peg_clearance_m(self) -> float:
+            """The diametral socket clearance this env was built with (S1; ADR-026 §Decision 1)."""
+            return self._clearance_m
+
         # ----- Public read-only API -----
 
         @property
@@ -912,11 +1183,15 @@ __all__ = [
     "COINSERT_GATE0_BASE_FAILURE_MAX",
     "COINSERT_N_BOOT",
     "COINSERT_PEG_DIAMETER_M",
+    "COINSERT_PEG_SOCKET_FRICTION",
     "COINSERT_RECEPTACLE_MASS_KG",
     "COINSERT_REFERENCE_SUCCESS_MIN",
+    "COINSERT_SOCKET_DEPTH_M",
+    "COINSERT_SOCKET_OUTER_HALF_M",
     "CoInsertCondition",
     "coinsert_capability_gate_floor",
     "coinsert_realism_compliance_line",
+    "coinsert_socket_inner_half_width",
     "evaluate_coinsert_success",
     "make_coinsert_env",
     "resolve_coinsert_condition",

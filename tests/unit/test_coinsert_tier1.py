@@ -41,11 +41,13 @@ from chamber.envs.coinsert import (
     COINSERT_INSERT_FORCE_MAX_N,
     COINSERT_N_BOOT,
     COINSERT_PEG_DIAMETER_M,
+    COINSERT_PEG_SOCKET_FRICTION,
     COINSERT_RECEPTACLE_MASS_KG,
     COINSERT_REFERENCE_SUCCESS_MIN,
     CoInsertCondition,
     coinsert_capability_gate_floor,
     coinsert_realism_compliance_line,
+    coinsert_socket_inner_half_width,
     evaluate_coinsert_success,
     resolve_coinsert_condition,
 )
@@ -227,3 +229,44 @@ class TestFrozenableConstants:
         # at S0 (the co-insert design).
         assert COINSERT_INSERT_FORCE_MAX_N is None
         assert COINSERT_COUPLE_FORCE_MAX_N is None
+
+
+class TestSocketGeometry:
+    """S1 socket geometry helper (ADR-026 §Decision 1; ADR-005)."""
+
+    def test_inner_half_is_peg_radius_plus_half_clearance(self) -> None:
+        # The square-socket per-side gap is half the diametral clearance, so
+        # lateral wall contact onsets at a peg offset of clearance/2.
+        r = COINSERT_PEG_DIAMETER_M / 2.0
+        for clearance in COINSERT_CLEARANCE_SET_M:
+            assert coinsert_socket_inner_half_width(clearance) == pytest.approx(r + clearance / 2.0)
+
+    def test_inner_half_is_monotone_in_clearance(self) -> None:
+        widths = [coinsert_socket_inner_half_width(c) for c in (0.2e-3, 0.5e-3, 1.0e-3)]
+        assert widths[0] < widths[1] < widths[2]
+
+    def test_friction_is_declared_frozen_value(self) -> None:
+        # Declared at S1 (was a None placeholder at S0); a positive Coulomb value.
+        assert isinstance(COINSERT_PEG_SOCKET_FRICTION, float)
+        assert COINSERT_PEG_SOCKET_FRICTION > 0.0
+
+
+class TestMujocoOracleMjcf:
+    """The MuJoCo oracle MJCF builder is a pure string (ADR-005; ADR-026 §D4)."""
+
+    def test_mjcf_encodes_clearance_and_friction(self) -> None:
+        # build_mjcf is a pure string builder (no MuJoCo import), so it is
+        # Tier-1-testable; the clearance sizes the socket inner half-width and
+        # the frozen friction appears on the geoms.
+        from scripts.repro._coinsert_s1_mujoco_oracle import (  # type: ignore[import-not-found]
+            build_mjcf,
+        )
+
+        xml = build_mjcf(1.0e-3)
+        assert "<mujoco" in xml
+        assert "peg" in xml
+        assert "wall_px" in xml
+        assert "floor" in xml
+        assert str(COINSERT_PEG_SOCKET_FRICTION) in xml
+        # Tighter clearance ⇒ smaller inner half-width ⇒ different wall geometry.
+        assert build_mjcf(0.2e-3) != build_mjcf(1.0e-3)

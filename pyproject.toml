@@ -119,6 +119,16 @@ dev = [
   "pip-licenses>=4.0", "cyclonedx-bom>=4.0",
 ]
 
+# Contact-fidelity oracle (dev-only; NOT a runtime dependency of the wheel).
+# MuJoCo is the high-fidelity contact engine used as the second independent
+# line for the co-insert contact-force validation — a two-touchpoint tool (the
+# S1 fidelity check + the S6 re-score), not a maintained parallel stack. MuJoCo
+# is Apache-2.0 (ADR-012-compatible). The chamber/concerto import surface never
+# depends on it; only the committed repro generators under scripts/repro/ do.
+oracle = [
+  "mujoco>=3.1",
+]
+
 # harl-aht ships to TestPyPI for the v0.x release line (mirrors
 # concerto-multirobot's own TestPyPI-for-v0.x policy in the release
 # workflow). Promote to real PyPI at v1.x; this block goes away
