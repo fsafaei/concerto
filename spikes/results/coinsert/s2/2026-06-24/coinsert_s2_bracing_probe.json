@@ -1,0 +1,104 @@
+{
+  "below_hold_braces_but_over_constrains": {
+    "braces": "socket-z holds (no drag) \u2014 the below-hold resists the axial reaction in compression",
+    "over_constrains": "every span shows a large zero-action wrist preload + socket tilt \u2192 peg cannot engage",
+    "spans": [
+      {
+        "anchor_span_mm": 20.0,
+        "socket_openup_tilt_deg": 45.0,
+        "socket_z_held_m": 0.2955,
+        "zero_action_wrist_preload_n": 573.0
+      },
+      {
+        "anchor_span_mm": 40.0,
+        "socket_openup_tilt_deg": 33.5,
+        "socket_z_held_m": 0.3003,
+        "zero_action_wrist_preload_n": 1014.0
+      },
+      {
+        "anchor_span_mm": 60.0,
+        "socket_openup_tilt_deg": 29.1,
+        "socket_z_held_m": 0.3008,
+        "zero_action_wrist_preload_n": 1195.0
+      },
+      {
+        "anchor_span_mm": 100.0,
+        "socket_openup_tilt_deg": 22.0,
+        "socket_z_held_m": 0.298,
+        "zero_action_wrist_preload_n": 1306.0
+      }
+    ],
+    "weld_arm_m": 0.088
+  },
+  "design": {
+    "below_hold": "holder hand moved below+beside the socket to brace the axial reaction in compression",
+    "clearance_m": 0.001,
+    "episode_length": 320,
+    "force_cut": "inserter descend_step 0.006 (ram) vs 0.002 (force-guided)",
+    "friction": 0.5,
+    "seeds": [
+      0,
+      1,
+      2
+    ]
+  },
+  "force_cut": {
+    "finding": "softening the press cuts the peak forces substantially (the 32 mm wedge was a brute-force ram)",
+    "force_guided": {
+      "depth_mm_max": 30.7,
+      "peak_couple_wrench_n": 92.2,
+      "peak_insert_force_n": 61.5
+    },
+    "ram": {
+      "depth_mm_max": 33.9,
+      "peak_couple_wrench_n": 515.7,
+      "peak_insert_force_n": 87.8
+    }
+  },
+  "honesty_statement": "Numbers are the committed probe output; no value is hand-entered. The below-hold sweep PATCHES the holder geometry module constants to characterise an alternate configuration (not the shipped default); the matched-pair rollouts use the shipped env + controllers unchanged. The matched pair does NOT seat (\u22650.9 precondition not met) \u2014 so the Gate-D / capability-gate / force-limit / oracle-calibration measurements are NOT run; this slice stops at the force-trust blocker, as pre-committed.",
+  "lateral_hold_drag": {
+    "any_seated": false,
+    "assembly_sink_mm_max": 209.6,
+    "finding": "even at the reduced force the clean-weld lateral bracket hold cannot brace the axial reaction \u2014 the FREE assembly drags down and the peg seats only part-way",
+    "per_seed": [
+      {
+        "align_deg": 1.1,
+        "assembly_sink_mm": 209.6,
+        "depth_mm": 30.7,
+        "peak_couple_wrench_n": 92.2,
+        "peak_insert_force_n": 61.5,
+        "seated": false,
+        "seed": 0,
+        "socket_z_end_m": 0.061,
+        "socket_z_start_m": 0.2706
+      },
+      {
+        "align_deg": 1.1,
+        "assembly_sink_mm": 209.6,
+        "depth_mm": 30.7,
+        "peak_couple_wrench_n": 92.2,
+        "peak_insert_force_n": 61.5,
+        "seated": false,
+        "seed": 1,
+        "socket_z_end_m": 0.061,
+        "socket_z_start_m": 0.2706
+      },
+      {
+        "align_deg": 1.1,
+        "assembly_sink_mm": 209.6,
+        "depth_mm": 30.7,
+        "peak_couple_wrench_n": 92.2,
+        "peak_insert_force_n": 61.5,
+        "seated": false,
+        "seed": 2,
+        "socket_z_end_m": 0.061,
+        "socket_z_start_m": 0.2706
+      }
+    ]
+  },
+  "purpose": "After the founder S2 assembly-drag ruling (take the bracing path: cut the insertion force, then hold so the reference resists the reaction; active raise-to-meet mating is construct-invalid). Establish whether a competent BRACING cooperative hold can seat the peg within SAPIEN's drive-weld limits.",
+  "rationale": "No SAPIEN drive-weld hold both braces the axial insertion reaction AND holds the socket orientation without over-constraint: the only cleanly-representable weld (the long lateral bracket, align ~1\u00b0) cannot brace (the assembly drags), while the hand-below-socket hold that DOES brace over-constrains the drive-weld at every anchor span (large zero-action wrist preload + socket tilt) so the peg cannot engage. This is a sim / force-trust blocker (the drive-weld cannot represent an axial-load-bearing cooperative grasp), NOT a Gate-D task finding (which is reserved for a clean, competent, FREE hold that still cannot seat). Per the Stage-2 \u00a77 escalation it triggers the founder decision between the pre-committed S1b MuJoCo migrate path and an honest close; it is NOT resolved with active raise-to-meet mating (construct-invalid).",
+  "schema": "coinsert_s2_bracing_probe/v1",
+  "stage": "S2 \u2014 bracing path + SAPIEN constraint-fidelity check",
+  "verdict": "SAPIEN_CONSTRAINT_FIDELITY_WALL"
+}

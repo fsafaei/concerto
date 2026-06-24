@@ -176,6 +176,72 @@ class PandaJacobianProvider:
         pos = mat[0, :CARTESIAN_POSITION_DIM, 3].detach().cpu().numpy()
         return np.ascontiguousarray(pos, dtype=np.float64)
 
+    def fk_tcp_rotation(self, qpos_arm: NDArray[np.floating]) -> NDArray[np.float64]:
+        """Forward-kinematics TCP rotation matrix in the base frame (ADR-026 §Decision 1; ADR-004).
+
+        Companion to :meth:`fk_tcp_position`: the 3x3 orientation of
+        :attr:`ee_link` in the panda base frame at ``qpos_arm``. Consumed by the
+        co-insert controllers (:mod:`chamber.partners.coinsert_impedance`), which
+        hold the gripper orientation fixed (so the welded peg / socket cannot
+        tip under the insertion contact torque) — the 6-DOF orientation-hold
+        term the 3x7 linear slice cannot express.
+
+        Args:
+            qpos_arm: Joint-angle vector for the 7 panda arm joints, shape ``(7,)``.
+
+        Returns:
+            TCP rotation matrix in the base frame, shape ``(3, 3)``, dtype ``float64``.
+
+        Raises:
+            ValueError: If ``qpos_arm`` shape mismatches ``(7,)``.
+        """
+        import torch
+
+        q = np.asarray(qpos_arm, dtype=np.float32)
+        if q.shape != (PANDA_ARM_DOF,):
+            msg = (
+                f"PandaJacobianProvider.fk_tcp_rotation: qpos_arm shape {q.shape} "
+                f"mismatches expected ({PANDA_ARM_DOF},) for the 7-DOF Panda chain."
+            )
+            raise ValueError(msg)
+        q_torch = torch.from_numpy(q).unsqueeze(0)
+        mat = self._chain.forward_kinematics(q_torch).get_matrix()  # type: ignore[union-attr]
+        rot = mat[0, :CARTESIAN_POSITION_DIM, :CARTESIAN_POSITION_DIM].detach().cpu().numpy()
+        return np.ascontiguousarray(rot, dtype=np.float64)
+
+    def jacobian_6x7(self, qpos_arm: NDArray[np.floating]) -> NDArray[np.float64]:
+        """Full 6x7 SE(3) end-effector Jacobian at ``qpos_arm`` (ADR-026 §Decision 1; ADR-004).
+
+        The linear (rows 0:3) AND angular (rows 3:6) parts of the base-frame
+        end-effector Jacobian. The safety stack consumes only the 3x7 linear
+        slice (:meth:`__call__`; ADR-004 §Decision — the pairwise distance
+        barrier is orientation-free); this full Jacobian is for the co-insert
+        controllers' 6-DOF orientation-hold step (:mod:`chamber.partners.
+        coinsert_impedance`), which the linear slice cannot express. Same cached
+        ``pytorch_kinematics`` chain; no safety-contract change.
+
+        Args:
+            qpos_arm: Joint-angle vector for the 7 panda arm joints, shape ``(7,)``.
+
+        Returns:
+            The 6x7 Jacobian, shape ``(6, 7)``, dtype ``float64``.
+
+        Raises:
+            ValueError: If ``qpos_arm`` shape mismatches ``(7,)``.
+        """
+        import torch
+
+        q = np.asarray(qpos_arm, dtype=np.float32)
+        if q.shape != (PANDA_ARM_DOF,):
+            msg = (
+                f"PandaJacobianProvider.jacobian_6x7: qpos_arm shape {q.shape} "
+                f"mismatches expected ({PANDA_ARM_DOF},) for the 7-DOF Panda chain."
+            )
+            raise ValueError(msg)
+        q_torch = torch.from_numpy(q).unsqueeze(0)
+        jac_6x7 = self._chain.jacobian(q_torch)[0].detach().cpu().numpy()
+        return np.ascontiguousarray(jac_6x7, dtype=np.float64)
+
     def __call__(
         self,
         snap: AgentSnapshot,
