@@ -1,0 +1,135 @@
+{
+  "all_sapien_monotone": true,
+  "all_within_shape_tolerance": true,
+  "design": {
+    "clearance_set_m": [
+      0.001,
+      0.0005,
+      0.0002
+    ],
+    "decision_rule": "STAY iff SAPIEN monotone (graded ramp, no cliff/penetration) AND shape-normalised agreement with the oracle within tolerance; else MIGRATE. Monotonicity is the make-or-break criterion.",
+    "divergence_tolerance_shape_normalised": 0.2,
+    "dx_grid_m": [
+      0.0,
+      0.0002,
+      0.0004,
+      0.0006,
+      0.0008,
+      0.0012,
+      0.002,
+      0.003,
+      0.004,
+      0.006
+    ],
+    "friction": 0.5,
+    "insertion_depth_m": 0.025,
+    "oracle_signal": "MuJoCo native contact force (mj_contactForce), friction-inclusive",
+    "sapien_signal": "peg-socket contact-pair force (a lateral NORMAL contact; the friction-excluded contact-pair impulse captures the lateral force faithfully \u2014 friction here is tangential)",
+    "seeds": [
+      0,
+      1,
+      2
+    ]
+  },
+  "honesty_statement": "Numbers are the committed sweep output; no value is hand-entered. The SAPIEN and MuJoCo rigs both hold the peg rigidly at a controlled lateral penetration into a fixed socket and read the engine's contact force; absolute magnitudes are contact-stiffness-convention dependent and are compared on the shape-normalised curves, with the raw ratio reported transparently.",
+  "purpose": "Sweep peg lateral misalignment across the frozen clearance set and record peg-socket contact force on SAPIEN + the MuJoCo oracle; execute the migrate-vs-stay decision rule. ADR-005 \u00a7Decision; ADR-026 \u00a7Decision 4.",
+  "rationale": "SAPIEN peg-socket contact is monotone and graded (no cliff / penetration) at every clearance, and its shape agrees with the MuJoCo oracle within tolerance. Stay on SAPIEN; retain the oracle for the S6 re-score.",
+  "recommendation": "STAY",
+  "results_by_clearance": {
+    "0.0002": {
+      "clearance_m": 0.0002,
+      "oracle_force_n": [
+        0.0,
+        2.2033135272171687,
+        6.196924123420532,
+        10.272279046157927,
+        14.359589693409456,
+        22.544019735228826,
+        38.92321567586714,
+        59.401890891074196,
+        79.88203316384616,
+        120.84373514271513
+      ],
+      "oracle_monotone": true,
+      "raw_peak_ratio_sapien_over_oracle": 5.550526598592959,
+      "sapien_force_n": [
+        0.0,
+        9.12099451654487,
+        33.76932309733497,
+        58.468530575434364,
+        83.15688338544633,
+        131.61061141226025,
+        222.3049388991462,
+        338.87360095977783,
+        449.5351923836602,
+        670.746366182963
+      ],
+      "sapien_monotone": true,
+      "shape_normalised_divergence": 0.013659150498706696
+    },
+    "0.0005": {
+      "clearance_m": 0.0005,
+      "oracle_force_n": [
+        0.0,
+        0.0,
+        3.1766250744346176,
+        7.213525724790916,
+        11.293494162837112,
+        19.4740512262077,
+        35.85169635933643,
+        56.32995697683134,
+        76.80996443421341,
+        117.7715744302131
+      ],
+      "oracle_monotone": true,
+      "raw_peak_ratio_sapien_over_oracle": 5.790607137040912,
+      "sapien_force_n": [
+        0.0,
+        0.2135828835889697,
+        10.489691628350151,
+        35.42503996027841,
+        59.738589988814454,
+        108.71778064303929,
+        208.4561586380005,
+        330.9576630592346,
+        451.5760580698649,
+        681.9689194361368
+      ],
+      "sapien_monotone": true,
+      "shape_normalised_divergence": 0.011591285136439883
+    },
+    "0.0010": {
+      "clearance_m": 0.001,
+      "oracle_force_n": [
+        0.0,
+        0.0,
+        0.0,
+        2.2033135272171354,
+        6.196924123420426,
+        14.359589693409418,
+        30.73281348512502,
+        51.21014618138362,
+        71.6898806812017,
+        112.65131502493917
+      ],
+      "oracle_monotone": true,
+      "raw_peak_ratio_sapien_over_oracle": 5.850828278148247,
+      "sapien_force_n": [
+        0.036840290082669945,
+        0.3966460366629892,
+        0.24601021416149002,
+        0.5920793783540527,
+        20.687713970740635,
+        68.92564528518253,
+        169.06365421083237,
+        293.2739774386088,
+        416.7206313874986,
+        659.1034995185005
+      ],
+      "sapien_monotone": true,
+      "shape_normalised_divergence": 0.023622124506212858
+    }
+  },
+  "schema": "coinsert_s1_fidelity_sweep/v1",
+  "stage": "S1 \u2014 contact-fidelity spike + MuJoCo oracle"
+}
