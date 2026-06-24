@@ -1,0 +1,249 @@
+# Pre-registration: co-insert (contact-rich hold-and-insert) heterogeneity bet.
+#
+# Phase-2, NON-GATING research bet (invariant I1; ADR-026 §Decision 4). The
+# contact-rich successor to the co-carry ladder: does pairing un-co-designed
+# robots break cooperation in a regime that does not forgive mismatch?
+#
+# ---------------------------------------------------------------------------
+# SCHEMA NOTE (read before editing). This file deliberately does NOT validate
+# against chamber.evaluation.prereg.PreregistrationSpec. That Pydantic schema is
+# locked to the six ADR-007 axes (axis in {AS, OM, CR, CM, PF, SA}, extra keys
+# forbidden) and cannot represent a Phase-2 / ADR-026 bet or its richer decision
+# rule. The co-carry Phase-2 pre-registrations set the precedent: a
+# self-describing prereg document with its own `schema` id, locked by the SAME
+# ADR-007 §Discipline git-tag blob-SHA mechanism (the tag's blob SHA must equal
+# the on-disk blob SHA at launch). Adding a "coinsert" axis to the
+# PreregistrationSpec shortlist WOULD be a schema change and is out of scope (I9
+# forbids it without an ADR). This file is therefore the prereg of record; the
+# lock is the git tag, not the loader.
+# ---------------------------------------------------------------------------
+
+schema: coinsert_s0_prereg/v1
+date: 2026-06-24
+author: fsafaei
+stage: "S0 — scaffolding + pre-registration (NO measurement)"
+governance:
+  phase: "Phase-2, non-gating (invariant I1; ADR-026 §Decision 4). Touches no Phase-1 gate and no Stage-1 pick-place line."
+  invariants: "I1 (non-gating), I6 (no AI-tooling references), I8 (immutable archives), I9 (no SCHEMA_VERSION / wire-format bump)."
+  do_not_merge: "open the PR and stop for review."
+  scope_of_s0: >
+    This pre-registration declares (does NOT freeze) the frozen-able parameters,
+    the success predicate, the positive controls, the decision rule, the
+    capability gate, and the partner roster placeholder. The LOCK happens at the
+    two measurement slices: S3 (Gate 0) and S6 (Gate 2) each re-freeze the
+    relevant coefficients and git-tag BEFORE the first measurement commit (a
+    tag that post-dates the measurement is worthless).
+  references:
+    adrs: "ADR-026 §Decision 1-4 (coupling validity; non-gating); ADR-007 §Discipline (this lock); ADR-009 §Consequences (frozen partner); ADR-005 §Decision (sim); proposed ADR-018 §1 (realism checklist seed)."
+
+# ---------------------------------------------------------------------------
+# Task + ego role.
+# ---------------------------------------------------------------------------
+task:
+  kind: hold_and_insert
+  ego_role: inserter        # ego = inserter (the residual CONCERTO trains)
+  partner_role: holder      # the black-box partner held frozen (ADR-009)
+  receptacle: free          # held ONLY by the holder, NOT fixed to the table
+                            # (the two-robot-necessity choice)
+  env_module: chamber.envs.coinsert
+  env_factory: make_coinsert_env
+  conditions:               # env conditions (LOCKED names; ADR-007 §P4)
+    matched_reference: coinsert_matched_reference
+    single_inserter_positive_control: coinsert_single_inserter_positive_control
+
+# ---------------------------------------------------------------------------
+# Frozen-able physical parameters. Declared now; frozen at S3.
+# ---------------------------------------------------------------------------
+frozen_parameters:
+  peg_diameter_m: 0.016
+  clearance_set_m: [1.0e-3, 5.0e-4, 2.0e-4]   # {1.0, 0.5, 0.2} mm — the difficulty knob is CLEARANCE, not inter-robot stiffness
+  depth_target_m: 0.040
+  chamfer_m: 0.0005                            # 0.5 mm x 45 deg lead-in (graded contact onset)
+  receptacle_mass_kg: 0.5
+  peg_socket_friction: null                    # frozen, load-bearing; set at S1 from the contact-fidelity spike + oracle (jamming is friction-mediated)
+  control_hz: 20
+  control_mode: pd_joint_delta_pos
+  episode_horizon_band: [250, 320]             # quasi-static; exact horizon frozen at S3 from the S2 pilot
+
+# ---------------------------------------------------------------------------
+# Success predicate: seated AND within_force AND static AND settled.
+# ---------------------------------------------------------------------------
+success_predicate:
+  definition: "success = seated AND within_force AND static AND settled"
+  seated: "peg-tip depth >= depth_target - depth_eps AND peg axis aligned to socket axis within axis_align_tol"
+  within_force: "peak peg-socket contact force <= f_insert_max AND peak workpiece interaction wrench <= f_couple_max (no over-stress, no jam-through)"
+  static: "both robots' joint velocities below static_qvel_thresh at termination"
+  settled: "receptacle pose stable over the final settle window"
+  thresholds:
+    depth_eps_m: 0.002
+    axis_align_tol_deg: 5.0
+    static_qvel_thresh: 0.2
+    settle_window_steps: 15
+    f_insert_max_n: null    # DERIVED AT S2 from the matched-pair success distribution (p99-scaled); never asserted at S0
+    f_couple_max_n: null    # DERIVED AT S2 from the matched-pair success distribution; never asserted at S0
+  implementation: chamber.envs.coinsert.evaluate_coinsert_success
+
+# ---------------------------------------------------------------------------
+# Positive controls — all three pre-registered (ADR-026 §Decision 2).
+# ---------------------------------------------------------------------------
+positive_controls:
+  - id: two_robot_necessity
+    statement: "single inserter + UNHELD receptacle => success ~0; and the contact/force constraints bind on successful matched episodes."
+    condition: coinsert_single_inserter_positive_control
+  - id: base_failure_cooperation_load_bearing   # this is Gate 0 (S3); allowed to KILL the task
+    statement: >
+      a competent-but-non-accommodating, non-destructive holder makes the
+      STRUCTURED BASE inserter fail (<= base_failure_max) while the cooperative
+      reference holder lets it succeed (>= reference_success_min) — proving the
+      holder's reaction is outcome-determining.
+  - id: zero_action_static_subtraction
+    statement: "with no insertion happening, any workpiece load present is a static/pose artifact and is SUBTRACTED, not counted as cooperation cost."
+
+# ---------------------------------------------------------------------------
+# Refinement 1 — Delta_min and the power-sized n. Delta_min = 0.20 with a
+# one-sided 95% CI excluding 0; n sized by a TASK-SPECIFIC Monte-Carlo power
+# simulation, NOT inherited from co-carry.
+# ---------------------------------------------------------------------------
+decision_rule:
+  delta_definition: "Delta = success(reference holder) - success(non-co-designed holder), pooled across the >=2 non-co-designed holders; per-holder values also reported."
+  delta_min: 0.20
+  lands_iff: "pooled mean Delta >= 0.20 AND one-sided 95% CI excludes 0 AND the positive control passes AND the drop is wrench-mediated AND it survives the base-robustness control (both instruments — structured base AND full ego — show it)."
+  null_iff: "the ego succeeds with co-designed and non-co-designed holders alike AND the positive control passes => thesis-disconfirming NULL, reported via the EQUIVALENCE / CI BOUND (two-sided 95% CI upper < Delta_min), NEVER via a power claim, and NEVER re-described as a coupling failure (ADR-026 §Decision 2)."
+  indeterminate_iff: "Delta in the blind band OR single-sourced => not a result; add the pre-committed second line (oracle re-score) or report inconclusive."
+  bootstrap:
+    method: paired_cluster_bootstrap     # over seed-clusters x episodes
+    n_boot: 10000
+    estimator: mean_delta                # IQM secondary
+    ci: one_sided_95_lower_excludes_0    # equivalence/two-sided-upper for the null
+  power_simulation:
+    status: "PROVISIONAL — re-derived at S6 from the S2-measured variance, before any shifted holder is seen."
+    rationale: "co-carry's n (12 / 28) is NOT inherited: the co-insert reference success is ~0.9 (not a 1.0 ceiling), so the between-seed variance — and therefore n — is task-specific."
+    artifact: spikes/preregistration/coinsert/coinsert_s0_power_sim.json
+    generator: scripts/repro/_coinsert_s0_power_sim.py
+    recommended_n_provisional: 16        # smallest n with MDE <= 0.25 at 80% power across ALL dispersion brackets (worst-case robust)
+    at_bar_blind_band_power: 0.52        # power AT Delta_min=0.20 is structurally ~0.5 (the mean->=->bar conjunct dominates); SURFACED, never represented as adequate
+    honest_power_statement: >
+      At the bar (Delta=0.20) power is ~0.52 and n CANNOT raise it — the "pooled
+      mean Delta >= Delta_min" conjunct makes the point estimate the binding
+      constraint. n is therefore sized by the minimum detectable effect
+      (MDE <= 0.25 at 80% power), not by at-bar power. This design is NOT
+      80%-powered at the bar and is not represented as such; a null is resolved
+      by the equivalence/CI bound.
+  precondition:
+    statement: "reference insertion success must be high (~0.9+) so Delta_min=0.20 has dynamic range to be measurable."
+    verified_at: S2
+    reference_success_min: 0.9
+
+# ---------------------------------------------------------------------------
+# Refinement 2 — relative capability gate C_min (ADR-026 §Risks).
+# ---------------------------------------------------------------------------
+capability_gate:
+  c_min_rule: "C_min = max(0.75, M - 0.25), RELATIVE to the cooperative-reference holder's achieved hold-sub-task score M (NOT a bare 0.75)."
+  c_min_floor: 0.75
+  c_min_margin: 0.25
+  implementation: chamber.envs.coinsert.coinsert_capability_gate_floor
+  reference_must_clear_comfortably: "the reference holder must clear the hold sub-task COMFORTABLY (well above 0.75), else the gate stops discriminating; verified at S2."
+  non_circularity: "gate every candidate holder against a COOPERATIVE REFERENCE INSERTER (never the measuring incumbent); certify competence at the HOLD SUB-TASK IN ISOLATION under a scripted reference insertion."
+  directional_bias_caveat: >
+    excluding holders that fail the gate truncates heterogeneity from above and
+    biases toward null. The excluded-holder roster is archived; the inference
+    "Delta ~ 0 => axis not coupling-valid" is FORBIDDEN when exclusions
+    occurred. A null is reported "among capability-matched holders," never
+    "heterogeneity is inert" (ADR-026 §Risks).
+
+# ---------------------------------------------------------------------------
+# Refinement 3 — Gate-0 holder behaviour, pre-registered EXACTLY. The
+# non-cooperating holder is competent-but-non-accommodating and explicitly
+# NON-destructive.
+# ---------------------------------------------------------------------------
+gate0:
+  base_failure_max: 0.5
+  reference_success_min: 0.9
+  graded_by: "the contact-force signature, WITHOUT numerical instability (graceful jam, not a solver blow-up)."
+  non_cooperating_holder:
+    label: competent_but_non_accommodating
+    competent: "competent at HOLDING — passes the capability gate at its own hold objective."
+    non_accommodating: "holds the receptacle at ITS OWN pose; does NOT actively yield to or assist the insertion."
+    non_destructive: "explicitly NON-destructive — does NOT drop the part and does NOT actively fight the inserter."
+    rationale: >
+      a DESTRUCTIVE holder would make the base fail TRIVIALLY and over-state
+      coupling-validity. Gate 0 tests "does the holder need to actively
+      cooperate," NOT "can a broken holder break things." Its exact behaviour is
+      pre-registered here so it cannot be tuned post-hoc.
+  outcomes:
+    pass: "base >= 0.9 with reference AND <= 0.5 with the non-accommodating holder, graded, no instability => proceed to Gate 1."
+    too_forgiving: "base SUCCEEDS with the non-accommodating holder => task too forgiving => STOP & reframe (do NOT stiffen toward instability)."
+    physics_wall: "the effect appears only as numerical blow-up => physics-wall artifact => STOP (sim/task is the problem, not heterogeneity)."
+  base_controller_holder_dependence:
+    statement: >
+      the structured base is competent at insertion GIVEN a stable, in-envelope
+      held part, and explicitly does NOT re-acquire a receptacle the holder has
+      let drift OUT of the insertion envelope. The "insertion envelope" is
+      defined PHYSICALLY (the chamfer capture radius + the declared spiral-search
+      amplitude) and frozen at S3 — a property of the controller's physics,
+      auditable, NOT a degree of freedom tuned to make Gate 0 resolve a chosen
+      way.
+
+# ---------------------------------------------------------------------------
+# Partner roster placeholder. The tiered ladder; the concrete holders are built
+# and gated at S4, the VLA rung deferred.
+# ---------------------------------------------------------------------------
+partner_roster_placeholder:
+  reference_holder:
+    count: 1
+    role: "co-designed cooperative control / calibration anchor (the A-arm); tracks the receptacle to the ego's insertion pose and yields compliantly to insertion force (analogue of cocarry_impedance)."
+  rung_a_own_objective_frozen:
+    count: ">=2"
+    in_scope: true
+    examples: ["grasp-effort-minimising holder (generalises cocarry_selfish_effort)", "pose-station-keeping holder (generalises cocarry_selfish_goal)"]
+    note: "competent at THEIR objective, indifferent to insertion; frozen NN or scripted; both must pass the capability gate at their own objective. Built + gated at S4."
+  rung_b_different_embodiment_frozen:
+    count: ">=1"
+    in_scope: true
+    examples: ["xArm6 + Robotiq holder", "UR-e holder"]
+    note: "real kinematic/capability asymmetry (ADR-007 action-space axis); passes the gate on its own body; carries the pose-artifact control. Built + gated at S4."
+  rung_c_vla:
+    in_scope: false
+    note: "OpenVLA / CrossFormer holder (ADR-010) — DEFERRED. Armed only if Gates 0-1 pass and a setup is provisioned; control-rate (5-15 Hz vs 20 Hz) declared and matched-or-named-as-a-confound."
+  shield: "all holders enter via the chamber.partners.api.FrozenPartner Protocol (reset+act only); _FORBIDDEN_ATTRS blocks policy-weight access; the trainer refuses any non-frozen partner via _assert_partner_is_frozen (ADR-009 §Consequences)."
+
+# ---------------------------------------------------------------------------
+# Realism compliance (proposed ADR-018 §1 seed) + the ADR-026 ego-robustness-
+# gate stub (Gate 1; committed to ADR-026 at S7).
+# ---------------------------------------------------------------------------
+realism_compliance:
+  log_line_emitter: chamber.envs.coinsert.coinsert_realism_compliance_line
+  records: ["which partner ran", "_assert_partner_is_frozen passed", "no forbidden partner-policy-access symbol reached"]
+  note: "the realism checklist is the proposed-ADR-018 §1 operationalisation seed; CI-checked at the measurement slices; a violation fails loudly (never logged past)."
+ego_robustness_gate_stub:
+  id: gate_1
+  statement: "the full ego (base+residual+overlay) must pass a partner-robustness gate across a held-pose / holder-behaviour distribution it was NOT individually tuned to, BEFORE it measures heterogeneity (the fix for the co-carry single-partner-trained-residual confound)."
+  adr_action: "move ADR-026's ego-robustness admission gate from proposed to part of the criterion at S7, before it is relied on."
+
+# ---------------------------------------------------------------------------
+# Kill criterion (technical gates). Each slice is staged and requires review
+# before proceeding to the next; the expensive residual-training slices (S4-S6)
+# are a separate decision taken after Gate 0.
+# ---------------------------------------------------------------------------
+kill_criterion:
+  - "S1/S1b cannot establish a trustworthy, monotone contact-force signal on either simulator (sim-fidelity blocker)."
+  - "S3 Gate 0 fails either way (task too forgiving => reframe; or only numerical blow-up => physics-wall artifact)."
+  - "S5 Gate 1 yields no partner-robust ego (instrument untrustworthy)."
+on_kill: 'write up "regime probed; here is what we learned" — do NOT extend into a "keep making it harder until it breaks" chase.'
+
+# ---------------------------------------------------------------------------
+# ADR-007 §Discipline lock. Cut by the maintainer post-merge from the commit
+# that lands this file; the tag's blob SHA must equal the on-disk blob SHA at
+# launch, and the tag MUST precede the first S3/S6 measurement commit.
+# ---------------------------------------------------------------------------
+git_tag: prereg-coinsert-s0-2026-06-24
+repro_command: uv run python scripts/repro/_coinsert_s0_power_sim.py
+honesty_statement: >
+  As of this commit NO co-insert episode has been scored — there is no env
+  contact logic, no reward, and no measurement (S0 is scaffolding only). The
+  power simulation is a synthetic Monte-Carlo design calculation under stated,
+  bracketed assumptions (reference success ~0.9; between-seed dispersion swept
+  low/central/high); its n is PROVISIONAL and re-derived at S6 from the
+  S2-measured variance. The force limits (f_insert_max, f_couple_max), the
+  friction coefficient, and the exact horizon are null/declared placeholders set
+  from measured distributions at S1/S2, never asserted here.
