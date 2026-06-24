@@ -75,6 +75,7 @@ References:
 
 from __future__ import annotations
 
+import os
 from typing import TYPE_CHECKING, Any, ClassVar, NamedTuple
 
 import numpy as np
@@ -408,7 +409,7 @@ _PANDA_READY_QPOS_EGO: NDArray[np.float64] = np.array(
 #: over-constrain the SAPIEN drive-weld — the documented S2 constraint-fidelity
 #: wall — so this clean-weld lateral hold is the committed reference.)
 _PANDA_READY_QPOS_HOLDER: NDArray[np.float64] = np.array(
-    [0.5, -0.1, 0.0, -2.2, 0.0, 2.1, 0.785, 0.04, 0.04]
+    [0.0, 0.1, 0.0, -2.65, 0.0, 2.75, 0.785, 0.0, 0.0]
 )
 
 #: Peg weld (ego): identity body orientation at the grip offset down hand +z, so
@@ -427,13 +428,86 @@ _PEG_GRIP_IN_HAND_Q: tuple[float, float, float, float] = (1.0, 0.0, 0.0, 0.0)
 #: flip socket weld, read the ego peg-tip world ``T`` and the holder-hand world
 #: pose ``(hp, hR)``, then ``grip_p = hR.T @ ([T_x, T_y, T_z - 0.013] - hp)`` and
 #: re-tune the yaw if the qposes change.
-_SOCKET_GRIP_IN_HAND_P: tuple[float, float, float] = (-0.0832, 0.2341, 0.1554)
-_SOCKET_GRIP_IN_HAND_Q: tuple[float, float, float, float] = (0.0, 0.96891, 0.24740, 0.0)
+_SOCKET_GRIP_IN_HAND_P: tuple[float, float, float] = (0.0639, 0.0, -0.0609)
+_SOCKET_GRIP_IN_HAND_Q: tuple[float, float, float, float] = (0.0, 1.0, 0.0, 0.0)
 
 #: Span (metres) between the two weld anchors along the held body's local +z
 #: axis. Two translation-locked anchors this far apart lock position + both tilt
 #: (swing) DOF while leaving the harmless twist about the body axis free (S2).
 _WELD_ANCHOR_SPAN_M: float = 0.06
+
+#: Name of the socket link injected into the holder URDF as a rigid child of
+#: ``panda_hand`` (S2 fixed-link attach; the create_drive-free architecture).
+_SOCKET_LINK_NAME: str = "coinsert_socket"
+
+
+def _quat_wxyz_to_rpy(q: tuple[float, float, float, float]) -> tuple[float, float, float]:
+    """URDF roll-pitch-yaw (extrinsic XYZ) from a wxyz quaternion (S2; ADR-026 §Decision 1)."""
+    w, x, y, z = q
+    roll = float(np.arctan2(2 * (w * x + y * z), 1 - 2 * (x * x + y * y)))
+    pitch = float(np.arcsin(max(-1.0, min(1.0, 2 * (w * y - z * x)))))
+    yaw = float(np.arctan2(2 * (w * z + x * y), 1 - 2 * (y * y + z * z)))
+    return roll, pitch, yaw
+
+
+def _augmented_socket_holder_urdf(clearance_m: float) -> str:
+    """Write a holder URDF = panda_v2 + the blind socket as a fixed child of panda_hand.
+
+    The S2 fixed-link attach (ADR-026 §Decision 1): the held socket is a rigid
+    LINK in the holder articulation (a fixed joint off ``panda_hand``), NOT a
+    maximal-coordinate ``create_drive`` inter-body weld — so the robust
+    reduced-coordinate articulation solver holds it (no over-constraint preload)
+    and the holder joint impedance bears the axial insertion reaction. The socket
+    geometry (4 walls + a floor, inner half-width sized by the diametral
+    clearance) and the flip+offset that places the opening up on the insertion
+    axis match the actor / create_drive build exactly. Mesh paths are absolutised
+    so the generated URDF can live in a temp dir. Returns the temp URDF path.
+    """
+    import tempfile
+
+    from mani_skill import PACKAGE_ASSET_DIR
+
+    panda_dir = f"{PACKAGE_ASSET_DIR}/robots/panda"
+    base = open(f"{panda_dir}/panda_v2.urdf", encoding="utf-8").read()  # noqa: SIM115
+    base = base.replace(
+        'filename="franka_description/', f'filename="{panda_dir}/franka_description/'
+    )
+    w_in = coinsert_socket_inner_half_width(clearance_m)
+    w_out = COINSERT_SOCKET_OUTER_HALF_M
+    depth = COINSERT_SOCKET_DEPTH_M
+    t_floor = 0.010
+    wall = (w_out - w_in) / 2.0
+    boxes = [
+        ([w_out, w_out, t_floor / 2.0], [0.0, 0.0, -depth - t_floor / 2.0]),
+        ([wall, w_out, depth / 2.0], [w_in + wall, 0.0, -depth / 2.0]),
+        ([wall, w_out, depth / 2.0], [-(w_in + wall), 0.0, -depth / 2.0]),
+        ([w_in, wall, depth / 2.0], [0.0, w_in + wall, -depth / 2.0]),
+        ([w_in, wall, depth / 2.0], [0.0, -(w_in + wall), -depth / 2.0]),
+    ]
+    geom = "\n".join(
+        f'    <collision><origin xyz="{c[0]} {c[1]} {c[2]}"/><geometry>'
+        f'<box size="{2 * h[0]} {2 * h[1]} {2 * h[2]}"/></geometry></collision>\n'
+        f'    <visual><origin xyz="{c[0]} {c[1]} {c[2]}"/><geometry>'
+        f'<box size="{2 * h[0]} {2 * h[1]} {2 * h[2]}"/></geometry></visual>'
+        for h, c in boxes
+    )
+    rpy = _quat_wxyz_to_rpy(_SOCKET_GRIP_IN_HAND_Q)
+    xyz = _SOCKET_GRIP_IN_HAND_P
+    block = (
+        f'\n  <link name="{_SOCKET_LINK_NAME}">\n{geom}\n'
+        f'    <inertial><mass value="{COINSERT_RECEPTACLE_MASS_KG}"/>'
+        '<inertia ixx="5e-4" ixy="0" ixz="0" iyy="5e-4" iyz="0" izz="5e-4"/></inertial>\n'
+        f'  </link>\n  <joint name="{_SOCKET_LINK_NAME}_joint" type="fixed">\n'
+        f'    <origin xyz="{xyz[0]} {xyz[1]} {xyz[2]}" rpy="{rpy[0]} {rpy[1]} {rpy[2]}"/>\n'
+        f'    <parent link="{_HAND_LINK_NAME}"/>\n'
+        f'    <child link="{_SOCKET_LINK_NAME}"/>\n  </joint>\n'
+    )
+    out = base.replace("</robot>", block + "</robot>")
+    fd, path = tempfile.mkstemp(suffix="_coinsert_holder.urdf")
+    with os.fdopen(fd, "w", encoding="utf-8") as fh:
+        fh.write(out)
+    return path
+
 
 #: Per-uid initial base pose ``(xyz, quat_wxyz)`` — the holder is yawed π about
 #: z to face the ego across the table (mirrored, deliberate poses; the co-insert design).
@@ -839,6 +913,21 @@ def make_coinsert_env(
             self._peak_insert_n: Any = None
             self._peak_couple_n: Any = None
             self._eval_prev_step: int = -1
+            # S2 fixed-link attach: the matched rig holds the socket as a rigid
+            # CHILD LINK of the holder articulation (a fixed joint off panda_hand),
+            # not a create_drive inter-body weld — the reduced-coordinate solver
+            # holds it without over-constraint and the holder joint impedance bears
+            # the axial reaction. The single-inserter control (free, unheld socket)
+            # and the S1 fidelity probe keep the actor socket.
+            self._socket_fixed_link: bool = not self._fidelity_probe and not self._single_inserter
+            self._holder_urdf_path: str | None = None
+            orig_holder_urdf: str | None = None
+            if self._socket_fixed_link:
+                from chamber.agents.panda_partner import PandaPartner
+
+                self._holder_urdf_path = _augmented_socket_holder_urdf(self._clearance_m)
+                orig_holder_urdf = PandaPartner.urdf_path
+                PandaPartner.urdf_path = self._holder_urdf_path  # type: ignore[assignment]
             try:
                 super().__init__(
                     robot_uids=(_EGO_UID, self._partner_uid),  # type: ignore[arg-type]
@@ -854,6 +943,11 @@ def make_coinsert_env(
                     f"CoInsertEnv(condition_id={condition_id!r}) build: {exc}\n"
                     'Set render_backend="none" on CUDA-only hosts; see ADR-001 §Risks.'
                 ) from exc
+            finally:
+                if orig_holder_urdf is not None:
+                    from chamber.agents.panda_partner import PandaPartner
+
+                    PandaPartner.urdf_path = orig_holder_urdf  # type: ignore[assignment]
 
         # ----- ManiSkill v3 BaseEnv hooks -----
 
@@ -958,8 +1052,20 @@ def make_coinsert_env(
             # generates contacts against the kinematic peg (SAPIEN computes NO
             # contact between two kinematic bodies, so the socket cannot also be
             # kinematic).
-            self.receptacle = self._build_socket_receptacle(contact_mat, kinematic=False)
             self._socket_anchor = None
+            if self._socket_fixed_link:
+                # S2 fixed-link attach: the socket is a rigid child link of the
+                # holder articulation (built into the holder URDF; ADR-026
+                # §Decision 1). Grab the link handle as the receptacle — no actor,
+                # no create_drive weld. Friction uses the loader default (the
+                # matched-seat gate is friction-independent; the frozen
+                # peg-socket coefficient is applied to the peg actor + the MuJoCo
+                # oracle as before).
+                self.receptacle = self.agent.agents_dict[  # type: ignore[attr-defined]
+                    self._partner_uid
+                ].robot.links_map[_SOCKET_LINK_NAME]
+            else:
+                self.receptacle = self._build_socket_receptacle(contact_mat, kinematic=False)
             if self._fidelity_probe:
                 anchor_builder = self.scene.create_actor_builder()
                 anchor_builder.initial_pose = sapien.Pose(p=list(COINSERT_PROBE_SOCKET_XYZ))  # type: ignore[assignment]
@@ -1003,8 +1109,10 @@ def make_coinsert_env(
                 self._drives.append(drive)
             else:
                 self._add_weld(_EGO_UID, self.peg)
-                if not self._single_inserter:
-                    self._add_weld(self._partner_uid, self.receptacle)
+                # The socket is NOT create_drive-welded: the matched rig holds it
+                # as a fixed link in the holder articulation; the single-inserter
+                # positive control leaves it a free, unheld actor (so a lone
+                # inserter cannot stabilise it). ADR-026 §Decision 1-2.
 
         def _build_socket_receptacle(
             self,
@@ -1178,31 +1286,19 @@ def make_coinsert_env(
                     above = socket + torch.tensor([0.0, 0.0, 0.10], device=self.device)
                     self.peg.set_pose(Pose.create_from_pq(above.expand(b, 3)))
                 else:
-                    # Normal rig: warm-start BOTH held bodies at their welded grip
-                    # targets so each weld starts at ~zero stress (the co-carry
-                    # zero-initial-stress discipline — a body initialised away from
-                    # its grip frame would make the weld yank it in with a large
-                    # preload). The peg hangs off the ego hand (tip down); the
-                    # socket hangs off the holder hand via the flip+bracket weld so
-                    # its opening sits under the peg tip, facing up. The single-
-                    # inserter positive control welds + warm-starts the peg only —
-                    # the receptacle is left unheld (it cannot be stabilised by a
-                    # lone inserter; ADR-026 §Decision 2).
+                    # Normal rig: warm-start the PEG actor at its welded grip so
+                    # the peg weld starts at ~zero stress (the co-carry zero-
+                    # initial-stress discipline). The socket needs no warm-start:
+                    # in the matched rig it is a FIXED LINK that follows the holder
+                    # hand automatically; in the single-inserter positive control
+                    # it is a free, unheld actor left at its builder pose (so a
+                    # lone inserter cannot stabilise it; ADR-026 §Decision 2).
                     ego_hand = self.agent.agents_dict[_EGO_UID].robot.links_map[_HAND_LINK_NAME]  # type: ignore[attr-defined]
                     peg_grip = ego_hand.pose * Pose.create_from_pq(
                         p=torch.tensor(_PEG_GRIP_IN_HAND_P, device=self.device),
                         q=torch.tensor(_PEG_GRIP_IN_HAND_Q, device=self.device),
                     )
                     self.peg.set_pose(peg_grip)
-                    if not self._single_inserter:
-                        h_hand = self.agent.agents_dict[self._partner_uid].robot.links_map[  # type: ignore[attr-defined]
-                            _HAND_LINK_NAME
-                        ]
-                        sock_grip = h_hand.pose * Pose.create_from_pq(
-                            p=torch.tensor(_SOCKET_GRIP_IN_HAND_P, device=self.device),
-                            q=torch.tensor(_SOCKET_GRIP_IN_HAND_Q, device=self.device),
-                        )
-                        self.receptacle.set_pose(sock_grip)
 
                 # Placeholder goal (the seated socket pose); refined at S2 once
                 # the success contact logic exists. Tiny P6 jitter for a

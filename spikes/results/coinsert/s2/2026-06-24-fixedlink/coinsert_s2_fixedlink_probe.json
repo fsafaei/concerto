@@ -1,0 +1,65 @@
+{
+  "bracing": {
+    "finding": "the below-hold fixed link braces (socket-z holds) \u2014 the holder joint impedance bears the axial reaction in compression",
+    "lateral_create_drive_sink_mm": 209.6,
+    "matched_assembly_sink_mm_max": -1.4
+  },
+  "design": {
+    "attach": "socket = fixed child link of the holder panda_hand (no create_drive)",
+    "clearance_m": 0.001,
+    "episode_length": 320,
+    "seeds": [
+      0,
+      1,
+      2
+    ]
+  },
+  "honesty_statement": "Numbers are the committed probe output; no value is hand-entered. The matched pair does NOT seat (seat_rate above), so the downstream M / f-limit / oracle-calibration measurements are not run. This slice establishes the fixed-link architecture breaks the create_drive over-constraint + braces; the seat is left to bounded control tuning.",
+  "matched_depth_mm_max": -12.8,
+  "matched_rollout": [
+    {
+      "align_deg": 0.7,
+      "assembly_sink_mm": -1.4,
+      "depth_mm": -12.8,
+      "peak_couple_n": 23.2,
+      "peak_insert_n": 0.0,
+      "seated": false,
+      "seed": 0,
+      "success_geom": false
+    },
+    {
+      "align_deg": 0.7,
+      "assembly_sink_mm": -1.4,
+      "depth_mm": -12.8,
+      "peak_couple_n": 23.2,
+      "peak_insert_n": 0.0,
+      "seated": false,
+      "seed": 1,
+      "success_geom": false
+    },
+    {
+      "align_deg": 0.7,
+      "assembly_sink_mm": -1.4,
+      "depth_mm": -12.8,
+      "peak_couple_n": 23.2,
+      "peak_insert_n": 0.0,
+      "seated": false,
+      "seed": 2,
+      "success_geom": false
+    }
+  ],
+  "matched_seat_rate": 0.0,
+  "over_constraint": {
+    "create_drive_preload_n_range": [
+      573.0,
+      1306.0
+    ],
+    "finding": "the create_drive over-constraint preload is a maximal-coordinate artifact; the fixed link has ~0 N",
+    "fixed_link_zero_action_preload_n": 0.2
+  },
+  "rationale": "The fixed-link attach removes the create_drive over-constraint (preload ~0 N vs 573-1306 N) and the below-hold fixed link braces the axial reaction (no assembly drag) without solver instability \u2014 so the earlier wall was a create_drive maximal-coordinate artifact, NOT a SAPIEN constraint-fidelity limit, and the escalation condition (fixed-link cannot brace / hold alignment without instability) is NOT met. The matched pair does not yet reach the >=0.9 seat: the peg does not engage because the socket drifts laterally in the reaching-under below-hold pose (weak holder lateral joint-impedance there), so the base inserter never commits to the press. That is controller / holder-pose-conditioning tuning, not a sim limit \u2014 do NOT migrate or close on the strength of it.",
+  "schema": "coinsert_s2_fixedlink_probe/v1",
+  "single_inserter_success_geom": false,
+  "stage": "S2 \u2014 fixed-link articulation attach (the last bounded SAPIEN attempt)",
+  "verdict": "NOT_A_SAPIEN_WALL__SEAT_NEEDS_CONTROL_TUNING"
+}
