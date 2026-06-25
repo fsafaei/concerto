@@ -445,6 +445,46 @@ _WELD_ANCHOR_SPAN_M: float = 0.06
 #: ``panda_hand`` (S2 fixed-link attach; the create_drive-free architecture).
 _SOCKET_LINK_NAME: str = "coinsert_socket"
 
+#: Number of tangential wall facets approximating the ROUND socket bore (S2). The
+#: peg/socket cross-section is ROUND (a cylinder peg + an N-gon bore) — the
+#: canonical, sim2real-validated insertion geometry: the cylinder self-centres
+#: under the insertion force and frees the yaw DOF, removing the square's
+#: corner-wedge that over-constrained tilt (the ~30 mm wall). The bore is a ring
+#: of convex boxes — the same no-mesh convex-decomposition technique as the
+#: square walls, just more facets (ADR-001 §Risks no-mesh). The square geometry
+#: is NOT in the frozen prereg set, so this is a documented geometry change.
+_ROUND_BORE_FACETS: int = 12
+
+
+def _round_bore_boxes(clearance_m: float) -> list[tuple[list[float], list[float], float]]:
+    """Round-approx blind socket bore as convex boxes (S2; ADR-001 §Risks no-mesh).
+
+    Returns ``(half_size[xyz], centre[xyz], yaw_about_z)`` for the floor + the
+    :data:`_ROUND_BORE_FACETS` tangential wall facets of a regular N-gon bore of
+    inscribed radius ``r_in = peg_radius + clearance/2`` — so the per-face
+    diametral clearance equals the declared clearance, exactly as the square
+    walls. Each facet is a thin box whose flat inner face is tangent to the bore
+    circle; the cylinder peg self-centres against the ring and is free in yaw.
+    Shared by the fixed-link URDF socket and the actor socket so they match.
+    """
+    r_peg = COINSERT_PEG_DIAMETER_M / 2.0
+    r_in = r_peg + clearance_m / 2.0
+    w_out = COINSERT_SOCKET_OUTER_HALF_M
+    depth = COINSERT_SOCKET_DEPTH_M
+    t_floor = 0.010
+    t = w_out - r_in  # radial wall thickness (outer extent ~ the square w_out)
+    n = _ROUND_BORE_FACETS
+    half_seg = (r_in + t) * float(np.tan(np.pi / n)) + 0.002  # tangential half-width (+overlap)
+    r_c = r_in + t / 2.0
+    out: list[tuple[list[float], list[float], float]] = [
+        ([w_out, w_out, t_floor / 2.0], [0.0, 0.0, -depth - t_floor / 2.0], 0.0),
+    ]
+    for i in range(n):
+        theta = 2.0 * np.pi * i / n
+        cx, cy = r_c * float(np.cos(theta)), r_c * float(np.sin(theta))
+        out.append(([t / 2.0, half_seg, depth / 2.0], [cx, cy, -depth / 2.0], float(theta)))
+    return out
+
 
 def _quat_wxyz_to_rpy(q: tuple[float, float, float, float]) -> tuple[float, float, float]:
     """URDF roll-pitch-yaw (extrinsic XYZ) from a wxyz quaternion (S2; ADR-026 §Decision 1)."""
@@ -463,10 +503,11 @@ def _augmented_socket_holder_urdf(clearance_m: float) -> str:
     maximal-coordinate ``create_drive`` inter-body weld — so the robust
     reduced-coordinate articulation solver holds it (no over-constraint preload)
     and the holder joint impedance bears the axial insertion reaction. The socket
-    geometry (4 walls + a floor, inner half-width sized by the diametral
-    clearance) and the flip+offset that places the opening up on the insertion
-    axis match the actor / create_drive build exactly. Mesh paths are absolutised
-    so the generated URDF can live in a temp dir. Returns the temp URDF path.
+    bore is the ROUND N-gon ring (:func:`_round_bore_boxes`, inscribed radius
+    sized by the diametral clearance) + a floor, with the flip+offset that places
+    the opening up on the insertion axis matching the actor build exactly. Mesh
+    paths are absolutised so the generated URDF can live in a temp dir. Returns
+    the temp URDF path.
     """
     import tempfile
 
@@ -477,24 +518,12 @@ def _augmented_socket_holder_urdf(clearance_m: float) -> str:
     base = base.replace(
         'filename="franka_description/', f'filename="{panda_dir}/franka_description/'
     )
-    w_in = coinsert_socket_inner_half_width(clearance_m)
-    w_out = COINSERT_SOCKET_OUTER_HALF_M
-    depth = COINSERT_SOCKET_DEPTH_M
-    t_floor = 0.010
-    wall = (w_out - w_in) / 2.0
-    boxes = [
-        ([w_out, w_out, t_floor / 2.0], [0.0, 0.0, -depth - t_floor / 2.0]),
-        ([wall, w_out, depth / 2.0], [w_in + wall, 0.0, -depth / 2.0]),
-        ([wall, w_out, depth / 2.0], [-(w_in + wall), 0.0, -depth / 2.0]),
-        ([w_in, wall, depth / 2.0], [0.0, w_in + wall, -depth / 2.0]),
-        ([w_in, wall, depth / 2.0], [0.0, -(w_in + wall), -depth / 2.0]),
-    ]
     geom = "\n".join(
-        f'    <collision><origin xyz="{c[0]} {c[1]} {c[2]}"/><geometry>'
+        f'    <collision><origin xyz="{c[0]} {c[1]} {c[2]}" rpy="0 0 {yaw}"/><geometry>'
         f'<box size="{2 * h[0]} {2 * h[1]} {2 * h[2]}"/></geometry></collision>\n'
-        f'    <visual><origin xyz="{c[0]} {c[1]} {c[2]}"/><geometry>'
+        f'    <visual><origin xyz="{c[0]} {c[1]} {c[2]}" rpy="0 0 {yaw}"/><geometry>'
         f'<box size="{2 * h[0]} {2 * h[1]} {2 * h[2]}"/></geometry></visual>'
-        for h, c in boxes
+        for h, c, yaw in _round_bore_boxes(clearance_m)
     )
     rpy = _quat_wxyz_to_rpy(_SOCKET_GRIP_IN_HAND_Q)
     xyz = _SOCKET_GRIP_IN_HAND_P
@@ -1029,15 +1058,33 @@ def make_coinsert_env(
             # impulse does not fling the near-massless body out of the socket
             # (numerical ejection); the welded rig uses the default density.
             peg_density = 8000.0 if self._fidelity_probe else 1000.0
-            peg_builder.add_box_collision(
-                half_size=peg_half,  # type: ignore[arg-type]
-                material=contact_mat,
-                density=peg_density,
-            )
-            peg_builder.add_box_visual(
-                half_size=peg_half,  # type: ignore[arg-type]
-                material=sapien.render.RenderMaterial(base_color=[0.30, 0.30, 0.35, 1.0]),
-            )
+            peg_colour = sapien.render.RenderMaterial(base_color=[0.30, 0.30, 0.35, 1.0])
+            if self._fidelity_probe:
+                # S1 fidelity probe keeps the SQUARE box peg unchanged (its
+                # contact-fidelity STAY verdict stands).
+                peg_builder.add_box_collision(
+                    half_size=peg_half,  # type: ignore[arg-type]
+                    material=contact_mat,
+                    density=peg_density,
+                )
+                peg_builder.add_box_visual(half_size=peg_half, material=peg_colour)  # type: ignore[arg-type]
+            else:
+                # S2 ROUND geometry: a CYLINDER peg. SAPIEN's cylinder primitive
+                # lies along its local x, so the collision/visual pose rotates it
+                # -90° about y to align the cylinder axis with the peg's local +z
+                # (the insertion/approach axis, where the box's +z was). The
+                # cylinder self-centres in the round bore and is free in yaw.
+                cyl_pose = sapien.Pose(q=[0.7071067811865476, 0.0, -0.7071067811865476, 0.0])
+                peg_builder.add_cylinder_collision(
+                    pose=cyl_pose,
+                    radius=peg_radius,
+                    half_length=peg_half_len,
+                    material=contact_mat,
+                    density=peg_density,
+                )
+                peg_builder.add_cylinder_visual(
+                    pose=cyl_pose, radius=peg_radius, half_length=peg_half_len, material=peg_colour
+                )
             peg_builder.initial_pose = sapien.Pose(p=[-_BASE_X_M + 0.2, 0.0, 0.3])  # type: ignore[assignment]
             if self._fidelity_probe:
                 # Kinematic peg: the sweep teleports it to a controlled lateral
@@ -1125,35 +1172,39 @@ def make_coinsert_env(
             *,
             kinematic: bool = False,
         ) -> Any:  # noqa: ANN401 - sapien actor
-            """Compose a blind square socket from convex boxes (S1; ADR-001 §Risks).
+            """Compose a blind socket from convex boxes (ADR-001 §Risks no-mesh).
 
-            Four walls + a floor enclose a central cavity of inner half-width
-            :attr:`_socket_inner_half` (a cavity is non-convex, so it is built
-            from convex primitives — no mesh asset). The cavity opens at +z and
-            descends ``COINSERT_SOCKET_DEPTH_M``; the floor caps it (a *blind*
-            socket). Friction is applied to every wall + floor collision.
-            ``kinematic=True`` (the fidelity-probe rig) fixes the socket immovable
-            so the contact reads cleanly off the peg drive.
+            A cavity is non-convex, so it is built from convex primitives (no mesh
+            asset). The S1 fidelity-probe rig keeps the original SQUARE socket (4
+            walls + floor) unchanged; the S2 single-inserter actor socket uses the
+            ROUND N-gon bore (:func:`_round_bore_boxes`) so it matches the
+            fixed-link matched socket. The cavity opens at +z and descends
+            ``COINSERT_SOCKET_DEPTH_M``; the floor caps it (a *blind* socket).
+            ``kinematic=True`` fixes the socket immovable for the probe drive.
             """
-            w_in = self._socket_inner_half
-            w_out = COINSERT_SOCKET_OUTER_HALF_M
-            depth = COINSERT_SOCKET_DEPTH_M
-            t_floor = 0.010
-            wall = (w_out - w_in) / 2.0  # half-thickness of each wall slab
-            # (half_size, center) for floor + 4 walls in the actor's local frame.
-            boxes: list[tuple[list[float], list[float]]] = [
-                ([w_out, w_out, t_floor / 2.0], [0.0, 0.0, -depth - t_floor / 2.0]),
-                ([wall, w_out, depth / 2.0], [w_in + wall, 0.0, -depth / 2.0]),
-                ([wall, w_out, depth / 2.0], [-(w_in + wall), 0.0, -depth / 2.0]),
-                ([w_in, wall, depth / 2.0], [0.0, w_in + wall, -depth / 2.0]),
-                ([w_in, wall, depth / 2.0], [0.0, -(w_in + wall), -depth / 2.0]),
-            ]
-            volume = sum(8.0 * h[0] * h[1] * h[2] for h, _ in boxes)
+            if self._fidelity_probe:
+                w_in = self._socket_inner_half
+                w_out = COINSERT_SOCKET_OUTER_HALF_M
+                depth = COINSERT_SOCKET_DEPTH_M
+                t_floor = 0.010
+                wall = (w_out - w_in) / 2.0  # half-thickness of each wall slab
+                specs: list[tuple[list[float], list[float], float]] = [
+                    ([w_out, w_out, t_floor / 2.0], [0.0, 0.0, -depth - t_floor / 2.0], 0.0),
+                    ([wall, w_out, depth / 2.0], [w_in + wall, 0.0, -depth / 2.0], 0.0),
+                    ([wall, w_out, depth / 2.0], [-(w_in + wall), 0.0, -depth / 2.0], 0.0),
+                    ([w_in, wall, depth / 2.0], [0.0, w_in + wall, -depth / 2.0], 0.0),
+                    ([w_in, wall, depth / 2.0], [0.0, -(w_in + wall), -depth / 2.0], 0.0),
+                ]
+            else:
+                specs = _round_bore_boxes(self._clearance_m)
+            volume = sum(8.0 * h[0] * h[1] * h[2] for h, _, _ in specs)
             density = COINSERT_RECEPTACLE_MASS_KG / volume
             builder = self.scene.create_actor_builder()
             colour = sapien.render.RenderMaterial(base_color=[0.55, 0.42, 0.20, 1.0])
-            for half, centre in boxes:
-                pose = sapien.Pose(p=centre)
+            for half, centre, yaw in specs:
+                pose = sapien.Pose(
+                    p=centre, q=[float(np.cos(yaw / 2)), 0.0, 0.0, float(np.sin(yaw / 2))]
+                )
                 builder.add_box_collision(
                     pose=pose,
                     half_size=tuple(half),  # type: ignore[arg-type]

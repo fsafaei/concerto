@@ -1,0 +1,200 @@
+{
+  "design": {
+    "clearance_set_m": [
+      0.001,
+      0.0005,
+      0.0002
+    ],
+    "episode_length": 320,
+    "frozen": "depth 40mm, chamfer, clearance set, fixed-link attach, force cut, cooperative reference holder + base inserter (pre-registered insertion envelope unchanged)",
+    "geometry": "ROUND \u2014 cylinder peg + 12-facet convex-box N-gon bore (frees yaw)",
+    "seat_target": 0.9,
+    "seeds": [
+      0,
+      1,
+      2,
+      3,
+      4
+    ]
+  },
+  "honesty_statement": "Numbers are the committed sweep output; no value is hand-entered. The matched insertion is deterministic across seeds (the per-episode goal jitter does not perturb the peg/socket warm-start), so the seat rate is cleanly 0/5 at every clearance. No operating point seats, so the coupling check is moot (recorded for completeness). The holder rotational-compliance lever is the per-controller ori_hold_gain (added this slice; the base inserter keeps 2.5).",
+  "levers_ruled_out": {
+    "architecture": "create_drive AND fixed-link both wall at ~30mm",
+    "cross_section": "square AND round both wall at ~30mm (this sweep)",
+    "friction": "depth pinned ~30mm across \u03bc 0.5\u21920.05",
+    "holder_rotational_compliance": "holder ori-hold gain 2.5\u21921.0 walls ~30mm; \u22640.5 the socket flops (align 55-71\u00b0, worse) \u2014 no setting clears the wedge"
+  },
+  "rationale": "The ~30mm tilt-wedge is robust to architecture, friction, cross-section, and holder rotational compliance: a 40mm seat at 0.5mm/side clearance requires the relative peg-bore tilt held <0.7\u00b0 through the full insertion, but the insertion contact itself cocks the peg to ~0.9-2.8\u00b0, which two-point-wedges at ~30mm. No competent control strategy on the validated rig holds the required precision. The SEATABLE region (tilt <0.7\u00b0) and the ACHIEVABLE-control region (~0.9-2.8\u00b0 under contact) do not overlap, so contact-rich cooperative free-receptacle insertion at 40mm x 0.5mm has NO operating point in this sim where a competent matched pair seats AND holder heterogeneity could be load-bearing. NOT the (disproven) sim wall, NOT a control-competence failure \u2014 a task-parameterisation finding. Per the bound: do NOT reduce seat depth, loosen clearance beyond the frozen set, or use active mating \u2014 each is weaken-to-pass / construct-invalid. Founder call.",
+  "round_sweep": [
+    {
+      "clearance_mm": 1.0,
+      "coupling_valid": false,
+      "matched_align_deg_median": 2.7,
+      "matched_depth_mm_median": 29.7,
+      "matched_peak_couple_n_max": 65.5,
+      "matched_peak_insert_n_max": 37.2,
+      "matched_per_seed": [
+        {
+          "align_deg": 2.7,
+          "depth_mm": 29.7,
+          "peak_couple_n": 65.5,
+          "peak_insert_n": 37.2,
+          "seated": false,
+          "seed": 0
+        },
+        {
+          "align_deg": 2.7,
+          "depth_mm": 29.7,
+          "peak_couple_n": 65.5,
+          "peak_insert_n": 37.2,
+          "seated": false,
+          "seed": 1
+        },
+        {
+          "align_deg": 2.7,
+          "depth_mm": 29.7,
+          "peak_couple_n": 65.5,
+          "peak_insert_n": 37.2,
+          "seated": false,
+          "seed": 2
+        },
+        {
+          "align_deg": 2.7,
+          "depth_mm": 29.7,
+          "peak_couple_n": 65.5,
+          "peak_insert_n": 37.2,
+          "seated": false,
+          "seed": 3
+        },
+        {
+          "align_deg": 2.7,
+          "depth_mm": 29.7,
+          "peak_couple_n": 65.5,
+          "peak_insert_n": 37.2,
+          "seated": false,
+          "seed": 4
+        }
+      ],
+      "matched_seat_rate": 0.0,
+      "rigid_hold_seat_rate": 0.0,
+      "seatable": false,
+      "single_inserter_seat_rate": 0.0
+    },
+    {
+      "clearance_mm": 0.5,
+      "coupling_valid": false,
+      "matched_align_deg_median": 0.8,
+      "matched_depth_mm_median": 30.7,
+      "matched_peak_couple_n_max": 72.7,
+      "matched_peak_insert_n_max": 47.7,
+      "matched_per_seed": [
+        {
+          "align_deg": 0.8,
+          "depth_mm": 30.7,
+          "peak_couple_n": 72.7,
+          "peak_insert_n": 47.7,
+          "seated": false,
+          "seed": 0
+        },
+        {
+          "align_deg": 0.8,
+          "depth_mm": 30.7,
+          "peak_couple_n": 72.7,
+          "peak_insert_n": 47.7,
+          "seated": false,
+          "seed": 1
+        },
+        {
+          "align_deg": 0.8,
+          "depth_mm": 30.7,
+          "peak_couple_n": 72.7,
+          "peak_insert_n": 47.7,
+          "seated": false,
+          "seed": 2
+        },
+        {
+          "align_deg": 0.8,
+          "depth_mm": 30.7,
+          "peak_couple_n": 72.7,
+          "peak_insert_n": 47.7,
+          "seated": false,
+          "seed": 3
+        },
+        {
+          "align_deg": 0.8,
+          "depth_mm": 30.7,
+          "peak_couple_n": 72.7,
+          "peak_insert_n": 47.7,
+          "seated": false,
+          "seed": 4
+        }
+      ],
+      "matched_seat_rate": 0.0,
+      "rigid_hold_seat_rate": 0.0,
+      "seatable": false,
+      "single_inserter_seat_rate": 0.0
+    },
+    {
+      "clearance_mm": 0.2,
+      "coupling_valid": false,
+      "matched_align_deg_median": 5.7,
+      "matched_depth_mm_median": 4.6,
+      "matched_peak_couple_n_max": 70.6,
+      "matched_peak_insert_n_max": 47.0,
+      "matched_per_seed": [
+        {
+          "align_deg": 5.7,
+          "depth_mm": 4.6,
+          "peak_couple_n": 70.6,
+          "peak_insert_n": 47.0,
+          "seated": false,
+          "seed": 0
+        },
+        {
+          "align_deg": 5.7,
+          "depth_mm": 4.6,
+          "peak_couple_n": 70.6,
+          "peak_insert_n": 47.0,
+          "seated": false,
+          "seed": 1
+        },
+        {
+          "align_deg": 5.7,
+          "depth_mm": 4.6,
+          "peak_couple_n": 70.6,
+          "peak_insert_n": 47.0,
+          "seated": false,
+          "seed": 2
+        },
+        {
+          "align_deg": 5.7,
+          "depth_mm": 4.6,
+          "peak_couple_n": 70.6,
+          "peak_insert_n": 47.0,
+          "seated": false,
+          "seed": 3
+        },
+        {
+          "align_deg": 5.7,
+          "depth_mm": 4.6,
+          "peak_couple_n": 70.6,
+          "peak_insert_n": 47.0,
+          "seated": false,
+          "seed": 4
+        }
+      ],
+      "matched_seat_rate": 0.0,
+      "rigid_hold_seat_rate": 0.0,
+      "seatable": false,
+      "single_inserter_seat_rate": 0.0
+    }
+  ],
+  "schema": "coinsert_s2_round_sweep/v1",
+  "stage": "S2 \u2014 round-geometry Gate-D sweep (founder (i)/(ii)/(iii) decision tree)",
+  "step_i_square_at_1mm": {
+    "matched_depth_mm_median": 30.3,
+    "matched_seat_rate": 0.0,
+    "note": "established by the committed 2026-06-25-fixedlink-tuning artifact (walls ~30mm) \u21d2 STEP (ii)"
+  },
+  "verdict": "HARD_STOP"
+}

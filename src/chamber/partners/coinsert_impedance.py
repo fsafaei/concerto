@@ -308,6 +308,13 @@ class _CoInsertControllerBase(PartnerBase):
         self._peg_half_len: float = float(extra.get("peg_half_len", str(_DEFAULT_PEG_HALF_LEN_M)))
         self._damping: float = float(extra.get("damping", str(self._default_damping())))
         self._step_max: float = float(extra.get("step_max", str(self._default_step_max())))
+        # Orientation-hold gain, per-controller: the base inserter holds the peg
+        # orientation stiffly (so the peg cannot flop); the cooperative reference
+        # holder uses a LOW gain so the socket rotationally COMPLIES — it tilts to
+        # align with the slightly-cocked peg under the insertion contact, the
+        # cooperation that lets the peg seat past the tilt-wedge (a stiff /
+        # non-accommodating hold cannot, which is what the coupling check probes).
+        self._ori_hold_gain: float = float(extra.get("ori_hold_gain", str(_ORI_HOLD_GAIN)))
         urdf_path = extra.get("urdf_path")
         self._provider = PandaJacobianProvider(urdf_path)
         # Within-episode state (the ONLY state; zeroed in reset — ADR-009).
@@ -408,7 +415,7 @@ class _CoInsertControllerBase(PartnerBase):
         rot_cur = self._provider.fk_tcp_rotation(qpos)  # (3,3) base frame
         if self._target_rot is None:
             self._target_rot = rot_cur  # hold the ready orientation
-        omega = _ORI_HOLD_GAIN * _rotvec(self._target_rot @ rot_cur.T)
+        omega = self._ori_hold_gain * _rotvec(self._target_rot @ rot_cur.T)
         omega = np.clip(omega, -_ORI_STEP_MAX_RAD, _ORI_STEP_MAX_RAD)
         v6 = np.concatenate([v_base, omega])
         jac6 = self._provider.jacobian_6x7(qpos)  # (6,7) base frame
