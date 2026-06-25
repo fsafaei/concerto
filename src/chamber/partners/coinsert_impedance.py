@@ -103,7 +103,7 @@ _GRIPPER_ACTION: float = -1.0
 #: error, rad/rad). Drives the gripper back to its captured ready orientation so
 #: the welded peg / socket cannot tip under the insertion contact torque (the
 #: 6-DOF term the 3x7 linear Jacobian cannot express). The co-insert design.
-_ORI_HOLD_GAIN: float = 6.0
+_ORI_HOLD_GAIN: float = 2.5
 
 #: Per-step angular command clip, radians — keeps the orientation correction
 #: quasi-static (no snap).
@@ -146,7 +146,7 @@ _BASE_INTEGRAL_CLAMP_MS: float = 0.4
 #: Approach standoff, metres — during the approach phase the base drives the peg
 #: tip to this height above the socket mouth (along the socket axis) while
 #: nulling the lateral offset, so the descent starts pre-aligned.
-_BASE_APPROACH_STANDOFF_M: float = 0.015
+_BASE_APPROACH_STANDOFF_M: float = 0.004
 
 #: Lateral centering tolerance, metres — the base presses only once the peg tip
 #: is laterally within this of the socket axis (tight, so the chamfer + clearance
@@ -156,7 +156,7 @@ _BASE_ALIGN_TOL_M: float = 0.0012
 #: Stall window, control steps — if the press makes no depth progress for this
 #: many steps the unjam maneuver engages (the peg has friction-wedged on a slight
 #: cock and a stiff press only locks it harder / drags the whole assembly down).
-_BASE_STALL_STEPS: int = 3
+_BASE_STALL_STEPS: int = 8
 
 #: Unjam retract distance, metres — on a stall the base briefly backs the peg UP
 #: by this much (relieving the wedge normal force) while spiral-searching, then
@@ -171,7 +171,7 @@ _BASE_RETRACT_STEPS: int = 5
 #: steady quasi-static seat — the target depth advances by this each press step
 #: (capped at the depth target). Paired with the unjam retract pulses below, it
 #: walks the peg past the friction-wedge depth without slamming.
-_BASE_DESCEND_STEP_M: float = 0.002
+_BASE_DESCEND_STEP_M: float = 0.005
 
 #: Lead-in / spiral-search amplitude, metres — the lateral search radius the
 #: base sweeps while pressing, to find the hole when the initial alignment is at

@@ -1,0 +1,79 @@
+{
+  "diagnosis": "On the validated fixed-link rig the matched pair reliably reaches ~30 mm with good alignment (median depth 30.3 mm, align 0.9 deg), but cannot clear the last ~8 mm to the 38 mm seat: a friction wedge at ~30 mm (0.5 mm-per-side clearance + the declared friction + 40 mm depth). The press authority needed to overcome the friction either COCKS the peg (align 0.3 -> 2.4-4.7 deg, worsening the wedge) or, once the peg friction-locks, DRAGS the holder (the joint impedance cannot resist the locked-pair reaction; stiffening it destabilises). This wall is robust across the create_drive AND fixed-link architectures and all 8 control configs.",
+  "firm_bound": "8 tuning configurations (founder-set); hit without reaching the seat",
+  "honesty_statement": "Numbers are the committed probe output; no value is hand-entered. The matched pair does NOT seat \u2014 the >=0.9 precondition is not met \u2014 so the coupling preview, Gate-D, capability-gate, force-limit and oracle-calibration steps are NOT run; this slice stops at the firm bound.",
+  "interpretation": "NOT the (disproven) SAPIEN constraint-fidelity wall \u2014 the fixed link braces with no over-constraint and the single-inserter positive control holds (rate 0.00). NOT a control-competence failure that 8 configs could fix. A TASK-PARAMETERISATION wall: the task as parameterised (clearance + the declared peg-socket friction + the 40 mm seat depth in the quasi-static control regime) is mis-conditioned even for a competent controller. Founder call: adjust the still-unfrozen task params (the declared friction and/or the seat depth) or honest stop. Do NOT tune unbounded.",
+  "matched": {
+    "align_deg_median": 0.9,
+    "depth_mm_median": 30.3,
+    "per_seed": [
+      {
+        "align_deg": 0.9,
+        "depth_mm": 30.3,
+        "peak_couple_n": 72.6,
+        "peak_insert_n": 45.1,
+        "seated": false,
+        "seed": 0,
+        "success_geom": false
+      },
+      {
+        "align_deg": 0.9,
+        "depth_mm": 30.3,
+        "peak_couple_n": 72.6,
+        "peak_insert_n": 45.1,
+        "seated": false,
+        "seed": 1,
+        "success_geom": false
+      },
+      {
+        "align_deg": 0.9,
+        "depth_mm": 30.3,
+        "peak_couple_n": 72.6,
+        "peak_insert_n": 45.1,
+        "seated": false,
+        "seed": 2,
+        "success_geom": false
+      },
+      {
+        "align_deg": 0.9,
+        "depth_mm": 30.3,
+        "peak_couple_n": 72.6,
+        "peak_insert_n": 45.1,
+        "seated": false,
+        "seed": 3,
+        "success_geom": false
+      },
+      {
+        "align_deg": 0.9,
+        "depth_mm": 30.3,
+        "peak_couple_n": 72.6,
+        "peak_insert_n": 45.1,
+        "seated": false,
+        "seed": 4,
+        "success_geom": false
+      }
+    ],
+    "seat_rate": 0.0
+  },
+  "schema": "coinsert_s2_fixedlink_tuning/v1",
+  "single_inserter_positive_control": {
+    "rate": 0.0,
+    "success": [
+      false,
+      false,
+      false
+    ]
+  },
+  "stage": "S2 \u2014 bounded competence-tuning on the fixed-link rig",
+  "tuning_log": [
+    "1. baseline (ori_gain 6): seat 0; ori-hold couples into lateral, peg never centres",
+    "2. ori_gain 6->2.5: seat 0; lateral fixed (~1 mm), peg hovers at standoff",
+    "3. standoff 15->4 mm: seat 0; peg stuck ~13 mm above (below-hold arm-arm interference)",
+    "4. holder->long-bracket fixed-link: seat 0 but inserts 23 mm; socket braces (sockDrift 0)",
+    "5. descend 0.002->0.005, stall 3->8: seat 0; reaches ~30 mm and HOLDS (committed best)",
+    "6. descend->0.003, retract 0.004x3: seat 0; friction-lock drags holder (210 mm + 113 mm)",
+    "7. stiff holder kp 2->8 + firm press: seat 0; DESTABILISES (socket flung, depth 86 mm)",
+    "8. ori_gain->4 + moderate unjam: seat 0; reaches ~30 mm then drags 167 mm"
+  ],
+  "verdict": "BOUND_HIT"
+}

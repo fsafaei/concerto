@@ -403,13 +403,16 @@ _PANDA_READY_QPOS_EGO: NDArray[np.float64] = np.array(
 )
 
 #: Holder ready qpos — forward reach, gripper straight down, base joint
-#: ``j1 = +0.5`` so the holder hand swings ~248 mm off the insertion axis (clear
-#: of the descending peg); the socket is reached back onto the axis by the welded
-#: bracket below. (The shorter side / below holds that would brace the axial load
-#: over-constrain the SAPIEN drive-weld — the documented S2 constraint-fidelity
-#: wall — so this clean-weld lateral hold is the committed reference.)
+#: ``j1 = +0.5`` so the holder hand swings ~248 mm off the insertion axis; the
+#: socket is reached back onto the axis by the fixed-link bracket below. The long
+#: bracket keeps the holder ARM clear of the ego's vertical descent corridor (a
+#: shorter below/side hold puts the holder arm in the peg's path and an active
+#: holder then blocks the ego). With the FIXED-LINK attach (a rigid child link in
+#: the holder articulation, not a ``create_drive`` inter-body weld) the long
+#: bracket does NOT over-constrain — the reduced-coordinate solver holds the
+#: socket rock-steady and the holder joint impedance braces the axial reaction.
 _PANDA_READY_QPOS_HOLDER: NDArray[np.float64] = np.array(
-    [0.0, 0.1, 0.0, -2.65, 0.0, 2.75, 0.785, 0.0, 0.0]
+    [0.5, -0.1, 0.0, -2.2, 0.0, 2.1, 0.785, 0.04, 0.04]
 )
 
 #: Peg weld (ego): identity body orientation at the grip offset down hand +z, so
@@ -418,18 +421,20 @@ _PANDA_READY_QPOS_HOLDER: NDArray[np.float64] = np.array(
 _PEG_GRIP_IN_HAND_P: tuple[float, float, float] = (0.0, 0.0, _GRIP_OFFSET_Z_M)
 _PEG_GRIP_IN_HAND_Q: tuple[float, float, float, float] = (1.0, 0.0, 0.0, 0.0)
 
-#: Socket weld (holder): a 180°-about-hand-x flip composed with a -0.5 rad yaw
-#: (q = wxyz (0, 0.96891, 0.24740, 0)) maps the socket opening (local +z) to world
+#: Socket fixed-joint origin (holder): the ``(xyz, q=wxyz)`` hand-frame pose of
+#: the socket rigid child link's fixed joint (read by ``_augmented_socket_holder_urdf``
+#: via ``_quat_wxyz_to_rpy``). A 180°-about-hand-x flip composed with a -0.5 rad
+#: yaw (q = (0, 0.96891, 0.24740, 0)) maps the socket opening (local +z) to world
 #: +z (UP) AND cancels the holder ``j1 = +0.5`` base swing so the SQUARE socket is
 #: yaw-aligned with the SQUARE peg (a 28.6° yaw mismatch would make the peg's
 #: diagonal interfere with the 0.5 mm-per-side clearance). The translation reaches
 #: the swung-out hand's socket back onto the insertion axis, 13 mm below the ego
 #: peg tip. **Tied to the two ready qposes**: rebuild with an identity-position +
-#: flip socket weld, read the ego peg-tip world ``T`` and the holder-hand world
+#: flip fixed joint, read the ego peg-tip world ``T`` and the holder-hand world
 #: pose ``(hp, hR)``, then ``grip_p = hR.T @ ([T_x, T_y, T_z - 0.013] - hp)`` and
 #: re-tune the yaw if the qposes change.
-_SOCKET_GRIP_IN_HAND_P: tuple[float, float, float] = (0.0639, 0.0, -0.0609)
-_SOCKET_GRIP_IN_HAND_Q: tuple[float, float, float, float] = (0.0, 1.0, 0.0, 0.0)
+_SOCKET_GRIP_IN_HAND_P: tuple[float, float, float] = (-0.0832, 0.2341, 0.1554)
+_SOCKET_GRIP_IN_HAND_Q: tuple[float, float, float, float] = (0.0, 0.96891, 0.24740, 0.0)
 
 #: Span (metres) between the two weld anchors along the held body's local +z
 #: axis. Two translation-locked anchors this far apart lock position + both tilt
