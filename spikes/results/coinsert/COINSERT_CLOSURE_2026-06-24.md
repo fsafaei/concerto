@@ -24,7 +24,7 @@ parameter), not an inter-robot stiffness (the structural escape from the co-carr
 | **S1** contact-fidelity spike | **STAY** on SAPIEN: contact monotone + graded on both sims, shape-normalised SAPIEN↔MuJoCo agreement within tolerance (~1–2.4%) | `spikes/results/coinsert/s1/2026-06-24/coinsert_s1_fidelity_sweep.json` (#257, `d81726b`) |
 | **S2** base inserter + the apparent "SAPIEN wall" | `create_drive` socket weld over-constrains under axial bracing load: zero-action holder-wrist preload **573→1306 N**; lateral hold drags the free assembly **~210 mm**; force-cut peak couple **515.7→92.2 N** | `spikes/results/coinsert/s2/2026-06-24/coinsert_s2_bracing_probe.json` (`20fbace`) |
 | **S2** fixed-link attach — **wall DISPROVEN** | socket as a rigid child link of the holder articulation collapses the preload **573–1306 N → 0.2 N**, braces (sink −1.4 mm), holds align ~0.7°, single-inserter ≈0 — the "wall" was a maximal-coordinate `create_drive` artifact | `spikes/results/coinsert/s2/2026-06-24-fixedlink/coinsert_s2_fixedlink_probe.json` (`582992b`) |
-| **S2** bounded competence-tuning — **BOUND_HIT** | two decisive control fixes (6-DOF ori-hold 6→2.5; long-bracket fixed-link arm clearance); competent matched pair reaches **~30.3 mm**, align 0.9°, but cannot clear the last ~8 mm to the 38 mm seat | `spikes/results/coinsert/s2/2026-06-25-fixedlink-tuning/coinsert_s2_fixedlink_tuning_probe.json` (`58f3da3`) |
+| **S2** bounded competence-tuning — **BOUND_HIT** | two decisive control fixes (6-DOF ori-hold 6→2.5; long-bracket fixed-link arm clearance); competent matched pair reaches **~30.3 mm**, align 0.9°, but cannot clear the last ~8 mm to the 38 mm seated threshold | `spikes/results/coinsert/s2/2026-06-25-fixedlink-tuning/coinsert_s2_fixedlink_tuning_probe.json` (`58f3da3`) |
 | **S2** round-geometry Gate-D sweep — **HARD_STOP** | (i) square@1.0 mm walls (~30.3 mm, seat 0); (ii) canonical round (cylinder peg + 12-facet bore) walls at the **same ~30 mm** at every clearance (1.0/0.5/0.2 mm → matched **0/5**, rigid-hold 0/5, single-inserter 0) | `spikes/results/coinsert/s2/2026-06-25-round/coinsert_s2_round_sweep.json` (`aaf8694`) |
 | **S2** friction-lever probe | matched seated depth pinned (~20–31 mm) across declared friction **0.5→0.05**, **none seated** — the wedge is geometric, not a friction-lock | `spikes/results/coinsert/s2/2026-06-25-friction/coinsert_s2_friction_probe.json` (this commit) |
 
@@ -45,8 +45,9 @@ round sweep); deterministic (env P6 substream + deterministic controllers).
    envelope, 6-DOF orientation hold, and per-episode-reset assertion; the **cooperative reference holder**). The
    matched pair is a competent inserter (reaches ~30 mm, align 0.9°, braces, single-inserter ≈0).
 3. **The geometric no-operating-point finding (the close).** There is **no clearance** in the frozen set — square or
-   canonical round — at which the competent matched pair seats. The ~30 mm wall is a geometric **tilt-wedge**: a
-   40 mm seat at 0.5 mm-per-side clearance requires the relative peg-bore tilt held **<0.7°** through the full
+   canonical round — at which the competent matched pair seats. The ~30 mm wall is a geometric **tilt-wedge**:
+   reaching the **38 mm seated threshold** (the 40 mm nominal depth target minus the 2 mm tolerance) at 0.5 mm-per-side
+   clearance requires the relative peg-bore tilt held **<0.7°** through the full
    insertion, but the insertion contact itself cocks the peg to **~0.9–2.8°**, which two-point-wedges at ~30 mm. It
    is robust to **every** lever probed: architecture (`create_drive` AND fixed-link), friction (0.5→0.05),
    cross-section (square AND round), and holder rotational compliance (ori-hold 2.5→1.0 walls; ≤0.5 the socket flops
@@ -87,7 +88,7 @@ falsifiable controls, the honest stops), **not** on a clean existence result tha
 
 **HARD_STOP / honest close**, per the founder's pre-committed (i)→(ii)→(iii) tree. The following weaken-to-pass /
 construct-invalid moves were available and were **refused** (each would manufacture a pass without testing the
-thesis): (a) reduce the 40 mm seat depth; (b) loosen clearance beyond the frozen {1.0, 0.5, 0.2} mm set; (c) active
+thesis): (a) reduce the 40 mm nominal seat-depth target; (b) loosen clearance beyond the frozen {1.0, 0.5, 0.2} mm set; (c) active
 raise-to-meet mating (makes the task require co-designed choreography — the exact co-design confound). The locked
 `coinsert_s0.yaml` is untouched; the square→round cross-section change is documented here (the peg cross-section is
 not in the frozen prereg set; `peg_diameter`/`clearance`/`depth`/`chamfer`/`mass`/`friction`/`control`/`horizon`
@@ -106,6 +107,6 @@ a tune-to-pass of this one).
 
 All numbers above are read from the committed JSON artifacts named in the arc table; none is hand-entered. The
 matched insertion is deterministic across seeds (the per-episode goal jitter does not perturb the peg/socket
-warm-start), so seat rates are cleanly 0 at every clearance. No co-insert episode reached the 38 mm seat, so no
+warm-start), so seat rates are cleanly 0 at every clearance. No co-insert episode reached the 38 mm seated threshold, so no
 heterogeneity / capability-gate / force-limit / oracle-calibration measurement was run — this bet closes at the
 pre-committed HARD_STOP, before any heterogeneity comparison.
