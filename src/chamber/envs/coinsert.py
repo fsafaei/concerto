@@ -909,8 +909,15 @@ def make_coinsert_env(
     if render_backend == "none":
         patch_sapien_urdf_no_visual_material()
 
-    class CoInsertEnv(BaseEnv):  # type: ignore[misc, valid-type]
-        """Two-robot hold-and-insert env — S0 skeleton (ADR-026 §Decision 1-4).
+    # The inner env class is SAPIEN/Vulkan-only — it subclasses ManiSkill's
+    # ``BaseEnv`` and every method drives the physx scene, so it cannot execute on
+    # the CPU-only ``coverage-gate`` runner (the gpu-marked tests skip there). It is
+    # exercised by ``tests/integration/test_coinsert_real.py`` on a GPU host;
+    # excluded from the aggregate coverage gate via ``# pragma: no cover`` (the pure
+    # module-level surface — the predicate, the geometry helpers, the controllers —
+    # stays covered by the Tier-1 tests).
+    class CoInsertEnv(BaseEnv):  # type: ignore[misc, valid-type]  # pragma: no cover
+        """Two-robot hold-and-insert env (ADR-026 §Decision 1-4).
 
         Subclasses :class:`mani_skill.envs.sapien_env.BaseEnv` directly
         (matching :class:`chamber.envs.cocarry.CoCarryEnv`). Ego = inserter
