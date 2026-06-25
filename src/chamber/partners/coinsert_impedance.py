@@ -1,6 +1,11 @@
 # SPDX-License-Identifier: Apache-2.0
 r"""Hand-written co-insert controllers — structured base inserter + cooperative holder.
 
+**STATUS: S2-closed (HARD_STOP 2026-06-24); Phase-2 parked.** Kept as a competent,
+reusable instrument pair; the co-insert bet honest-closed at a geometric
+tilt-wedge (no clearance seats the competent matched pair). See
+``spikes/results/coinsert/COINSERT_CLOSURE_2026-06-24.md``.
+
 The S2 instrument pair for the contact-rich hold-and-insert task
 (:mod:`chamber.envs.coinsert`), the contact-rich generalisation of the co-carry
 end-effector-space impedance controller

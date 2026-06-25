@@ -6,7 +6,15 @@
 # are exported but not advertised in the torch stub's ``__all__``. Suppressed
 # file-locally so the scene / spaces / telemetry logic stays free of per-line
 # ``type: ignore`` noise.
-r"""Co-insert env — contact-rich (hold-and-insert) heterogeneity setup (S0 skeleton).
+r"""Co-insert env — contact-rich (hold-and-insert) heterogeneity setup.
+
+**STATUS: S2-closed (HARD_STOP 2026-06-24); Phase-2 parked.** The contact-rich
+co-insert bet reached a documented honest close: no clearance (square or
+canonical round) seats the competent matched pair (a geometric tilt-wedge), so
+no operating point existed to test heterogeneity. The env + controllers are kept
+as a competent, reusable rig (the SAPIEN "wall" was a ``create_drive`` artifact,
+disproven by the fixed-link attach). See
+``spikes/results/coinsert/COINSERT_CLOSURE_2026-06-24.md``.
 
 Phase-2, **non-gating** research bet (invariant I1; ADR-026 §Decision 4):
 the contact-rich successor to the co-carry ladder. Two manipulators perform a
