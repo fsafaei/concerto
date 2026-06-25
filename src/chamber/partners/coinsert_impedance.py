@@ -497,7 +497,7 @@ class CoInsertBaseInserter(_CoInsertControllerBase):
         self._last_depth = -1.0
 
     def assert_episode_state_clear(self) -> None:
-        """Assert the within-episode state — including the stall clock — was cleared."""
+        """Assert the within-episode state — including the stall clock — was cleared (ADR-009)."""
         super().assert_episode_state_clear()
         if self._stall_count != 0 or self._retract_count != 0:
             msg = (
@@ -659,7 +659,7 @@ class CoInsertReferenceHolder(_CoInsertControllerBase):
         self._nominal_mouth = None
 
     def assert_episode_state_clear(self) -> None:
-        """Assert the within-episode state — including the nominal mouth pose — was cleared."""
+        """Assert within-episode state — incl. the nominal mouth pose — was cleared (ADR-009)."""
         super().assert_episode_state_clear()
         if self._nominal_mouth is not None:
             msg = (
