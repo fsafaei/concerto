@@ -39,6 +39,7 @@ The M4-gate integration test (T4.9) lands in a follow-up PR (plan/04 §1).
 
 from chamber.partners.api import FrozenPartner, PartnerSpec
 from chamber.partners.cocarry_impedance import CoCarryImpedancePartner
+from chamber.partners.coinsert_impedance import CoInsertBaseInserter, CoInsertReferenceHolder
 from chamber.partners.frozen_harl import FrozenHARLPartner
 from chamber.partners.frozen_mappo import FrozenMAPPOPartner
 from chamber.partners.heuristic import ScriptedHeuristicPartner
@@ -50,6 +51,8 @@ from chamber.partners.stubs.openvla import OpenVLAPartner
 
 __all__ = [
     "CoCarryImpedancePartner",
+    "CoInsertBaseInserter",
+    "CoInsertReferenceHolder",
     "CrossFormerPartner",
     "FrozenHARLPartner",
     "FrozenMAPPOPartner",

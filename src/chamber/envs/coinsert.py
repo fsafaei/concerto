@@ -6,7 +6,15 @@
 # are exported but not advertised in the torch stub's ``__all__``. Suppressed
 # file-locally so the scene / spaces / telemetry logic stays free of per-line
 # ``type: ignore`` noise.
-r"""Co-insert env — contact-rich (hold-and-insert) heterogeneity setup (S0 skeleton).
+r"""Co-insert env — contact-rich (hold-and-insert) heterogeneity setup.
+
+**STATUS: S2-closed (HARD_STOP 2026-06-24); Phase-2 parked.** The contact-rich
+co-insert bet reached a documented honest close: no clearance (square or
+canonical round) seats the competent matched pair (a geometric tilt-wedge), so
+no operating point existed to test heterogeneity. The env + controllers are kept
+as a competent, reusable rig (the SAPIEN "wall" was a ``create_drive`` artifact,
+disproven by the fixed-link attach). See
+``spikes/results/coinsert/COINSERT_CLOSURE_2026-06-24.md``.
 
 Phase-2, **non-gating** research bet (invariant I1; ADR-026 §Decision 4):
 the contact-rich successor to the co-carry ladder. Two manipulators perform a
@@ -75,6 +83,7 @@ References:
 
 from __future__ import annotations
 
+import os
 from typing import TYPE_CHECKING, Any, ClassVar, NamedTuple
 
 import numpy as np
@@ -280,11 +289,54 @@ COINSERT_N_BOOT: int = 10000
 COINSERT_RESIDUAL_RMAX_FRAC: float = 0.05
 
 # ---------------------------------------------------------------------------
+# Dense-reward shaping coefficients (S2; the co-carry transport+level+settle
+# pattern extended to insertion: reward = align + depth + seat_bonus -
+# force_penalty). Named constants so the reward + the S3 freeze read one source
+# of truth. The force penalty engages only past the settle window (the
+# placement transient is not cooperation cost — the co-carry settle discipline).
+# ---------------------------------------------------------------------------
+
+#: Lateral-alignment reward weight — peg tip toward the socket axis.
+COINSERT_REWARD_ALIGN_COEFF: float = 1.0
+
+#: Insertion-depth reward weight — peg tip progress into the socket bore.
+COINSERT_REWARD_DEPTH_COEFF: float = 1.0
+
+#: Seated-bonus reward (added once ``seated`` holds) — the insertion goal.
+COINSERT_REWARD_SEAT_BONUS: float = 3.0
+
+#: Success-bonus reward (added once the full predicate holds).
+COINSERT_REWARD_SUCCESS_BONUS: float = 5.0
+
+#: Over-force penalty weight (subtracted when the peak interaction wrench exceeds
+#: the soft threshold) — discourages jamming-through / over-stress.
+COINSERT_REWARD_FORCE_COEFF: float = 1.0
+
+#: Soft force threshold (N) above which the over-force penalty ramps in. A
+#: shaping coefficient only (NOT the success ``f_couple_max``, which is derived
+#: from the matched-pair distribution at S2 and frozen at S3).
+COINSERT_REWARD_FORCE_SOFT_N: float = 80.0
+
+#: tanh distance scale (1/m) for the alignment/depth shaping terms.
+COINSERT_REWARD_TANH_SCALE: float = 50.0
+
+#: Reward normaliser — keeps the dense reward in a bounded band.
+COINSERT_REWARD_NORMALIZER: float = 5.0
+
+#: Receptacle linear-velocity threshold (m/s) for the ``settled`` conjunct — the
+#: free receptacle must be quasi-stationary over the final settle window.
+COINSERT_SETTLE_VEL_THRESH: float = 0.05
+
+# ---------------------------------------------------------------------------
 # Robot / link wiring. The ego seat is the Panda inserter; the PARTNER (holder)
 # seat is embodiment-configurable (Panda reference at S0; the Rung-B
 # different-embodiment xArm6/UR holder is wired at S4). Only the Panda
 # reference holder is built in this S0 skeleton.
 # ---------------------------------------------------------------------------
+
+#: Number of Panda arm DOF (excludes the two gripper fingers) — the span of the
+#: ``is_static`` qvel check (the co-carry convention).
+_PANDA_ARM_DOF: int = 7
 
 #: Ego (inserter) uid — the Panda incumbent (AS-homo convention from
 #: :mod:`chamber.envs.stage1_pickplace` / :mod:`chamber.envs.cocarry`).
@@ -329,6 +381,175 @@ _PANDA_READY_QPOS: NDArray[np.float64] = np.array(
 _PANDA_RETRACTED_QPOS: NDArray[np.float64] = np.array(
     [0.0, -np.pi / 4, 0.0, -np.pi * 7 / 8, 0.0, np.pi * 5 / 8, -np.pi / 4, 0.04, 0.04]
 )
+
+# ---------------------------------------------------------------------------
+# S2 vertical top-down insertion geometry (ADR-026 §Decision 1; the S2 pilot
+# calibration). The Panda gripper points down naturally in a forward reach, so
+# insertion is vertical: the ego holds the peg pointing DOWN (peg welded along
+# hand +z = world -z); the holder holds the socket FLIPPED so its opening faces
+# world +z (UP), reached onto the insertion axis by a welded bracket while the
+# holder hand sits clear of the descending peg. The 2-anchor weld
+# (:meth:`_add_weld`) holds the socket orientation cleanly here (align ~1°, the
+# droop the founder flagged is resolved). **Known S2 limitation (the SAPIEN
+# constraint-fidelity wall; see spikes/results/coinsert/s2/):** a lateral bracket
+# hold cannot structurally brace the axial insertion reaction (the wrist yields to
+# the moment → the free assembly drags down), and a hand-below-socket hold that
+# WOULD brace over-constrains the SAPIEN drive-weld at every anchor span
+# (hundreds-to-1300 N internal preload / socket tilt) — so the matched pair seats
+# only to ~31-37 mm, short of the 38 mm target. These constants are S2-pilot-
+# derived and frozen at S3; they are tied to one another (see
+# ``_SOCKET_GRIP_IN_HAND_P``) — recompute the socket weld offset if the qposes
+# change. The receptacle stays FREE (held only by the holder weld, never
+# world-anchored — the two-robot-necessity positive control depends on it).
+# ---------------------------------------------------------------------------
+
+#: Ego (inserter) ready qpos — forward reach, gripper down, peg tip over the
+#: socket mouth at the workspace centre (world hand ~[0.012, 0, 0.426]; peg tip
+#: ~[0.012, 0, 0.283]).
+_PANDA_READY_QPOS_EGO: NDArray[np.float64] = np.array(
+    [0.0, -0.1, 0.0, -2.2, 0.0, 2.1, 0.785, 0.04, 0.04]
+)
+
+#: Holder ready qpos — forward reach, gripper straight down, base joint
+#: ``j1 = +0.5`` so the holder hand swings ~248 mm off the insertion axis; the
+#: socket is reached back onto the axis by the fixed-link bracket below. The long
+#: bracket keeps the holder ARM clear of the ego's vertical descent corridor (a
+#: shorter below/side hold puts the holder arm in the peg's path and an active
+#: holder then blocks the ego). With the FIXED-LINK attach (a rigid child link in
+#: the holder articulation, not a ``create_drive`` inter-body weld) the long
+#: bracket does NOT over-constrain — the reduced-coordinate solver holds the
+#: socket rock-steady and the holder joint impedance braces the axial reaction.
+_PANDA_READY_QPOS_HOLDER: NDArray[np.float64] = np.array(
+    [0.5, -0.1, 0.0, -2.2, 0.0, 2.1, 0.785, 0.04, 0.04]
+)
+
+#: Peg weld (ego): identity body orientation at the grip offset down hand +z, so
+#: the peg's local +z (the inserting tip) extends along the gripper approach
+#: (world -z; tip-down). (xyz, quat wxyz) in the hand frame.
+_PEG_GRIP_IN_HAND_P: tuple[float, float, float] = (0.0, 0.0, _GRIP_OFFSET_Z_M)
+_PEG_GRIP_IN_HAND_Q: tuple[float, float, float, float] = (1.0, 0.0, 0.0, 0.0)
+
+#: Socket fixed-joint origin (holder): the ``(xyz, q=wxyz)`` hand-frame pose of
+#: the socket rigid child link's fixed joint (read by ``_augmented_socket_holder_urdf``
+#: via ``_quat_wxyz_to_rpy``). A 180°-about-hand-x flip composed with a -0.5 rad
+#: yaw (q = (0, 0.96891, 0.24740, 0)) maps the socket opening (local +z) to world
+#: +z (UP) AND cancels the holder ``j1 = +0.5`` base swing so the SQUARE socket is
+#: yaw-aligned with the SQUARE peg (a 28.6° yaw mismatch would make the peg's
+#: diagonal interfere with the 0.5 mm-per-side clearance). The translation reaches
+#: the swung-out hand's socket back onto the insertion axis, 13 mm below the ego
+#: peg tip. **Tied to the two ready qposes**: rebuild with an identity-position +
+#: flip fixed joint, read the ego peg-tip world ``T`` and the holder-hand world
+#: pose ``(hp, hR)``, then ``grip_p = hR.T @ ([T_x, T_y, T_z - 0.013] - hp)`` and
+#: re-tune the yaw if the qposes change.
+_SOCKET_GRIP_IN_HAND_P: tuple[float, float, float] = (-0.0832, 0.2341, 0.1554)
+_SOCKET_GRIP_IN_HAND_Q: tuple[float, float, float, float] = (0.0, 0.96891, 0.24740, 0.0)
+
+#: Span (metres) between the two weld anchors along the held body's local +z
+#: axis. Two translation-locked anchors this far apart lock position + both tilt
+#: (swing) DOF while leaving the harmless twist about the body axis free (S2).
+_WELD_ANCHOR_SPAN_M: float = 0.06
+
+#: Name of the socket link injected into the holder URDF as a rigid child of
+#: ``panda_hand`` (S2 fixed-link attach; the create_drive-free architecture).
+_SOCKET_LINK_NAME: str = "coinsert_socket"
+
+#: Number of tangential wall facets approximating the ROUND socket bore (S2). The
+#: peg/socket cross-section is ROUND (a cylinder peg + an N-gon bore) — the
+#: canonical, sim2real-validated insertion geometry: the cylinder self-centres
+#: under the insertion force and frees the yaw DOF, removing the square's
+#: corner-wedge that over-constrained tilt (the ~30 mm wall). The bore is a ring
+#: of convex boxes — the same no-mesh convex-decomposition technique as the
+#: square walls, just more facets (ADR-001 §Risks no-mesh). The square geometry
+#: is NOT in the frozen prereg set, so this is a documented geometry change.
+_ROUND_BORE_FACETS: int = 12
+
+
+def _round_bore_boxes(clearance_m: float) -> list[tuple[list[float], list[float], float]]:
+    """Round-approx blind socket bore as convex boxes (S2; ADR-001 §Risks no-mesh).
+
+    Returns ``(half_size[xyz], centre[xyz], yaw_about_z)`` for the floor + the
+    :data:`_ROUND_BORE_FACETS` tangential wall facets of a regular N-gon bore of
+    inscribed radius ``r_in = peg_radius + clearance/2`` — so the per-face
+    diametral clearance equals the declared clearance, exactly as the square
+    walls. Each facet is a thin box whose flat inner face is tangent to the bore
+    circle; the cylinder peg self-centres against the ring and is free in yaw.
+    Shared by the fixed-link URDF socket and the actor socket so they match.
+    """
+    r_peg = COINSERT_PEG_DIAMETER_M / 2.0
+    r_in = r_peg + clearance_m / 2.0
+    w_out = COINSERT_SOCKET_OUTER_HALF_M
+    depth = COINSERT_SOCKET_DEPTH_M
+    t_floor = 0.010
+    t = w_out - r_in  # radial wall thickness (outer extent ~ the square w_out)
+    n = _ROUND_BORE_FACETS
+    half_seg = (r_in + t) * float(np.tan(np.pi / n)) + 0.002  # tangential half-width (+overlap)
+    r_c = r_in + t / 2.0
+    out: list[tuple[list[float], list[float], float]] = [
+        ([w_out, w_out, t_floor / 2.0], [0.0, 0.0, -depth - t_floor / 2.0], 0.0),
+    ]
+    for i in range(n):
+        theta = 2.0 * np.pi * i / n
+        cx, cy = r_c * float(np.cos(theta)), r_c * float(np.sin(theta))
+        out.append(([t / 2.0, half_seg, depth / 2.0], [cx, cy, -depth / 2.0], float(theta)))
+    return out
+
+
+def _quat_wxyz_to_rpy(q: tuple[float, float, float, float]) -> tuple[float, float, float]:
+    """URDF roll-pitch-yaw (extrinsic XYZ) from a wxyz quaternion (S2; ADR-026 §Decision 1)."""
+    w, x, y, z = q
+    roll = float(np.arctan2(2 * (w * x + y * z), 1 - 2 * (x * x + y * y)))
+    pitch = float(np.arcsin(max(-1.0, min(1.0, 2 * (w * y - z * x)))))
+    yaw = float(np.arctan2(2 * (w * z + x * y), 1 - 2 * (y * y + z * z)))
+    return roll, pitch, yaw
+
+
+def _augmented_socket_holder_urdf(clearance_m: float) -> str:
+    """Write a holder URDF = panda_v2 + the blind socket as a fixed child of panda_hand.
+
+    The S2 fixed-link attach (ADR-026 §Decision 1): the held socket is a rigid
+    LINK in the holder articulation (a fixed joint off ``panda_hand``), NOT a
+    maximal-coordinate ``create_drive`` inter-body weld — so the robust
+    reduced-coordinate articulation solver holds it (no over-constraint preload)
+    and the holder joint impedance bears the axial insertion reaction. The socket
+    bore is the ROUND N-gon ring (:func:`_round_bore_boxes`, inscribed radius
+    sized by the diametral clearance) + a floor, with the flip+offset that places
+    the opening up on the insertion axis matching the actor build exactly. Mesh
+    paths are absolutised so the generated URDF can live in a temp dir. Returns
+    the temp URDF path.
+    """
+    import tempfile
+
+    from mani_skill import PACKAGE_ASSET_DIR
+
+    panda_dir = f"{PACKAGE_ASSET_DIR}/robots/panda"
+    base = open(f"{panda_dir}/panda_v2.urdf", encoding="utf-8").read()  # noqa: SIM115
+    base = base.replace(
+        'filename="franka_description/', f'filename="{panda_dir}/franka_description/'
+    )
+    geom = "\n".join(
+        f'    <collision><origin xyz="{c[0]} {c[1]} {c[2]}" rpy="0 0 {yaw}"/><geometry>'
+        f'<box size="{2 * h[0]} {2 * h[1]} {2 * h[2]}"/></geometry></collision>\n'
+        f'    <visual><origin xyz="{c[0]} {c[1]} {c[2]}" rpy="0 0 {yaw}"/><geometry>'
+        f'<box size="{2 * h[0]} {2 * h[1]} {2 * h[2]}"/></geometry></visual>'
+        for h, c, yaw in _round_bore_boxes(clearance_m)
+    )
+    rpy = _quat_wxyz_to_rpy(_SOCKET_GRIP_IN_HAND_Q)
+    xyz = _SOCKET_GRIP_IN_HAND_P
+    block = (
+        f'\n  <link name="{_SOCKET_LINK_NAME}">\n{geom}\n'
+        f'    <inertial><mass value="{COINSERT_RECEPTACLE_MASS_KG}"/>'
+        '<inertia ixx="5e-4" ixy="0" ixz="0" iyy="5e-4" iyz="0" izz="5e-4"/></inertial>\n'
+        f'  </link>\n  <joint name="{_SOCKET_LINK_NAME}_joint" type="fixed">\n'
+        f'    <origin xyz="{xyz[0]} {xyz[1]} {xyz[2]}" rpy="{rpy[0]} {rpy[1]} {rpy[2]}"/>\n'
+        f'    <parent link="{_HAND_LINK_NAME}"/>\n'
+        f'    <child link="{_SOCKET_LINK_NAME}"/>\n  </joint>\n'
+    )
+    out = base.replace("</robot>", block + "</robot>")
+    fd, path = tempfile.mkstemp(suffix="_coinsert_holder.urdf")
+    with os.fdopen(fd, "w", encoding="utf-8") as fh:
+        fh.write(out)
+    return path
+
 
 #: Per-uid initial base pose ``(xyz, quat_wxyz)`` — the holder is yawed π about
 #: z to face the ego across the table (mirrored, deliberate poses; the co-insert design).
@@ -597,6 +818,8 @@ def make_coinsert_env(
     peg_clearance_m: float = COINSERT_CLEARANCE_SET_M[0],
     peg_socket_friction: float = COINSERT_PEG_SOCKET_FRICTION,
     fidelity_probe: bool = False,
+    f_insert_max: float | None = None,
+    f_couple_max: float | None = None,
 ) -> gym.Env[Any, Any]:
     """Build a :class:`CoInsertEnv` instance (ADR-026 §Decision 1-4).
 
@@ -638,6 +861,14 @@ def make_coinsert_env(
             socket at a fixed pose — a controlled lateral-misalignment sweep that
             isolates the peg-socket contact for the SAPIEN-vs-oracle check.
             ``False`` (default) keeps the peg welded to the ego inserter.
+        f_insert_max: Peak peg-socket contact-force budget for the success
+            ``within_force`` conjunct, Newtons. ``None`` (default) => ``+inf``
+            (the conjunct is vacuous, so a measurement run collects the raw force
+            DISTRIBUTION); the value is derived from the matched-pair success
+            distribution at S2 and frozen at S3 (the co-insert design).
+        f_couple_max: Peak workpiece interaction-wrench budget for the success
+            ``within_force`` conjunct, Newtons. Same ``None`` => ``+inf``
+            semantics; derived at S2, frozen at S3.
 
     Returns:
         A :class:`CoInsertEnv` ready to ``reset(seed=K)``.
@@ -678,8 +909,15 @@ def make_coinsert_env(
     if render_backend == "none":
         patch_sapien_urdf_no_visual_material()
 
-    class CoInsertEnv(BaseEnv):  # type: ignore[misc, valid-type]
-        """Two-robot hold-and-insert env — S0 skeleton (ADR-026 §Decision 1-4).
+    # The inner env class is SAPIEN/Vulkan-only — it subclasses ManiSkill's
+    # ``BaseEnv`` and every method drives the physx scene, so it cannot execute on
+    # the CPU-only ``coverage-gate`` runner (the gpu-marked tests skip there). It is
+    # exercised by ``tests/integration/test_coinsert_real.py`` on a GPU host;
+    # excluded from the aggregate coverage gate via ``# pragma: no cover`` (the pure
+    # module-level surface — the predicate, the geometry helpers, the controllers —
+    # stays covered by the Tier-1 tests).
+    class CoInsertEnv(BaseEnv):  # type: ignore[misc, valid-type]  # pragma: no cover
+        """Two-robot hold-and-insert env (ADR-026 §Decision 1-4).
 
         Subclasses :class:`mani_skill.envs.sapien_env.BaseEnv` directly
         (matching :class:`chamber.envs.cocarry.CoCarryEnv`). Ego = inserter
@@ -702,12 +940,43 @@ def make_coinsert_env(
             self._socket_inner_half: float = coinsert_socket_inner_half_width(self._clearance_m)
             self._friction: float = float(peg_socket_friction)
             self._fidelity_probe: bool = bool(fidelity_probe)
+            # Success ``within_force`` budgets — derived from the matched-pair
+            # distribution at S2 and frozen at S3; ``None`` => +inf (the force
+            # conjunct is vacuous, so a measurement run collects the raw force
+            # DISTRIBUTION without pre-asserting a limit). The co-insert design.
+            self._f_insert_max: float = (
+                float("inf") if f_insert_max is None else float(f_insert_max)
+            )
+            self._f_couple_max: float = (
+                float("inf") if f_couple_max is None else float(f_couple_max)
+            )
             self._rng: np.random.Generator = derive_substream(
                 _SUBSTREAM_NAME, root_seed=self._root_seed
             ).default_rng()
             self._drives: list[Any] = []
             self._hand_link_index_by_uid: dict[str, int] = {}
             self._goal_xyz: NDArray[np.float64] = np.zeros((num_envs, 3), dtype=np.float64)
+            # Episode-peak force buffers (reset lazily at episode start inside
+            # ``evaluate``; the settle window excludes the reset transient). The
+            # co-carry running-maxima pattern.
+            self._peak_insert_n: Any = None
+            self._peak_couple_n: Any = None
+            self._eval_prev_step: int = -1
+            # S2 fixed-link attach: the matched rig holds the socket as a rigid
+            # CHILD LINK of the holder articulation (a fixed joint off panda_hand),
+            # not a create_drive inter-body weld — the reduced-coordinate solver
+            # holds it without over-constraint and the holder joint impedance bears
+            # the axial reaction. The single-inserter control (free, unheld socket)
+            # and the S1 fidelity probe keep the actor socket.
+            self._socket_fixed_link: bool = not self._fidelity_probe and not self._single_inserter
+            self._holder_urdf_path: str | None = None
+            orig_holder_urdf: str | None = None
+            if self._socket_fixed_link:
+                from chamber.agents.panda_partner import PandaPartner
+
+                self._holder_urdf_path = _augmented_socket_holder_urdf(self._clearance_m)
+                orig_holder_urdf = PandaPartner.urdf_path
+                PandaPartner.urdf_path = self._holder_urdf_path  # type: ignore[assignment]
             try:
                 super().__init__(
                     robot_uids=(_EGO_UID, self._partner_uid),  # type: ignore[arg-type]
@@ -723,6 +992,11 @@ def make_coinsert_env(
                     f"CoInsertEnv(condition_id={condition_id!r}) build: {exc}\n"
                     'Set render_backend="none" on CUDA-only hosts; see ADR-001 §Risks.'
                 ) from exc
+            finally:
+                if orig_holder_urdf is not None:
+                    from chamber.agents.panda_partner import PandaPartner
+
+                    PandaPartner.urdf_path = orig_holder_urdf  # type: ignore[assignment]
 
         # ----- ManiSkill v3 BaseEnv hooks -----
 
@@ -799,15 +1073,33 @@ def make_coinsert_env(
             # impulse does not fling the near-massless body out of the socket
             # (numerical ejection); the welded rig uses the default density.
             peg_density = 8000.0 if self._fidelity_probe else 1000.0
-            peg_builder.add_box_collision(
-                half_size=peg_half,  # type: ignore[arg-type]
-                material=contact_mat,
-                density=peg_density,
-            )
-            peg_builder.add_box_visual(
-                half_size=peg_half,  # type: ignore[arg-type]
-                material=sapien.render.RenderMaterial(base_color=[0.30, 0.30, 0.35, 1.0]),
-            )
+            peg_colour = sapien.render.RenderMaterial(base_color=[0.30, 0.30, 0.35, 1.0])
+            if self._fidelity_probe:
+                # S1 fidelity probe keeps the SQUARE box peg unchanged (its
+                # contact-fidelity STAY verdict stands).
+                peg_builder.add_box_collision(
+                    half_size=peg_half,  # type: ignore[arg-type]
+                    material=contact_mat,
+                    density=peg_density,
+                )
+                peg_builder.add_box_visual(half_size=peg_half, material=peg_colour)  # type: ignore[arg-type]
+            else:
+                # S2 ROUND geometry: a CYLINDER peg. SAPIEN's cylinder primitive
+                # lies along its local x, so the collision/visual pose rotates it
+                # -90° about y to align the cylinder axis with the peg's local +z
+                # (the insertion/approach axis, where the box's +z was). The
+                # cylinder self-centres in the round bore and is free in yaw.
+                cyl_pose = sapien.Pose(q=[0.7071067811865476, 0.0, -0.7071067811865476, 0.0])
+                peg_builder.add_cylinder_collision(
+                    pose=cyl_pose,
+                    radius=peg_radius,
+                    half_length=peg_half_len,
+                    material=contact_mat,
+                    density=peg_density,
+                )
+                peg_builder.add_cylinder_visual(
+                    pose=cyl_pose, radius=peg_radius, half_length=peg_half_len, material=peg_colour
+                )
             peg_builder.initial_pose = sapien.Pose(p=[-_BASE_X_M + 0.2, 0.0, 0.3])  # type: ignore[assignment]
             if self._fidelity_probe:
                 # Kinematic peg: the sweep teleports it to a controlled lateral
@@ -827,8 +1119,20 @@ def make_coinsert_env(
             # generates contacts against the kinematic peg (SAPIEN computes NO
             # contact between two kinematic bodies, so the socket cannot also be
             # kinematic).
-            self.receptacle = self._build_socket_receptacle(contact_mat, kinematic=False)
             self._socket_anchor = None
+            if self._socket_fixed_link:
+                # S2 fixed-link attach: the socket is a rigid child link of the
+                # holder articulation (built into the holder URDF; ADR-026
+                # §Decision 1). Grab the link handle as the receptacle — no actor,
+                # no create_drive weld. Friction uses the loader default (the
+                # matched-seat gate is friction-independent; the frozen
+                # peg-socket coefficient is applied to the peg actor + the MuJoCo
+                # oracle as before).
+                self.receptacle = self.agent.agents_dict[  # type: ignore[attr-defined]
+                    self._partner_uid
+                ].robot.links_map[_SOCKET_LINK_NAME]
+            else:
+                self.receptacle = self._build_socket_receptacle(contact_mat, kinematic=False)
             if self._fidelity_probe:
                 anchor_builder = self.scene.create_actor_builder()
                 anchor_builder.initial_pose = sapien.Pose(p=list(COINSERT_PROBE_SOCKET_XYZ))  # type: ignore[assignment]
@@ -872,8 +1176,10 @@ def make_coinsert_env(
                 self._drives.append(drive)
             else:
                 self._add_weld(_EGO_UID, self.peg)
-                if not self._single_inserter:
-                    self._add_weld(self._partner_uid, self.receptacle)
+                # The socket is NOT create_drive-welded: the matched rig holds it
+                # as a fixed link in the holder articulation; the single-inserter
+                # positive control leaves it a free, unheld actor (so a lone
+                # inserter cannot stabilise it). ADR-026 §Decision 1-2.
 
         def _build_socket_receptacle(
             self,
@@ -881,35 +1187,39 @@ def make_coinsert_env(
             *,
             kinematic: bool = False,
         ) -> Any:  # noqa: ANN401 - sapien actor
-            """Compose a blind square socket from convex boxes (S1; ADR-001 §Risks).
+            """Compose a blind socket from convex boxes (ADR-001 §Risks no-mesh).
 
-            Four walls + a floor enclose a central cavity of inner half-width
-            :attr:`_socket_inner_half` (a cavity is non-convex, so it is built
-            from convex primitives — no mesh asset). The cavity opens at +z and
-            descends ``COINSERT_SOCKET_DEPTH_M``; the floor caps it (a *blind*
-            socket). Friction is applied to every wall + floor collision.
-            ``kinematic=True`` (the fidelity-probe rig) fixes the socket immovable
-            so the contact reads cleanly off the peg drive.
+            A cavity is non-convex, so it is built from convex primitives (no mesh
+            asset). The S1 fidelity-probe rig keeps the original SQUARE socket (4
+            walls + floor) unchanged; the S2 single-inserter actor socket uses the
+            ROUND N-gon bore (:func:`_round_bore_boxes`) so it matches the
+            fixed-link matched socket. The cavity opens at +z and descends
+            ``COINSERT_SOCKET_DEPTH_M``; the floor caps it (a *blind* socket).
+            ``kinematic=True`` fixes the socket immovable for the probe drive.
             """
-            w_in = self._socket_inner_half
-            w_out = COINSERT_SOCKET_OUTER_HALF_M
-            depth = COINSERT_SOCKET_DEPTH_M
-            t_floor = 0.010
-            wall = (w_out - w_in) / 2.0  # half-thickness of each wall slab
-            # (half_size, center) for floor + 4 walls in the actor's local frame.
-            boxes: list[tuple[list[float], list[float]]] = [
-                ([w_out, w_out, t_floor / 2.0], [0.0, 0.0, -depth - t_floor / 2.0]),
-                ([wall, w_out, depth / 2.0], [w_in + wall, 0.0, -depth / 2.0]),
-                ([wall, w_out, depth / 2.0], [-(w_in + wall), 0.0, -depth / 2.0]),
-                ([w_in, wall, depth / 2.0], [0.0, w_in + wall, -depth / 2.0]),
-                ([w_in, wall, depth / 2.0], [0.0, -(w_in + wall), -depth / 2.0]),
-            ]
-            volume = sum(8.0 * h[0] * h[1] * h[2] for h, _ in boxes)
+            if self._fidelity_probe:
+                w_in = self._socket_inner_half
+                w_out = COINSERT_SOCKET_OUTER_HALF_M
+                depth = COINSERT_SOCKET_DEPTH_M
+                t_floor = 0.010
+                wall = (w_out - w_in) / 2.0  # half-thickness of each wall slab
+                specs: list[tuple[list[float], list[float], float]] = [
+                    ([w_out, w_out, t_floor / 2.0], [0.0, 0.0, -depth - t_floor / 2.0], 0.0),
+                    ([wall, w_out, depth / 2.0], [w_in + wall, 0.0, -depth / 2.0], 0.0),
+                    ([wall, w_out, depth / 2.0], [-(w_in + wall), 0.0, -depth / 2.0], 0.0),
+                    ([w_in, wall, depth / 2.0], [0.0, w_in + wall, -depth / 2.0], 0.0),
+                    ([w_in, wall, depth / 2.0], [0.0, -(w_in + wall), -depth / 2.0], 0.0),
+                ]
+            else:
+                specs = _round_bore_boxes(self._clearance_m)
+            volume = sum(8.0 * h[0] * h[1] * h[2] for h, _, _ in specs)
             density = COINSERT_RECEPTACLE_MASS_KG / volume
             builder = self.scene.create_actor_builder()
             colour = sapien.render.RenderMaterial(base_color=[0.55, 0.42, 0.20, 1.0])
-            for half, centre in boxes:
-                pose = sapien.Pose(p=centre)
+            for half, centre, yaw in specs:
+                pose = sapien.Pose(
+                    p=centre, q=[float(np.cos(yaw / 2)), 0.0, 0.0, float(np.sin(yaw / 2))]
+                )
                 builder.add_box_collision(
                     pose=pose,
                     half_size=tuple(half),  # type: ignore[arg-type]
@@ -932,14 +1242,69 @@ def make_coinsert_env(
             co-carry simplification; real grasping is a later relaxation). The
             weld is specified in the hand link's **local** frame so it holds
             across arm configurations.
+
+            **S2 vertical-insertion welds.** The ego peg is welded identity at
+            the grip offset (peg tip extends down the gripper approach); the
+            holder socket is welded with a 180°-about-hand-x flip + a short
+            offset (:data:`_SOCKET_GRIP_IN_HAND_P` / ``_Q``) so the socket opening
+            faces world +z (UP) on the insertion axis while the holder hand sits
+            just below+beside it, clear of the descending peg (ADR-026 §Decision 1).
+
+            **Orientation-locking attach via two anchors (S2).** A single
+            translation-only drive is a ball joint — it pins position but leaves
+            the body free to rotate, so a single-arm-held peg tips over under the
+            insertion contact torque (the co-carry bar is saved only by being held
+            at BOTH ends; the 3x7 linear Jacobian cannot recover orientation).
+            SAPIEN's angular drive primitives misbehave here (a stiff SLERP /
+            twist+cone single drive does not hold the swing — the body flops under
+            gravity) and a 3-point translation weld over-constrains the moving arm
+            (a large internal preload). The attach is therefore TWO
+            translation-locked anchors spread :data:`_WELD_ANCHOR_SPAN_M` along the
+            body axis: two coincident point pairs lock position + both tilt (swing)
+            DOF — the wedge-causing ones — leaving only the harmless twist about the
+            (already yaw-aligned) socket axis free. Uses only the public
+            ``set_limit_{x,y,z}`` API (ADR-001 §Risks / P2).
             """
-            grip_in_hand = sapien.Pose(p=[0.0, 0.0, _GRIP_OFFSET_Z_M])
+            if uid == _EGO_UID:
+                grip_p = np.asarray(_PEG_GRIP_IN_HAND_P, dtype=np.float64)
+                grip_q = np.asarray(_PEG_GRIP_IN_HAND_Q, dtype=np.float64)
+            else:
+                grip_p = np.asarray(_SOCKET_GRIP_IN_HAND_P, dtype=np.float64)
+                grip_q = np.asarray(_SOCKET_GRIP_IN_HAND_Q, dtype=np.float64)
+            # Orientation-locking weld via TWO translation-locked anchors spread
+            # along the body axis. SAPIEN's only orientation primitives misbehave
+            # here: a stiff SLERP / twist+cone single drive does NOT hold the swing
+            # (the body flops under gravity) and a 3-point translation weld
+            # over-constrains the moving arm (a large internal preload that would
+            # corrupt the cooperation-cost force readout). Two coincident point
+            # pairs along the body axis lock position + BOTH tilt (swing) DOF —
+            # the wedge-causing ones — leaving only the harmless twist about the
+            # (already yaw-aligned) socket axis free, with far less over-constraint
+            # than three. Each body point ``d`` maps to hand-frame ``grip_p +
+            # r_weld @ d`` so the welded relative orientation (incl. the socket
+            # flip) is preserved. Uses only the public ``set_limit_{x,y,z}`` API
+            # (ADR-001 §Risks / P2 — no reach into ManiSkill drive internals).
+            qn = grip_q / max(float(np.linalg.norm(grip_q)), 1e-12)
+            w, x, y, z = qn
+            r_weld = np.asarray(
+                [
+                    [1 - 2 * (y * y + z * z), 2 * (x * y - w * z), 2 * (x * z + w * y)],
+                    [2 * (x * y + w * z), 1 - 2 * (x * x + z * z), 2 * (y * z - w * x)],
+                    [2 * (x * z - w * y), 2 * (y * z + w * x), 1 - 2 * (x * x + y * y)],
+                ],
+                dtype=np.float64,
+            )
             hand = self.agent.agents_dict[uid].robot.links_map[_HAND_LINK_NAME]  # type: ignore[attr-defined]
-            drive = self.scene.create_drive(hand, grip_in_hand, body, sapien.Pose())
-            for axis in ("x", "y", "z"):
-                getattr(drive, f"set_drive_property_{axis}")(2.0e4, 2.0e3)
-                getattr(drive, f"set_limit_{axis}")(0.0, 0.0)
-            self._drives.append(drive)
+            for d_body in ((0.0, 0.0, 0.0), (0.0, 0.0, _WELD_ANCHOR_SPAN_M)):
+                d = np.asarray(d_body, dtype=np.float64)
+                hand_anchor = grip_p + r_weld @ d
+                drive = self.scene.create_drive(
+                    hand, sapien.Pose(p=hand_anchor.tolist()), body, sapien.Pose(p=d.tolist())
+                )
+                for axis in ("x", "y", "z"):
+                    getattr(drive, f"set_drive_property_{axis}")(2.0e4, 2.0e3)
+                    getattr(drive, f"set_limit_{axis}")(0.0, 0.0)
+                self._drives.append(drive)
 
         def _initialize_episode(self, env_idx: torch.Tensor, options: dict[str, Any]) -> None:
             """Reset ready poses and sample the goal (P6 / ADR-002 determinism).
@@ -961,11 +1326,19 @@ def make_coinsert_env(
                     # involved). Everyone else holds the ready pose.
                     retract_holder = uid == self._partner_uid and self._single_inserter
                     retract_ego = uid == _EGO_UID and self._fidelity_probe
-                    ready = (
-                        _PANDA_RETRACTED_QPOS
-                        if (retract_holder or retract_ego)
-                        else _PANDA_READY_QPOS
-                    )
+                    # S2: ego + holder use distinct vertical-insertion ready poses
+                    # (the holder base joint swung out so its hand clears the
+                    # descending peg). The fidelity-probe rig keeps the legacy
+                    # symmetric pose (its peg + socket are kinematic, posed by the
+                    # sweep). Retracted poses win for the single-inserter / probe.
+                    if retract_holder or retract_ego:
+                        ready = _PANDA_RETRACTED_QPOS
+                    elif self._fidelity_probe:
+                        ready = _PANDA_READY_QPOS
+                    elif uid == _EGO_UID:
+                        ready = _PANDA_READY_QPOS_EGO
+                    else:
+                        ready = _PANDA_READY_QPOS_HOLDER
                     qpos = torch.from_numpy(np.tile(ready, (b, 1)).astype(np.float32)).to(
                         self.device
                     )
@@ -983,18 +1356,20 @@ def make_coinsert_env(
                     self.receptacle.set_pose(Pose.create_from_pq(socket.expand(b, 3)))
                     above = socket + torch.tensor([0.0, 0.0, 0.10], device=self.device)
                     self.peg.set_pose(Pose.create_from_pq(above.expand(b, 3)))
-                elif not self._single_inserter:
-                    # Normal rig: warm-start the socket AT the holder grip frame so
-                    # the weld starts at ~zero stress (the co-carry zero-initial-
-                    # stress discipline — a socket initialised away from the grip
-                    # frame would make the weld yank it in with a large preload).
-                    hand = self.agent.agents_dict[self._partner_uid].robot.links_map[  # type: ignore[attr-defined]
-                        _HAND_LINK_NAME
-                    ]
-                    grip = hand.pose * Pose.create_from_pq(
-                        p=torch.tensor([0.0, 0.0, _GRIP_OFFSET_Z_M], device=self.device)
+                else:
+                    # Normal rig: warm-start the PEG actor at its welded grip so
+                    # the peg weld starts at ~zero stress (the co-carry zero-
+                    # initial-stress discipline). The socket needs no warm-start:
+                    # in the matched rig it is a FIXED LINK that follows the holder
+                    # hand automatically; in the single-inserter positive control
+                    # it is a free, unheld actor left at its builder pose (so a
+                    # lone inserter cannot stabilise it; ADR-026 §Decision 2).
+                    ego_hand = self.agent.agents_dict[_EGO_UID].robot.links_map[_HAND_LINK_NAME]  # type: ignore[attr-defined]
+                    peg_grip = ego_hand.pose * Pose.create_from_pq(
+                        p=torch.tensor(_PEG_GRIP_IN_HAND_P, device=self.device),
+                        q=torch.tensor(_PEG_GRIP_IN_HAND_Q, device=self.device),
                     )
-                    self.receptacle.set_pose(grip)
+                    self.peg.set_pose(peg_grip)
 
                 # Placeholder goal (the seated socket pose); refined at S2 once
                 # the success contact logic exists. Tiny P6 jitter for a
@@ -1028,21 +1403,133 @@ def make_coinsert_env(
                 "receptacle_pose": self.receptacle.pose.raw_pose,
             }
 
-        def evaluate(self) -> dict[str, Any]:
-            """Stubbed success predicate (S0 skeleton; the co-insert design; ADR-026 §Decision 1).
+        def _peg_socket_geometry(self) -> tuple[Any, Any, Any]:
+            """Per-env (peg-tip insertion depth m, axis misalignment deg, lateral m).
 
-            The real predicate is ``seated ∧ within_force ∧ static ∧ settled``
-            (:func:`evaluate_coinsert_success`), but its force conjuncts need
-            the S1 contact instrument and the S2-derived ``f_insert_max`` /
-            ``f_couple_max``. Until then this returns an all-``False`` success
-            with a ``"stub": True`` marker so callers cannot mistake the S0
-            skeleton for a measuring env. **No contact logic at S0.**
+            The S2 seating geometry, computed from the live peg + socket poses
+            (no hard-coded geometry — robust to the S3-frozen ready pose). The
+            peg's inserting tip is its local +z end; the socket mouth sits at the
+            receptacle origin with the socket axis along its local +z (pointing
+            out of the mouth). Depth is the tip's penetration along the socket
+            axis (>0 once seated); alignment is the angle between the peg's
+            insertion direction and the socket bore (0 = collinear). Batched.
             """
             import torch as _torch
 
-            n = self.peg.pose.p.shape[0]
-            false = _torch.zeros(n, dtype=_torch.bool, device=self.device)
-            return {"success": false, "stub": True}
+            peg_p, peg_q = self.peg.pose.p, self.peg.pose.q  # (b,3),(b,4) wxyz
+            sock_p, sock_q = self.receptacle.pose.p, self.receptacle.pose.q
+
+            def _zaxis(q: Any) -> Any:  # third column of R(q) for wxyz quat  # noqa: ANN401
+                w, x, y, z = q[:, 0], q[:, 1], q[:, 2], q[:, 3]
+                return _torch.stack(
+                    [2 * (x * z + w * y), 2 * (y * z - w * x), 1 - 2 * (x * x + y * y)], dim=1
+                )
+
+            peg_axis = _zaxis(peg_q)  # peg local +z (tip / insertion direction)
+            sock_axis = _zaxis(sock_q)  # socket local +z (out of the mouth)
+            tip = peg_p + self._peg_half_len * peg_axis
+            rel = tip - sock_p
+            depth = -_torch.sum(rel * sock_axis, dim=1)
+            lateral = _torch.linalg.norm(
+                rel - _torch.sum(rel * sock_axis, dim=1, keepdim=True) * sock_axis, dim=1
+            )
+            # insertion direction (peg_axis) vs bore (-sock_axis): cos at perfect seat = +1.
+            cos = _torch.clamp(_torch.sum(peg_axis * (-sock_axis), dim=1), -1.0, 1.0)
+            align_deg = _torch.rad2deg(_torch.arccos(cos))
+            return depth, align_deg, lateral
+
+        def _both_static(self) -> Any:  # noqa: ANN401 - torch.Tensor
+            """Whether both robots' arm joint velocities are below the static threshold."""
+            import torch as _torch
+
+            uids = [_EGO_UID] if self._single_inserter else [_EGO_UID, self._partner_uid]
+            norms = []
+            for uid in uids:
+                qvel = self.agent.agents_dict[uid].robot.get_qvel()[..., :_PANDA_ARM_DOF]  # type: ignore[attr-defined]
+                norms.append(_torch.linalg.norm(qvel, dim=1))
+            return _torch.stack(norms, dim=0).amax(dim=0) < COINSERT_STATIC_QVEL_THRESH
+
+        def _accumulate_peaks(self) -> tuple[Any, Any]:
+            """Update + return the episode-peak (contact force, interaction wrench), N.
+
+            Resets the buffers at episode start (detected by ``elapsed_steps``
+            resetting) and excludes the first :data:`COINSERT_SETTLE_WINDOW_STEPS`
+            ticks (the reset / weld-settle transient is an artifact, not
+            cooperation cost — the co-carry settle discipline). The contact-pair
+            force is friction-excluded (a near-normal wall contact); the wrench is
+            the friction-inclusive workpiece-frame signal.
+            """
+            import torch as _torch
+
+            elapsed = int(_torch.as_tensor(self.elapsed_steps).reshape(-1)[0].item())
+            b = self.peg.pose.p.shape[0]
+            if self._peak_insert_n is None or elapsed <= self._eval_prev_step:
+                self._peak_insert_n = _torch.zeros(b, device=self.device)
+                self._peak_couple_n = _torch.zeros(b, device=self.device)
+            self._eval_prev_step = elapsed
+            if elapsed > COINSERT_SETTLE_WINDOW_STEPS:
+                contact = _torch.full(
+                    (b,), float(self.peg_socket_contact_force()), device=self.device
+                )
+                wrench = self.workpiece_interaction_wrench()
+                self._peak_insert_n = _torch.maximum(self._peak_insert_n, contact)
+                self._peak_couple_n = _torch.maximum(self._peak_couple_n, wrench)
+            return self._peak_insert_n, self._peak_couple_n
+
+        def evaluate(self) -> dict[str, Any]:
+            """Joint co-insert success predicate (S2; the co-insert design; ADR-026 §Decision 1).
+
+            ``success = seated ∧ within_force ∧ static ∧ settled``
+            (:func:`evaluate_coinsert_success`), computed from the live scene:
+
+            - **seated** — peg-tip depth ≥ ``depth_target - depth_eps`` AND the
+              peg/socket axes aligned within ``axis_align_tol``;
+            - **within_force** — episode-peak peg-socket contact force ≤
+              ``f_insert_max`` AND episode-peak workpiece interaction wrench ≤
+              ``f_couple_max`` (``+inf`` when the budget is unset, so a
+              measurement run collects the raw distribution — never asserts an
+              unmeasured limit);
+            - **static** — both arms below the static qvel threshold;
+            - **settled** — past the settle window AND the free receptacle is
+              quasi-stationary.
+
+            The raw geometry + peak forces are surfaced alongside the booleans so
+            the S2 measurement harness can recompute ``within_force`` with the
+            S2-derived limits (the co-carry "env exposes raw maxima, the script
+            applies the threshold" pattern). ``success_geom`` is the
+            force-agnostic ``seated ∧ static ∧ settled`` (the held-out predicate).
+            """
+            import torch as _torch
+
+            depth, align_deg, lateral = self._peg_socket_geometry()
+            peak_insert, peak_couple = self._accumulate_peaks()
+            seated = (depth >= (COINSERT_DEPTH_TARGET_M - COINSERT_DEPTH_EPS_M)) & (
+                align_deg <= COINSERT_AXIS_ALIGN_TOL_DEG
+            )
+            within_force = (peak_insert <= self._f_insert_max) & (peak_couple <= self._f_couple_max)
+            both_static = self._both_static()
+            elapsed = int(_torch.as_tensor(self.elapsed_steps).reshape(-1)[0].item())
+            recep_vel = _torch.linalg.norm(
+                _torch.as_tensor(self.receptacle.get_linear_velocity()), dim=-1
+            ).reshape(-1)
+            settled = _torch.as_tensor(
+                elapsed >= COINSERT_SETTLE_WINDOW_STEPS, device=self.device
+            ) & (recep_vel < COINSERT_SETTLE_VEL_THRESH)
+            success_geom = seated & both_static & settled
+            success = success_geom & within_force
+            return {
+                "success": success,
+                "success_geom": success_geom,
+                "seated": seated,
+                "within_force": within_force,
+                "both_static": both_static,
+                "settled": settled,
+                "seated_depth_m": depth,
+                "axis_align_deg": align_deg,
+                "lateral_offset_m": lateral,
+                "peak_insert_force_n": peak_insert,
+                "peak_couple_wrench_n": peak_couple,
+            }
 
         def compute_normalized_dense_reward(
             self,
@@ -1050,16 +1537,38 @@ def make_coinsert_env(
             action: Any,  # noqa: ANN401
             info: dict[str, Any],
         ) -> Any:  # noqa: ANN401
-            """Stubbed reward (S0 skeleton; ADR-026 §Decision 1).
+            """Dense insertion reward: align + depth + seat bonus - force penalty (ADR-026).
 
-            The dense reward (impedance + lead-in-search shaping) is an S2
-            deliverable — **no reward logic at S0**. Returns zeros so the
-            skeleton env steps without a reward signal.
+            The co-carry transport+level+settle shaping pattern extended to
+            insertion (the ``base_policy`` shaping the structured base follows;
+            also the S5 residual's reward): a lateral-alignment term and a
+            depth-progress term (both tanh-shaped) draw the peg into the bore, a
+            seated bonus rewards reaching the target depth aligned, a soft
+            over-force penalty (engaging only past the settle window) discourages
+            jamming-through, and the full success predicate earns a terminal
+            bonus. Normalised to a bounded band.
             """
-            del obs, action, info
+            del obs, action
             import torch as _torch
 
-            return _torch.zeros(self.peg.pose.p.shape[0], device=self.device)
+            depth, _align_deg, lateral = self._peg_socket_geometry()
+            align = COINSERT_REWARD_ALIGN_COEFF * (
+                1.0 - _torch.tanh(COINSERT_REWARD_TANH_SCALE * lateral)
+            )
+            depth_prog = _torch.clamp(depth / COINSERT_DEPTH_TARGET_M, min=0.0, max=1.0)
+            depth_term = COINSERT_REWARD_DEPTH_COEFF * depth_prog
+            seat_bonus = COINSERT_REWARD_SEAT_BONUS * info["seated"].to(depth.dtype)
+            over = _torch.clamp(
+                info["peak_couple_wrench_n"] - COINSERT_REWARD_FORCE_SOFT_N, min=0.0
+            )
+            force_penalty = COINSERT_REWARD_FORCE_COEFF * _torch.tanh(
+                over / COINSERT_REWARD_FORCE_SOFT_N
+            )
+            reward = align + depth_term + seat_bonus - force_penalty
+            reward = _torch.where(
+                info["success"], _torch.full_like(reward, COINSERT_REWARD_SUCCESS_BONUS), reward
+            )
+            return reward / COINSERT_REWARD_NORMALIZER
 
         # ----- S1 contact instrument + fidelity-probe rig -----
 

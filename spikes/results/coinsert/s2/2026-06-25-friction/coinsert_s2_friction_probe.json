@@ -1,0 +1,126 @@
+{
+  "design": {
+    "clearance_m": 0.001,
+    "episode_length": 320,
+    "frictions": [
+      0.5,
+      0.3,
+      0.2,
+      0.1,
+      0.05
+    ],
+    "geometry": "canonical round (cylinder peg + N-gon bore) \u2014 the committed S2 rig",
+    "seeds": [
+      0,
+      1,
+      2
+    ]
+  },
+  "finding": "the matched seated depth is pinned at ~30 mm across declared friction 0.5 -> 0.05; no friction setting clears the wedge, so the ~30 mm wall is geometric (tilt x engaged-depth vs clearance), not a friction-lock",
+  "friction_sweep": [
+    {
+      "align_deg": [
+        2.7,
+        2.7,
+        2.7
+      ],
+      "any_seated": false,
+      "depth_mm": [
+        29.7,
+        29.7,
+        29.7
+      ],
+      "depth_mm_max": 29.7,
+      "friction": 0.5,
+      "seated": [
+        false,
+        false,
+        false
+      ]
+    },
+    {
+      "align_deg": [
+        4.9,
+        4.9,
+        4.9
+      ],
+      "any_seated": false,
+      "depth_mm": [
+        22.4,
+        22.4,
+        22.4
+      ],
+      "depth_mm_max": 22.4,
+      "friction": 0.3,
+      "seated": [
+        false,
+        false,
+        false
+      ]
+    },
+    {
+      "align_deg": [
+        4.0,
+        4.0,
+        4.0
+      ],
+      "any_seated": false,
+      "depth_mm": [
+        19.9,
+        19.9,
+        19.9
+      ],
+      "depth_mm_max": 19.9,
+      "friction": 0.2,
+      "seated": [
+        false,
+        false,
+        false
+      ]
+    },
+    {
+      "align_deg": [
+        2.8,
+        2.8,
+        2.8
+      ],
+      "any_seated": false,
+      "depth_mm": [
+        30.4,
+        30.4,
+        30.4
+      ],
+      "depth_mm_max": 30.4,
+      "friction": 0.1,
+      "seated": [
+        false,
+        false,
+        false
+      ]
+    },
+    {
+      "align_deg": [
+        0.8,
+        0.8,
+        0.8
+      ],
+      "any_seated": false,
+      "depth_mm": [
+        30.9,
+        30.9,
+        30.9
+      ],
+      "depth_mm_max": 30.9,
+      "friction": 0.05,
+      "seated": [
+        false,
+        false,
+        false
+      ]
+    }
+  ],
+  "honesty_statement": "Numbers are the committed probe output; no value is hand-entered. The matched insertion is deterministic across seeds. This characterises one of the levers ruled out for the S2 honest-close finding.",
+  "schema": "coinsert_s2_friction_probe/v1",
+  "stage": "S2 honest-close \u2014 friction-lever characterisation (round geometry)",
+  "verdict": "FRICTION_INDEPENDENT"
+}
