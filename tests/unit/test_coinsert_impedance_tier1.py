@@ -171,3 +171,53 @@ def test_determinism_same_obs_same_action_across_reset() -> None:
         a1 = np.asarray(b1.act(_obs("panda_wristcam")))
         a2 = np.asarray(b2.act(_obs("panda_wristcam")))
         np.testing.assert_array_equal(a1, a2)
+
+
+def _obs_depth(peg_z: float, sock_z: float = 0.20) -> dict:
+    """Synthetic obs (identity orientations) placing the peg tip at a chosen depth.
+
+    Socket axis = world +z (q identity), mouth at ``sock_z``; peg axis = world +z,
+    tip at ``peg_z + 0.04``. depth = -(tip - mouth)·axis = sock_z - (peg_z + 0.04).
+    """
+    return {
+        "agent": {"panda_wristcam": {"qpos": np.zeros((1, 9), dtype=np.float32)}},
+        "extra": {
+            "peg_pose": np.array([[0.0, 0.0, peg_z, 1.0, 0.0, 0.0, 0.0]]),
+            "receptacle_pose": np.array([[0.0, 0.0, sock_z, 1.0, 0.0, 0.0, 0.0]]),
+        },
+    }
+
+
+def test_base_press_phase_runs() -> None:
+    """A centred peg just inside the mouth drives the press branch (depth ~0, lateral 0)."""
+    b = _base()
+    b.reset(seed=0)
+    # tip_z = 0.16 + 0.04 = 0.20 = mouth → depth ~0 → press phase.
+    action = np.asarray(b.act(_obs_depth(peg_z=0.16, sock_z=0.20)))
+    assert action.shape == (8,)
+    assert np.all(np.isfinite(action))
+
+
+def test_base_seated_phase_holds() -> None:
+    """A peg past the seat depth drives the seated branch (command ~zero, arms settle)."""
+    b = _base()
+    b.reset(seed=0)
+    # tip_z = 0.115 + 0.04 = 0.155; depth = 0.20 - 0.155 = 0.045 ≥ 0.038 → seated.
+    action = np.asarray(b.act(_obs_depth(peg_z=0.115, sock_z=0.20)))
+    assert np.all(np.isfinite(action))
+    # Seated holds: the arm deltas are ~0 (the integral is zeroed, v_cmd is zero).
+    assert np.allclose(action[:7], 0.0, atol=1e-6)
+
+
+def test_base_unjam_engages_on_stall() -> None:
+    """Repeated no-progress press triggers the retract-repress unjam (stall clock + retract)."""
+    b = _base()
+    b.reset(seed=0)
+    obs = _obs_depth(peg_z=0.16, sock_z=0.20)  # fixed press obs → depth never advances
+    for _ in range(6):
+        assert np.all(np.isfinite(np.asarray(b.act(obs))))
+    # The stall clock advances under no progress (deterministic, before the window).
+    assert b._stall_count > 0
+    # Cross the stall window so the retract-repress unjam branch fires (no crash).
+    for _ in range(10):
+        assert np.all(np.isfinite(np.asarray(b.act(obs))))
