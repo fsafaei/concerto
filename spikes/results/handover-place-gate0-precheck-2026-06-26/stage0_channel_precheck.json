@@ -1,0 +1,52 @@
+{
+  "channel": "grasp_pose_orientation",
+  "clearance_rationale": "The seat-approach clearance factor is a proxy for gripper/fixture collision + straight-in seat reachability, NOT a true fraction of the wrist's free-space range. For a straight-in connector seat the usable in-grasp reorientation is bounded by collision and straight-in reachability, so 0.7 is optimistic and the realistic regime likely sits low -> the factor is swept [0.2, 0.35, 0.5, 0.7] and the coupling verdict reported at each level.",
+  "clearance_sweep": {
+    "0.20": 25.0,
+    "0.35": 43.75,
+    "0.50": 62.5,
+    "0.70": 87.5
+  },
+  "derived_boundaries": {
+    "derivation": "wrist_correction = J5_pitch_half * seat_approach_clearance_factor; reacquire = graspable_face_span. Cited wrist limit + stated geometry. The clearance factor is SWEPT (not frozen); the table below gives wrist_correction at each swept level.",
+    "reacquire_range_deg": 170.0,
+    "wrist_correction_range_deg_headline": 87.5
+  },
+  "finding": "Lateral offsets across the realistic presentation range are fully corrected by ego translation (1.000 translatable within the 10 cm reach) and force no re-grasp -> lateral is the downstream SUCCESS tolerance, not the coupling channel. Grasp-pose orientation errors beyond the wrist-correction range (88 deg) force a re-grasp, and errors beyond the re-acquire range (170 deg) are kinematically intrinsic. The mismatch channel is GRASP-POSE/ORIENTATION; the intrinsic boundary is the re-acquire range. These parameterize the frozen prereg.",
+  "grasp_pose_channel": {
+    "forces_regrasp": true,
+    "in_grasp_fraction": 0.47725,
+    "intrinsic_fraction": 0.05975,
+    "requires_regrasp_fraction": 0.463
+  },
+  "inputs": {
+    "clearance_factor_sweep": [
+      0.2,
+      0.35,
+      0.5,
+      0.7
+    ],
+    "grasp_pose_probe_max_deg": 180.0,
+    "graspable_face_span_bracket_deg": [
+      150.0,
+      180.0
+    ],
+    "graspable_face_span_deg": 170.0,
+    "j5_pitch_half_bracket_deg": [
+      120.0,
+      135.0
+    ],
+    "j5_pitch_half_deg": 125.0,
+    "lateral_probe_max_m": 0.03,
+    "n_samples": 4000,
+    "seat_approach_clearance_factor_headline": 0.7,
+    "translation_range_m": 0.1
+  },
+  "lateral_channel": {
+    "caveat_check": "minimal kinematic model: translation is collision-free within reach and does not raise the seating force, so lateral forces no re-grasp",
+    "forces_regrasp": false,
+    "translatable_fraction": 1.0
+  },
+  "purpose": "Stage-0 channel pre-check (ADR-026; Rev 2 \u00a73): derive which sub-channel forces a re-grasp and the two grasp-pose boundaries, before the prereg is frozen.",
+  "schema": "handover_place_gate0_stage0_precheck/v1"
+}
