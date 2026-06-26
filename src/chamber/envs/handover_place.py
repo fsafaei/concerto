@@ -536,8 +536,7 @@ class HandoverPlaceEnv:
     ) -> tuple[dict[str, Any], float, bool, bool, dict[str, Any]]:
         if act.shape[0] != HANDOVER_PRESENTATION_DIM:
             raise ValueError(
-                f"presentation action must have dim {HANDOVER_PRESENTATION_DIM}, "
-                f"got {act.shape[0]}"
+                f"presentation action must have dim {HANDOVER_PRESENTATION_DIM}, got {act.shape[0]}"
             )
         self._lateral_offset = act[0:2].copy()
         self._grasp_pose_error_deg = float(act[2])
