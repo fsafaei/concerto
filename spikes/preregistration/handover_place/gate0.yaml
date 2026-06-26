@@ -1,0 +1,259 @@
+# Pre-registration: cross-modal handover-and-place — Gate-0 coupling-validity (Rev 2).
+#
+# Phase-2, NON-GATING research bet (invariant I1; ADR-026 §Decision). The discrete
+# (let-go) successor probe to the co-carry / co-insert coupling-validity line: does a
+# GRASP-POSE-mismatched black-box partner measurably degrade the place outcome a matched
+# partner achieves, for a REAL reason (a real downstream tolerance a varying presentation
+# makes unrecoverable within a real takt-derived re-grasp budget), and not because the
+# ego was hobbled?
+#
+# ---------------------------------------------------------------------------
+# SCHEMA NOTE. This file deliberately does NOT validate against
+# chamber.evaluation.prereg.PreregistrationSpec (locked to the six ADR-007 axes; extra
+# keys forbidden). Like the co-carry / co-insert Phase-2 pre-registrations it is a
+# self-describing document with its own `schema` id, locked by the ADR-007 §Discipline
+# git-tag blob-SHA mechanism (the tag's blob SHA must equal the on-disk blob SHA at
+# launch). The lock is the git tag, not the loader. The maintainer cuts the tag
+# post-merge; a tag that post-dates the first measurement is worthless.
+# ---------------------------------------------------------------------------
+
+schema: handover_place_gate0_prereg/v2
+revision: 2
+date: 2026-06-26
+author: fsafaei
+stage: "Gate-0 — solvability + coupling-validity, single measured slice (scripted/CPU)"
+supersedes: "Rev 1 (lateral-channel mismatch + SCARA point crossover) — corrected per founder freeze review."
+
+governance:
+  phase: >
+    Phase-2, non-gating (invariant I1; ADR-026 §Decision). Touches no Phase-1 gate, no
+    M10 date, no Stage-1 pick-place line. The cheapest test that can REFUTE the
+    cross-modal handover-and-place regime before any demo capacity is spent.
+  invariants: >
+    I1 (non-gating), I6 (no AI-tooling references; founder is author), I7 (evidence-
+    backed: every number traces to a committed artifact), I8 (immutable archives), I9
+    (no SCHEMA_VERSION / wire-format bump).
+  do_not_merge: "open the PR and stop for review; the maintainer cuts the tag post-merge."
+  scope: >
+    Scripted competent ego (no training) + frozen scripted presenter (no training); CPU,
+    hours. Out of scope (separately authorised later): the trained cooperation residual,
+    the moat test, the demo build, any commercial commitment. No contact-impedance
+    mismatch (grasp-pose presentation channel only).
+  references:
+    adrs: >
+      ADR-026 §Decision (coupling validity; non-gating); ADR-007 §Discipline (this lock);
+      ADR-009 §Decision (frozen black-box partner; pose visible, policy not); ADR-010
+      (partner zoo); ADR-016 (immutable SpikeRun archive); ADR-018 (realism checklist).
+    authorising_doc: "04_engineering/HANDOVER_PLACE_GATE0_VALIDATION_AND_PLAN_2026-06-26.md"
+    executor_prompt: "CCP-HANDOVER-PLACE-GATE0-2026-06-26 Rev 2"
+
+# Stage-0 channel pre-check finding that fixes the channel + boundaries (committed).
+precheck_ref: spikes/results/handover-place-gate0-precheck-2026-06-26/stage0_channel_precheck.json
+precheck_finding: >
+  GRASP-POSE/ORIENTATION is the re-grasp-forcing channel (lateral is fully translatable
+  -> success-side). Boundaries DERIVED from the cited six-axis wrist limits + stated
+  geometry: wrist_correction_deg = J5_pitch_half (125 deg, datasheet bracket [120,135]) *
+  clearance_factor; reacquire_range_deg = 170 (graspable-face span, bracket [150,180]).
+
+# ---------------------------------------------------------------------------
+# Task + ego role.
+# ---------------------------------------------------------------------------
+task:
+  kind: handover_and_place                # discrete: the partner LETS GO once the ego has the part
+  ego_role: placer                        # legacy six-axis ego receives + places/seats
+  partner_role: presenter                 # black-box partner held frozen (ADR-009)
+  binding_channel: grasp_pose_orientation # Rev 2 B1 — NOT lateral, NOT impedance
+  env_module: chamber.envs.handover_place
+  env_factory: make_handover_place_env
+  conditions:                             # LOCKED names (ADR-007 §P4); must match code verbatim
+    matched_reference: handover_matched_reference
+    grasp_pose_mismatch: handover_presentation_mismatch
+
+# ---------------------------------------------------------------------------
+# Success tolerance (downstream window). lateral = success-side; angular SWEPT.
+# ---------------------------------------------------------------------------
+success_tolerance:
+  lateral_window_m: 1.0e-3
+  lateral_source: >
+    Yumbla et al., "Tolerance dataset: mating process of plug-in cable connectors for
+    wire harness assembly tasks," Intelligent Service Robotics 13:159-168 (2020), DOI
+    10.1007/s11370-019-00307-5 — empirical robot-mated lateral mating tolerance of 70
+    automotive harness connectors, X = 0.27-2.05 mm; 1.0 mm is a representative mid-band
+    value in the ROBOT-MATING regime. Lateral is the SUCCESS tolerance, not the mismatch.
+  angular_window_deg_sweep: [0.0, 2.0, 4.0, 6.0, 8.0, 10.0]
+  angular_window_central_deg: 5.0
+  angular_source: >
+    SWEPT — no automotive-connector primary publishes an angular mating tolerance (Yumbla
+    is linear X/Z only; USCAR-2 mandates straight-in mating, its "lead-in taper" is a
+    1 mm AXIAL margin; the "~2 deg" figures are folklore / apparatus error). The central
+    ~5 deg is a defensible DERIVED capture ~ arctan(lateral_window / engagement_length);
+    the window is swept 0-10 deg and the verdict's sensitivity to it reported. The
+    folklore 2 deg is NEVER cited as a primary.
+  seating_force_ceiling_n: 75.0
+  force_source: >
+    SAE/USCAR-25 Rev 1 (2008) sec 4.1 — hand-mate assembly-force ceiling above which
+    mating assist is required (ergonomic Class 3). Force anchor for the automotive-
+    connector regime.
+  force_proxy_construction: >
+    The kinematic seating-force proxy is a BACKSTOP, not a primary criterion (the pose
+    windows are primary). contact_stiffness = ceiling / (2 * lateral_window) = 3.75e4
+    N/m; angular_stiffness = ceiling / (2 * angular_central) = 12.5 / deg-equivalent.
+    Documented proxy construction tied to the sourced numbers, not free knobs.
+
+# ---------------------------------------------------------------------------
+# In-grasp correction limit — SWEPT (decision #1), NOT a frozen point.
+# ---------------------------------------------------------------------------
+in_grasp_correction:
+  clearance_factor_sweep: [0.2, 0.35, 0.5, 0.7]
+  wrist_correction_deg: "J5_pitch_half_deg (125) * clearance_factor   # -> {25, 43.75, 62.5, 87.5} deg"
+  proxy_rationale: >
+    The clearance factor is a proxy for gripper/fixture seat-approach clearance and
+    straight-in reachability, NOT a true fraction of the wrist's free-space range. For a
+    straight-in connector seat the usable in-grasp reorientation is bounded by collision
+    and straight-in reachability, so 0.7 is optimistic and the realistic regime likely
+    sits low. The factor is therefore swept and the coupling verdict reported at each
+    level (decision #1).
+  primary_readout:
+    - "coupling verdict at each clearance level"
+    - "binding grasp-pose mismatch threshold (= wrist_correction + angular_window) in BOTH degrees and matched-sigma units, as a function of the limit"
+    - "overlay the realistic mismatched-presenter grasp-pose distribution -> fraction of mismatch mass clearing the threshold per level"
+
+intrinsic_boundary:
+  reacquire_range_deg: 170.0              # Stage-0 derived; bracket [150, 180]
+  source: precheck
+
+# ---------------------------------------------------------------------------
+# Crossover BAND (Rev 2 B2). Six-axis place-cycle + re-grasp bands (NOT a SCARA point).
+# Decision #2: the ABB IRB 120 "0.92 s" row BUNDLES a 180-deg axis-6 reorient, so the
+# nominal WELL-PRESENTED place-cycle is re-derived from the PLAIN cycle; the 0.34 s
+# reorient delta is reassigned to the re-grasp's reorientation term.
+# ---------------------------------------------------------------------------
+arm_bases:
+  fast:
+    arm: "Epson C4 six-axis, spec sheet CPD-55431 (0.37 s standard 25/300/25 cycle, 1 kg)"
+    place_cycle_s: 0.37
+    regrasp_duration_s: 1.06             # 2*place_cycle + scaled reorient (0.22) + 2*gripper stroke (0.05 each, Schunk EGP / OnRobot RG2)
+  slow:
+    arm: "ABB IRB 120, datasheet (0.58 s PLAIN 25/300/25 cycle, 1 kg; the 0.92 s row is place + 180-deg axis-6 reorient -> NOT a well-presented place)"
+    place_cycle_s: 0.58
+    regrasp_duration_s: 1.90             # 2*place_cycle + reorient delta (0.34) + 2*gripper stroke (0.20 each, typical electric)
+place_cycle_band_s: [0.37, 0.58]
+regrasp_duration_band_s: [1.06, 1.90]
+crossover_takt_band_s: [1.43, 2.48]      # = place_cycle + regrasp_duration at the fast / slow endpoints
+gripper_source: >
+  Open/close per stroke: ~0.05 s (Schunk EGP 40-N-S-B / OnRobot RG2, primary datasheets)
+  to ~0.20 s (typical electric parallel jaw). Robotiq adaptive ~0.5-0.6 s is DERIVED from
+  published finger speed (no datasheet time) and is not used as the anchor.
+
+# ---------------------------------------------------------------------------
+# Takt sweep — crossover-bracketing grid (Rev 2 G1) + free-re-grasp endpoint.
+# ---------------------------------------------------------------------------
+takt_grid_s: [0.3, 0.5, 0.75, 1.0, 1.5, 2.0, 3.0, 5.0, 8.0]
+takt_anchor_whole_line_s: 60             # sourceable extreme (Roser/lean lit), context only
+budget_definition: "budget = takt - place_cycle (per arm basis)"
+free_regrasp_endpoint: true              # budget = +inf: splits intrinsic vs budget-mediated binding
+realistic_takt_band_s: [1.0, 5.0]        # defensible per-part station range for the overlap check
+
+# ---------------------------------------------------------------------------
+# Partner mismatch — GRASP-POSE channel ONLY. Frozen PartnerBase; _FORBIDDEN_ATTRS shield.
+# ---------------------------------------------------------------------------
+partner:
+  zoo_stratum: heuristic                  # chamber.partners.handover_presenter (frozen)
+  matched:
+    lateral_offset_sigma_m: 2.0e-4
+    grasp_pose_sigma_deg: 2.0             # competent presenter grasp-pose precision (the sigma the mismatch is expressed against)
+    timing_skew_sigma_s: 0.05
+  mismatched:
+    lateral_offset_sigma_m: 2.0e-4        # lateral NOT inflated (it is success-side)
+    grasp_pose_bias_deg: 30.0             # a non-co-designed partner: ~30 deg grasp-pose error (substantial, sub-flip)
+    grasp_pose_bias_multiple_of_matched_sigma: 15.0   # 30 / 2 deg
+    grasp_pose_sigma_deg: 10.0
+    timing_skew_bias_s: 0.2
+    timing_skew_sigma_s: 0.1
+  no_impedance_term: true
+
+# ---------------------------------------------------------------------------
+# Decision rule — equivalence-bounded; the budget->takt sweep (x clearance, x arm basis)
+# is the primary readout. A null is informative via the CI bound, never a power claim.
+# ---------------------------------------------------------------------------
+decision_rule:
+  estimator: iqm_success_rate
+  bootstrap:
+    method: cluster                       # paired_cluster for the matched-vs-mismatch gap
+    n_boot: 10000                         # = chamber.envs.handover_place.HANDOVER_N_BOOT
+    ci: one_sided_95_lower                # equivalence / two-sided-upper for the null
+  episodes_per_seed: 20                   # = HANDOVER_K_EPISODES
+  seeds: [0, 1, 2, 3, 4, 5, 6, 7]         # n = 8 (provisional, from the power sim)
+  solvability_threshold_tau_solv: 0.90    # = HANDOVER_TAU_SOLV (Limb-1 bar)
+  coupling_delta_min_pp: 20.0             # = HANDOVER_DELTA_MIN_PP
+  reading_rule_two_crossovers:
+    solvability_floor: "smallest budget at which ci_low(matched_success) >= tau_solv (below it even matched fails -> Limb-1 region)."
+    coupling_ceiling: "largest budget at which ci_low(gap_pp) >= delta_min_pp (above it the mismatched partner can always afford its re-grasp -> washout)."
+    window: "[solvability_floor, coupling_ceiling] in budget; mapped to takt = budget + place_cycle, for BOTH arm-basis endpoints and each clearance level."
+    free_regrasp_split: "gap persists at the free endpoint -> intrinsic (kinematic); vanishes -> budget-mediated."
+  indeterminate_response: "one pre-committed seed extension to seeds_extension, then declare; NEVER widen delta_min_pp, the crossover band, or any tolerance."
+  seeds_extension: [8, 9, 10, 11, 12, 13, 14, 15]
+  implementation: chamber.spikes.handover_place_gate0.decision
+
+verdict_space:
+  - COUPLING_VALID            # window overlaps a realistic per-part takt across the arm band
+  - COUPLING_VALID_INTRINSIC  # degradation persists at the free re-grasp endpoint (kinematic, takt-independent)
+  - WASHOUT                   # ci_high(gap_pp) < delta_min across the grid -> equivalence null
+  - WASHOUT_FOR_REAL_CELLS    # coupling-valid only at takts below the realistic band -> escalate to co-hold with caveat
+  - LIMB1_FAIL                # matched cannot meet tau_solv at the realistic takt -> record, do NOT widen
+  - INDETERMINATE             # CI straddles delta_min -> one seed extension then declare
+branches:
+  COUPLING_VALID / COUPLING_VALID_INTRINSIC: "handover-and-place confirmed in principle; proceed to discovery convergence + cert-evidence spec."
+  WASHOUT / WASHOUT_FOR_REAL_CELLS: "execute the pre-named switch -> escalate to cross-modal co-hold-and-secure (analysis E.8)."
+  LIMB1_FAIL: "record immutably; do NOT widen the tolerance."
+
+transparency:
+  log_binding_conjunct: true              # record whether lateral / angular / force drove each place failure (T3) -> verify 'lateral is success-side, grasp-pose is coupling-side'
+  state_matched_sigma_and_limb1_headroom: true   # T1
+  express_mismatch_relative_to_matched_sigma: true  # T2
+
+power_simulation:
+  status: "PROVISIONAL — sizes n (seed-clusters) per (clearance, takt) cell before any measured run."
+  recommended_n_provisional: 8            # worst-case robust at MDE <= 0.25 across low/central/high dispersion
+  at_bar_blind_band_power: "~0.5 (gap = delta_min); surfaced honestly, NEVER represented as adequate; a null is resolved by the equivalence/CI bound."
+  artifact: spikes/preregistration/handover_place/gate0_power_sim.json
+  generator: scripts/repro/_handover_place_gate0_power_sim.py
+
+# ---------------------------------------------------------------------------
+# Realism / black-box compliance (ADR-018 §1; ADR-009 §Decision).
+# ---------------------------------------------------------------------------
+realism_compliance:
+  records: ["which presenter variant ran", "ego read only the presented lateral offset + grasp-pose (no presenter policy)", "no _FORBIDDEN_ATTRS symbol reached"]
+  note: >
+    If ego-side learning is ever introduced (out of scope for Gate-0), the trainer must
+    gate it via chamber.benchmarks.ego_ppo_trainer._assert_partner_is_frozen.
+
+out_of_scope:
+  - "No trained cooperation residual; the ego is scripted for Gate-0."
+  - "No demo / visualisation / commissioning / certification-evidence code."
+  - "No SCHEMA_VERSION bump; emit a standard SpikeRun (schema_version 2)."
+  - "No contact-impedance mismatch (grasp-pose presentation channel only)."
+  - "No widening of any tolerance, the crossover band, or delta_min after seeing a null."
+
+# ---------------------------------------------------------------------------
+# ADR-007 §Discipline lock. Cut by the maintainer post-merge from the commit that lands
+# this file; the tag's blob SHA must equal the on-disk blob SHA at launch, and the tag
+# MUST precede the first measurement commit (PR C).
+# ---------------------------------------------------------------------------
+git_tag: prereg-handover-place-gate0-rev2-2026-06-26
+repro_command: uv run python scripts/repro/_handover_place_gate0_power_sim.py
+honesty_statement: >
+  As of this commit NO handover-place episode has been scored — PR A is the harness +
+  the Stage-0 channel pre-check; this PR B is the pre-registration + tooling; the measured
+  two-limb slice is PR C against the tagged prereg. The power simulation is a synthetic
+  Monte-Carlo design calculation; its n=8 is PROVISIONAL and the at-bar power (~0.5) is
+  surfaced, never represented as adequate. The lateral tolerance (1.0 mm, Yumbla 2020),
+  force ceiling (75 N, USCAR-25), six-axis place-cycle band ([0.37, 0.58] s, Epson C4 /
+  ABB IRB 120 PLAIN cycle), and wrist limits (J5 ~125 deg) are externally cited; the
+  re-grasp-duration band and crossover band are DERIVED with the derivation stated; the
+  angular success window has NO automotive primary and is SWEPT (the folklore 2 deg is
+  never cited); the in-grasp correction limit is SWEPT (0.7 is optimistic) with the
+  mismatch threshold + realistic-mass overlay reported per level; the per-part takt is
+  NOT hard-committed (it is swept, the crossover band reported as a transparent output).
+  The solvable-and-coupling-valid middle is FOUND against these committed numbers, never
+  tuned until the limbs pass.
