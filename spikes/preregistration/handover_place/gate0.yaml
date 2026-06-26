@@ -96,8 +96,9 @@ success_tolerance:
     connector regime.
   force_proxy_construction: >
     The kinematic seating-force proxy is a BACKSTOP, not a primary criterion (the pose
-    windows are primary). contact_stiffness = ceiling / (2 * lateral_window) = 3.75e4
-    N/m; angular_stiffness = ceiling / (2 * angular_central) = 12.5 / deg-equivalent.
+    windows are primary). contact_stiffness = ceiling / (2 * lateral_window) =
+    75 / (2 * 1.0e-3) = 3.75e4 N/m; angular_stiffness = ceiling / (2 * angular_central) =
+    75 / (2 * 5.0) = 7.5 N/deg (anchored at the central swept angular window of 5 deg).
     Documented proxy construction tied to the sourced numbers, not free knobs.
 
 # ---------------------------------------------------------------------------
@@ -140,6 +141,14 @@ arm_bases:
 place_cycle_band_s: [0.37, 0.58]
 regrasp_duration_band_s: [1.06, 1.90]
 crossover_takt_band_s: [1.43, 2.48]      # = place_cycle + regrasp_duration at the fast / slow endpoints
+regrasp_composition: >
+  regrasp_duration = 2*place_cycle (set-down round-trip + re-acquire round-trip) + reorient
+  + 2*gripper_stroke. The reorient term is anchored on the ABB IRB 120 published delta
+  between its "25x300x25 with 180-deg axis-6 reorientation" cycle (0.92 s) and its plain
+  cycle (0.58 s) = 0.34 s (slow endpoint). For the FAST endpoint (Epson C4) no reorient
+  delta is published, so it is scaled by the place-cycle ratio:
+  0.34 * (0.37 / 0.58) = 0.22 s. So fast = 2*0.37 + 0.22 + 2*0.05 = 1.06 s;
+  slow = 2*0.58 + 0.34 + 2*0.20 = 1.90 s.
 gripper_source: >
   Open/close per stroke: ~0.05 s (Schunk EGP 40-N-S-B / OnRobot RG2, primary datasheets)
   to ~0.20 s (typical electric parallel jaw). Robotiq adaptive ~0.5-0.6 s is DERIVED from
@@ -165,12 +174,21 @@ partner:
     timing_skew_sigma_s: 0.05
   mismatched:
     lateral_offset_sigma_m: 2.0e-4        # lateral NOT inflated (it is success-side)
-    grasp_pose_bias_deg: 30.0             # a non-co-designed partner: ~30 deg grasp-pose error (substantial, sub-flip)
-    grasp_pose_bias_multiple_of_matched_sigma: 15.0   # 30 / 2 deg
-    grasp_pose_sigma_deg: 10.0
+    grasp_pose_bias_deg_sweep: [15.0, 30.0, 45.0]   # SWEPT (decision #2): a non-co-designed partner's grasp-pose error, in DEGREES
+    grasp_pose_bias_central_deg: 30.0
+    grasp_pose_sigma_deg: 10.0            # held fixed across the bias sweep
+    grasp_pose_bias_sigma_units_secondary: "15/30/45 deg = 7.5/15/22.5 matched-sigma (matched sigma = 2 deg); reported in DEGREES, sigma units secondary (not headlined)"
     timing_skew_bias_s: 0.2
     timing_skew_sigma_s: 0.1
   no_impedance_term: true
+  mismatch_sweep_readout: >
+    Report the coupling region in (clearance x mismatch): per cell the binding threshold
+    (= wrist_correction + angular_window) in degrees AND matched-sigma units, whether the
+    mismatch bias CROSSES it, and the realistic mismatch mass clearing it. Closes the
+    symmetric knob (the clearance limit was swept; the mismatch is now swept too). The
+    design-time overlay is committed at gate0_clearance_mismatch_overlay.json; the MEASURED
+    (clearance x mismatch) coupling region is produced by the runner at PR C.
+  mismatch_overlay_artifact: spikes/preregistration/handover_place/gate0_clearance_mismatch_overlay.json
 
 # ---------------------------------------------------------------------------
 # Decision rule — equivalence-bounded; the budget->takt sweep (x clearance, x arm basis)
@@ -183,7 +201,7 @@ decision_rule:
     n_boot: 10000                         # = chamber.envs.handover_place.HANDOVER_N_BOOT
     ci: one_sided_95_lower                # equivalence / two-sided-upper for the null
   episodes_per_seed: 20                   # = HANDOVER_K_EPISODES
-  seeds: [0, 1, 2, 3, 4, 5, 6, 7]         # n = 8 (provisional, from the power sim)
+  seeds: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19]  # n = 20 (provisional, from the power sim; sized for adequacy)
   solvability_threshold_tau_solv: 0.90    # = HANDOVER_TAU_SOLV (Limb-1 bar)
   coupling_delta_min_pp: 20.0             # = HANDOVER_DELTA_MIN_PP
   reading_rule_two_crossovers:
@@ -192,7 +210,7 @@ decision_rule:
     window: "[solvability_floor, coupling_ceiling] in budget; mapped to takt = budget + place_cycle, for BOTH arm-basis endpoints and each clearance level."
     free_regrasp_split: "gap persists at the free endpoint -> intrinsic (kinematic); vanishes -> budget-mediated."
   indeterminate_response: "one pre-committed seed extension to seeds_extension, then declare; NEVER widen delta_min_pp, the crossover band, or any tolerance."
-  seeds_extension: [8, 9, 10, 11, 12, 13, 14, 15]
+  seeds_extension: [20, 21, 22, 23, 24, 25, 26, 27]   # genuine contingency BEYOND the sized n=20
   implementation: chamber.spikes.handover_place_gate0.decision
 
 verdict_space:
@@ -213,9 +231,24 @@ transparency:
   express_mismatch_relative_to_matched_sigma: true  # T2
 
 power_simulation:
-  status: "PROVISIONAL — sizes n (seed-clusters) per (clearance, takt) cell before any measured run."
-  recommended_n_provisional: 8            # worst-case robust at MDE <= 0.25 across low/central/high dispersion
-  at_bar_blind_band_power: "~0.5 (gap = delta_min); surfaced honestly, NEVER represented as adequate; a null is resolved by the equivalence/CI bound."
+  status: "PROVISIONAL — sized for ADEQUACY WITH MARGIN (founder freeze review), per (clearance, takt) cell, before any measured run."
+  recommended_n_provisional: 20           # smallest n meeting, across EVERY dispersion bracket, ALL of: MDE <= 0.05 (half the ~0.10 design ceiling) AND WASHOUT power (null at gap=0) >= 0.80 AND COUPLING_VALID power (at the expected effect) >= 0.80 AND cluster-bootstrap type-I (sig at gap=0) <= 0.075
+  achieved_at_n20:
+    mde: 0.05                             # smallest gap detected as significant (two-sided CI low > 0) at >= 80% power; HALF delta_min
+    washout_power_at_gap0: 1.00           # P(two-sided CI upper < delta_min | gap=0); the equivalence-null resolution
+    coupling_power_at_expected_gap_0p40: 1.00
+    type_i_at_gap0: 0.033                 # cluster-bootstrap calibrated (<= 0.075)
+    at_bar_blind_band_power: 0.57         # gap = delta_min; surfaced honestly, NOT a sizing target
+  mde_definition_note: >
+    The MDE is the SIGNIFICANCE-based minimum detectable effect (smallest true gap with
+    two-sided 95% CI lower > 0 at >= 80% power) — the notion that makes the crossover
+    region resolvable. The prior "n=8, MDE ~0.25, power ~0.5" was an ARTIFACT of measuring
+    the MDE with the COUPLING_VALID lands rule (whose pooled-mean >= delta_min conjunct
+    structurally caps sub-bar resolution = the at-bar blind band). Under the corrected MDE,
+    n=8 already meets the ~0.10 design ceiling with calibrated type-I; n=20 is sized HIGHER
+    for crossover-resolution margin (MDE 0.05) + robust cluster-bootstrap behaviour
+    ("size for adequacy, not economy"). n_boot=10000 does NOT substitute for seed-clusters.
+  at_bar_blind_band_power: "~0.57 (gap = delta_min); surfaced honestly, NEVER represented as adequate; a null is resolved by the equivalence/CI bound, never a power claim."
   artifact: spikes/preregistration/handover_place/gate0_power_sim.json
   generator: scripts/repro/_handover_place_gate0_power_sim.py
 
@@ -246,14 +279,18 @@ honesty_statement: >
   As of this commit NO handover-place episode has been scored — PR A is the harness +
   the Stage-0 channel pre-check; this PR B is the pre-registration + tooling; the measured
   two-limb slice is PR C against the tagged prereg. The power simulation is a synthetic
-  Monte-Carlo design calculation; its n=8 is PROVISIONAL and the at-bar power (~0.5) is
-  surfaced, never represented as adequate. The lateral tolerance (1.0 mm, Yumbla 2020),
-  force ceiling (75 N, USCAR-25), six-axis place-cycle band ([0.37, 0.58] s, Epson C4 /
-  ABB IRB 120 PLAIN cycle), and wrist limits (J5 ~125 deg) are externally cited; the
-  re-grasp-duration band and crossover band are DERIVED with the derivation stated; the
-  angular success window has NO automotive primary and is SWEPT (the folklore 2 deg is
-  never cited); the in-grasp correction limit is SWEPT (0.7 is optimistic) with the
-  mismatch threshold + realistic-mass overlay reported per level; the per-part takt is
-  NOT hard-committed (it is swept, the crossover band reported as a transparent output).
+  Monte-Carlo design calculation; its n=20 is PROVISIONAL, sized for ADEQUACY WITH MARGIN
+  (MDE 0.05 = half delta_min; calibrated cluster-bootstrap type-I), and the at-bar power
+  (~0.57) is surfaced, never represented as adequate (n=8 met the corrected significance-MDE
+  ceiling but is the bare minimum; the old "n=8 / MDE ~0.25" was a lands-rule artifact).
+  The lateral tolerance (1.0 mm, Yumbla 2020), force ceiling (75 N, USCAR-25), six-axis
+  place-cycle band ([0.37, 0.58] s, Epson C4 / ABB IRB 120 PLAIN cycle), and wrist limits
+  (J5 ~125 deg) are externally cited; the re-grasp-duration band and crossover band are
+  DERIVED with the derivation stated (incl. the fast-arm reorient scaling 0.34*0.37/0.58 =
+  0.22 s); the angular success window has NO automotive primary and is SWEPT (the folklore
+  2 deg is never cited); BOTH the in-grasp correction limit (clearance; 0.7 is optimistic)
+  AND the mismatch grasp-pose bias (15/30/45 deg) are SWEPT, with the (clearance x mismatch)
+  threshold-crossing + realistic-mass overlay reported; the per-part takt is NOT
+  hard-committed (it is swept, the crossover band reported as a transparent output).
   The solvable-and-coupling-valid middle is FOUND against these committed numbers, never
   tuned until the limbs pass.

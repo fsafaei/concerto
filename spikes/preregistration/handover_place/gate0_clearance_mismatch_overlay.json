@@ -1,0 +1,134 @@
+{
+  "design": {
+    "angular_window_central_deg": 5.0,
+    "clearance_factor_sweep": [
+      0.2,
+      0.35,
+      0.5,
+      0.7
+    ],
+    "j5_pitch_half_deg": 125.0,
+    "mass_definition": "P(|grasp_pose_error| > threshold) under Normal(bias, sigma)",
+    "matched_grasp_pose_sigma_deg": 2.0,
+    "mismatch_bias_sweep_deg": [
+      15.0,
+      30.0,
+      45.0
+    ],
+    "mismatched_grasp_pose_sigma_deg": 10.0,
+    "threshold_definition": "wrist_correction (= J5_half * clearance) + angular_window"
+  },
+  "interpretation": "A cell is a candidate coupling regime when the mismatch bias CROSSES the binding threshold and a substantial realistic mass clears it. At high clearance (0.7, wrist ~87.5 deg) only a near-flip mismatch crosses; at low clearance (0.2, wrist ~25 deg) modest mismatches (>= ~30 deg) cross and most mass clears. The measured verdict per cell follows at PR C; this overlay shows where coupling is even possible, transparently, across BOTH knobs.",
+  "overlay": [
+    {
+      "binding_threshold_deg": 30.0,
+      "binding_threshold_sigma": 15.0,
+      "clearance_factor": 0.2,
+      "mismatch_bias_deg": 15.0,
+      "mismatch_mass_clearing": 0.06681059894198281,
+      "threshold_crossed": false,
+      "wrist_correction_deg": 25.0
+    },
+    {
+      "binding_threshold_deg": 30.0,
+      "binding_threshold_sigma": 15.0,
+      "clearance_factor": 0.2,
+      "mismatch_bias_deg": 30.0,
+      "mismatch_mass_clearing": 0.5000000009865877,
+      "threshold_crossed": false,
+      "wrist_correction_deg": 25.0
+    },
+    {
+      "binding_threshold_deg": 30.0,
+      "binding_threshold_sigma": 15.0,
+      "clearance_factor": 0.2,
+      "mismatch_bias_deg": 45.0,
+      "mismatch_mass_clearing": 0.9331927987311738,
+      "threshold_crossed": true,
+      "wrist_correction_deg": 25.0
+    },
+    {
+      "binding_threshold_deg": 48.75,
+      "binding_threshold_sigma": 24.375,
+      "clearance_factor": 0.35,
+      "mismatch_bias_deg": 15.0,
+      "mismatch_mass_clearing": 0.0003690785457565437,
+      "threshold_crossed": false,
+      "wrist_correction_deg": 43.75
+    },
+    {
+      "binding_threshold_deg": 48.75,
+      "binding_threshold_sigma": 24.375,
+      "clearance_factor": 0.35,
+      "mismatch_bias_deg": 30.0,
+      "mismatch_mass_clearing": 0.030396361765263075,
+      "threshold_crossed": false,
+      "wrist_correction_deg": 43.75
+    },
+    {
+      "binding_threshold_deg": 48.75,
+      "binding_threshold_sigma": 24.375,
+      "clearance_factor": 0.35,
+      "mismatch_bias_deg": 45.0,
+      "mismatch_mass_clearing": 0.3538302333272762,
+      "threshold_crossed": false,
+      "wrist_correction_deg": 43.75
+    },
+    {
+      "binding_threshold_deg": 67.5,
+      "binding_threshold_sigma": 33.75,
+      "clearance_factor": 0.5,
+      "mismatch_bias_deg": 15.0,
+      "mismatch_mass_clearing": 7.604960524408453e-08,
+      "threshold_crossed": false,
+      "wrist_correction_deg": 62.5
+    },
+    {
+      "binding_threshold_deg": 67.5,
+      "binding_threshold_sigma": 33.75,
+      "clearance_factor": 0.5,
+      "mismatch_bias_deg": 30.0,
+      "mismatch_mass_clearing": 8.841728520080383e-05,
+      "threshold_crossed": false,
+      "wrist_correction_deg": 62.5
+    },
+    {
+      "binding_threshold_deg": 67.5,
+      "binding_threshold_sigma": 33.75,
+      "clearance_factor": 0.5,
+      "mismatch_bias_deg": 45.0,
+      "mismatch_mass_clearing": 0.012224472655044704,
+      "threshold_crossed": false,
+      "wrist_correction_deg": 62.5
+    },
+    {
+      "binding_threshold_deg": 92.5,
+      "binding_threshold_sigma": 46.25,
+      "clearance_factor": 0.7,
+      "mismatch_bias_deg": 15.0,
+      "mismatch_mass_clearing": 4.594627435781566e-15,
+      "threshold_crossed": false,
+      "wrist_correction_deg": 87.5
+    },
+    {
+      "binding_threshold_deg": 92.5,
+      "binding_threshold_sigma": 46.25,
+      "clearance_factor": 0.7,
+      "mismatch_bias_deg": 30.0,
+      "mismatch_mass_clearing": 2.0522634252189355e-10,
+      "threshold_crossed": false,
+      "wrist_correction_deg": 87.5
+    },
+    {
+      "binding_threshold_deg": 92.5,
+      "binding_threshold_sigma": 46.25,
+      "clearance_factor": 0.7,
+      "mismatch_bias_deg": 45.0,
+      "mismatch_mass_clearing": 1.017083242568703e-06,
+      "threshold_crossed": false,
+      "wrist_correction_deg": 87.5
+    }
+  ],
+  "purpose": "Design-time (clearance x mismatch) threshold-crossing + realistic-mass overlay (decision #2). Closes the symmetric knob; the measured coupling region is PR C.",
+  "schema": "handover_place_gate0_clearance_mismatch_overlay/v1"
+}

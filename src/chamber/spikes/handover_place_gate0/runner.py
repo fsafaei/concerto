@@ -40,6 +40,7 @@ from chamber.spikes.handover_place_gate0.decision import (
     binding_threshold_deg,
     classify_cell,
     classify_verdict,
+    clearance_mismatch_overlay,
     mismatch_mass_clearing,
     threshold_in_sigma,
     two_crossover_window,
@@ -70,6 +71,7 @@ def run_cell_episodes(
     episodes_per_seed: int,
     env_params: dict[str, Any],
     presenter_params: dict[str, float],
+    mismatch_bias_deg: float | None = None,
 ) -> list[EpisodeResult]:
     """Run one (variant, clearance, takt, arm-basis) cell and return its episodes (ADR-026).
 
@@ -115,6 +117,7 @@ def run_cell_episodes(
                         "takt_s": takt_s,
                         "arm_basis": arm_basis,
                         "free_regrasp": free_regrasp,
+                        "mismatch_bias_deg": mismatch_bias_deg,
                         "binding_conjunct": info["binding_conjunct"],
                         "failure_mode": info["failure_mode"],
                     },
@@ -197,92 +200,129 @@ def analyze(
     takt_grid_s: Sequence[float],
     arm_bases: Sequence[str],
     n_boot: int,
-    overlay: list[dict[str, float]],
+    overlay: list[dict[str, Any]],
+    mismatch_biases_deg: Sequence[float] = (),
     tau_solv: float = HANDOVER_TAU_SOLV,
     delta_min_pp: float = HANDOVER_DELTA_MIN_PP,
 ) -> dict[str, Any]:
-    """Build the per-cell crossover curves + verdict from the raw episodes (ADR-026 §Decision)."""
+    """Build the per-cell crossover curves + verdict from the raw episodes (ADR-026 §Decision).
+
+    Cells are keyed by (mismatch_bias, arm, clearance, takt) — the clearance and mismatch
+    knobs are BOTH swept (decision #2). The matched reference is shared across biases; the
+    gap pairs the matched set with each bias's mismatched set on identical initial
+    conditions. Also returns the (clearance x mismatch) measured coupling region.
+    """
 
     def _sel(eps: list[EpisodeResult], filt: dict[str, Any]) -> list[EpisodeResult]:
         return [e for e in eps if all(e.metadata.get(k) == v for k, v in filt.items())]
 
+    biases: Sequence[float] = mismatch_biases_deg or (math.nan,)
     curves: list[dict[str, Any]] = []
     any_indeterminate = False
     free_gap_low = -math.inf
     matched_solvable_at_realistic = False
+    lo, hi = REALISTIC_TAKT_BAND_S
 
-    for arm in arm_bases:
-        for f in clearance_factors:
-            takt_cells: list[tuple[float, Any]] = []
-            for t in takt_grid_s:
-                base = {"arm_basis": arm, "clearance_factor": f, "takt_s": t, "free_regrasp": False}
-                matched = _sel(episodes, {**base, "condition": HANDOVER_MATCHED_REFERENCE})
-                mismatched = _sel(episodes, {**base, "condition": HANDOVER_PRESENTATION_MISMATCH})
-                if not matched or not mismatched:
-                    continue
-                m_iqm, m_low = _iqm_ci(
-                    _successes_by_seed(matched),
-                    n_boot=n_boot,
-                    rng_name=f"eval.matched.{arm}.{f}.{t}",
-                )
-                gap_iqm, gap_low, gap_high = _gap_ci_pp(
-                    matched,
-                    mismatched,
-                    n_boot=n_boot,
-                    rng_name=f"eval.gap.{arm}.{f}.{t}",
-                )
-                verdict = classify_cell(
-                    matched_ci_low=m_low,
-                    gap_ci_low_pp=gap_low,
-                    gap_ci_high_pp=gap_high,
-                    tau_solv=tau_solv,
-                    delta_min_pp=delta_min_pp,
-                )
-                any_indeterminate = any_indeterminate or verdict.indeterminate
-                lo, hi = REALISTIC_TAKT_BAND_S
-                if verdict.solvable and lo <= t <= hi:
-                    matched_solvable_at_realistic = True
-                takt_cells.append((t, verdict))
-                curves.append(
-                    {
+    for bias in biases:
+        for arm in arm_bases:
+            for f in clearance_factors:
+                takt_cells: list[tuple[float, Any]] = []
+                for t in takt_grid_s:
+                    mb = {
                         "arm_basis": arm,
                         "clearance_factor": f,
                         "takt_s": t,
-                        "matched_iqm": m_iqm,
-                        "matched_ci_low": m_low,
-                        "gap_pp": gap_iqm,
-                        "gap_ci_low_pp": gap_low,
-                        "gap_ci_high_pp": gap_high,
-                        "solvable": verdict.solvable,
-                        "coupling_valid": verdict.coupling_valid,
-                        "washout": verdict.washout,
-                        "indeterminate": verdict.indeterminate,
+                        "free_regrasp": False,
+                    }
+                    matched = _sel(episodes, {**mb, "condition": HANDOVER_MATCHED_REFERENCE})
+                    mm_filt = {**mb, "condition": HANDOVER_PRESENTATION_MISMATCH}
+                    if mismatch_biases_deg:
+                        mm_filt["mismatch_bias_deg"] = bias
+                    mismatched = _sel(episodes, mm_filt)
+                    if not matched or not mismatched:
+                        continue
+                    m_iqm, m_low = _iqm_ci(
+                        _successes_by_seed(matched),
+                        n_boot=n_boot,
+                        rng_name=f"eval.matched.{arm}.{f}.{t}",
+                    )
+                    gap_iqm, gap_low, gap_high = _gap_ci_pp(
+                        matched,
+                        mismatched,
+                        n_boot=n_boot,
+                        rng_name=f"eval.gap.{bias}.{arm}.{f}.{t}",
+                    )
+                    verdict = classify_cell(
+                        matched_ci_low=m_low,
+                        gap_ci_low_pp=gap_low,
+                        gap_ci_high_pp=gap_high,
+                        tau_solv=tau_solv,
+                        delta_min_pp=delta_min_pp,
+                    )
+                    any_indeterminate = any_indeterminate or verdict.indeterminate
+                    if verdict.solvable and lo <= t <= hi:
+                        matched_solvable_at_realistic = True
+                    takt_cells.append((t, verdict))
+                    curves.append(
+                        {
+                            "mismatch_bias_deg": bias,
+                            "arm_basis": arm,
+                            "clearance_factor": f,
+                            "takt_s": t,
+                            "matched_iqm": m_iqm,
+                            "matched_ci_low": m_low,
+                            "gap_pp": gap_iqm,
+                            "gap_ci_low_pp": gap_low,
+                            "gap_ci_high_pp": gap_high,
+                            "solvable": verdict.solvable,
+                            "coupling_valid": verdict.coupling_valid,
+                            "washout": verdict.washout,
+                            "indeterminate": verdict.indeterminate,
+                        }
+                    )
+                curves.append(
+                    {
+                        "mismatch_bias_deg": bias,
+                        "arm_basis": arm,
+                        "clearance_factor": f,
+                        "crossover_window": two_crossover_window(takt_cells)._asdict(),
                     }
                 )
-            # crossover window for this (arm, clearance) curve
-            window = two_crossover_window(takt_cells)
-            curves.append(
+
+    # free-re-grasp diagnostic (intrinsic if it persists): max free gap-low over biases.
+    for bias in biases:
+        fmm_filt: dict[str, Any] = {
+            "condition": HANDOVER_PRESENTATION_MISMATCH,
+            "free_regrasp": True,
+        }
+        if mismatch_biases_deg:
+            fmm_filt["mismatch_bias_deg"] = bias
+        fm = _sel(episodes, {"condition": HANDOVER_MATCHED_REFERENCE, "free_regrasp": True})
+        fmm = _sel(episodes, fmm_filt)
+        if fm and fmm:
+            _, gl, _ = _gap_ci_pp(fm, fmm, n_boot=n_boot, rng_name=f"eval.gap.free.{bias}")
+            free_gap_low = max(free_gap_low, gl)
+
+    # (clearance x mismatch) measured coupling region: coupling-valid at any takt/arm.
+    region: list[dict[str, Any]] = []
+    for f in clearance_factors:
+        for bias in biases:
+            cells = [
+                c
+                for c in curves
+                if c.get("clearance_factor") == f
+                and c.get("mismatch_bias_deg") == bias
+                and "takt_s" in c
+            ]
+            region.append(
                 {
-                    "arm_basis": arm,
                     "clearance_factor": f,
-                    "crossover_window": window._asdict(),
+                    "mismatch_bias_deg": bias,
+                    "coupling_valid_any_takt": any(c["coupling_valid"] for c in cells),
+                    "max_gap_ci_low_pp": max((c["gap_ci_low_pp"] for c in cells), default=math.nan),
                 }
             )
 
-    # free-re-grasp diagnostic: gap at the free endpoint (intrinsic if it persists).
-    free_matched = _sel(episodes, {"condition": HANDOVER_MATCHED_REFERENCE, "free_regrasp": True})
-    free_mismatched = _sel(
-        episodes, {"condition": HANDOVER_PRESENTATION_MISMATCH, "free_regrasp": True}
-    )
-    if free_matched and free_mismatched:
-        _, free_gap_low, _ = _gap_ci_pp(
-            free_matched,
-            free_mismatched,
-            n_boot=n_boot,
-            rng_name="eval.gap.free",
-        )
-
-    # overall window across all (arm, clearance) cells, for the verdict
     all_takt_cells: list[tuple[float, Any]] = [
         (
             c["takt_s"],
@@ -310,6 +350,7 @@ def analyze(
         "overall_window": overall_window._asdict(),
         "free_regrasp_gap_ci_low_pp": free_gap_low,
         "clearance_threshold_overlay": overlay,
+        "mismatch_coupling_region": region,
         "verdict": verdict,
     }
 
@@ -332,14 +373,51 @@ def run_gate0(params: dict[str, Any]) -> tuple[SpikeRun, dict[str, Any]]:
     env_params: dict[str, Any] = params["env_params"]
     n_boot: int = params["n_boot"]
 
+    mismatch_bias_sweep: Sequence[float] = params["mismatched_grasp_pose_bias_sweep_deg"]
+    matched_pp: dict[str, float] = params["matched_presenter_params"]
+    mismatched_pp_base: dict[str, float] = params["mismatched_presenter_params"]
+    free_regrasp_duration_s = arm_bases["fast"]["regrasp_duration_s"]
+
     episodes: list[EpisodeResult] = []
-    for variant in ("matched", "mismatched"):
-        pp = params[f"{variant}_presenter_params"]
+    # Matched reference (shared across mismatch biases).
+    for arm, ab in arm_bases.items():
+        for f in clearances:
+            for t in takts:
+                episodes += run_cell_episodes(
+                    variant="matched",
+                    clearance_factor=f,
+                    takt_s=t,
+                    arm_basis=arm,
+                    place_cycle_s=ab["place_cycle_s"],
+                    regrasp_duration_s=ab["regrasp_duration_s"],
+                    free_regrasp=False,
+                    seeds=seeds,
+                    episodes_per_seed=k,
+                    env_params=env_params,
+                    presenter_params=matched_pp,
+                )
+    for f in clearances:  # matched free-re-grasp endpoint (arm-basis-independent)
+        episodes += run_cell_episodes(
+            variant="matched",
+            clearance_factor=f,
+            takt_s=takts[0],
+            arm_basis="free",
+            place_cycle_s=0.0,
+            regrasp_duration_s=free_regrasp_duration_s,
+            free_regrasp=True,
+            seeds=seeds,
+            episodes_per_seed=k,
+            env_params=env_params,
+            presenter_params=matched_pp,
+        )
+    # Mismatched, swept over the grasp-pose bias (decision #2).
+    for bias in mismatch_bias_sweep:
+        pp = {**mismatched_pp_base, "grasp_pose_bias_deg": bias}
         for arm, ab in arm_bases.items():
             for f in clearances:
                 for t in takts:
                     episodes += run_cell_episodes(
-                        variant=variant,
+                        variant="mismatched",
                         clearance_factor=f,
                         takt_s=t,
                         arm_basis=arm,
@@ -350,36 +428,38 @@ def run_gate0(params: dict[str, Any]) -> tuple[SpikeRun, dict[str, Any]]:
                         episodes_per_seed=k,
                         env_params=env_params,
                         presenter_params=pp,
+                        mismatch_bias_deg=bias,
                     )
-            # free-re-grasp diagnostic (takt-independent; one nominal takt + budget=inf)
-            for f in clearances:
-                episodes += run_cell_episodes(
-                    variant=variant,
-                    clearance_factor=f,
-                    takt_s=takts[0],
-                    arm_basis="free",
-                    place_cycle_s=0.0,
-                    regrasp_duration_s=arm_bases["fast"]["regrasp_duration_s"],
-                    free_regrasp=True,
-                    seeds=seeds,
-                    episodes_per_seed=k,
-                    env_params=env_params,
-                    presenter_params=pp,
-                )
-            break  # the free endpoint does not depend on the arm basis
+        for f in clearances:
+            episodes += run_cell_episodes(
+                variant="mismatched",
+                clearance_factor=f,
+                takt_s=takts[0],
+                arm_basis="free",
+                place_cycle_s=0.0,
+                regrasp_duration_s=free_regrasp_duration_s,
+                free_regrasp=True,
+                seeds=seeds,
+                episodes_per_seed=k,
+                env_params=env_params,
+                presenter_params=pp,
+                mismatch_bias_deg=bias,
+            )
 
-    overlay = clearance_threshold_overlay(
-        clearance_factors=clearances,
+    overlay = clearance_mismatch_overlay(
+        clearance_factors=list(clearances),
+        mismatch_biases_deg=list(mismatch_bias_sweep),
         angular_window_deg=env_params["angular_window_deg"],
-        matched_grasp_pose_sigma_deg=params["matched_grasp_pose_sigma_deg"],
-        mismatched_grasp_pose_bias_deg=params["mismatched_grasp_pose_bias_deg"],
-        mismatched_grasp_pose_sigma_deg=params["mismatched_grasp_pose_sigma_deg"],
+        matched_sigma_deg=params["matched_grasp_pose_sigma_deg"],
+        mismatch_sigma_deg=params["mismatched_grasp_pose_sigma_deg"],
+        j5_pitch_half_deg=_J5_PITCH_HALF_DEG,
     )
     analysis = analyze(
         episodes,
         clearance_factors=clearances,
         takt_grid_s=takts,
         arm_bases=list(arm_bases),
+        mismatch_biases_deg=mismatch_bias_sweep,
         n_boot=n_boot,
         overlay=overlay,
     )

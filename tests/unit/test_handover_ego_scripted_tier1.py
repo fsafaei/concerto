@@ -25,7 +25,7 @@ from chamber.partners.handover_presenter import HandoverPresenterPartner, presen
 
 _ENV_KW: dict[str, Any] = {
     "lateral_window_m": 1.0e-3,
-    "angular_window_deg": 3.0,
+    "angular_window_deg": 5.0,
     "seating_force_limit_n": 75.0,
     "regrasp_budget_s": 1.0,
     "regrasp_duration_s": 2.0,
@@ -33,7 +33,7 @@ _ENV_KW: dict[str, Any] = {
     "wrist_correction_deg": 15.0,
     "reacquire_range_deg": 90.0,
     "contact_stiffness_n_per_m": 3.75e4,
-    "angular_stiffness_n_per_deg": 12.5,
+    "angular_stiffness_n_per_deg": 7.5,
 }
 
 
@@ -45,7 +45,7 @@ def _obs(*, lateral, grasp_pose_error_deg):
         "grasp_pose_error_deg": float(grasp_pose_error_deg),
         "spec": {
             "lateral_window_m": 1.0e-3,
-            "angular_window_deg": 3.0,
+            "angular_window_deg": 5.0,
             "seating_force_limit_n": 75.0,
             "regrasp_budget_s": 1.0,
         },

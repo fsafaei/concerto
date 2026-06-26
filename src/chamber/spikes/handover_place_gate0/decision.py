@@ -127,6 +127,43 @@ class CrossoverWindow(NamedTuple):
     non_empty: bool
 
 
+def clearance_mismatch_overlay(
+    *,
+    clearance_factors: list[float],
+    mismatch_biases_deg: list[float],
+    angular_window_deg: float,
+    matched_sigma_deg: float,
+    mismatch_sigma_deg: float,
+    j5_pitch_half_deg: float,
+) -> list[dict[str, float | bool]]:
+    """The (clearance x mismatch) design overlay (decision #2; ADR-026).
+
+    Closes the symmetric knob: for each (clearance_factor, mismatch_bias) cell, the
+    binding grasp-pose threshold (= wrist_correction + angular_window) in degrees and
+    matched-sigma units, whether the mismatch bias crosses it, and the realistic
+    mismatch mass clearing it. Analytical (design-time); the MEASURED coupling region
+    is produced by the runner at PR C. ``j5_pitch_half_deg`` is the cited binding wrist
+    axis (wrist_correction = j5_pitch_half * clearance_factor).
+    """
+    wrist_by_f = {f: j5_pitch_half_deg * f for f in clearance_factors}
+    thr_by_f = {
+        f: binding_threshold_deg(wrist_by_f[f], angular_window_deg) for f in clearance_factors
+    }
+    return [
+        {
+            "clearance_factor": f,
+            "mismatch_bias_deg": bias,
+            "wrist_correction_deg": wrist_by_f[f],
+            "binding_threshold_deg": thr_by_f[f],
+            "binding_threshold_sigma": threshold_in_sigma(thr_by_f[f], matched_sigma_deg),
+            "threshold_crossed": bias > thr_by_f[f],
+            "mismatch_mass_clearing": mismatch_mass_clearing(thr_by_f[f], bias, mismatch_sigma_deg),
+        }
+        for f in clearance_factors
+        for bias in mismatch_biases_deg
+    ]
+
+
 def two_crossover_window(takt_sorted_cells: list[tuple[float, CellVerdict]]) -> CrossoverWindow:
     """Locate the solvable-and-coupling-valid takt window from a takt-sorted grid (ADR-026).
 

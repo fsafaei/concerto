@@ -21,10 +21,32 @@ from chamber.spikes.handover_place_gate0.decision import (
     binding_threshold_deg,
     classify_cell,
     classify_verdict,
+    clearance_mismatch_overlay,
     mismatch_mass_clearing,
     threshold_in_sigma,
     two_crossover_window,
 )
+
+
+class TestClearanceMismatchOverlay:
+    def test_grid_shape_and_threshold_crossing(self) -> None:
+        rows = clearance_mismatch_overlay(
+            clearance_factors=[0.2, 0.7],
+            mismatch_biases_deg=[15.0, 45.0],
+            angular_window_deg=5.0,
+            matched_sigma_deg=2.0,
+            mismatch_sigma_deg=10.0,
+            j5_pitch_half_deg=125.0,
+        )
+        assert len(rows) == 4  # 2 clearances x 2 biases
+        by = {(r["clearance_factor"], r["mismatch_bias_deg"]): r for r in rows}
+        # Low clearance (wrist 25, threshold 30): bias 45 crosses; bias 15 does not.
+        assert by[(0.2, 45.0)]["threshold_crossed"] is True
+        assert by[(0.2, 15.0)]["threshold_crossed"] is False
+        # High clearance (wrist 87.5, threshold 92.5): even bias 45 does not cross.
+        assert by[(0.7, 45.0)]["threshold_crossed"] is False
+        # More mass clears at low clearance than high for the same bias.
+        assert by[(0.2, 45.0)]["mismatch_mass_clearing"] > by[(0.7, 45.0)]["mismatch_mass_clearing"]
 
 
 class TestClassifyCell:

@@ -20,12 +20,12 @@ from chamber.spikes.handover_place_gate0.runner import (
 
 _ENV_PARAMS: dict[str, Any] = {
     "lateral_window_m": 1.0e-3,
-    "angular_window_deg": 3.0,
+    "angular_window_deg": 5.0,
     "seating_force_limit_n": 75.0,
     "translation_range_m": 0.10,
     "reacquire_range_deg": 170.0,
     "contact_stiffness_n_per_m": 3.75e4,
-    "angular_stiffness_n_per_deg": 12.5,
+    "angular_stiffness_n_per_deg": 7.5,
 }
 _MISMATCH = {"grasp_pose_bias_deg": 30.0, "grasp_pose_sigma_deg": 10.0}
 
@@ -102,9 +102,9 @@ class TestRunGate0Pipeline:
             "env_params": _ENV_PARAMS,
             "n_boot": 200,
             "matched_presenter_params": {},
-            "mismatched_presenter_params": _MISMATCH,
+            "mismatched_presenter_params": {"grasp_pose_sigma_deg": 10.0},
+            "mismatched_grasp_pose_bias_sweep_deg": [15.0, 45.0],
             "matched_grasp_pose_sigma_deg": 2.0,
-            "mismatched_grasp_pose_bias_deg": 30.0,
             "mismatched_grasp_pose_sigma_deg": 10.0,
             "prereg_sha": "tiny-smoke",
             "git_tag": "tiny-smoke",
@@ -120,8 +120,10 @@ class TestRunGate0Pipeline:
             "LIMB1_FAIL",
             "INDETERMINATE",
         }
-        # The analysis carries the decision-#1 clearance overlay.
-        assert len(analysis["clearance_threshold_overlay"]) == 2
+        # The (clearance x mismatch) overlay: 2 clearances x 2 biases.
+        assert len(analysis["clearance_threshold_overlay"]) == 4
+        # The measured (clearance x mismatch) coupling region: 2 clearances x 2 biases.
+        assert len(analysis["mismatch_coupling_region"]) == 4
 
     def test_analyze_empty_is_limb1_fail(self) -> None:
         out = analyze(

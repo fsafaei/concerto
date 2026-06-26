@@ -106,8 +106,9 @@ HANDOVER_K_EPISODES: int = 20
 # ---------------------------------------------------------------------------
 #: Lateral place-tolerance SUCCESS window (m). Placeholder only.
 HANDOVER_DEFAULT_LATERAL_WINDOW_M: float = 1.0e-3
-#: Angular place-tolerance SUCCESS window (deg). Load-bearing in Rev 2. Placeholder.
-HANDOVER_DEFAULT_ANGULAR_WINDOW_DEG: float = 3.0
+#: Angular place-tolerance SUCCESS window (deg). Load-bearing in Rev 2; the prereg sweeps
+#: it 0-10 deg with central 5.0, so the default mirrors that central. Placeholder.
+HANDOVER_DEFAULT_ANGULAR_WINDOW_DEG: float = 5.0
 #: Seating-force proxy limit (N). Placeholder only.
 HANDOVER_DEFAULT_SEATING_FORCE_LIMIT_N: float = 75.0
 
@@ -130,9 +131,11 @@ HANDOVER_DEFAULT_REGRASP_BUDGET_S: float = 1.0
 HANDOVER_DEFAULT_REGRASP_DURATION_S: float = 2.0
 
 #: Kinematic seating-force proxy stiffnesses (backstop inside the windows; pose is
-#: primary). Tied to the sourced numbers, not free knobs (see force_proxy docs).
+#: primary). Tied to the sourced numbers, not free knobs: contact = ceiling /
+#: (2 * lateral_window) = 75 / (2 * 1e-3) = 3.75e4; angular = ceiling /
+#: (2 * angular_central) = 75 / (2 * 5) = 7.5 (see force_proxy docs).
 HANDOVER_DEFAULT_CONTACT_STIFFNESS_N_PER_M: float = 3.75e4
-HANDOVER_DEFAULT_ANGULAR_STIFFNESS_N_PER_DEG: float = 12.5
+HANDOVER_DEFAULT_ANGULAR_STIFFNESS_N_PER_DEG: float = 7.5
 
 #: Nominal place-target pose [x, y, seat_angle_deg]; small per-episode jitter is added.
 HANDOVER_DEFAULT_TARGET_POSE: tuple[float, float, float] = (0.0, 0.0, 0.0)
