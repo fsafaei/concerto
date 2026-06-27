@@ -4784,6 +4784,56 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#chamber.partners.HandoverPresenterPartner" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        HandoverPresenterPartner
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="HandoverPresenterPartner">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#chamber.partners.HandoverPresenterPartner.__init__" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        __init__
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#chamber.partners.HandoverPresenterPartner.act" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        act
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#chamber.partners.HandoverPresenterPartner.reset" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        reset
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#chamber.partners.OpenVLAPartner" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -9983,6 +10033,56 @@
         
           <li class="md-nav__item">
   <a href="#chamber.partners.FrozenPartner.reset" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        reset
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#chamber.partners.HandoverPresenterPartner" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        HandoverPresenterPartner
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="HandoverPresenterPartner">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#chamber.partners.HandoverPresenterPartner.__init__" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        __init__
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#chamber.partners.HandoverPresenterPartner.act" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        act
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#chamber.partners.HandoverPresenterPartner.reset" class="md-nav__link">
     <span class="md-ellipsis">
       
         reset
@@ -55493,6 +55593,345 @@ substream. Implementations route this through
 <span class="sd">            :func:`concerto.training.seeding.derive_substream`.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="o">...</span>  <span class="c1"># pragma: no cover</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+
+
+  </div>
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-class">
+
+
+
+<h2 id="chamber.partners.HandoverPresenterPartner" class="doc doc-heading">
+            <span class="doc doc-object-name doc-class-name">HandoverPresenterPartner</span>
+
+
+</h2>
+
+
+    <div class="doc doc-contents ">
+            <p class="doc doc-class-bases">
+              Bases: <code><a class="autorefs autorefs-internal" title="PartnerBase (chamber.partners.interface.PartnerBase)" href="#chamber.partners.PartnerBase">PartnerBase</a></code></p>
+
+
+
+        <p>Scripted black-box presenter for handover-and-place (ADR-009; ADR-026 §Decision).</p>
+<p>Emits a presentation action <code>[lat_offset_x, lat_offset_y, grasp_pose_error_deg,
+timing_skew_s]</code> drawn from its distribution; the matched/mismatched split lives in
+the grasp-pose term only. Frozen: implements <code>reset</code>/<code>act</code> only;
+<code>PartnerBase</code> blocks every <code>_FORBIDDEN_ATTRS</code> lookup so the AHT
+no-joint-training constraint holds at runtime (ADR-009 §Consequences).</p>
+
+
+
+
+
+
+
+
+              <details class="mkdocstrings-source">
+                <summary>Source code in <code>src/chamber/partners/handover_presenter.py</code></summary>
+                <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">121</span>
+<span class="normal">122</span>
+<span class="normal">123</span>
+<span class="normal">124</span>
+<span class="normal">125</span>
+<span class="normal">126</span>
+<span class="normal">127</span>
+<span class="normal">128</span>
+<span class="normal">129</span>
+<span class="normal">130</span>
+<span class="normal">131</span>
+<span class="normal">132</span>
+<span class="normal">133</span>
+<span class="normal">134</span>
+<span class="normal">135</span>
+<span class="normal">136</span>
+<span class="normal">137</span>
+<span class="normal">138</span>
+<span class="normal">139</span>
+<span class="normal">140</span>
+<span class="normal">141</span>
+<span class="normal">142</span>
+<span class="normal">143</span>
+<span class="normal">144</span>
+<span class="normal">145</span>
+<span class="normal">146</span>
+<span class="normal">147</span>
+<span class="normal">148</span>
+<span class="normal">149</span>
+<span class="normal">150</span>
+<span class="normal">151</span>
+<span class="normal">152</span>
+<span class="normal">153</span>
+<span class="normal">154</span>
+<span class="normal">155</span>
+<span class="normal">156</span>
+<span class="normal">157</span>
+<span class="normal">158</span>
+<span class="normal">159</span>
+<span class="normal">160</span>
+<span class="normal">161</span>
+<span class="normal">162</span>
+<span class="normal">163</span>
+<span class="normal">164</span>
+<span class="normal">165</span>
+<span class="normal">166</span>
+<span class="normal">167</span>
+<span class="normal">168</span>
+<span class="normal">169</span>
+<span class="normal">170</span>
+<span class="normal">171</span>
+<span class="normal">172</span>
+<span class="normal">173</span>
+<span class="normal">174</span>
+<span class="normal">175</span>
+<span class="normal">176</span>
+<span class="normal">177</span>
+<span class="normal">178</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@register_partner</span><span class="p">(</span><span class="n">HANDOVER_PRESENTER_CLASS</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">HandoverPresenterPartner</span><span class="p">(</span><span class="n">PartnerBase</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Scripted black-box presenter for handover-and-place (ADR-009; ADR-026 §Decision).</span>
+
+<span class="sd">    Emits a presentation action ``[lat_offset_x, lat_offset_y, grasp_pose_error_deg,</span>
+<span class="sd">    timing_skew_s]`` drawn from its distribution; the matched/mismatched split lives in</span>
+<span class="sd">    the grasp-pose term only. Frozen: implements ``reset``/``act`` only;</span>
+<span class="sd">    ``PartnerBase`` blocks every ``_FORBIDDEN_ATTRS`` lookup so the AHT</span>
+<span class="sd">    no-joint-training constraint holds at runtime (ADR-009 §Consequences).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">spec</span><span class="p">:</span> <span class="n">PartnerSpec</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Bind the variant label and presentation params from ``spec`` (ADR-009).&quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">spec</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">variant</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">spec</span><span class="o">.</span><span class="n">extra</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;variant&quot;</span><span class="p">,</span> <span class="s2">&quot;matched&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_params</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="n">key</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span><span class="n">spec</span><span class="o">.</span><span class="n">extra</span><span class="p">[</span><span class="n">key</span><span class="p">])</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">_PARAM_KEYS</span> <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">spec</span><span class="o">.</span><span class="n">extra</span>
+        <span class="p">}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_rng</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">Generator</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">reset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">seed</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Seed the per-episode presentation RNG (P6 / ADR-002; FrozenPartner contract).</span>
+
+<span class="sd">        Builds a fresh deterministic generator so the presentation is a pure function</span>
+<span class="sd">        of ``seed``; clears any prior episode state.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">episode_seed</span> <span class="o">=</span> <span class="mi">0</span> <span class="k">if</span> <span class="n">seed</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="nb">int</span><span class="p">(</span><span class="n">seed</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_rng</span> <span class="o">=</span> <span class="n">derive_substream</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;partner.handover_presenter.</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">variant</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">root_seed</span><span class="o">=</span><span class="n">episode_seed</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">default_rng</span><span class="p">()</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">act</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obs</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="o">*</span><span class="p">,</span> <span class="n">deterministic</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">floating</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Draw the presentation handed to the ego (ADR-026 §Decision; ADR-009).</span>
+
+<span class="sd">        A one-shot draw from the variant&#39;s distribution; ``obs`` is unused (the</span>
+<span class="sd">        presenter conditions on nothing the ego controls). ``deterministic`` is</span>
+<span class="sd">        accepted for the FrozenPartner Protocol; the draw is fully seed-determined, so</span>
+<span class="sd">        the flag does not change behaviour.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">del</span> <span class="n">obs</span><span class="p">,</span> <span class="n">deterministic</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rng</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;HandoverPresenterPartner.act called before reset()&quot;</span><span class="p">)</span>
+        <span class="n">rng</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rng</span>
+        <span class="n">p</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_params</span>
+        <span class="n">lateral_sigma</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;lateral_sigma_m&quot;</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>
+        <span class="n">lat_x</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;lateral_offset_x_m&quot;</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span> <span class="o">+</span> <span class="nb">float</span><span class="p">(</span><span class="n">rng</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">lateral_sigma</span><span class="p">))</span>
+        <span class="n">lat_y</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;lateral_offset_y_m&quot;</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span> <span class="o">+</span> <span class="nb">float</span><span class="p">(</span><span class="n">rng</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">lateral_sigma</span><span class="p">))</span>
+        <span class="n">grasp_pose_error</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;grasp_pose_bias_deg&quot;</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span> <span class="o">+</span> <span class="nb">float</span><span class="p">(</span>
+            <span class="n">rng</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">p</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;grasp_pose_sigma_deg&quot;</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">))</span>
+        <span class="p">)</span>
+        <span class="n">timing_skew</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span>
+            <span class="mf">0.0</span><span class="p">,</span>
+            <span class="n">p</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;timing_skew_bias_s&quot;</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>
+            <span class="o">+</span> <span class="nb">float</span><span class="p">(</span><span class="n">rng</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">p</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;timing_skew_sigma_s&quot;</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">))),</span>
+        <span class="p">)</span>
+        <span class="n">action</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">HANDOVER_PRESENTATION_DIM</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+        <span class="n">action</span><span class="p">[:]</span> <span class="o">=</span> <span class="p">(</span><span class="n">lat_x</span><span class="p">,</span> <span class="n">lat_y</span><span class="p">,</span> <span class="n">grasp_pose_error</span><span class="p">,</span> <span class="n">timing_skew</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">action</span>
+</code></pre></div></td></tr></table></div>
+              </details>
+
+
+
+<div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="chamber.partners.HandoverPresenterPartner.__init__" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">__init__</span>
+
+
+</h3>
+<div class="doc-signature highlight"><pre><span></span><code><span class="nf">__init__</span><span class="p">(</span><span class="n">spec</span><span class="p">:</span> <span class="n">PartnerSpec</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Bind the variant label and presentation params from <code>spec</code> (ADR-009).</p>
+
+
+            <details class="mkdocstrings-source">
+              <summary>Source code in <code>src/chamber/partners/handover_presenter.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">132</span>
+<span class="normal">133</span>
+<span class="normal">134</span>
+<span class="normal">135</span>
+<span class="normal">136</span>
+<span class="normal">137</span>
+<span class="normal">138</span>
+<span class="normal">139</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">spec</span><span class="p">:</span> <span class="n">PartnerSpec</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Bind the variant label and presentation params from ``spec`` (ADR-009).&quot;&quot;&quot;</span>
+    <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">spec</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">variant</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">spec</span><span class="o">.</span><span class="n">extra</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;variant&quot;</span><span class="p">,</span> <span class="s2">&quot;matched&quot;</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_params</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="n">key</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span><span class="n">spec</span><span class="o">.</span><span class="n">extra</span><span class="p">[</span><span class="n">key</span><span class="p">])</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">_PARAM_KEYS</span> <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">spec</span><span class="o">.</span><span class="n">extra</span>
+    <span class="p">}</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_rng</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">Generator</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="chamber.partners.HandoverPresenterPartner.act" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">act</span>
+
+
+</h3>
+<div class="doc-signature highlight"><pre><span></span><code><span class="nf">act</span><span class="p">(</span>
+    <span class="n">obs</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="o">*</span><span class="p">,</span> <span class="n">deterministic</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">floating</span><span class="p">]</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Draw the presentation handed to the ego (ADR-026 §Decision; ADR-009).</p>
+<p>A one-shot draw from the variant's distribution; <code>obs</code> is unused (the
+presenter conditions on nothing the ego controls). <code>deterministic</code> is
+accepted for the FrozenPartner Protocol; the draw is fully seed-determined, so
+the flag does not change behaviour.</p>
+
+
+            <details class="mkdocstrings-source">
+              <summary>Source code in <code>src/chamber/partners/handover_presenter.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">152</span>
+<span class="normal">153</span>
+<span class="normal">154</span>
+<span class="normal">155</span>
+<span class="normal">156</span>
+<span class="normal">157</span>
+<span class="normal">158</span>
+<span class="normal">159</span>
+<span class="normal">160</span>
+<span class="normal">161</span>
+<span class="normal">162</span>
+<span class="normal">163</span>
+<span class="normal">164</span>
+<span class="normal">165</span>
+<span class="normal">166</span>
+<span class="normal">167</span>
+<span class="normal">168</span>
+<span class="normal">169</span>
+<span class="normal">170</span>
+<span class="normal">171</span>
+<span class="normal">172</span>
+<span class="normal">173</span>
+<span class="normal">174</span>
+<span class="normal">175</span>
+<span class="normal">176</span>
+<span class="normal">177</span>
+<span class="normal">178</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">act</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obs</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="o">*</span><span class="p">,</span> <span class="n">deterministic</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">floating</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Draw the presentation handed to the ego (ADR-026 §Decision; ADR-009).</span>
+
+<span class="sd">    A one-shot draw from the variant&#39;s distribution; ``obs`` is unused (the</span>
+<span class="sd">    presenter conditions on nothing the ego controls). ``deterministic`` is</span>
+<span class="sd">    accepted for the FrozenPartner Protocol; the draw is fully seed-determined, so</span>
+<span class="sd">    the flag does not change behaviour.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">del</span> <span class="n">obs</span><span class="p">,</span> <span class="n">deterministic</span>
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rng</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;HandoverPresenterPartner.act called before reset()&quot;</span><span class="p">)</span>
+    <span class="n">rng</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rng</span>
+    <span class="n">p</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_params</span>
+    <span class="n">lateral_sigma</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;lateral_sigma_m&quot;</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>
+    <span class="n">lat_x</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;lateral_offset_x_m&quot;</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span> <span class="o">+</span> <span class="nb">float</span><span class="p">(</span><span class="n">rng</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">lateral_sigma</span><span class="p">))</span>
+    <span class="n">lat_y</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;lateral_offset_y_m&quot;</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span> <span class="o">+</span> <span class="nb">float</span><span class="p">(</span><span class="n">rng</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">lateral_sigma</span><span class="p">))</span>
+    <span class="n">grasp_pose_error</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;grasp_pose_bias_deg&quot;</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span> <span class="o">+</span> <span class="nb">float</span><span class="p">(</span>
+        <span class="n">rng</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">p</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;grasp_pose_sigma_deg&quot;</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">))</span>
+    <span class="p">)</span>
+    <span class="n">timing_skew</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span>
+        <span class="mf">0.0</span><span class="p">,</span>
+        <span class="n">p</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;timing_skew_bias_s&quot;</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>
+        <span class="o">+</span> <span class="nb">float</span><span class="p">(</span><span class="n">rng</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">p</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;timing_skew_sigma_s&quot;</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">))),</span>
+    <span class="p">)</span>
+    <span class="n">action</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">HANDOVER_PRESENTATION_DIM</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+    <span class="n">action</span><span class="p">[:]</span> <span class="o">=</span> <span class="p">(</span><span class="n">lat_x</span><span class="p">,</span> <span class="n">lat_y</span><span class="p">,</span> <span class="n">grasp_pose_error</span><span class="p">,</span> <span class="n">timing_skew</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">action</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="chamber.partners.HandoverPresenterPartner.reset" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">reset</span>
+
+
+</h3>
+<div class="doc-signature highlight"><pre><span></span><code><span class="nf">reset</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n">seed</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Seed the per-episode presentation RNG (P6 / ADR-002; FrozenPartner contract).</p>
+<p>Builds a fresh deterministic generator so the presentation is a pure function
+of <code>seed</code>; clears any prior episode state.</p>
+
+
+            <details class="mkdocstrings-source">
+              <summary>Source code in <code>src/chamber/partners/handover_presenter.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">141</span>
+<span class="normal">142</span>
+<span class="normal">143</span>
+<span class="normal">144</span>
+<span class="normal">145</span>
+<span class="normal">146</span>
+<span class="normal">147</span>
+<span class="normal">148</span>
+<span class="normal">149</span>
+<span class="normal">150</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">reset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">seed</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Seed the per-episode presentation RNG (P6 / ADR-002; FrozenPartner contract).</span>
+
+<span class="sd">    Builds a fresh deterministic generator so the presentation is a pure function</span>
+<span class="sd">    of ``seed``; clears any prior episode state.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">episode_seed</span> <span class="o">=</span> <span class="mi">0</span> <span class="k">if</span> <span class="n">seed</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="nb">int</span><span class="p">(</span><span class="n">seed</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_rng</span> <span class="o">=</span> <span class="n">derive_substream</span><span class="p">(</span>
+        <span class="sa">f</span><span class="s2">&quot;partner.handover_presenter.</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">variant</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">root_seed</span><span class="o">=</span><span class="n">episode_seed</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">default_rng</span><span class="p">()</span>
 </code></pre></div></td></tr></table></div>
             </details>
     </div>
