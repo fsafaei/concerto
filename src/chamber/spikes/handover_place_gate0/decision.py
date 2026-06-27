@@ -71,7 +71,15 @@ def classify_cell(
     tau_solv: float = HANDOVER_TAU_SOLV,
     delta_min_pp: float = HANDOVER_DELTA_MIN_PP,
 ) -> CellVerdict:
-    """Classify a cell from its matched/gap CIs (ADR-026; ADR-008 equivalence bound)."""
+    """Classify a cell from its matched/gap CIs (ADR-026; ADR-008 equivalence bound).
+
+    THE single canonical rule (gate0.yaml decision_rule.canonical_cell_rule), using the
+    SAME two-sided 95% cluster-bootstrap CI (2.5 / 97.5 percentiles) for both limbs:
+    COUPLING_VALID iff gap CI_lower >= delta_min; WASHOUT iff gap CI_upper < delta_min;
+    INDETERMINATE otherwise; SOLVABLE iff matched CI_lower >= tau_solv. ``gap_ci_low_pp`` /
+    ``gap_ci_high_pp`` / ``matched_ci_low`` are the 2.5 / 97.5 / 2.5 percentiles from the
+    (paired-)cluster bootstrap; the power sim sizes n under this exact rule.
+    """
     solvable = matched_ci_low >= tau_solv
     coupling_valid = gap_ci_low_pp >= delta_min_pp
     washout = gap_ci_high_pp < delta_min_pp

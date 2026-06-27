@@ -199,14 +199,26 @@ decision_rule:
   bootstrap:
     method: cluster                       # paired_cluster for the matched-vs-mismatch gap
     n_boot: 10000                         # = chamber.envs.handover_place.HANDOVER_N_BOOT
-    ci: one_sided_95_lower                # equivalence / two-sided-upper for the null
+    ci: two_sided_95                      # 2.5 / 97.5 percentiles; the SAME bound for BOTH limbs (canonical)
+  canonical_cell_rule: >
+    THE single definition of COUPLING_VALID / WASHOUT (this YAML is the source of truth;
+    implemented verbatim by chamber.spikes.handover_place_gate0.decision.classify_cell;
+    the power sim sizes n under this EXACT rule). Using the SAME two-sided 95% cluster-
+    bootstrap CI (2.5 / 97.5 percentiles) for BOTH limbs:
+      COUPLING_VALID  iff  gap CI_lower (2.5 pct)  >= coupling_delta_min_pp
+      WASHOUT         iff  gap CI_upper (97.5 pct) <  coupling_delta_min_pp
+      INDETERMINATE   otherwise
+      (Limb-1) SOLVABLE iff matched-success CI_lower (2.5 pct) >= tau_solv
+    At the exact crossover (gap = delta_min) a cell is INDETERMINATE most of the time by
+    construction; the verdict resolves from cells AWAY from the boundary (large gap at low
+    takt -> coupling; ~0 gap at high takt -> washout).
   episodes_per_seed: 20                   # = HANDOVER_K_EPISODES
   seeds: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19]  # n = 20 (provisional, from the power sim; sized for adequacy)
   solvability_threshold_tau_solv: 0.90    # = HANDOVER_TAU_SOLV (Limb-1 bar)
   coupling_delta_min_pp: 20.0             # = HANDOVER_DELTA_MIN_PP
   reading_rule_two_crossovers:
-    solvability_floor: "smallest budget at which ci_low(matched_success) >= tau_solv (below it even matched fails -> Limb-1 region)."
-    coupling_ceiling: "largest budget at which ci_low(gap_pp) >= delta_min_pp (above it the mismatched partner can always afford its re-grasp -> washout)."
+    solvability_floor: "smallest budget at which matched-success CI_lower(2.5 pct) >= tau_solv (below it even matched fails -> Limb-1 region)."
+    coupling_ceiling: "largest budget at which gap CI_lower(2.5 pct) >= delta_min_pp (above it the mismatched partner can always afford its re-grasp -> washout)."
     window: "[solvability_floor, coupling_ceiling] in budget; mapped to takt = budget + place_cycle, for BOTH arm-basis endpoints and each clearance level."
     free_regrasp_split: "gap persists at the free endpoint -> intrinsic (kinematic); vanishes -> budget-mediated."
   indeterminate_response: "one pre-committed seed extension to seeds_extension, then declare; NEVER widen delta_min_pp, the crossover band, or any tolerance."
@@ -231,24 +243,26 @@ transparency:
   express_mismatch_relative_to_matched_sigma: true  # T2
 
 power_simulation:
-  status: "PROVISIONAL — sized for ADEQUACY WITH MARGIN (founder freeze review), per (clearance, takt) cell, before any measured run."
-  recommended_n_provisional: 20           # smallest n meeting, across EVERY dispersion bracket, ALL of: MDE <= 0.05 (half the ~0.10 design ceiling) AND WASHOUT power (null at gap=0) >= 0.80 AND COUPLING_VALID power (at the expected effect) >= 0.80 AND cluster-bootstrap type-I (sig at gap=0) <= 0.075
+  status: "PROVISIONAL — sized for ADEQUACY WITH MARGIN under the SINGLE canonical rule (two-sided 95% CI; see decision_rule.canonical_cell_rule), per (clearance, takt) cell, before any measured run."
+  rule: "the EXACT canonical rule in decision_rule.canonical_cell_rule (COUPLING_VALID iff gap CI_lower(2.5 pct) >= delta_min; WASHOUT iff gap CI_upper(97.5 pct) < delta_min); same two-sided-95 CI both limbs."
+  recommended_n_provisional: 20           # smallest n meeting, across EVERY dispersion bracket, ALL of: MDE <= 0.05 (half the ~0.10 design ceiling) AND WASHOUT power P(CI_upper < delta_min | gap=0) >= 0.80 AND COUPLING_VALID power P(CI_lower >= delta_min | gap=expected) >= 0.80 AND cluster-bootstrap type-I P(CI_lower > 0 | gap=0) <= 0.075
   achieved_at_n20:
-    mde: 0.05                             # smallest gap detected as significant (two-sided CI low > 0) at >= 80% power; HALF delta_min
-    washout_power_at_gap0: 1.00           # P(two-sided CI upper < delta_min | gap=0); the equivalence-null resolution
-    coupling_power_at_expected_gap_0p40: 1.00
-    type_i_at_gap0: 0.033                 # cluster-bootstrap calibrated (<= 0.075)
-    at_bar_blind_band_power: 0.57         # gap = delta_min; surfaced honestly, NOT a sizing target
-  mde_definition_note: >
-    The MDE is the SIGNIFICANCE-based minimum detectable effect (smallest true gap with
-    two-sided 95% CI lower > 0 at >= 80% power) — the notion that makes the crossover
-    region resolvable. The prior "n=8, MDE ~0.25, power ~0.5" was an ARTIFACT of measuring
-    the MDE with the COUPLING_VALID lands rule (whose pooled-mean >= delta_min conjunct
-    structurally caps sub-bar resolution = the at-bar blind band). Under the corrected MDE,
-    n=8 already meets the ~0.10 design ceiling with calibrated type-I; n=20 is sized HIGHER
-    for crossover-resolution margin (MDE 0.05) + robust cluster-bootstrap behaviour
-    ("size for adequacy, not economy"). n_boot=10000 does NOT substitute for seed-clusters.
-  at_bar_blind_band_power: "~0.57 (gap = delta_min); surfaced honestly, NEVER represented as adequate; a null is resolved by the equivalence/CI bound, never a power claim."
+    mde: 0.05                             # smallest gap with P(CI_lower > 0) >= 0.80; HALF delta_min
+    washout_power_at_gap0: 1.00           # P(CI_upper(97.5 pct) < delta_min | gap=0)
+    coupling_power_at_expected_gap_0p40: 1.00  # P(CI_lower(2.5 pct) >= delta_min | gap=0.40)
+    type_i_at_gap0: 0.033                 # P(CI_lower > 0 | gap=0); cluster-bootstrap calibrated (<= 0.075)
+    at_bar_indeterminate_rate: 0.93       # gap = delta_min: a boundary cell is INDETERMINATE ~93% of the time BY DESIGN (CI_lower < delta_min < CI_upper); NOT a sizing target; the verdict resolves from off-boundary cells
+    at_bar_coupling_rate: 0.05            # P(CI_lower >= delta_min | gap=delta_min); low at the exact boundary, expected
+    at_bar_washout_rate: 0.02
+  sizing_note: >
+    Sized under the canonical two-sided rule (NOT the prior asymmetric "pooled mean >=
+    delta_min AND one-sided CI > 0", which diverged from the YAML/code). n=8 met the
+    corrected ~0.10 MDE ceiling with calibrated type-I, but is the bare minimum sitting AT
+    the MDE boundary; n=20 is sized for crossover-resolution margin (MDE 0.05) + robust
+    cluster-bootstrap behaviour ("size for adequacy, not economy"). n_boot=10000 does NOT
+    substitute for seed-clusters. At PR C the MEASURED between-seed variance is checked
+    against the sigma_u=1.0 (high) bracket; if it exceeds, the pre-registered seed
+    extension is invoked.
   artifact: spikes/preregistration/handover_place/gate0_power_sim.json
   generator: scripts/repro/_handover_place_gate0_power_sim.py
 
@@ -279,10 +293,15 @@ honesty_statement: >
   As of this commit NO handover-place episode has been scored — PR A is the harness +
   the Stage-0 channel pre-check; this PR B is the pre-registration + tooling; the measured
   two-limb slice is PR C against the tagged prereg. The power simulation is a synthetic
-  Monte-Carlo design calculation; its n=20 is PROVISIONAL, sized for ADEQUACY WITH MARGIN
-  (MDE 0.05 = half delta_min; calibrated cluster-bootstrap type-I), and the at-bar power
-  (~0.57) is surfaced, never represented as adequate (n=8 met the corrected significance-MDE
-  ceiling but is the bare minimum; the old "n=8 / MDE ~0.25" was a lands-rule artifact).
+  Monte-Carlo design calculation sizing n under the SINGLE canonical rule (two-sided 95% CI;
+  COUPLING_VALID iff gap CI_lower >= delta_min, WASHOUT iff gap CI_upper < delta_min — stated
+  once in decision_rule.canonical_cell_rule, implemented by classify_cell, exercised verbatim
+  by the sim). Its n=20 is PROVISIONAL, sized for ADEQUACY WITH MARGIN (MDE 0.05 = half
+  delta_min; WASHOUT + COUPLING power 1.0; calibrated cluster-bootstrap type-I 0.033). At the
+  exact crossover a cell is INDETERMINATE ~93% of the time BY DESIGN (NOT a power claim); the
+  verdict resolves from off-boundary cells. (n=8 met the corrected MDE ceiling but is the bare
+  minimum; the prior "n=8 / MDE ~0.25 / one-sided-pooled rule" was a lands-rule artifact AND
+  diverged from the code — now reconciled to one rule.)
   The lateral tolerance (1.0 mm, Yumbla 2020), force ceiling (75 N, USCAR-25), six-axis
   place-cycle band ([0.37, 0.58] s, Epson C4 / ABB IRB 120 PLAIN cycle), and wrist limits
   (J5 ~125 deg) are externally cited; the re-grasp-duration band and crossover band are
