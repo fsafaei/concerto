@@ -1,0 +1,186 @@
+{
+  "design_overlay": [
+    {
+      "binding_threshold_deg": 30.0,
+      "binding_threshold_sigma": 15.0,
+      "clearance_factor": 0.2,
+      "mismatch_bias_deg": 15.0,
+      "mismatch_mass_clearing": 0.06681059894198281,
+      "threshold_crossed": false,
+      "wrist_correction_deg": 25.0
+    },
+    {
+      "binding_threshold_deg": 30.0,
+      "binding_threshold_sigma": 15.0,
+      "clearance_factor": 0.2,
+      "mismatch_bias_deg": 30.0,
+      "mismatch_mass_clearing": 0.5000000009865877,
+      "threshold_crossed": false,
+      "wrist_correction_deg": 25.0
+    },
+    {
+      "binding_threshold_deg": 30.0,
+      "binding_threshold_sigma": 15.0,
+      "clearance_factor": 0.2,
+      "mismatch_bias_deg": 45.0,
+      "mismatch_mass_clearing": 0.9331927987311738,
+      "threshold_crossed": true,
+      "wrist_correction_deg": 25.0
+    },
+    {
+      "binding_threshold_deg": 48.75,
+      "binding_threshold_sigma": 24.375,
+      "clearance_factor": 0.35,
+      "mismatch_bias_deg": 15.0,
+      "mismatch_mass_clearing": 0.0003690785457565437,
+      "threshold_crossed": false,
+      "wrist_correction_deg": 43.75
+    },
+    {
+      "binding_threshold_deg": 48.75,
+      "binding_threshold_sigma": 24.375,
+      "clearance_factor": 0.35,
+      "mismatch_bias_deg": 30.0,
+      "mismatch_mass_clearing": 0.030396361765263075,
+      "threshold_crossed": false,
+      "wrist_correction_deg": 43.75
+    },
+    {
+      "binding_threshold_deg": 48.75,
+      "binding_threshold_sigma": 24.375,
+      "clearance_factor": 0.35,
+      "mismatch_bias_deg": 45.0,
+      "mismatch_mass_clearing": 0.3538302333272762,
+      "threshold_crossed": false,
+      "wrist_correction_deg": 43.75
+    },
+    {
+      "binding_threshold_deg": 67.5,
+      "binding_threshold_sigma": 33.75,
+      "clearance_factor": 0.5,
+      "mismatch_bias_deg": 15.0,
+      "mismatch_mass_clearing": 7.604960524408453e-08,
+      "threshold_crossed": false,
+      "wrist_correction_deg": 62.5
+    },
+    {
+      "binding_threshold_deg": 67.5,
+      "binding_threshold_sigma": 33.75,
+      "clearance_factor": 0.5,
+      "mismatch_bias_deg": 30.0,
+      "mismatch_mass_clearing": 8.841728520080383e-05,
+      "threshold_crossed": false,
+      "wrist_correction_deg": 62.5
+    },
+    {
+      "binding_threshold_deg": 67.5,
+      "binding_threshold_sigma": 33.75,
+      "clearance_factor": 0.5,
+      "mismatch_bias_deg": 45.0,
+      "mismatch_mass_clearing": 0.012224472655044704,
+      "threshold_crossed": false,
+      "wrist_correction_deg": 62.5
+    },
+    {
+      "binding_threshold_deg": 92.5,
+      "binding_threshold_sigma": 46.25,
+      "clearance_factor": 0.7,
+      "mismatch_bias_deg": 15.0,
+      "mismatch_mass_clearing": 4.594627435781566e-15,
+      "threshold_crossed": false,
+      "wrist_correction_deg": 87.5
+    },
+    {
+      "binding_threshold_deg": 92.5,
+      "binding_threshold_sigma": 46.25,
+      "clearance_factor": 0.7,
+      "mismatch_bias_deg": 30.0,
+      "mismatch_mass_clearing": 2.0522634252189355e-10,
+      "threshold_crossed": false,
+      "wrist_correction_deg": 87.5
+    },
+    {
+      "binding_threshold_deg": 92.5,
+      "binding_threshold_sigma": 46.25,
+      "clearance_factor": 0.7,
+      "mismatch_bias_deg": 45.0,
+      "mismatch_mass_clearing": 1.017083242568703e-06,
+      "threshold_crossed": false,
+      "wrist_correction_deg": 87.5
+    }
+  ],
+  "measured_region": [
+    {
+      "clearance_factor": 0.2,
+      "coupling_valid_any_takt": false,
+      "max_gap_ci_low_pp": 0.0,
+      "mismatch_bias_deg": 15.0
+    },
+    {
+      "clearance_factor": 0.2,
+      "coupling_valid_any_takt": true,
+      "max_gap_ci_low_pp": 46.5,
+      "mismatch_bias_deg": 30.0
+    },
+    {
+      "clearance_factor": 0.2,
+      "coupling_valid_any_takt": true,
+      "max_gap_ci_low_pp": 100.0,
+      "mismatch_bias_deg": 45.0
+    },
+    {
+      "clearance_factor": 0.35,
+      "coupling_valid_any_takt": false,
+      "max_gap_ci_low_pp": 0.0,
+      "mismatch_bias_deg": 15.0
+    },
+    {
+      "clearance_factor": 0.35,
+      "coupling_valid_any_takt": false,
+      "max_gap_ci_low_pp": 0.0,
+      "mismatch_bias_deg": 30.0
+    },
+    {
+      "clearance_factor": 0.35,
+      "coupling_valid_any_takt": false,
+      "max_gap_ci_low_pp": 17.5,
+      "mismatch_bias_deg": 45.0
+    },
+    {
+      "clearance_factor": 0.5,
+      "coupling_valid_any_takt": false,
+      "max_gap_ci_low_pp": 0.0,
+      "mismatch_bias_deg": 15.0
+    },
+    {
+      "clearance_factor": 0.5,
+      "coupling_valid_any_takt": false,
+      "max_gap_ci_low_pp": 0.0,
+      "mismatch_bias_deg": 30.0
+    },
+    {
+      "clearance_factor": 0.5,
+      "coupling_valid_any_takt": false,
+      "max_gap_ci_low_pp": 0.0,
+      "mismatch_bias_deg": 45.0
+    },
+    {
+      "clearance_factor": 0.7,
+      "coupling_valid_any_takt": false,
+      "max_gap_ci_low_pp": 0.0,
+      "mismatch_bias_deg": 15.0
+    },
+    {
+      "clearance_factor": 0.7,
+      "coupling_valid_any_takt": false,
+      "max_gap_ci_low_pp": 0.0,
+      "mismatch_bias_deg": 30.0
+    },
+    {
+      "clearance_factor": 0.7,
+      "coupling_valid_any_takt": false,
+      "max_gap_ci_low_pp": 0.0,
+      "mismatch_bias_deg": 45.0
+    }
+  ]
+}

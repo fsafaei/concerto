@@ -1,0 +1,7 @@
+verify-prereg: PASS (blob b26cfba74a2f1bb9ac295810e4846fe23742ff1b == tag prereg-handover-place-gate0-rev2-2026-06-26 blob)
+code SHA (launch): 1b6f38f386e775166cad355cfb206089c97a2750  run_id: c33ee3dd2baf7a89
+running n=20 seed-clusters x 20 episodes ...
+variance check: measured sigma_u_hat=0.137 (matched 0.000 / mismatched 0.137) vs high bracket 1.0
+episodes scored: 121600
+VERDICT: COUPLING_VALID
+exit_code: 0
