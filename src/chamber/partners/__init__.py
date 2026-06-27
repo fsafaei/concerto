@@ -42,6 +42,7 @@ from chamber.partners.cocarry_impedance import CoCarryImpedancePartner
 from chamber.partners.coinsert_impedance import CoInsertBaseInserter, CoInsertReferenceHolder
 from chamber.partners.frozen_harl import FrozenHARLPartner
 from chamber.partners.frozen_mappo import FrozenMAPPOPartner
+from chamber.partners.handover_presenter import HandoverPresenterPartner
 from chamber.partners.heuristic import ScriptedHeuristicPartner
 from chamber.partners.interface import PartnerBase
 from chamber.partners.registry import list_registered, load_partner, register_partner
@@ -57,6 +58,7 @@ __all__ = [
     "FrozenHARLPartner",
     "FrozenMAPPOPartner",
     "FrozenPartner",
+    "HandoverPresenterPartner",
     "OpenVLAPartner",
     "PartnerBase",
     "PartnerSpec",

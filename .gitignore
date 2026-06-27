@@ -50,6 +50,11 @@ spikes/results/*
 # The S1 contact-fidelity spike artifacts under spikes/results/coinsert/ are the
 # auditable record of the migrate-vs-stay decision and MUST be committed.
 !spikes/results/coinsert/
+# Carve-out: the cross-modal handover-and-place Gate-0 spike (ADR-026 §Decision).
+# The Stage-0 channel-pre-check finding and the immutable two-limb results archive
+# under spikes/results/handover-place-gate0-*/ are the auditable record (the
+# pre-check parameterizes the frozen prereg; ADR-007 §Discipline) and MUST be committed.
+!spikes/results/handover-place-gate0-*/
 .local/
 sbom.spdx.json
 licences.json
