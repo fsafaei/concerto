@@ -443,7 +443,7 @@ class ExploratoryConfig(_FrozenModel):
         partner_static_override: When ``True``,
             :func:`chamber.benchmarks.training_runner.run_training`
             wraps the built partner in the zero-action
-            :class:`chamber.partners.static_override.ExploratoryStaticPartnerOverride`
+            :class:`chamber.partners.exploratory.static_override.ExploratoryStaticPartnerOverride`
             (the partner stands motionless at its reset pose; partner
             classes and registry untouched). EXPLORATORY only — the
             2026-06-11 homo-static slice

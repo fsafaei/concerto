@@ -8,6 +8,99 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 While the project is on `0.x`, MINOR-version bumps may break the public API
 per SemVer §4.
 
+## [Unreleased]
+
+June 2026 catch-up, reconstructed from git history (hand-written; the
+next release-please cut regenerates its own section from Conventional
+Commits and does not depend on this one).
+
+### Stage-1 AS gate verdict and its reinterpretation
+
+- 2026-06-11 — Stage-1b Action-Space gate fired at scale: exit 5, the
+  gap is sign-reversed (hetero 12/100 vs homo 1/100)
+  ([#226](https://github.com/fsafaei/concerto/pull/226)); verdict
+  processing — operationalization audit, consultation brief, OM
+  assessment ([#229](https://github.com/fsafaei/concerto/pull/229)).
+- 2026-06-12 — EXPLORATORY homo-static probe: the moving partner does
+  NOT explain the reversal (0/90, frozen rule)
+  ([#234](https://github.com/fsafaei/concerto/pull/234),
+  [#235](https://github.com/fsafaei/concerto/pull/235)).
+- 2026-06-16 — ADR-026 (coupling-validity criterion, RFC) lands with
+  the index entry; the Stage-1 AS verdict is reinterpreted as
+  construct-invalid for cooperation
+  ([#241](https://github.com/fsafaei/concerto/pull/241)); public docs
+  reconciled ([#243](https://github.com/fsafaei/concerto/pull/243));
+  CI runs on `adr/**` and `uv.lock`
+  ([#244](https://github.com/fsafaei/concerto/pull/244)).
+
+### Co-carry (coupling-valid re-operationalization) rungs
+
+- 2026-06-16 — co-carry coupling-valid rig, Rungs 0–1, per ADR-026
+  ([#245](https://github.com/fsafaei/concerto/pull/245)).
+- 2026-06-19 — Rung-2 frozen learned incumbent (training + freeze)
+  ([#246](https://github.com/fsafaei/concerto/pull/246)); reward
+  remediation — stress penalty + transport PBRS, 0% → 67%, STOP at
+  budget ([#247](https://github.com/fsafaei/concerto/pull/247));
+  Rung-3 policy-heterogeneity measurement — pooled null, one
+  stiff-teammate drop
+  ([#248](https://github.com/fsafaei/concerto/pull/248)); Rung-4
+  embodiment-heterogeneity capstone — feasibility finding
+  ([#249](https://github.com/fsafaei/concerto/pull/249)).
+- 2026-06-20 — Rung-4b compliant coupling — over-coupling resolved,
+  EH blocked by the embodiment-biased stress proxy
+  ([#251](https://github.com/fsafaei/concerto/pull/251)); Rung-4c
+  embodiment-invariant stress instrument
+  ([#252](https://github.com/fsafaei/concerto/pull/252)); Rung-4d/4e —
+  the Rung-4c EH drop is retracted as a pose artifact and the EH axis
+  closes as a robust null under task-fair matching
+  ([#253](https://github.com/fsafaei/concerto/pull/253)).
+- 2026-06-23 — base-difficulty probe: coupling physics has no graceful
+  hard regime; only tilt-tolerance does
+  ([#254](https://github.com/fsafaei/concerto/pull/254)).
+
+### Co-insert (hold-and-insert) — honest close
+
+- 2026-06-24 — S0 env skeleton + pre-registration
+  ([#256](https://github.com/fsafaei/concerto/pull/256)); S1
+  peg-socket contact + MuJoCo oracle, stay verdict
+  ([#257](https://github.com/fsafaei/concerto/pull/257)).
+- 2026-06-25 — S2 honest close at HARD_STOP: the sim wall is
+  disproven; the blocker is a geometric tilt-wedge
+  ([#258](https://github.com/fsafaei/concerto/pull/258)); seat-depth
+  figure reconciled to the 38 mm seated threshold
+  ([#259](https://github.com/fsafaei/concerto/pull/259)).
+
+### Handover-and-place Gate-0
+
+- 2026-06-27 — Gate-0 harness + Stage-0 pre-check + tagged Rev-2
+  pre-registration ([#262](https://github.com/fsafaei/concerto/pull/262));
+  Gate-0 measured and its immutable results archive committed —
+  verdict `COUPLING_VALID`, `SOLVABLE`
+  ([#263](https://github.com/fsafaei/concerto/pull/263)).
+
+### Other fixes and features (June 2026)
+
+- 2026-06-06/09 — Stage-1b horizon enforcement
+  ([#206](https://github.com/fsafaei/concerto/pull/206)), canonical
+  ready-pose initialisation
+  ([#210](https://github.com/fsafaei/concerto/pull/210)).
+- 2026-06-10/11 — vectorised Stage-1b training cell
+  ([#213](https://github.com/fsafaei/concerto/pull/213)); gate-spike
+  blockers B1+B2 ([#217](https://github.com/fsafaei/concerto/pull/217));
+  potential-based settle shaping
+  ([#219](https://github.com/fsafaei/concerto/pull/219)); production-PyPI
+  debut staged behind pre-flight gates
+  ([#224](https://github.com/fsafaei/concerto/pull/224),
+  [#225](https://github.com/fsafaei/concerto/pull/225)).
+- 2026-06-12 — device-aware zero-masking in `Stage1OMChannelFilter`
+  ([#236](https://github.com/fsafaei/concerto/pull/236)); settle-shaping
+  Phi reads privileged env state
+  ([#237](https://github.com/fsafaei/concerto/pull/237)); `git_sha`
+  resolved once per process
+  ([#238](https://github.com/fsafaei/concerto/pull/238)).
+- 2026-06-16 — tornado 6.5.5 → 6.5.7, clearing four OSV advisories
+  ([#242](https://github.com/fsafaei/concerto/pull/242)).
+
 ## [0.7.0](https://github.com/fsafaei/concerto/compare/v0.6.0...v0.7.0) (2026-05-17)
 
 

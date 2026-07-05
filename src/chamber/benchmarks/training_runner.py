@@ -374,7 +374,7 @@ def run_training(
     # reach here with the flag set - TrainedPolicyFactory refuses it at
     # construction (the safety-loud-fail pattern).
     if cfg.exploratory.partner_static_override:
-        from chamber.partners.static_override import (
+        from chamber.partners.exploratory.static_override import (
             ExploratoryStaticPartnerOverride,
         )
 

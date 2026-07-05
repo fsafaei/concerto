@@ -11,13 +11,16 @@ ADR-009 (the partner contract the wrapper preserves).
 
 from __future__ import annotations
 
+import sys
+
 import numpy as np
 import pytest
 
 from chamber.benchmarks.stage1_common import TrainedPolicyFactory
 from chamber.partners.api import PartnerSpec
+from chamber.partners.exploratory.static_override import ExploratoryStaticPartnerOverride
 from chamber.partners.heuristic import ScriptedHeuristicPartner
-from chamber.partners.static_override import ExploratoryStaticPartnerOverride
+from chamber.partners.registry import list_registered
 from concerto.training.config import (
     EgoAHTConfig,
     EnvConfig,
@@ -87,3 +90,29 @@ class TestOverrideWrapper:
         wrapped = ExploratoryStaticPartnerOverride(inner)
         assert wrapped.spec is inner.spec
         wrapped.reset(seed=7)  # must not raise
+
+
+class TestExploratoryQuarantine:
+    """The exploratory namespace quarantine (ADR-009 §Decision; ADR-027 §Reporting rules)."""
+
+    def test_deprecated_import_path_warns_and_reexports(self) -> None:
+        """The legacy path re-exports the same class under DeprecationWarning."""
+        sys.modules.pop("chamber.partners.static_override", None)
+        with pytest.warns(DeprecationWarning, match=r"exploratory"):
+            from chamber.partners.static_override import (
+                ExploratoryStaticPartnerOverride as LegacyExport,
+            )
+        assert LegacyExport is ExploratoryStaticPartnerOverride
+
+    def test_structurally_ineligible_for_leaderboard_runs(self) -> None:
+        """No exploratory partner is reachable through the registry surface.
+
+        Leaderboard-facing runs build partners exclusively via
+        ``chamber.partners.registry.load_partner`` (registered classes)
+        and the gate-facing factory refuses the exploratory knob
+        (:class:`TestFactoryRefusal`); the quarantined namespace has no
+        registry entry to load.
+        """
+        assert not any(
+            "static_override" in name or "exploratory" in name for name in list_registered()
+        )
