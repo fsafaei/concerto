@@ -5,7 +5,7 @@ plan/04 §6 #5; plan/05 §6 #8; plan/06 §6 #6).
 Pins the script's contract against three synthetic ``coverage.xml``
 fixtures:
 
-- All five named packages meet their floor → exit 0.
+- All named packages meet their floor → exit 0.
 - One named package drops 1 pp below its floor → exit non-zero with
   the offending package and the gap named on stderr.
 - One named package is missing from the report → exit non-zero with
@@ -72,6 +72,7 @@ _PASSING_FIXTURE: dict[str, float] = {
     "src.chamber.comm": 0.95,
     "src.chamber.partners": 0.95,
     "src.chamber.evaluation": 0.95,
+    "src.chamber.tasks": 0.95,
 }
 
 
@@ -83,7 +84,7 @@ class TestCoverageFloors:
         script_module: ModuleType,
         tmp_path: Path,
     ) -> None:
-        """All five floors met → exit 0."""
+        """All floors met → exit 0."""
         xml_path = tmp_path / "coverage.xml"
         _write_coverage_xml(xml_path, _PASSING_FIXTURE)
         rc = script_module.main(["--coverage-xml", str(xml_path)])

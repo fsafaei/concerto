@@ -7,6 +7,14 @@ HRS vector + scalar over the full set of axes, and emit the
 leaderboard entry. The renderer is in :mod:`chamber.evaluation.render`;
 ``chamber-eval`` is the orchestration shim.
 
+One subcommand rides alongside the evaluation pipeline:
+``chamber-eval manifest`` emits the pinned CHAMBER-Bench suite
+composition as JSON from the :mod:`chamber.tasks` registry (ADR-027
+§Versioning: "suite composition is pinned in a generated manifest").
+It is dispatched by first positional token before the evaluation
+argument parser runs, so the historical flat invocation
+(``chamber-eval SPIKE_RUN.json …``) is untouched.
+
 ADR-008 §Decision binds the HRS bundle to the *surviving ADR-007
 axes* — i.e. a leaderboard row is only complete once the spikes that
 cover the surviving-axis set have all been evaluated. Reviewer P1-3
@@ -22,11 +30,13 @@ mistaken for a complete row (see
 from __future__ import annotations
 
 import argparse
+import json
 import sys
 from pathlib import Path
 from typing import TYPE_CHECKING
 
 import chamber
+import chamber.tasks
 from chamber.evaluation import (
     ConditionResult,
     LeaderboardEntry,
@@ -43,6 +53,35 @@ from concerto.training.seeding import derive_substream
 
 if TYPE_CHECKING:
     import numpy as np
+
+
+def _parse_manifest_args(argv: list[str]) -> argparse.Namespace:
+    parser = argparse.ArgumentParser(
+        prog="chamber-eval manifest",
+        description=(
+            "Emit the pinned CHAMBER-Bench suite composition as JSON from the "
+            "chamber.tasks registry (ADR-027 §Versioning). Deterministically "
+            "ordered — two invocations are byte-identical."
+        ),
+    )
+    parser.add_argument(
+        "--output",
+        type=Path,
+        default=None,
+        help="Write the manifest JSON here; print to stdout otherwise.",
+    )
+    return parser.parse_args(argv)
+
+
+def _run_manifest(argv: list[str]) -> int:
+    """Emit the CHAMBER-Bench manifest (ADR-027 §Versioning)."""
+    args = _parse_manifest_args(argv)
+    payload = json.dumps(chamber.tasks.manifest(), indent=2) + "\n"
+    if args.output is not None:
+        args.output.write_text(payload, encoding="utf-8")
+        return 0
+    sys.stdout.write(payload)
+    return 0
 
 
 def _parse_args(argv: list[str] | None) -> argparse.Namespace:
@@ -200,7 +239,7 @@ def _weights_for(keys_in_order: list[tuple[str, str]]) -> dict[str, float]:
 
 
 def main(argv: list[str] | None = None) -> int:
-    """Entry point for the ``chamber-eval`` console script (ADR-008 §Decision).
+    """``chamber-eval`` entry point (ADR-008 §Decision; ADR-027 §Versioning for ``manifest``).
 
     Args:
         argv: Optional list of CLI arguments (testing hook).
@@ -209,13 +248,17 @@ def main(argv: list[str] | None = None) -> int:
         ``0`` on success; ``2`` when a spike-run JSON is missing or
         duplicate axes are passed without ``--allow-duplicate-axes``.
     """
-    args = _parse_args(argv)
+    argv_list = list(sys.argv[1:]) if argv is None else list(argv)
+    if argv_list[:1] == ["manifest"]:
+        return _run_manifest(argv_list[1:])
+    args = _parse_args(argv_list)
     if not args.spike_runs:
         print(f"chamber-eval  (CHAMBER {chamber.__version__})")
         print(
             "Usage: chamber-eval SPIKE_RUN.json [SPIKE_RUN.json ...] "
             "[--method-id ID] [--allow-duplicate-axes] [--output OUT.json]"
         )
+        print("       chamber-eval manifest [--output MANIFEST.json]")
         return 0
 
     for path in args.spike_runs:

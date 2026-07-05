@@ -23,6 +23,7 @@ _ADR_BEARING_PREFIXES = (
     "chamber/partners",
     "chamber/evaluation",
     "chamber/benchmarks",
+    "chamber/tasks",
 )
 
 _ADR_RE = re.compile(r"ADR-\d{3}", re.IGNORECASE)

@@ -81,6 +81,7 @@ COVERAGE_FLOORS: dict[str, _Floor] = {
     "src.chamber.partners": _Floor(floor=0.90, plan_ref="plan/04 §6 #5"),
     "src.concerto.training": _Floor(floor=0.85, plan_ref="plan/05 §6 #8"),
     "src.chamber.evaluation": _Floor(floor=0.90, plan_ref="plan/06 §6 #6"),
+    "src.chamber.tasks": _Floor(floor=0.90, plan_ref="ADR-027 §Consequences (v1.0 build-out)"),
 }
 
 #: Exit code on any floor violation. Distinct from argparse's 2 ("bad

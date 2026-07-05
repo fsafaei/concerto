@@ -1,9 +1,9 @@
 .PHONY: install test lint typecheck format docs docs-build \
         verify-licences verify-no-ai-mentions verify-coverage-floors \
-        verify-changelog-completeness \
+        verify-changelog-completeness verify-readme-tables \
         sbom smoke verify release-preflight \
         empirical-guarantee zoo-seed-gpu zoo-seed-pull zoo-seed-verify \
-        stage1-as stage1-om
+        stage1-as stage1-om render-task-docs
 
 install:
 	# HARL ships as the `harl-aht` PyPI distribution (ADR-002
@@ -57,6 +57,20 @@ verify-changelog-completeness:
 # enforced by pyproject.toml's `[tool.coverage.report] fail_under`.
 verify-coverage-floors:
 	uv run python scripts/check_coverage_floors.py
+
+# Drift gate for the generated benchmark-suite surfaces (ADR-027
+# §Versioning / §Consequences): the README task table and the
+# docs/reference/tasks/ cards must match a fresh render from the
+# chamber.tasks registry. Regenerate with `make render-task-docs`.
+verify-readme-tables:
+	uv run python scripts/render_task_table.py --check
+	uv run python scripts/render_task_cards.py --check
+
+# Regenerate the README task table + docs/reference/tasks/ cards from
+# the chamber.tasks registry (the write mode of verify-readme-tables).
+render-task-docs:
+	uv run python scripts/render_task_table.py
+	uv run python scripts/render_task_cards.py
 
 sbom:
 	uv run cyclonedx-py environment -o sbom.spdx.json
@@ -126,4 +140,4 @@ stage1-as:
 stage1-om:
 	bash scripts/repro/stage1_om.sh
 
-verify: lint typecheck test verify-coverage-floors docs-build verify-licences verify-no-ai-mentions verify-changelog-completeness
+verify: lint typecheck test verify-coverage-floors docs-build verify-licences verify-no-ai-mentions verify-changelog-completeness verify-readme-tables
