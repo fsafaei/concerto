@@ -1,0 +1,97 @@
+{
+  "schema_version": 1,
+  "task_id": "cocarry",
+  "task_version": 1,
+  "prereg_git_tag": "prereg-admission-cocarry-2026-07-05",
+  "prereg_blob_sha": "7525a066d7d55a2f98312344d7272634844617c1",
+  "git_sha": "d68dee1d33277726fd18f6eaae153425261b96f0",
+  "dirty": false,
+  "date_stamp": "2026-07-05",
+  "checks": [
+    {
+      "check": "A1",
+      "outcome": "PASS",
+      "criterion": "success_ci_low >= tau_solv (0.95) with successful-episode stress peak <= stress_limit (130.56970529556276)",
+      "statistics": {
+        "n_episodes": 60.0,
+        "success_mean": 1.0,
+        "success_iqm": 1.0,
+        "success_ci_low": 1.0,
+        "success_ci_high": 1.0,
+        "stress_n": 60.0,
+        "stress_p50": 88.59993743896484,
+        "stress_p90": 104.0792839050293,
+        "stress_p99": 106.42241874694824,
+        "stress_max": 107.91167449951172
+      },
+      "bundles": [
+        "a1_reference"
+      ],
+      "evidence": {
+        "a1_reference/bundle.json": "6987b9178bcb6a26eead4e05e4cfc73d7602bc6cd7eceb5bff836f3dd87b054e"
+      },
+      "extended": false,
+      "notes": ""
+    },
+    {
+      "check": "A2",
+      "outcome": "PASS",
+      "criterion": "success_ci_high <= tau_infeasible (0.05)",
+      "statistics": {
+        "n_episodes": 60.0,
+        "success_mean": 0.0,
+        "success_iqm": 0.0,
+        "success_ci_low": 0.0,
+        "success_ci_high": 0.0,
+        "stress_n": 60.0,
+        "stress_p50": 8.16704511642456,
+        "stress_p90": 9.45764741897583,
+        "stress_p99": 15.180480775833114,
+        "stress_max": 17.996543884277344
+      },
+      "bundles": [
+        "a2_single_arm"
+      ],
+      "evidence": {
+        "a2_single_arm/bundle.json": "26d24676cc969842b6c62fac41b48154c7a7e7d1aec597a7f918259e56c219b0"
+      },
+      "extended": false,
+      "notes": ""
+    },
+    {
+      "check": "A3",
+      "outcome": "PASS",
+      "criterion": "paired reference-minus-blind gap: delta_ci_low >= delta_min (0.2) passes; delta_ci_high < delta_min demotes to Tier-1 CONTROL",
+      "statistics": {
+        "n_pairs": 60.0,
+        "delta_iqm": 1.0,
+        "delta_mean": 1.0,
+        "delta_ci_low": 1.0,
+        "delta_ci_high": 1.0,
+        "blind_n_episodes": 60.0,
+        "blind_success_mean": 0.0,
+        "blind_success_iqm": 0.0,
+        "blind_success_ci_low": 0.0,
+        "blind_success_ci_high": 0.0
+      },
+      "bundles": [
+        "a3_blind"
+      ],
+      "evidence": {
+        "a3_blind/bundle.json": "dd08179e68c7de70c751231cfc7823e2e4091a5e801f24cae6562dc1a0548ca0"
+      },
+      "extended": false,
+      "notes": ""
+    }
+  ],
+  "verdict": "ADMITTED",
+  "seed_extension_used": false,
+  "binding_evidence": {
+    "stress_n": 60.0,
+    "stress_p50": 88.59993743896484,
+    "stress_p90": 104.0792839050293,
+    "stress_p99": 106.42241874694824,
+    "stress_max": 107.91167449951172
+  },
+  "notes": ""
+}

@@ -141,6 +141,15 @@ HANDOVER_DEFAULT_ANGULAR_STIFFNESS_N_PER_DEG: float = 7.5
 HANDOVER_DEFAULT_TARGET_POSE: tuple[float, float, float] = (0.0, 0.0, 0.0)
 #: Half-width of the uniform per-episode lateral target jitter (m), routed through P6.
 HANDOVER_GOAL_JITTER_HALF_M: float = 5.0e-3
+#: Lateral offset (m) the part rests at when the presenter is ablated
+#: (ADR-027 §Admission protocol A2): with no presentation event the part
+#: never enters the ego's workspace, so it stays at the presenter-side
+#: staging distance — far beyond the ego's ``translation_range_m``
+#: (default 0.10 m) plus any admissible ``lateral_window_m``. The value
+#: is structural (any offset ≫ reach demonstrates the same point); 0.35 m
+#: is the order of the inter-robot staging distance the Gate-0 geometry
+#: implies. Used only when ``presenter_ablated=True``.
+HANDOVER_ABLATED_STAGING_OFFSET_M: float = 0.35
 
 # Action layout.
 #: Presenter action (phase 0): [lat_offset_x, lat_offset_y, grasp_pose_error_deg, skew_s].
@@ -436,12 +445,21 @@ class HandoverPlaceEnv:
         contact_stiffness_n_per_m: float = HANDOVER_DEFAULT_CONTACT_STIFFNESS_N_PER_M,
         angular_stiffness_n_per_deg: float = HANDOVER_DEFAULT_ANGULAR_STIFFNESS_N_PER_DEG,
         target_pose: tuple[float, float, float] = HANDOVER_DEFAULT_TARGET_POSE,
+        presenter_ablated: bool = False,
     ) -> None:
         """Construct the env with injected physical params (ADR-026; ADR-009).
 
         Every binding number (success windows, takt-derived budget, ego kinematic
         ranges) is a keyword here; the defaults are NON-BINDING placeholders for unit
         tests. Raises ``KeyError`` for an unknown ``condition_id``.
+
+        ``presenter_ablated=True`` is the ADR-027 §Admission protocol A2
+        intervention: the phase-0 presentation action is consumed but
+        carries no part — the hand-off never happens and the part stays
+        at :data:`HANDOVER_ABLATED_STAGING_OFFSET_M`, outside the ego's
+        reach. The default (``False``) leaves behaviour byte-identical
+        (the established default-``None``/``False`` override precedent
+        of :func:`chamber.envs.cocarry.make_cocarry_env`).
         """
         if condition_id not in _CONDITION_TABLE:
             raise KeyError(
@@ -461,6 +479,7 @@ class HandoverPlaceEnv:
         self.reacquire_range_deg = float(reacquire_range_deg)
         self.contact_stiffness_n_per_m = float(contact_stiffness_n_per_m)
         self.angular_stiffness_n_per_deg = float(angular_stiffness_n_per_deg)
+        self.presenter_ablated = bool(presenter_ablated)
         self._target_pose_base = np.asarray(target_pose, dtype=np.float64)
 
         self._phase: int = HANDOVER_PHASE_PRESENT
@@ -541,9 +560,21 @@ class HandoverPlaceEnv:
             raise ValueError(
                 f"presentation action must have dim {HANDOVER_PRESENTATION_DIM}, got {act.shape[0]}"
             )
-        self._lateral_offset = act[0:2].copy()
-        self._grasp_pose_error_deg = float(act[2])
-        self._timing_skew_s = float(act[3])
+        if self.presenter_ablated:
+            # ADR-027 §Admission protocol A2: no presentation event — the
+            # part never enters the ego's workspace. The phase-0 action is
+            # consumed (the horizon is unchanged) but carries no part; the
+            # lateral offset is the out-of-reach staging distance and the
+            # placement resolves honestly against it.
+            self._lateral_offset = np.asarray(
+                [HANDOVER_ABLATED_STAGING_OFFSET_M, 0.0], dtype=np.float64
+            )
+            self._grasp_pose_error_deg = 0.0
+            self._timing_skew_s = 0.0
+        else:
+            self._lateral_offset = act[0:2].copy()
+            self._grasp_pose_error_deg = float(act[2])
+            self._timing_skew_s = float(act[3])
         self._phase = HANDOVER_PHASE_PLACE
         info = {"phase": HANDOVER_PHASE_PLACE, "initial_state_seed": self._initial_state_seed}
         return self._obs(), 0.0, False, False, info
@@ -605,6 +636,7 @@ def make_handover_place_env(
     contact_stiffness_n_per_m: float = HANDOVER_DEFAULT_CONTACT_STIFFNESS_N_PER_M,
     angular_stiffness_n_per_deg: float = HANDOVER_DEFAULT_ANGULAR_STIFFNESS_N_PER_DEG,
     target_pose: tuple[float, float, float] = HANDOVER_DEFAULT_TARGET_POSE,
+    presenter_ablated: bool = False,
 ) -> HandoverPlaceEnv:
     """Build a :class:`HandoverPlaceEnv` for the Gate-0 spike (ADR-026; ADR-007 §P4).
 
@@ -632,4 +664,5 @@ def make_handover_place_env(
         contact_stiffness_n_per_m=contact_stiffness_n_per_m,
         angular_stiffness_n_per_deg=angular_stiffness_n_per_deg,
         target_pose=target_pose,
+        presenter_ablated=presenter_ablated,
     )

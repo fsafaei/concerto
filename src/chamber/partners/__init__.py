@@ -37,7 +37,9 @@ plan/04 §3 (architecture). Phase-0 ships:
 The M4-gate integration test (T4.9) lands in a follow-up PR (plan/04 §1).
 """
 
+from chamber.partners.ablation import PartnerAblatedZero
 from chamber.partners.api import FrozenPartner, PartnerSpec
+from chamber.partners.cocarry_blind import CoCarryBlindImpedancePartner
 from chamber.partners.cocarry_impedance import CoCarryImpedancePartner
 from chamber.partners.coinsert_impedance import CoInsertBaseInserter, CoInsertReferenceHolder
 from chamber.partners.frozen_harl import FrozenHARLPartner
@@ -51,6 +53,7 @@ from chamber.partners.stubs.crossformer import CrossFormerPartner
 from chamber.partners.stubs.openvla import OpenVLAPartner
 
 __all__ = [
+    "CoCarryBlindImpedancePartner",
     "CoCarryImpedancePartner",
     "CoInsertBaseInserter",
     "CoInsertReferenceHolder",
@@ -60,6 +63,7 @@ __all__ = [
     "FrozenPartner",
     "HandoverPresenterPartner",
     "OpenVLAPartner",
+    "PartnerAblatedZero",
     "PartnerBase",
     "PartnerSpec",
     "ScriptedHeuristicPartner",

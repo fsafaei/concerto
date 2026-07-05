@@ -4,7 +4,7 @@
 
 A black-box presenter hands a part into a shared workspace; the ego arm must place and seat it within a downstream tolerance at cycle time, without a full re-grasp it cannot afford. The partner binds only through the hand-off initial condition — the grasp-pose error the ego must correct within its wrist-correction and re-grasp budgets. The binding is a tolerance phenomenon, so a pure-Python kinematic resolver captures it and the task runs on any host.
 
-**Tier 2 — admitted cooperation tasks** · **Status: CANDIDATE** · Suite: CHAMBER-Bench v1.0 ([`adr/ADR-027-chamber-bench-v1-protocol.md`](https://github.com/fsafaei/concerto/blob/main/adr/ADR-027-chamber-bench-v1-protocol.md))
+**Tier 2 — admitted cooperation tasks** · **Status: ADMITTED** · Suite: CHAMBER-Bench v1.0 ([`adr/ADR-027-chamber-bench-v1-protocol.md`](https://github.com/fsafaei/concerto/blob/main/adr/ADR-027-chamber-bench-v1-protocol.md))
 
 ## Spaces
 
@@ -30,6 +30,8 @@ Asynchronous part transfer between a feeder robot and a placing robot in machine
 
 ## Evidence
 
+- [`spikes/results/admission/handover_place-2026-07-05/admission_report.json`](https://github.com/fsafaei/concerto/blob/main/spikes/results/admission/handover_place-2026-07-05/admission_report.json)
+- [`spikes/preregistration/admission/handover_place_admission.yaml`](https://github.com/fsafaei/concerto/blob/main/spikes/preregistration/admission/handover_place_admission.yaml)
 - [`spikes/results/handover-place-gate0-2026-06-26/GATE_VERDICT_REPORT_2026-06-26.md`](https://github.com/fsafaei/concerto/blob/main/spikes/results/handover-place-gate0-2026-06-26/GATE_VERDICT_REPORT_2026-06-26.md)
 - [`spikes/preregistration/handover_place/gate0.yaml`](https://github.com/fsafaei/concerto/blob/main/spikes/preregistration/handover_place/gate0.yaml)
 
@@ -45,4 +47,4 @@ obs, info = env.reset(seed=0)
 
 ## Notes
 
-Admission-eligible (ADR-027 §Tier ladder): the measured Gate-0 verdict is COUPLING_VALID + SOLVABLE (PR #263) under the tagged Rev-2 prereg (prereg-handover-place-gate0-rev2-2026-06-26, blob b26cfba74a2f1bb9ac295810e4846fe23742ff1b); CANDIDATE flips to ADMITTED when the committed admission report wraps that verdict. Canonical benchmark cells are pinned to the measured coupling-valid region: the clearance-0.2 family with 30°/45° grasp-pose mismatch across the realistic takt band — 22 of 216 measured cells, valid takt windows at clearance 0.2 of [0.3, 1.5] s (fast profile) and [0.3, 2.0] s (slow profile) per GATE_VERDICT_REPORT_2026-06-26.md. Cells outside that region are not leaderboard cells.
+ADMITTED by the committed admission report (ADR-027 §Admission protocol; tag prereg-admission-handover-place-2026-07-05), which wraps — never re-runs (I8) — the measured Gate-0 verdict COUPLING_VALID + SOLVABLE (PR #263, tagged Rev-2 prereg prereg-handover-place-gate0-rev2-2026-06-26, blob b26cfba74a2f1bb9ac295810e4846fe23742ff1b): A1 from Limb 1 (band minima matched IQM/CI-lower 1.000 >= tau_solv 0.90), A3 from Limb 2 restricted to the coupling-valid family (min gap CI-lower 32.5 pp >= 20 pp), plus the one fresh A2 presenter-ablated cell (0/100 — with no presenter the part never enters the ego's workspace). Canonical benchmark cells are pinned to the measured coupling-valid region: the clearance-0.2 family with 30°/45° grasp-pose mismatch across the realistic takt band — 22 of 216 measured cells, valid takt windows at clearance 0.2 of [0.3, 1.5] s (fast profile) and [0.3, 2.0] s (slow profile) per GATE_VERDICT_REPORT_2026-06-26.md. Cells outside that region are not leaderboard cells.

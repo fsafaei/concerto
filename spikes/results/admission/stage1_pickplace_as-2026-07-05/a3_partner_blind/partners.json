@@ -1,0 +1,13 @@
+[
+  {
+    "checkpoint_step": null,
+    "class_name": "scripted_heuristic",
+    "extra": {
+      "action_dim": "13",
+      "target_xy": "0.0,0.0"
+    },
+    "name": "partner:scripted_heuristic",
+    "seed": 0,
+    "weights_uri": null
+  }
+]

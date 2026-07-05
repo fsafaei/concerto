@@ -55,6 +55,11 @@ spikes/results/*
 # under spikes/results/handover-place-gate0-*/ are the auditable record (the
 # pre-check parameterizes the frozen prereg; ADR-007 §Discipline) and MUST be committed.
 !spikes/results/handover-place-gate0-*/
+# Carve-out: the ADR-027 §Admission protocol report archives under
+# spikes/results/admission/ are the Tier-2 entry evidence the task
+# registry's admission_status flips cite (chamber-eval admission;
+# invariant I8) and MUST be committed.
+!spikes/results/admission/
 .local/
 sbom.spdx.json
 licences.json

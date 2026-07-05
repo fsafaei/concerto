@@ -1,0 +1,57 @@
+{
+  "schema_version": 3,
+  "task_id": "stage1_pickplace_as",
+  "task_version": 1,
+  "policy_id": "ref_script",
+  "partner_set_id": "adhoc:partner_ablated_zero",
+  "partner_hashes": {
+    "partner:partner_ablated_zero": "880b8ae6a0260bea"
+  },
+  "git_sha": "d68dee1d33277726fd18f6eaae153425261b96f0",
+  "dirty": false,
+  "package_version": "0.7.0",
+  "seed_schedule": {
+    "root_seed": 0,
+    "seeds": [
+      91000,
+      91001,
+      91002,
+      91003,
+      91004
+    ],
+    "episodes_per_seed": 12,
+    "substream_labels": [
+      "envs.stage1_pickplace",
+      "evaluation.bundle_bootstrap"
+    ]
+  },
+  "repro_command": "chamber-eval admission --prereg spikes/preregistration/admission/stage1_pickplace_as_admission.yaml --out spikes/results/admission/stage1_pickplace_as-2026-07-05 --date 2026-07-05",
+  "platform": {
+    "os": "Linux-6.17.0-29-generic-x86_64-with-glibc2.39",
+    "python": "3.12.3",
+    "numpy": "2.1.3",
+    "torch": "2.11.0+cu128",
+    "device": "NVIDIA GeForce RTX 2080 SUPER"
+  },
+  "manifest": {
+    "REPRO.txt": "4bc160b37328dc871057d0e34d5da69682c81a9d57a417c5546f0690877da694",
+    "episodes_seed91000.jsonl": "969fee08cadf2765ae76a3626bb9eec477c0114d58c582f42c15a3372c1dad19",
+    "episodes_seed91001.jsonl": "1121f0a699b5f2dbf5cc9a30d7d1c7080fad7bcc05df9d94db57baa2940759e8",
+    "episodes_seed91002.jsonl": "59c261c4ba747f6622e15a601ed9facce9f04dd7c7055716eba76c2db3f707fe",
+    "episodes_seed91003.jsonl": "e5d143d1fe8766bcfbe64aa7abfa4f80b4d561219ddb4aa80eaf2d6e4e308bfc",
+    "episodes_seed91004.jsonl": "7794e7c0643d5465250bfc0f8a93747fd484b9af990524a82fa8dabf3d1930f4",
+    "partners.json": "448b2f3c7132a7101cd95c34ad59b4718c7d1c58098bee81a96f54e4ae2074bc",
+    "prereg.yaml": "16304f90cb0e1513c446e3b7a8bc578c372a57ea992d0068fa90c12523af1f44"
+  },
+  "summary": {
+    "n_episodes": 60,
+    "success_mean": 1.0,
+    "success_iqm": 1.0,
+    "success_ci_low": 1.0,
+    "success_ci_high": 1.0,
+    "n_resamples": 2000,
+    "bootstrap_root_seed": 0
+  },
+  "prereg_git_tag": "prereg-admission-stage1-pickplace-as-2026-07-05",
+  "prereg_blob_sha": "a03067490eae2917706f858fb921422358fadb6f"
+}

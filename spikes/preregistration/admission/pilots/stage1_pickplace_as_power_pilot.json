@@ -1,0 +1,37 @@
+{
+  "cells": {
+    "pilot_a1_reference": {
+      "n_episodes": 12,
+      "stress": {},
+      "success_ci_high": 1.0,
+      "success_ci_low": 1.0,
+      "success_iqm": 1.0,
+      "success_mean": 1.0,
+      "wallclock_s": 5.32
+    },
+    "pilot_a2_partner_ablated": {
+      "n_episodes": 12,
+      "stress": {},
+      "success_ci_high": 1.0,
+      "success_ci_low": 1.0,
+      "success_iqm": 1.0,
+      "success_mean": 1.0,
+      "wallclock_s": 3.98
+    },
+    "pilot_a3_partner_blind": {
+      "n_episodes": 12,
+      "stress": {},
+      "success_ci_high": 1.0,
+      "success_ci_low": 1.0,
+      "success_iqm": 1.0,
+      "success_mean": 1.0,
+      "wallclock_s": 4.03
+    }
+  },
+  "episodes": 12,
+  "excluded_from_report": true,
+  "pilot_seed": 89900,
+  "repro_command": "uv run python scripts/repro/_admission_power_pilot.py --task stage1_pickplace_as",
+  "run_purpose": "power",
+  "task_id": "stage1_pickplace_as"
+}

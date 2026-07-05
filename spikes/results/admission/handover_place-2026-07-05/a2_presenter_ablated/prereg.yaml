@@ -1,0 +1,121 @@
+# Pre-registration — handover_place@v1 Tier-2 admission report (ADR-027 §Admission protocol).
+#
+# Wrap-first admission (CB-04 §2c): the measured Gate-0 archive
+# spikes/results/handover-place-gate0-2026-06-26/ carries the verdict
+# COUPLING_VALID + SOLVABLE under the tagged Rev-2 prereg
+# (prereg-handover-place-gate0-rev2-2026-06-26, blob
+# b26cfba74a2f1bb9ac295810e4846fe23742ff1b; PR #263). Per invariant I8 the
+# archive is the evidence: A1 and A3 WRAP the tagged measurement — the
+# statistics are re-extracted at report-build time from the SHA-256-pinned
+# crossover_curves.json, never hand-copied — and are never re-run. A2 is the
+# one genuinely new, cheap, CPU-scale cell: a presenter-ablated run
+# demonstrating (not asserting) the structural point that with no presenter
+# the part never enters the ego's workspace.
+#
+# Thresholds are the Gate-0 committed family: tau_solv = 0.90
+# (solvability_threshold_tau_solv, gate0.yaml), delta_min = 0.20
+# (coupling_delta_min_pp / 100), tau_infeasible = 0.05 (the admission
+# protocol's ≈0 ceiling, CB-04 §2a family). Committed before the A2 run;
+# never tuned afterward (ADR-007 §Discipline).
+#
+# Canonical-cell pinning: the A3 wrap is restricted to the measured
+# coupling-valid family — clearance_factor 0.2, grasp-pose mismatch
+# {30°, 45°}, inside the realistic takt band [1.0, 5.0] s (10 cells; min
+# gap CI-lower 32.5 pp) — exactly the leaderboard region the task registry
+# pins (ADR-027 §Tier ladder; chamber.tasks.ladder handover_place_v1 notes).
+# Cells outside that region are not leaderboard cells.
+schema_version: 1
+task_id: handover_place
+git_tag: prereg-admission-handover-place-2026-07-05
+revision: rev1
+parameters:
+  admission:
+    task_version: 1
+    tau_solv: 0.90
+    stress_limit: null   # wrapped A1: the Gate-0 predicate already gates seating force < 75 N
+    tau_infeasible: 0.05
+    delta_min: 0.20
+    seeds: [0, 1, 2, 3, 4]
+    episodes_per_seed: 20
+    extension_seeds: [5, 6]
+    n_resamples: 2000
+    root_seed: 0
+    a1:
+      archive: spikes/results/handover-place-gate0-2026-06-26
+      files:
+        spikes/results/handover-place-gate0-2026-06-26/crossover_curves.json: 41b59da7370e00b681c0b4b12e4cb50a2bfba4d85b9e158b8ea1c7bc9da86dfd
+      extractor: handover_gate0_limb1
+      params:
+        takt_band_s: [1.0, 5.0]
+    a2:
+      cell_id: a2_presenter_ablated
+      runner: handover_presenter_ablated
+      policy_id: ref_script_handover_ego
+      partner_name: partner_ablated_zero
+      params:
+        # The committed Gate-0 env numbers at the canonical coupling-valid
+        # cell family's anchor (clearance 0.2, fast arm basis, takt 1.5 s):
+        # wrist_correction = J5_pitch_half (125°) * 0.2; budget =
+        # takt (1.5) - place_cycle (0.37); regrasp_duration per the fast
+        # (Epson C4) basis. Windows/stiffnesses verbatim from gate0.yaml.
+        lateral_window_m: 1.0e-3
+        angular_window_deg: 5.0
+        seating_force_limit_n: 75.0
+        translation_range_m: 0.10
+        wrist_correction_deg: 25.0
+        reacquire_range_deg: 170.0
+        contact_stiffness_n_per_m: 3.75e4
+        angular_stiffness_n_per_deg: 7.5
+        regrasp_budget_s: 1.13
+        regrasp_duration_s: 1.06
+    a3:
+      archive: spikes/results/handover-place-gate0-2026-06-26
+      files:
+        spikes/results/handover-place-gate0-2026-06-26/crossover_curves.json: 41b59da7370e00b681c0b4b12e4cb50a2bfba4d85b9e158b8ea1c7bc9da86dfd
+      extractor: handover_gate0_limb2
+      params:
+        clearance_factor: 0.2
+        mismatch_bias_deg: [30.0, 45.0]
+        takt_band_s: [1.0, 5.0]
+  a2_structural_note: >
+    The presenter-ablated env variant (make_handover_place_env
+    presenter_ablated=True; default False is byte-identical) consumes the
+    phase-0 action but records no presentation: the part rests at the
+    out-of-reach staging offset HANDOVER_ABLATED_STAGING_OFFSET_M (0.35 m
+    >> translation_range 0.10 m + lateral window 1 mm), and the placement
+    resolves honestly through the unchanged kinematic resolver. Expected
+    success ~= 0 for the structural reason that the hand-off never happens;
+    the run demonstrates it rather than asserting it (ADR-026 §Decision 2).
+    No pilot is needed: the cell is deterministic-degenerate by
+    construction, and the 5x20 grid exists to demonstrate the degeneracy
+    across the seed schedule, not to size a CI.
+  binding_evidence_note: >
+    The coupling positive-control evidence for this task is the Gate-0
+    Limb-2 measurement itself (mismatched failures bind on the
+    angular/angular|force conjuncts; crossover_curves.json binding fields):
+    on matched successful episodes the seating conjuncts are inside the
+    windows by predicate. The admission report carries the A3 wrap
+    statistics as that evidence; the A2 cell's seating-force distribution
+    (out-of-reach => force proxy far above the 75 N ceiling) documents the
+    structural infeasibility.
+decision_rules: >
+  A1 PASS iff the wrapped Limb-1 family minimum matched CI-lower >=
+  tau_solv (0.90) over the realistic takt band. A3 PASS iff the wrapped
+  Limb-2 coupling-valid-family minimum gap CI-lower >= delta_min (0.20);
+  a wrapped straddle is FAIL (committed evidence cannot be extended). A2
+  PASS iff the presenter-ablated success CI-upper <= tau_infeasible
+  (0.05); a straddle consumes the single pre-committed seed extension
+  ([5, 6]) and is then final. Verdict: ADMITTED iff A1, A2, A3 all PASS;
+  A1 FAIL => NOT_SOLVABLE (stop; thresholds do not move); A2 or A3 FAIL
+  => CONTROL demotion (ADR-027 §Admission protocol). The admission report
+  additionally records that canonical leaderboard cells are the
+  coupling-valid region only (clearance 0.2, mismatch 30-45°, realistic
+  takt band).
+notes: >
+  CB-04 §2c. Grounds: ADR-027 §Admission protocol; ADR-026 §Decision 2;
+  ADR-016/I8 (wrap, never edit or re-run the immutable archive); ADR-018/I3
+  (the presenter stays black-box; the ablated seat is the registered
+  partner_ablated_zero instrument). Runner: chamber-eval admission
+  --prereg spikes/preregistration/admission/handover_place_admission.yaml
+  --out spikes/results/admission/handover_place-2026-07-05 --date
+  2026-07-05.

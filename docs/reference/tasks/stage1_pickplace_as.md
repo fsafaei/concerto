@@ -30,6 +30,8 @@ A single-robot bin-to-conveyor pick-and-place station with a second robot presen
 
 ## Evidence
 
+- [`spikes/results/admission/stage1_pickplace_as-2026-07-05/admission_report.json`](https://github.com/fsafaei/concerto/blob/main/spikes/results/admission/stage1_pickplace_as-2026-07-05/admission_report.json)
+- [`spikes/preregistration/admission/stage1_pickplace_as_admission.yaml`](https://github.com/fsafaei/concerto/blob/main/spikes/preregistration/admission/stage1_pickplace_as_admission.yaml)
 - [`adr/ADR-026-coupling-validity-criterion.md`](https://github.com/fsafaei/concerto/blob/main/adr/ADR-026-coupling-validity-criterion.md)
 - [`spikes/results/stage1-AS-2026-06-11/GATE_VERDICT_REPORT_2026-06-11.md`](https://github.com/fsafaei/concerto/blob/main/spikes/results/stage1-AS-2026-06-11/GATE_VERDICT_REPORT_2026-06-11.md)
 
@@ -45,4 +47,4 @@ obs, info = env.reset(seed=0)
 
 ## Notes
 
-Construct-invalid for cooperation as operationalized (ego-solvable; the AS cell is `invalid` per ADR-026's reinterpretation of the immutable 2026-06-11 archive) — retained precisely as a Tier-1 control (ADR-027 §Tier ladder): a method claiming cooperation gains here is measuring something else. Default condition is the heterogeneous panda+fetch cell; pass condition_id='stage1_pickplace_panda_only_mappo_shared_param' for the homogeneous baseline.
+Construct-invalid for cooperation as operationalized (ego-solvable; the AS cell is `invalid` per ADR-026's reinterpretation of the immutable 2026-06-11 archive) — retained precisely as a Tier-1 control (ADR-027 §Tier ladder): a method claiming cooperation gains here is measuring something else. CONTROL is now measured, not just recorded: the committed admission report (tag prereg-admission-stage1-pickplace-as-2026-07-05) rejects the task — A1 scripted-competent ego 60/60, A2 FAIL (partner-ablated 60/60: not two-robot-infeasible), A3 FAIL (partner-blind 60/60; gap CI [0, 0] < 0.20 — the demotion rule). Default condition is the heterogeneous panda+fetch cell; pass condition_id='stage1_pickplace_panda_only_mappo_shared_param' for the homogeneous baseline.

@@ -18,8 +18,8 @@ $ chamber-eval manifest
 | [`stage0_smoke@v1` — Stage-0 tri-embodiment smoke rig](stage0_smoke.md) | 0 (rig diagnostics) | DIAGNOSTIC |
 | [`stage1_pickplace_as@v1` — Stage-1 pick-and-place — action-space (AS) control](stage1_pickplace_as.md) | 1 (controls) | CONTROL |
 | [`stage1_pickplace_om@v1` — Stage-1 pick-and-place — observation-modality (OM) control](stage1_pickplace_om.md) | 1 (controls) | CONTROL |
-| [`cocarry@v1` — Co-carry — rigid dual-arm bar transport](cocarry.md) | 2 (admitted cooperation tasks) | CANDIDATE |
-| [`handover_place@v1` — Handover-and-place under takt pressure](handover_place.md) | 2 (admitted cooperation tasks) | CANDIDATE |
+| [`cocarry@v1` — Co-carry — rigid dual-arm bar transport](cocarry.md) | 2 (admitted cooperation tasks) | ADMITTED |
+| [`handover_place@v1` — Handover-and-place under takt pressure](handover_place.md) | 2 (admitted cooperation tasks) | ADMITTED |
 | [`amr_handover_dynamic@v0` — AMR dynamic handover (spec-only candidate)](amr_handover_dynamic.md) | 3 (documented candidates and closures) | CANDIDATE |
 | [`co_hold_secure@v0` — Co-hold-and-secure (spec-only candidate)](co_hold_secure.md) | 3 (documented candidates and closures) | CANDIDATE |
 | [`coinsert@v1` — Co-insert — hold-and-insert (closed; open challenge)](coinsert.md) | 3 (documented candidates and closures) | CLOSED |

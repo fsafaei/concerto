@@ -1,0 +1,12 @@
+[
+  {
+    "checkpoint_step": null,
+    "class_name": "partner_ablated_zero",
+    "extra": {
+      "action_dim": "4"
+    },
+    "name": "presenter:partner_ablated_zero",
+    "seed": 0,
+    "weights_uri": null
+  }
+]

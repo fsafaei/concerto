@@ -1,0 +1,76 @@
+{
+  "schema_version": 1,
+  "task_id": "handover_place",
+  "task_version": 1,
+  "prereg_git_tag": "prereg-admission-handover-place-2026-07-05",
+  "prereg_blob_sha": "0b158e4bfae51eb40a30f033936292ca9d6427fd",
+  "git_sha": "d68dee1d33277726fd18f6eaae153425261b96f0",
+  "dirty": false,
+  "date_stamp": "2026-07-05",
+  "checks": [
+    {
+      "check": "A1",
+      "outcome": "PASS",
+      "criterion": "success_ci_low >= tau_solv (0.9) with successful-episode stress peak <= stress_limit (None)",
+      "statistics": {
+        "n_cells": 120.0,
+        "success_iqm": 1.0,
+        "success_ci_low": 1.0,
+        "success_ci_high": 1.0
+      },
+      "bundles": [],
+      "evidence": {
+        "spikes/results/handover-place-gate0-2026-06-26/crossover_curves.json": "41b59da7370e00b681c0b4b12e4cb50a2bfba4d85b9e158b8ea1c7bc9da86dfd"
+      },
+      "extended": false,
+      "notes": "wrapped committed evidence: spikes/results/handover-place-gate0-2026-06-26 (I8)"
+    },
+    {
+      "check": "A2",
+      "outcome": "PASS",
+      "criterion": "success_ci_high <= tau_infeasible (0.05)",
+      "statistics": {
+        "n_episodes": 100.0,
+        "success_mean": 0.0,
+        "success_iqm": 0.0,
+        "success_ci_low": 0.0,
+        "success_ci_high": 0.0,
+        "stress_n": 100.0,
+        "stress_p50": 9374.999999999998,
+        "stress_p90": 9374.999999999998,
+        "stress_p99": 9374.999999999998,
+        "stress_max": 9374.999999999998
+      },
+      "bundles": [
+        "a2_presenter_ablated"
+      ],
+      "evidence": {
+        "a2_presenter_ablated/bundle.json": "cda9d3b03f784ee9baa83e7766d0710397ce00a37785fb7a3904314428a34960"
+      },
+      "extended": false,
+      "notes": ""
+    },
+    {
+      "check": "A3",
+      "outcome": "PASS",
+      "criterion": "paired reference-minus-blind gap: delta_ci_low >= delta_min (0.2) passes; delta_ci_high < delta_min demotes to Tier-1 CONTROL",
+      "statistics": {
+        "n_cells": 10.0,
+        "delta_iqm": 0.455,
+        "delta_ci_low": 0.325,
+        "delta_ci_high": 1.0,
+        "delta_max": 1.0
+      },
+      "bundles": [],
+      "evidence": {
+        "spikes/results/handover-place-gate0-2026-06-26/crossover_curves.json": "41b59da7370e00b681c0b4b12e4cb50a2bfba4d85b9e158b8ea1c7bc9da86dfd"
+      },
+      "extended": false,
+      "notes": "wrapped committed evidence: spikes/results/handover-place-gate0-2026-06-26 (I8)"
+    }
+  ],
+  "verdict": "ADMITTED",
+  "seed_extension_used": false,
+  "binding_evidence": {},
+  "notes": ""
+}
