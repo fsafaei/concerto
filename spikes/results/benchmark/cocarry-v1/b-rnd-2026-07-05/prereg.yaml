@@ -1,0 +1,249 @@
+# Pre-registration — CHAMBER-Bench v1.0 co-carry baseline campaign
+# (ADR-027 §Reporting rules; ADR-011 §Decision as amended 2026-07-05;
+# ADR-007 §Discipline; ADR-028 §Decision 2 document-form).
+#
+# The first populated leaderboard: the six ADR-011 v1.0 rows on
+# cocarry@v1 against the public co-carry partner set v1, minus the
+# named validation partner. Thresholds, cells, seeds, budgets, and
+# stop rules are committed here, tagged BEFORE any measured episode,
+# and never tuned afterward. Every reported number is a
+# `chamber-eval verify`-passing v3 bundle. All rows ship, including
+# bad ones — the leaderboard's honesty is the product.
+schema_version: 1
+task_id: cocarry
+git_tag: prereg-cocarry-baselines-v1-rev2-2026-07-05
+revision: rev2
+parameters:
+  campaign:
+    campaign_id: cocarry_baselines_v1
+    task: cocarry@v1
+    condition_id: cocarry_matched_panda_pair
+    episode_length: 320
+    results_root: spikes/results/benchmark/cocarry-v1
+    # Execution in cost order (CB-06 §3). Eval-only rows first.
+    execution_order: [B-RND, B-STAT, REF-SCRIPT, B-BLIND, B-AHT, B-JOINT]
+  partner_grid:
+    partner_set: cocarry_partners@v1
+    # The held-out VALIDATION partner (ADR-027 §Reporting rules:
+    # checkpoint selection per seed on a held-out validation partner).
+    # imp_nominal is the public member centred on the ADR-026
+    # §Decision-1 default gains — representative, non-adversarial, and
+    # EXCLUDED from every eval cell below.
+    validation_partner: imp_nominal
+    # The eval cells: the public set minus the validation partner.
+    # Private members are not leaderboard cells in v1.0 (the shipped
+    # evaluation surface is the public split; ADR-009 as amended).
+    eval_members:
+      - imp_stiff_low
+      - imp_stiff_high
+      - imp_damp_low
+      - imp_damp_high
+      - imp_lag_bounded
+      - imp_blend_b
+      - imp_blend_c
+  rows:
+    # Policy ids are chamber-eval run --policy forms
+    # (chamber.benchmarks.cocarry_eval; PR #271).
+    REF-SCRIPT:
+      label: oracle reference          # never a baseline (ADR-011)
+      policy: ref_script_cocarry_impedance
+      trained: false
+    B-RND:
+      label: floor
+      policy: random
+      trained: false
+    B-STAT:
+      label: stationary control
+      policy: static
+      trained: false
+    B-BLIND:
+      label: partner-blind PPO ego (realizes B2; doubles as A3)
+      policy: "happo_blind_manifest:<committed per-seed selection manifest>"
+      trained: true
+      training_config: configs/training/ego_aht_happo/cocarry_blind.yaml
+      # The committed masked slice (chamber.envs.cocarry_blind_mask,
+      # pinned by Tier-1 test): ego-state indices [18, 43) zeroed =
+      # partner_qpos 18:27 + partner_qvel 27:36 (partner state) +
+      # bar_pose 36:43 (coupling feedback). The ego keeps
+      # [ego_qpos 0:9, ego_qvel 9:18, goal_pos 43:46] — the same
+      # information set as the scripted A3 blind ego. Known, stated
+      # asymmetry: the learned ego's own MEASURED qpos/qvel still
+      # carry load-induced deviation (the scripted A3 ego dead-reckons
+      # them away); masking own proprioception would make the policy
+      # input non-Markovian and untrainable, so the residual
+      # proprioceptive coupling channel is accepted and documented.
+      masked_slice: "[18, 43) of the 46-D ego state"
+      eval_interface: masked (identical to training; happo_blind:)
+    B-AHT:
+      label: CONCERTO reference line (ADR-002 HAPPO ego-AHT)
+      policy: "happo_manifest:<committed per-seed selection manifest>"
+      trained: true
+      training_config: configs/training/ego_aht_happo/cocarry_matched.yaml
+      # No algorithm changes (ADR-002 stands); the current remediated
+      # reward (ADR-026 §Decision 4: 110/20 stress penalty in-env +
+      # transport PBRS parity) is the training surface for ALL learned
+      # rows.
+    B-JOINT:
+      label: non-AHT upper anchor (jointly-trained MAPPO pair)
+      policy: "joint_ego:<that seed's selected pair checkpoint>"
+      trained: true
+      training_config: configs/training/joint_mappo/cocarry_matched.yaml
+      param_sharing: per_agent   # recorded as implemented (ADR-011)
+      # B-JOINT is evaluated AS THE PAIR IT TRAINED AS: its partner
+      # dimension is its own trained partner only (--partner
+      # frozen_cocarry_joint --partner-weights <same pair checkpoint>).
+      # Cross-partner B-JOINT cells are a v1.1 question, not run here.
+      # Packaging: the pair checkpoint differs per training seed and a
+      # v3 bundle carries one partner identity, so the B-JOINT row
+      # ships as ONE BUNDLE PER SEED under the row directory (5
+      # bundles); every other row is one bundle with per-seed cells.
+      partner_dimension: own trained partner only
+      bundles_per_row: 5 (one per training seed)
+  training:
+    seeds: [0, 1, 2, 3, 4]     # the project's 5-seed convention (ADR-007/ADR-008)
+    # Per-seed frame budget: the COMMITTED rung budget — 300,000 frames
+    # (spikes/results/cocarry/rung2/cocarry_rung2_train_stop.json
+    # budget_total_frames=300000; re-affirmed by the rung-5 re-freeze
+    # cocarry_rung5_refreeze_residual_train.json total_frames=300000,
+    # commit 20df685). The 900k budget-only escalation
+    # (cocarry_rung2_900k_train_stop.json) is on record as having
+    # WANDERED and is not budget headroom.
+    frames_per_seed: 300000
+    checkpoint_every: 50000    # the rung-2 stride; terminal flush included
+    per_row_training_cap_frames: 1500000   # 5 seeds x 300k — hard cap
+    # No committed wall-clock or GPU-hour cap exists in
+    # spikes/results/cocarry/ history (only prose: ~2-4 s/episode,
+    # cocarry_admission.yaml; ~10 GPU-min base probe). The cap is
+    # therefore denominated in frames — the committed denomination —
+    # and wall-clock + GPU time are REPORTED per row, never invented
+    # as new cap headroom.
+    wall_clock: reported per row, not capped
+  checkpoint_selection:
+    # ADR-027 §Reporting rules, verbatim: "Checkpoint selection for
+    # learned baselines is preregistered: per seed, the checkpoint
+    # with highest stress-compliant success on a held-out validation
+    # partner." Implemented by
+    # chamber.benchmarks.checkpoint_selection (PR #271), generalising
+    # the rung-2 freeze-selection precedent
+    # (cocarry_rung2_freeze_selection_prereg.json).
+    rule: >
+      per seed: highest stress-compliant success (success AND episode
+      stress max <= 130.0 N AND episode tilt max <= 15 deg) on the
+      held-out validation partner over the selection grid; ties break
+      to the EARLIEST checkpoint step (the rung-2 precedent).
+    validation_partner: imp_nominal
+    selection_seeds: [9000, 9001, 9002, 9003]
+    selection_episodes_per_seed: 3     # 12 episodes/checkpoint — the rung-2 S-set scale
+    b_joint_mode: >
+      pair mode — the candidate pair checkpoint plays BOTH seats (its
+      validation partner is definitionally its own trained partner);
+      same score, same tie-break.
+    evidence: >
+      one cocarry_baselines_checkpoint_selection/v1 JSON artifact per
+      (row, seed), committed under the row's results directory BEFORE
+      any eval-cell episode of that row runs; the per-seed selected
+      URIs are then committed as the row's checkpoint manifest (the
+      happo_manifest:/happo_blind_manifest: input).
+  evaluation:
+    root_seed: 0
+    n_resamples: 2000
+    # Eval cluster seeds: eval-only rows use [0..4] (parity with the
+    # learned rows); learned rows' cluster seed s drives training seed
+    # s's SELECTED checkpoint via the committed manifest.
+    eval_seeds: [0, 1, 2, 3, 4]
+    # Episodes per (seed x partner cell): LOCKED at 50 by the power
+    # pilot below (the rev1->rev2 change; rev1 committed this value as
+    # provisional plus the locking rule verbatim; tags are never
+    # reused — rev1 stays at prereg-cocarry-baselines-v1-2026-07-05).
+    episodes_per_seed_per_partner: 50
+    power_pilot:
+      run_purpose: power           # excluded from results (ADR-028)
+      row: B-RND and REF-SCRIPT    # the variance bracket: floor + ceiling
+      seeds: [0]
+      episodes_per_partner: 50
+      rule: >
+        final n = the smallest n in {50, 75, 100} whose projected 95%
+        cluster-bootstrap CI width on success (over the 5-seed grid,
+        extrapolated from the pilot's per-episode variance) is <= 10
+        percentage points; if even n=100 misses the target, n=100 is
+        locked and the achieved width is reported.
+      outcome_2026_07_05: >
+        Ran under rev1 (tag prereg-cocarry-baselines-v1-2026-07-05).
+        Bundles (committed, verify-passing, EXCLUDED from results and
+        from every leaderboard manifest):
+        spikes/results/benchmark/cocarry-v1/power-pilot-b-rnd-2026-07-05
+        (350 episodes, success IQM 0.000 [0.000, 0.000]; per-member
+        success 0.00 on all 7 eval members; stress p90 287.5 N) and
+        .../power-pilot-ref-script-2026-07-05 (350 episodes, success
+        IQM 1.000 [1.000, 1.000]; per-member success 1.00 on all 7;
+        stress p90 103.1 N). Both bracket rows are degenerate
+        (variance 0), so the projected CI width at n=50 is 0 <= 10
+        points and the rule locks n = 50. Honest caveat, stated
+        rather than tuned away: a 1-seed pilot cannot estimate
+        between-seed variance, and the learned rows may land between
+        the brackets with wider intervals — the achieved CI widths
+        ship in the row reports regardless (all rows ship).
+    pairing: >
+      every row and every partner cell sees the same matched
+      initial-state draws (initial_state_seed = seed*1000 + episode —
+      the Gate-0 pairing convention; fresh env per episode per the
+      measured co-carry rig-artifact rule), so row deltas are
+      paired-cluster-bootstrap comparable.
+  metrics:
+    primary: success (the env joint-success predicate — placed + level + unstressed + static + settled)
+    secondary:
+      - time_to_success (episode n_steps, env ticks at 20 Hz; 320 = truncation on failures)
+      - peak_internal_wrench (force_peak — the canonical wrist-stress instrument max, N)
+      - stress_threshold_exceedance (fraction of episodes with force_peak > 130.0 N)
+    estimators: >
+      IQM + 95% cluster-bootstrap CIs per row (2000 resamples,
+      bootstrap root seed 0); paired-cluster bootstrap for row deltas
+      on the matched draws; MANDATORY per-partner breakdown; no
+      single-seed claims (ADR-027 §Reporting rules).
+  zoo_enrichment:
+    # Preregistered v2 admissions (CB-05 machinery; ADR-009 as
+    # amended): the B-JOINT PARTNER-SIDE per-seed policies (the
+    # actor_partner of each seed's SELECTED pair checkpoint, 5
+    # members) join cocarry_partners version 2 under the hash-ordered
+    # 70/30 split rule, with cards + fingerprints; each card carries
+    # provenance "trained jointly with <ego hash>". B-AHT/B-BLIND egos
+    # are ego-side and STAY OUT of the partner zoo.
+    new_members: 5 x frozen_cocarry_joint (B-JOINT partner-side, one per training seed)
+    set_version: 2
+decision_rules: >
+  (1) Preregistration before any measured run: this document's tag
+  precedes the first measured episode; history proves it. The power
+  pilot (run_purpose: power) is excluded from results; the final n is
+  locked as rev2 under a new tag before the first leaderboard episode.
+  (2) Checkpoint selection happens per (row, seed) on the validation
+  partner BEFORE any eval-cell episode of that row is seen; the
+  selection artifacts and the resulting manifest are committed first.
+  (3) Compute caps: per-seed training stops at 300,000 frames; a row
+  that hits its cap SHIPS, with the selection rule applied to the
+  checkpoints that exist and the cap event reported — a capped row is
+  a result, not a failure. Budgets are never extended mid-campaign.
+  (4) Instability stop rule (the rung-2 signature): a success collapse
+  of more than 40 points between consecutive checkpoints on the
+  validation partner does not abort the row — finish the seed, apply
+  the selection rule, and report the event.
+  (5) All rows ship, including bad ones. REF-SCRIPT is labeled oracle
+  reference (never a baseline); B-JOINT is labeled non-AHT upper
+  anchor in every table.
+  (6) Nothing outside the preregistered cell list above runs, and no
+  run outside it appears anywhere under spikes/results/benchmark/.
+  (7) Every reported number is backed by a committed
+  chamber-eval verify-passing bundle with its repro command, seeds,
+  and git SHA; partner frozen and black-box in every AHT cell
+  (I3/ADR-018); archives immutable (I8).
+notes: >
+  Grounds: ADR-011 §Decision (2026-07-05 amendment — the six-row set;
+  per-agent MAPPO parameter sharing recorded as implemented), ADR-027
+  §Reporting rules (selection rule; IQM + paired-cluster bootstrap;
+  per-task tables, no scalar composite), ADR-002 (HAPPO ego-AHT
+  unchanged), ADR-026 §Decision 4 (remediated reward surface for all
+  learned rows), ADR-028 (v3 bundles; document-form prereg), ADR-018
+  (frozen black-box partners), ADR-002 P6 (derive_substream
+  everywhere). Learned-ego handover cells are explicitly v1.1
+  roadmap and are NOT preregistered here; the handover-place
+  scripted-ego leaderboard cells get their own prereg pinned to the
+  measured coupling-valid region (GATE_VERDICT_REPORT_2026-06-26).
