@@ -113,11 +113,16 @@ def run_cocarry_cell(
       :class:`chamber.partners.cocarry_blind.CoCarryBlindImpedancePartner`).
     - ``episode_length`` — optional truncation override.
 
-    One env per cluster seed (``root_seed=seed``); episodes advance the
-    env's P6 goal-jitter substream by consecutive resets, so two cells
-    sharing a cluster seed see identical initial-state schedules — the
-    A3 pairing precondition. ``force_peak`` records the canonical wrist
-    stress instrument's episode maximum (ADR-027 §Versioning).
+    **One fresh env per episode** (``root_seed = seed * 1000 + episode``
+    — the Gate-0 ``initial_state_seed`` convention): re-using a stepped
+    co-carry env across resets is a measured rig artifact (the dual-hold
+    attach carries state into the next episode and produces spurious
+    bar-fight failures — tilt 29-33° on draws that succeed cleanly from
+    a fresh build), and every rung measurement drove this env one
+    stepped episode per build. Two cells sharing a seed schedule see
+    identical ``initial_state_seed`` sequences — the A3 pairing
+    precondition. ``force_peak`` records the canonical wrist stress
+    instrument's episode maximum (ADR-027 §Versioning).
     """
     del root_seed  # per ADR-002 the co-carry substream keys on the cluster seed
     from chamber.envs.cocarry import (
@@ -140,44 +145,45 @@ def run_cocarry_cell(
     episodes_by_seed: dict[int, list[EpisodeResult]] = {}
     material: list[dict[str, object]] = []
     hashes: dict[str, str] = {}
+    controller_specs = cocarry_matched_controller_specs()
     for cluster_seed in seeds:
-        env = make_cocarry_env(
-            condition_id=condition_id,
-            episode_length=episode_length,
-            root_seed=cluster_seed,
-            render_backend=render_backend,
-        )
-        try:
-            single_arm = bool(env.single_arm)  # type: ignore[attr-defined]
-            ego_uid = str(env.ego_uid)  # type: ignore[attr-defined]
-            partner_uid = str(env.partner_uid)  # type: ignore[attr-defined]
-            controller_specs = cocarry_matched_controller_specs()
-            ego_spec = PartnerSpec(ego_class, 0, None, None, dict(controller_specs[ego_uid]))
-            ego = load_partner(ego_spec)
-            partner_dim = int(env.action_space.spaces[partner_uid].shape[0])  # type: ignore[attr-defined,index]
-            if single_arm:
-                partner_spec = PartnerSpec(
-                    PARTNER_ABLATED_ZERO_CLASS, 0, None, None, {"action_dim": str(partner_dim)}
-                )
-            else:
-                partner_spec = PartnerSpec(
-                    "cocarry_impedance", 0, None, None, dict(controller_specs[partner_uid])
-                )
-            partner = load_partner(partner_spec)
-            if not material:
-                material = [
-                    _partner_material(f"ego:{ego_class}", ego_spec),
-                    _partner_material(f"partner:{partner_spec.class_name}", partner_spec),
-                ]
-                hashes = {
-                    f"ego:{ego_class}": ego_spec.partner_id,
-                    f"partner:{partner_spec.class_name}": partner_spec.partner_id,
-                }
-            records: list[EpisodeResult] = []
-            for episode in range(episodes_per_seed):
-                obs, _ = env.reset(seed=episode)
-                ego.reset(seed=episode)
-                partner.reset(seed=episode)
+        records: list[EpisodeResult] = []
+        for episode in range(episodes_per_seed):
+            iss = int(cluster_seed) * 1000 + episode
+            env = make_cocarry_env(
+                condition_id=condition_id,
+                episode_length=episode_length,
+                root_seed=iss,
+                render_backend=render_backend,
+            )
+            try:
+                single_arm = bool(env.single_arm)  # type: ignore[attr-defined]
+                ego_uid = str(env.ego_uid)  # type: ignore[attr-defined]
+                partner_uid = str(env.partner_uid)  # type: ignore[attr-defined]
+                ego_spec = PartnerSpec(ego_class, 0, None, None, dict(controller_specs[ego_uid]))
+                ego = load_partner(ego_spec)
+                partner_dim = int(env.action_space.spaces[partner_uid].shape[0])  # type: ignore[attr-defined,index]
+                if single_arm:
+                    partner_spec = PartnerSpec(
+                        PARTNER_ABLATED_ZERO_CLASS, 0, None, None, {"action_dim": str(partner_dim)}
+                    )
+                else:
+                    partner_spec = PartnerSpec(
+                        "cocarry_impedance", 0, None, None, dict(controller_specs[partner_uid])
+                    )
+                partner = load_partner(partner_spec)
+                if not material:
+                    material = [
+                        _partner_material(f"ego:{ego_class}", ego_spec),
+                        _partner_material(f"partner:{partner_spec.class_name}", partner_spec),
+                    ]
+                    hashes = {
+                        f"ego:{ego_class}": ego_spec.partner_id,
+                        f"partner:{partner_spec.class_name}": partner_spec.partner_id,
+                    }
+                obs, _ = env.reset(seed=iss)
+                ego.reset(seed=iss)
+                partner.reset(seed=iss)
                 info: dict[str, Any] = {}
                 for _ in range(episode_length):
                     action = {ego_uid: ego.act(obs), partner_uid: partner.act(obs)}
@@ -189,7 +195,7 @@ def run_cocarry_cell(
                     EpisodeResult(
                         seed=cluster_seed,
                         episode_idx=episode,
-                        initial_state_seed=episode,
+                        initial_state_seed=iss,
                         success=bool(_to_float(info["success"])),
                         force_peak=_to_float(tel["max_stress_proxy"]),
                         metadata={
@@ -201,9 +207,9 @@ def run_cocarry_cell(
                         },
                     )
                 )
-            episodes_by_seed[cluster_seed] = records
-        finally:
-            env.close()
+            finally:
+                env.close()
+        episodes_by_seed[cluster_seed] = records
     return CellRun(
         episodes_by_seed=episodes_by_seed,
         partner_material=material,
