@@ -37,7 +37,18 @@ evidence per their own §Validation criteria.
 | 015 | Tier-task scope freeze                                             | §3.3 + §7.3        | Phase 1    | RFC<sup>e</sup>              |
 | 016 | SpikeRun schema lifecycle (Stage 1a / 1b disambiguation)           | §3.4 + §3.7        | Phase 0    | Accepted (2026-05-17)<sup>b</sup> |
 | 017 | Observability and experiment tracking (W&B + chamber-analyze)      | §13 + P1.05.11     | Phase 1    | Accepted (2026-05-22)        |
-| 026 | Coupling-validity criterion (+ Stage-1 AS reinterpretation)        | §3.2 + §3.4        | Phase 1→2  | RFC (2026-06-15)<sup>h</sup> |
+| 018 | Realism constraint — the black-box partner contract                | §3.5 + §6.1        | Phase 2    | Accepted (2026-07-05)        |
+| 026 | Coupling-validity criterion (+ Stage-1 AS reinterpretation)        | §3.2 + §3.4        | Phase 1→2  | Accepted (2026-07-05)<sup>h</sup> |
+| 027 | CHAMBER-Bench v1.0 protocol (tiers / admission / validity matrix)  | §3.3 + §3.7 + §3.10 | Phase 2   | Accepted (2026-07-05)        |
+| 028 | Result-bundle schema v3 + preregistration versioning               | §3.7               | Phase 2    | Accepted (2026-07-05)<sup>i</sup> |
+
+Numbers **019–025 remain reserved** (open-core / realism / certification
+governance ADRs and the proposed RSA-ADR cluster per the
+reference-system-architecture §18.2); 026 is confirmed permanent
+(ADR-026 §Revision history 2026-07-05). ADR-009 and ADR-011 carry
+2026-07-05 §Decision amendments (v1.0 partner-set right-sizing; v1.0
+baseline set) recorded in their §Revision histories — statuses
+unchanged.
 
 ### Open work flags
 
@@ -137,12 +148,25 @@ certification governance ADRs; 021–025 for the proposed RSA-ADR cluster,
 reference-system-architecture §18.2), so the 018–025 gap is intentional.
 Grounded in the project's structured internal review record (2026-06-15)
 — a documented internal review protocol, not an external assessment.
+**Promoted to Accepted (2026-07-05):** both RFC conditions are
+discharged — the evidence note is committed at
+`notes/tier1/construct_validity_in_cooperative_evaluation.md` and the
+number is confirmed permanent (018 filled by ADR-018; 019–025 remain
+reserved). See
+[ADR-026 §Revision history](ADR-026-coupling-validity-criterion.md#revision-history).
+
+<sup>i</sup> ADR-028 **authorizes** the schema work (I9: decision
+first, code second); the `SCHEMA_VERSION` 2→3 bump,
+`PREREG_SCHEMA_VERSION = 1`, and the `chamber-eval run`/`verify`
+surfaces land in a separate implementation change gated on this ADR.
+No schema constant changes with the decision itself.
 
 ## Lock-by phases (per v0.2 §8 gates)
 - **Phase 0** (Month 3): ADRs 001, 002, 003, 004, 005, 006, 007, 012, 013, 016.
 - **Phase 0–1** (Month 3–7): ADRs 008, 011.
 - **Phase 1** (Month 7): ADRs 009, 010, 014.
 - **Phase 1** (Month 12 gate): ADR 015.
+- **Phase 2** (CHAMBER-Bench v1.0): ADRs 018, 026, 027, 028.
 
 ## Locking rule
 

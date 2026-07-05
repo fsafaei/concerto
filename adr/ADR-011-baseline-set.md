@@ -21,6 +21,17 @@ v0.2 Phase 1 deliverables list B1, B2, B3, B6, B7. B5 may slip to early Phase 2.
 
 Rationale for selecting A over C: `notes/tier1/25_harl.md` confirms that HARL's monotonic-improvement guarantee (Theorem 7) requires all agents to update simultaneously — it is lost when the partner policy is frozen, as required by B0's AHT setting. A custom AHT wrapper must be built and validated before B5 is runnable; this engineering effort is not accounted for in the Phase 1 budget and its duration is unknown without a porting spike. Selecting C now would commit Phase 1 to an unestimated task. Once a porting spike is completed, this ADR may be revised to Option C if the effort fits Phase 1.
 
+**v1.0 baseline set (2026-07-05 amendment; per ADR-027).** For CHAMBER-Bench v1.0 the shipped set is defined **per admitted task** (ADR-027 §Tier ladder) and supersedes the B1–B7 lettering for the benchmark surface:
+
+- **REF-SCRIPT** — the scripted matched-reference pair, reported as **oracle-reference**, not a baseline (it defines A1 solvability, ADR-027 §Admission).
+- **B-RND** — random policy (floor).
+- **B-STAT** — stationary / lagged scripted partner-side control.
+- **B-BLIND** — partner-blind PPO ego (partner state masked from the observation). Realizes the original B2 (independent learning) and **doubles as admission check A3**: the preregistered B-BLIND-vs-coupling-aware margin is the partner-relevance test.
+- **B-AHT** — the HAPPO ego-AHT line (ADR-002) — the CONCERTO reference line.
+- **B-JOINT** — a jointly-trained MAPPO pair, evaluated **as a pair** — the upper anchor. This finally builds the baseline ADR-026 §Decision 3 records as never built (the pre-registration-fidelity gap). The installed `harl-aht` distribution exposes the MAPPO trainer (`harl.runners.RUNNER_REGISTRY["mappo"]` → `harl.runners.on_policy_ma_runner.OnPolicyMARunner`, actor `harl.algorithms.actors.mappo.MAPPO`; verified by import inspection 2026-07-05), so B-JOINT is buildable as specified; the committed fallback, had it been absent, was a shared-parameter joint PPO, documented as such. B-JOINT trains outside the AHT setting by construction; its evaluation obeys the ADR-018 contract (see ADR-018 §Consequences).
+
+**B1 (LLM planner) and B3 (HetGPPO) are explicitly deferred**: neither was ever resourced (no implementation, no porting spike started since 2026-05-13), and neither is load-bearing for the v1.0 claim — the benchmark's comparative story is scripted-reference vs partner-blind vs coupling-aware vs jointly-trained, which B-BLIND/B-AHT/B-JOINT carry. B6/B7 (CBF and conformal stack baselines) are properties of the CONCERTO stack evaluated within B-AHT runs, not separate v1.0 leaderboard rows. See §Revision history 2026-07-05.
+
 Rationale for selecting A over B: `notes/tier1/23_hetgppo.md` confirms B3 (HetGPPO-style heterogeneous MARL) is feasible with a frozen-partner AHT fork of the VMAS+RLlib stack; this verification is a known, bounded effort. Dropping B3 (Option B) would remove the only heterogeneous-MARL Phase 1 baseline, weakening differentiation from homogeneous methods.
 
 ## Rationale
@@ -58,5 +69,15 @@ By Phase 1 end: (1) all five shipped baselines (B1, B2, B3, B6, B7) reproduce ta
 
 ## Revision history
 
+- 2026-07-05 amendment (per ADR-027 CHAMBER-Bench v1.0): §Decision
+  extended with the v1.0 baseline set — REF-SCRIPT (oracle-reference),
+  B-RND, B-STAT, B-BLIND (realizes B2; doubles as ADR-027 admission
+  check A3), B-AHT (ADR-002 HAPPO ego-AHT), B-JOINT (jointly-trained
+  MAPPO pair as the upper anchor; the baseline ADR-026 records as
+  never built; `harl-aht` MAPPO trainer availability verified by
+  import inspection). B1 and B3 explicitly deferred (never resourced;
+  not load-bearing for the v1.0 claim). Status stays
+  **Accepted (2026-05-13)**; the Phase-1 Option-A record above is
+  historical and unaltered.
 - 2026-05-13 status re-classification: status changed from Proposed to **RFC** under the new ADR status taxonomy (see [ADR-INDEX §Status taxonomy](ADR-INDEX.md#status-taxonomy)); Phase-1 lock pending; no Decision content is altered.
 - 2026-05-13 lock: promoted to **Accepted (2026-05-13)** under the solo-developer working policy in ADR-INDEX (Option A — ship B1, B2, B3, B6, B7 in Phase 1, defer B5 — is the committed scope); no Decision content is altered.

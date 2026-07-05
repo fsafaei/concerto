@@ -23,6 +23,9 @@ directory of this repository.
 | ADR-015 | Task tier scope | Pending |
 | ADR-016 | SpikeRun schema lifecycle (Stage 1a / 1b disambiguation) | Accepted |
 | ADR-017 | Observability and experiment tracking | Accepted |
-| ADR-026 | Coupling-validity criterion (+ Stage-1 AS reinterpretation) | RFC |
+| ADR-018 | Realism constraint — the black-box partner contract | Accepted |
+| ADR-026 | Coupling-validity criterion (+ Stage-1 AS reinterpretation) | Accepted |
+| ADR-027 | CHAMBER-Bench v1.0 protocol (tiers / admission / validity matrix) | Accepted |
+| ADR-028 | Result-bundle schema v3 + preregistration versioning | Accepted (implementation pending) |
 
 For full text see the `adr/` directory.
