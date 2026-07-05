@@ -1,0 +1,55 @@
+{
+  "cells": {
+    "pilot_a1_reference": {
+      "n_episodes": 12,
+      "stress": {
+        "stress_max": 105.3977279663086,
+        "stress_n": 12.0,
+        "stress_p50": 85.49063110351562,
+        "stress_p90": 99.7956771850586,
+        "stress_p99": 104.79744697570801
+      },
+      "success_ci_high": 1.0,
+      "success_ci_low": 1.0,
+      "success_iqm": 1.0,
+      "success_mean": 1.0,
+      "wallclock_s": 9.36
+    },
+    "pilot_a2_single_arm": {
+      "n_episodes": 12,
+      "stress": {
+        "stress_max": 20.862890243530273,
+        "stress_n": 12.0,
+        "stress_p50": 8.817829132080078,
+        "stress_p90": 20.461388397216798,
+        "stress_p99": 20.84041284561157
+      },
+      "success_ci_high": 0.0,
+      "success_ci_low": 0.0,
+      "success_iqm": 0.0,
+      "success_mean": 0.0,
+      "wallclock_s": 27.95
+    },
+    "pilot_a3_blind": {
+      "n_episodes": 12,
+      "stress": {
+        "stress_max": 126.428955078125,
+        "stress_n": 12.0,
+        "stress_p50": 111.21951675415039,
+        "stress_p90": 117.80013275146484,
+        "stress_p99": 125.50828247070314
+      },
+      "success_ci_high": 0.0,
+      "success_ci_low": 0.0,
+      "success_iqm": 0.0,
+      "success_mean": 0.0,
+      "wallclock_s": 45.33
+    }
+  },
+  "episodes": 12,
+  "excluded_from_report": true,
+  "pilot_seed": 89900,
+  "repro_command": "uv run python scripts/repro/_admission_power_pilot.py --task cocarry",
+  "run_purpose": "power",
+  "task_id": "cocarry"
+}
