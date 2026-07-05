@@ -4,7 +4,7 @@
 
 Two manipulators rigidly carry one shared bar to a goal while keeping it level and keeping internal stress within a frozen force ceiling. The task is infeasible for one robot, so success measures cooperation rather than a single ego's competence. Its rung archives (frozen incumbent, policy-shift and embodiment-shift measurements) are the committed evidence for Tier-2 admission.
 
-**Tier 2 — admitted cooperation tasks** · **Status: CANDIDATE** · Suite: CHAMBER-Bench v1.0 ([`adr/ADR-027-chamber-bench-v1-protocol.md`](https://github.com/fsafaei/concerto/blob/main/adr/ADR-027-chamber-bench-v1-protocol.md))
+**Tier 2 — admitted cooperation tasks** · **Status: ADMITTED** · Suite: CHAMBER-Bench v1.0 ([`adr/ADR-027-chamber-bench-v1-protocol.md`](https://github.com/fsafaei/concerto/blob/main/adr/ADR-027-chamber-bench-v1-protocol.md))
 
 ## Spaces
 
@@ -30,6 +30,8 @@ Dual-robot handling of long or heavy payloads — two industrial arms sharing on
 
 ## Evidence
 
+- [`spikes/results/admission/cocarry-2026-07-05/admission_report.json`](https://github.com/fsafaei/concerto/blob/main/spikes/results/admission/cocarry-2026-07-05/admission_report.json)
+- [`spikes/preregistration/admission/cocarry_admission.yaml`](https://github.com/fsafaei/concerto/blob/main/spikes/preregistration/admission/cocarry_admission.yaml)
 - [`spikes/results/cocarry/rung2/cocarry_rung2_freeze_manifest.json`](https://github.com/fsafaei/concerto/blob/main/spikes/results/cocarry/rung2/cocarry_rung2_freeze_manifest.json)
 - [`spikes/results/cocarry/rung2/cocarry_rung2_freeze_selection_prereg.json`](https://github.com/fsafaei/concerto/blob/main/spikes/results/cocarry/rung2/cocarry_rung2_freeze_selection_prereg.json)
 - [`spikes/results/cocarry/rung2/cocarry_rung2_freeze_selection_validation.json`](https://github.com/fsafaei/concerto/blob/main/spikes/results/cocarry/rung2/cocarry_rung2_freeze_selection_validation.json)
@@ -54,4 +56,4 @@ obs, info = env.reset(seed=0)
 
 ## Notes
 
-CANDIDATE flips to ADMITTED only when the retroactive admission report (A1: matched reference 1.00, held-out validation 24/24 per the freeze-selection archives; A2: the rung positive controls; A3: measured against B-BLIND) is committed under ADR-027 §Admission protocol. The `null` AS cell records the embodiment-heterogeneity robust null established by the rung-4 archives (rung-4d pose-artifact retraction + rung-4e task-fair pose/controller search); the rung-3 policy-heterogeneity pooled null (with its stiff-impedance caveat) is recorded in the rung3 archive. Changing the canonical success predicate or stress instrument creates cocarry@2 (ADR-027 §Versioning).
+ADMITTED by the committed admission report (ADR-027 §Admission protocol; tag prereg-admission-cocarry-2026-07-05): A1 scripted matched reference 60/60 with wrist stress max 107.9 N < f_max 130.5697; A2 single-arm positive control 0/60; A3 partner-blind ego (B-BLIND, cocarry_blind_impedance) 0/60 — paired gap CI [1.0, 1.0] >= delta_min 0.20. Binding evidence: stress p50 88.6 / p99 106.4 N on matched successes. The `null` AS cell records the embodiment-heterogeneity robust null established by the rung-4 archives (rung-4d pose-artifact retraction + rung-4e task-fair pose/controller search); the rung-3 policy-heterogeneity pooled null (with its stiff-impedance caveat) is recorded in the rung3 archive. Changing the canonical success predicate or stress instrument creates cocarry@2 (ADR-027 §Versioning).

@@ -205,6 +205,15 @@ class TestLadder:
 
     def test_handover_place_pins_the_measured_valid_region(self) -> None:
         spec = chamber.tasks.get("handover_place")
-        assert spec.admission_status == "CANDIDATE"
+        assert spec.admission_status == "ADMITTED"
         assert "22 of 216" in spec.notes
         assert "prereg-handover-place-gate0-rev2-2026-06-26" in spec.notes
+        assert (
+            "spikes/results/admission/handover_place-2026-07-05/admission_report.json"
+            in spec.evidence
+        )
+
+    def test_cocarry_is_admitted_by_the_committed_report(self) -> None:
+        spec = chamber.tasks.get("cocarry")
+        assert spec.admission_status == "ADMITTED"
+        assert "spikes/results/admission/cocarry-2026-07-05/admission_report.json" in spec.evidence

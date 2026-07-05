@@ -120,6 +120,8 @@ def stage1_pickplace_as_v1() -> TaskSpec:
         axes=_axes(AS="invalid"),
         admission_status="CONTROL",
         evidence=[
+            "spikes/results/admission/stage1_pickplace_as-2026-07-05/admission_report.json",
+            "spikes/preregistration/admission/stage1_pickplace_as_admission.yaml",
             "adr/ADR-026-coupling-validity-criterion.md",
             "spikes/results/stage1-AS-2026-06-11/GATE_VERDICT_REPORT_2026-06-11.md",
         ],
@@ -128,7 +130,12 @@ def stage1_pickplace_as_v1() -> TaskSpec:
             "the AS cell is `invalid` per ADR-026's reinterpretation of the "
             "immutable 2026-06-11 archive) — retained precisely as a Tier-1 "
             "control (ADR-027 §Tier ladder): a method claiming cooperation gains "
-            "here is measuring something else. Default condition is the "
+            "here is measuring something else. CONTROL is now measured, not "
+            "just recorded: the committed admission report (tag "
+            "prereg-admission-stage1-pickplace-as-2026-07-05) rejects the task "
+            "— A1 scripted-competent ego 60/60, A2 FAIL (partner-ablated "
+            "60/60: not two-robot-infeasible), A3 FAIL (partner-blind 60/60; "
+            "gap CI [0, 0] < 0.20 — the demotion rule). Default condition is the "
             "heterogeneous panda+fetch cell; pass "
             "condition_id='stage1_pickplace_panda_only_mappo_shared_param' for "
             "the homogeneous baseline."
@@ -204,8 +211,10 @@ def cocarry_v1() -> TaskSpec:
             "ADR-027 §Versioning's canonical-instrument rule."
         ),
         axes=_axes(AS="null"),
-        admission_status="CANDIDATE",
+        admission_status="ADMITTED",
         evidence=[
+            "spikes/results/admission/cocarry-2026-07-05/admission_report.json",
+            "spikes/preregistration/admission/cocarry_admission.yaml",
             "spikes/results/cocarry/rung2/cocarry_rung2_freeze_manifest.json",
             "spikes/results/cocarry/rung2/cocarry_rung2_freeze_selection_prereg.json",
             "spikes/results/cocarry/rung2/cocarry_rung2_freeze_selection_validation.json",
@@ -219,11 +228,14 @@ def cocarry_v1() -> TaskSpec:
             "adr/ADR-026-coupling-validity-criterion.md",
         ],
         notes=(
-            "CANDIDATE flips to ADMITTED only when the retroactive admission "
-            "report (A1: matched reference 1.00, held-out validation 24/24 per "
-            "the freeze-selection archives; A2: the rung positive controls; A3: "
-            "measured against B-BLIND) is committed under ADR-027 §Admission "
-            "protocol. The `null` AS cell records the embodiment-heterogeneity "
+            "ADMITTED by the committed admission report (ADR-027 §Admission "
+            "protocol; tag prereg-admission-cocarry-2026-07-05): A1 scripted "
+            "matched reference 60/60 with wrist stress max 107.9 N < f_max "
+            "130.5697; A2 single-arm positive control 0/60; A3 partner-blind "
+            "ego (B-BLIND, cocarry_blind_impedance) 0/60 — paired gap CI "
+            "[1.0, 1.0] >= delta_min 0.20. Binding evidence: stress "
+            "p50 88.6 / p99 106.4 N on matched successes. "
+            "The `null` AS cell records the embodiment-heterogeneity "
             "robust null established by the rung-4 archives (rung-4d "
             "pose-artifact retraction + rung-4e task-fair pose/controller "
             "search); the rung-3 policy-heterogeneity pooled null (with its "
@@ -259,17 +271,25 @@ def handover_place_v1() -> TaskSpec:
             "Seating contact force from the kinematic resolver, gated by seating_force_limit_n"
         ),
         axes=_axes(),
-        admission_status="CANDIDATE",
+        admission_status="ADMITTED",
         evidence=[
+            "spikes/results/admission/handover_place-2026-07-05/admission_report.json",
+            "spikes/preregistration/admission/handover_place_admission.yaml",
             "spikes/results/handover-place-gate0-2026-06-26/GATE_VERDICT_REPORT_2026-06-26.md",
             "spikes/preregistration/handover_place/gate0.yaml",
         ],
         notes=(
-            "Admission-eligible (ADR-027 §Tier ladder): the measured Gate-0 "
-            "verdict is COUPLING_VALID + SOLVABLE (PR #263) under the tagged "
-            "Rev-2 prereg (prereg-handover-place-gate0-rev2-2026-06-26, blob "
-            "b26cfba74a2f1bb9ac295810e4846fe23742ff1b); CANDIDATE flips to "
-            "ADMITTED when the committed admission report wraps that verdict. "
+            "ADMITTED by the committed admission report (ADR-027 §Admission "
+            "protocol; tag prereg-admission-handover-place-2026-07-05), which "
+            "wraps — never re-runs (I8) — the measured Gate-0 verdict "
+            "COUPLING_VALID + SOLVABLE (PR #263, tagged Rev-2 prereg "
+            "prereg-handover-place-gate0-rev2-2026-06-26, blob "
+            "b26cfba74a2f1bb9ac295810e4846fe23742ff1b): A1 from Limb 1 (band "
+            "minima matched IQM/CI-lower 1.000 >= tau_solv 0.90), A3 from "
+            "Limb 2 restricted to the coupling-valid family (min gap CI-lower "
+            "32.5 pp >= 20 pp), plus the one fresh A2 presenter-ablated cell "
+            "(0/100 — with no presenter the part never enters the ego's "
+            "workspace). "
             "Canonical benchmark cells are pinned to the measured coupling-valid "
             "region: the clearance-0.2 family with 30°/45° grasp-pose mismatch "
             "across the realistic takt band — 22 of 216 measured cells, valid "
