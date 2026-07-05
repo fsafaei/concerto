@@ -22,6 +22,19 @@ Public modules:
   leaderboard renderers (ADR-014 §Decision, ADR-008 §Decision).
 """
 
+from chamber.evaluation.admission import (
+    ADMISSION_REPORT_SCHEMA_VERSION,
+    AdmissionCellSpec,
+    AdmissionError,
+    AdmissionReport,
+    AdmissionSpec,
+    CheckReport,
+    WrappedEvidenceSpec,
+    admission_spec_from_prereg,
+    load_admission_report,
+    render_admission_report_md,
+    run_admission,
+)
 from chamber.evaluation.bootstrap import (
     BootstrapCI,
     PairedEpisode,
@@ -69,11 +82,17 @@ from chamber.evaluation.results import (
 )
 
 __all__ = [
+    "ADMISSION_REPORT_SCHEMA_VERSION",
     "DEFAULT_AXIS_WEIGHTS",
     "PREREG_SCHEMA_VERSION",
     "SCHEMA_VERSION",
+    "AdmissionCellSpec",
+    "AdmissionError",
+    "AdmissionReport",
+    "AdmissionSpec",
     "BootstrapCI",
     "BundleSummary",
+    "CheckReport",
     "ConditionPair",
     "ConditionResult",
     "EpisodeResult",
@@ -89,17 +108,22 @@ __all__ = [
     "SeedSchedule",
     "SlackAggregate",
     "SpikeRun",
+    "WrappedEvidenceSpec",
+    "admission_spec_from_prereg",
     "aggregate_metrics",
     "aggregate_oscbf_slack",
     "cluster_bootstrap",
     "compute_hrs_scalar",
     "compute_hrs_vector",
+    "load_admission_report",
     "load_prereg",
     "load_prereg_document",
     "load_run_archive",
     "make_condition_row",
     "pacluster_bootstrap",
+    "render_admission_report_md",
     "render_leaderboard",
     "render_three_table_safety_report",
+    "run_admission",
     "verify_git_tag",
 ]

@@ -345,7 +345,8 @@ def build_verdict_report(  # noqa: PLR0915 (linear Markdown report builder)
         else "BUDGET-MEDIATED (vanishes at free re-grasp)"
     )
     a(
-        f"- free-re-grasp gap CI_lower = {free_low:.1f} pp -> **{split}** (spike JSON free episodes)."
+        f"- free-re-grasp gap CI_lower = {free_low:.1f} pp -> **{split}** "
+        "(spike JSON free episodes)."
     )
     a("")
     a("## (clearance x mismatch) MEASURED coupling region")

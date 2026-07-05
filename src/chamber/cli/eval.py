@@ -43,7 +43,7 @@ from typing import TYPE_CHECKING
 
 import chamber
 import chamber.tasks
-from chamber.cli import _eval_run, _eval_verify
+from chamber.cli import _eval_admission, _eval_run, _eval_verify
 from chamber.evaluation import (
     ConditionResult,
     LeaderboardEntry,
@@ -245,11 +245,12 @@ def _weights_for(keys_in_order: list[tuple[str, str]]) -> dict[str, float]:
     return weights
 
 
-#: First-token subcommand dispatch (ADR-027 manifest; ADR-028 run/verify).
+#: First-token subcommand dispatch (ADR-027 manifest + admission; ADR-028 run/verify).
 _SUBCOMMANDS = {
     "manifest": _run_manifest,
     "run": _eval_run.run,
     "verify": _eval_verify.run,
+    "admission": _eval_admission.run,
 }
 
 
@@ -279,6 +280,7 @@ def main(argv: list[str] | None = None) -> int:
             "--policy ID --seeds N --episodes N --out DIR [--prereg YAML]"
         )
         print("       chamber-eval verify BUNDLE_DIR")
+        print("       chamber-eval admission --prereg YAML --out DIR --date YYYY-MM-DD")
         return 0
 
     for path in args.spike_runs:

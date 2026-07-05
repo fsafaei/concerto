@@ -65,8 +65,11 @@ _EP = 320
 def _zero_action_preload() -> float:
     """Holder-wrist force after 20 zero-action steps (the over-constraint probe)."""
     env = make_coinsert_env(
-        condition_id="coinsert_matched_reference", num_envs=1, render_backend="none",
-        peg_clearance_m=1.0e-3, episode_length=_EP,
+        condition_id="coinsert_matched_reference",
+        num_envs=1,
+        render_backend="none",
+        peg_clearance_m=1.0e-3,
+        episode_length=_EP,
     )
     e = env.unwrapped
     env.reset(seed=0)
@@ -83,8 +86,11 @@ def _matched_rollout() -> list[dict]:
     rows: list[dict] = []
     for seed in _SEEDS:
         env = make_coinsert_env(
-            condition_id="coinsert_matched_reference", num_envs=1, render_backend="none",
-            peg_clearance_m=1.0e-3, episode_length=_EP,
+            condition_id="coinsert_matched_reference",
+            num_envs=1,
+            render_backend="none",
+            peg_clearance_m=1.0e-3,
+            episode_length=_EP,
         )
         e = env.unwrapped
         base = load_partner(PartnerSpec("coinsert_base_inserter", seed, None, None, dict(_EGO)))
@@ -105,16 +111,18 @@ def _matched_rollout() -> list[dict]:
             if bool(np.asarray(term).reshape(-1)[0]):
                 break
         sz1 = float(e.receptacle.pose.p[0, 2])
-        rows.append({
-            "seed": seed,
-            "depth_mm": round(float(info["seated_depth_m"][0]) * 1000, 1),
-            "align_deg": round(float(info["axis_align_deg"][0]), 1),
-            "seated": bool(np.asarray(info["seated"]).reshape(-1)[0]),
-            "success_geom": bool(np.asarray(info["success_geom"]).reshape(-1)[0]),
-            "peak_insert_n": round(float(info["peak_insert_force_n"][0]), 1),
-            "peak_couple_n": round(float(info["peak_couple_wrench_n"][0]), 1),
-            "assembly_sink_mm": round((sz0 - sz1) * 1000, 1),
-        })
+        rows.append(
+            {
+                "seed": seed,
+                "depth_mm": round(float(info["seated_depth_m"][0]) * 1000, 1),
+                "align_deg": round(float(info["axis_align_deg"][0]), 1),
+                "seated": bool(np.asarray(info["seated"]).reshape(-1)[0]),
+                "success_geom": bool(np.asarray(info["success_geom"]).reshape(-1)[0]),
+                "peak_insert_n": round(float(info["peak_insert_force_n"][0]), 1),
+                "peak_couple_n": round(float(info["peak_couple_wrench_n"][0]), 1),
+                "assembly_sink_mm": round((sz0 - sz1) * 1000, 1),
+            }
+        )
         env.close()
     return rows
 
@@ -122,8 +130,11 @@ def _matched_rollout() -> list[dict]:
 def _single_inserter() -> dict:
     """Two-robot-necessity control: single inserter + free unheld socket ⇒ success ≈ 0."""
     env = make_coinsert_env(
-        condition_id="coinsert_single_inserter_positive_control", num_envs=1,
-        render_backend="none", peg_clearance_m=1.0e-3, episode_length=_EP,
+        condition_id="coinsert_single_inserter_positive_control",
+        num_envs=1,
+        render_backend="none",
+        peg_clearance_m=1.0e-3,
+        episode_length=_EP,
     )
     base = load_partner(PartnerSpec("coinsert_base_inserter", 0, None, None, dict(_EGO)))
     obs, _ = env.reset(seed=0)
@@ -157,7 +168,9 @@ def main() -> int:
         "schema": "coinsert_s2_fixedlink_probe/v1",
         "stage": "S2 — fixed-link articulation attach (the last bounded SAPIEN attempt)",
         "design": {
-            "seeds": list(_SEEDS), "episode_length": _EP, "clearance_m": 1.0e-3,
+            "seeds": list(_SEEDS),
+            "episode_length": _EP,
+            "clearance_m": 1.0e-3,
             "attach": "socket = fixed child link of the holder panda_hand (no create_drive)",
         },
         "over_constraint": {
