@@ -9,13 +9,15 @@ no env behaviour (P2 wrapper-only, ADR-001 §Decision) and routes every
 random draw through :func:`concerto.training.seeding.derive_substream`
 (ADR-002 P6 — a bundle is byte-reproducible from its seed schedule).
 
-Scope (v1): CPU-only tasks with the dict-action Gymnasium surface and
-a per-task success predicate registered in
-:data:`SUCCESS_PREDICATES` — today ``mpe_cooperative_push``, the
-Tier-0 rig diagnostic the ADR-028 smoke evaluation pins. SAPIEN-tier
-tasks join as their admission campaigns land (ADR-027 §Admission
-protocol); an unsupported task loud-fails at dispatch, never
-half-runs.
+Scope: CPU tasks with the dict-action Gymnasium surface and a per-task
+success predicate registered in :data:`SUCCESS_PREDICATES` — today
+``mpe_cooperative_push``, the Tier-0 rig diagnostic the ADR-028 smoke
+evaluation pins — plus, per the ADR-027 admission-then-benchmark
+sequencing, the SAPIEN-tier ``cocarry`` task via its dedicated CB-06
+driver (:mod:`chamber.benchmarks.cocarry_eval`; telemetry-backed
+success + the canonical stress instrument). Other tasks join as their
+admission campaigns land; an unsupported task loud-fails at dispatch,
+never half-runs.
 """
 
 from __future__ import annotations
@@ -37,9 +39,12 @@ if TYPE_CHECKING:
 
     from chamber.partners.sets import PartnerMemberSpec, PartnerSetSpec
 
-#: Ego policy ids ``chamber-eval run --policy`` accepts (ADR-011 as
-#: amended: ``random`` is the B-RND floor baseline).
-POLICY_IDS: tuple[str, ...] = ("random",)
+#: Ego policy ids ``chamber-eval run --policy`` accepts on the generic
+#: (final-reward-predicate) path (ADR-011 as amended: ``random`` is the
+#: B-RND floor, ``static`` the B-STAT stationary seat). Task-specific
+#: drivers (co-carry: :mod:`chamber.benchmarks.cocarry_eval`) own their
+#: additional ids, including the checkpoint-loading learned rows.
+POLICY_IDS: tuple[str, ...] = ("random", "static")
 
 #: Substream label pattern for the random ego (ADR-002 P6). The
 #: ``{seed}.{episode}`` leaf scopes each episode's stream.
@@ -105,6 +110,28 @@ class RandomEgoPolicy:
         return self._rng.uniform(-1.0, 1.0, size=self._action_dim).astype(np.float32)
 
 
+class StaticEgoPolicy:
+    """The B-STAT stationary seat (ADR-011 §Decision as amended).
+
+    Emits the zero action regardless of observation — the "partner
+    carries it alone" control that separates partner competence from
+    ego contribution. Deterministic and stateless by construction
+    (ADR-002 P6 trivially holds).
+    """
+
+    def __init__(self, *, action_dim: int) -> None:
+        """Bind the action dimensionality (ADR-011 §Decision as amended)."""
+        self._action_dim = action_dim
+
+    def reset(self, *, seed: int, episode: int) -> None:
+        """No per-episode state (ADR-011 B-STAT; ADR-002 P6)."""
+        del seed, episode
+
+    def act(self, obs: Any) -> NDArray[np.float32]:  # noqa: ANN401, ARG002 — env-specific obs; the stationary seat ignores it by definition
+        """The zero action (ADR-011 B-STAT)."""
+        return np.zeros(self._action_dim, dtype=np.float32)
+
+
 def build_ego_policy(policy_id: str, *, action_dim: int, root_seed: int) -> EgoPolicy:
     """Construct the named ego policy (ADR-011 §Decision as amended).
 
@@ -113,6 +140,8 @@ def build_ego_policy(policy_id: str, *, action_dim: int, root_seed: int) -> EgoP
     """
     if policy_id == "random":
         return RandomEgoPolicy(action_dim=action_dim, root_seed=root_seed)
+    if policy_id == "static":
+        return StaticEgoPolicy(action_dim=action_dim)
     known = ", ".join(POLICY_IDS)
     msg = f"unknown policy id {policy_id!r}; known policy ids: {known}"
     raise KeyError(msg)
@@ -141,6 +170,7 @@ def run_task_episodes(
     task_version: int | None = None,
     policy_id: str,
     partner_name: str,
+    partner_weights: str | None = None,
     seeds: list[int],
     episodes_per_seed: int,
     root_seed: int = 0,
@@ -162,8 +192,23 @@ def run_task_episodes(
             bundle runner (no success predicate / no env factory).
     """
     spec = chamber.tasks.get(task_id, version=task_version)
+    if spec.task_id == "cocarry":
+        # CB-06 (ADR-011 §Decision as amended): the co-carry rows run
+        # through their dedicated SAPIEN-gated driver — telemetry-backed
+        # success + stress instrument, fresh env per episode. Lazy import
+        # (P2 wrapper-only; ADR-001 §Risks).
+        from chamber.benchmarks.cocarry_eval import run_cocarry_episodes_adhoc
+
+        return run_cocarry_episodes_adhoc(
+            policy_id=policy_id,
+            partner_name=partner_name,
+            partner_weights=partner_weights,
+            seeds=seeds,
+            episodes_per_seed=episodes_per_seed,
+            root_seed=root_seed,
+        )
     if spec.task_id not in SUCCESS_PREDICATES:
-        supported = ", ".join(sorted(SUCCESS_PREDICATES))
+        supported = ", ".join(sorted([*SUCCESS_PREDICATES, "cocarry"]))
         msg = (
             f"task {spec.slug} is not runnable by the bundle runner yet "
             f"(no success predicate); supported tasks: {supported}"
@@ -251,8 +296,22 @@ def run_task_episodes_for_set(
     from chamber.benchmarks.partner_probe import member_material
 
     spec = chamber.tasks.get(task_id, version=task_version)
+    if spec.task_id == "cocarry":
+        # CB-06 (ADR-011 §Decision as amended): the co-carry leaderboard
+        # grid runs through its dedicated SAPIEN-gated driver. Lazy import
+        # (P2 wrapper-only; ADR-001 §Risks).
+        from chamber.benchmarks.cocarry_eval import run_cocarry_episodes_for_set
+
+        return run_cocarry_episodes_for_set(
+            policy_id=policy_id,
+            set_spec=set_spec,
+            members=members,
+            seeds=seeds,
+            episodes_per_seed=episodes_per_seed,
+            root_seed=root_seed,
+        )
     if spec.task_id not in SUCCESS_PREDICATES:
-        supported = ", ".join(sorted(SUCCESS_PREDICATES))
+        supported = ", ".join(sorted([*SUCCESS_PREDICATES, "cocarry"]))
         msg = (
             f"task {spec.slug} is not runnable by the bundle runner yet "
             f"(no success predicate); supported tasks: {supported}"
@@ -322,6 +381,7 @@ __all__ = [
     "SUCCESS_PREDICATES",
     "EgoPolicy",
     "RandomEgoPolicy",
+    "StaticEgoPolicy",
     "build_ego_policy",
     "build_partner_spec",
     "run_task_episodes",

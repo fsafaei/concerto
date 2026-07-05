@@ -1,0 +1,82 @@
+# SPDX-License-Identifier: Apache-2.0
+# Hydra config for the B-BLIND co-carry baseline training cell
+# (ADR-011 §Decision as amended 2026-07-05; ADR-027 §Reporting rules;
+# ADR-026 §Decision 1-2 + §Decision 4; ADR-002 §Decisions).
+#
+# B-BLIND is cocarry_matched.yaml with EXACTLY ONE change:
+# env.mask_partner_obs=true layers chamber.envs.cocarry_blind_mask
+# .CoCarryEgoBlindMask outside the ego-state synthesizer, zeroing the
+# partner-state + coupling-feedback slice (indices [18, 43) of the 46-D
+# ego state: partner_qpos 18:27, partner_qvel 27:36, bar_pose 36:43).
+# The ego keeps [ego_qpos, ego_qvel, goal_pos] — the same information
+# set as the scripted A3 blind ego (chamber.partners.cocarry_blind).
+# No trainer changes; the actor input width is unchanged, so B-BLIND
+# and B-AHT checkpoints stay layout-compatible. Every other knob is
+# held identical to the B-AHT cell so the preregistered
+# B-BLIND-vs-coupling-aware margin isolates the value of coupling
+# feedback (ADR-011: B-BLIND doubles as admission check A3).
+#
+# Validates against concerto.training.config.EgoAHTConfig.
+
+algo: ego_aht_happo
+seed: 0
+# Matches cocarry_matched.yaml (the Rung-2 committed budget). The CB-06
+# campaign prereg pins the per-row cap; do not raise here.
+total_frames: 300000
+checkpoint_every: 50000
+artifacts_root: ./artifacts
+log_dir: ./logs
+
+wandb:
+  enabled: false
+  project: concerto-chamber
+
+env:
+  task: cocarry
+  episode_length: 320
+  agent_uids: [panda_wristcam, panda_partner]
+  condition_id: cocarry_matched_panda_pair
+  num_envs: 1
+  # THE B-BLIND SWITCH (ADR-011 §Decision as amended). Everything else
+  # in this file mirrors cocarry_matched.yaml verbatim.
+  mask_partner_obs: true
+
+# Frozen training partner: identical to the B-AHT cell (the matched
+# hand-written impedance controller; ADR-009 / I3).
+partner:
+  class_name: cocarry_impedance
+  seed: 0
+  checkpoint_step: null
+  weights_uri: null
+  extra:
+    uid: panda_partner
+    base_xyz: "0.5,0.0,0.0"
+    base_yaw_deg: "180"
+    end_sign: "-1"
+    bar_half_len: "0.115"
+
+# PPO hygiene: verbatim from cocarry_matched.yaml (re-grounded
+# 2026-06-18) so the B-BLIND margin is attributable to the mask alone.
+happo:
+  lr: 1.5e-4
+  gamma: 0.9
+  gae_lambda: 0.95
+  clip_eps: 0.1
+  n_epochs: 4
+  rollout_length: 320
+  batch_size: 320
+  hidden_dim: 256
+
+runtime:
+  device: cuda
+  deterministic_torch: false
+
+safety:
+  enabled: false
+
+shaping:
+  settle_alpha: 0.0
+  transport_pbrs_coeff: 1.0
+
+exploratory:
+  partner_static_override: false

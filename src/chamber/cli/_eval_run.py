@@ -100,6 +100,16 @@ def _build_parser() -> argparse.ArgumentParser:
     )
     group.add_argument("--partner", help="Single partner registry name (ad-hoc set).")
     parser.add_argument(
+        "--partner-weights",
+        default=None,
+        help=(
+            "Checkpoint URI (local://artifacts/...) for a frozen learned "
+            "--partner class — the B-JOINT evaluated-as-a-pair path "
+            "(ADR-011 §Decision as amended: pass the pair checkpoint here "
+            "with --partner frozen_cocarry_joint)."
+        ),
+    )
+    parser.add_argument(
         "--include-private",
         action="store_true",
         help=(
@@ -189,6 +199,9 @@ def _run_impl(args: argparse.Namespace, argv: list[str]) -> int:
     if args.include_private and args.partner_set is None:
         msg = "--include-private only applies to --partner-set runs"
         raise _CliExitError(msg, _USAGE_EXIT_CODE)
+    if args.partner_weights is not None and args.partner is None:
+        msg = "--partner-weights only applies to single --partner runs"
+        raise _CliExitError(msg, _USAGE_EXIT_CODE)
     try:
         seeds = _parse_seeds(args.seeds)
     except ValueError as exc:
@@ -237,6 +250,7 @@ def _run_impl(args: argparse.Namespace, argv: list[str]) -> int:
                 task_version=task_version,
                 policy_id=args.policy,
                 partner_name=args.partner,
+                partner_weights=args.partner_weights,
                 seeds=seeds,
                 episodes_per_seed=args.episodes,
                 root_seed=args.root_seed,

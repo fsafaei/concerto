@@ -99,6 +99,16 @@ class EnvConfig(_FrozenModel):
             criteria are untouched. The training-time safety stack is
             not batched in this slice: ``num_envs > 1`` with
             ``safety.enabled=True`` loud-fails in ``train()``.
+        mask_partner_obs: B-BLIND (ADR-011 §Decision as amended
+            2026-07-05): when ``True``, the env builder layers the
+            task's partner-blind observation mask outside the ego
+            ``state`` synthesizer, zeroing the partner-state +
+            coupling-feedback slice (co-carry: indices ``[18, 43)`` —
+            see :mod:`chamber.envs.cocarry_blind_mask`). A pure
+            observation transform — no trainer changes; the actor
+            keeps its input width so B-BLIND / B-AHT checkpoints stay
+            layout-compatible. ``False`` (default) is the historical
+            coupling-aware cell, byte-identical.
     """
 
     task: str
@@ -106,6 +116,7 @@ class EnvConfig(_FrozenModel):
     agent_uids: tuple[str, str] = ("ego", "partner")
     condition_id: str | None = None
     num_envs: int = Field(default=1, ge=1)
+    mask_partner_obs: bool = False
 
     @field_validator("agent_uids", mode="before")
     @classmethod

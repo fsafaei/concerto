@@ -36,6 +36,7 @@ from chamber.cli import (
     _spike_run,
     _spike_summarize_month3,
     _spike_train,
+    _spike_train_joint,
     _spike_verify_prereg,
 )
 
@@ -53,6 +54,7 @@ if TYPE_CHECKING:
 # ``_SUBCOMMANDS`` description string.
 _DISPATCH: dict[str, Callable[[argparse.Namespace], int]] = {
     "train": _spike_train.run,
+    "train-joint": _spike_train_joint.run,
     "verify-prereg": _spike_verify_prereg.run,
     "run": _spike_run.run,
     "next-stage": _spike_next_stage.run,
@@ -73,6 +75,7 @@ def _build_parser() -> argparse.ArgumentParser:
     )
     sub = parser.add_subparsers(dest="command", required=False)
     _spike_train.add_parser(sub)
+    _spike_train_joint.add_parser(sub)
     _spike_verify_prereg.add_parser(sub)
     _spike_run.add_parser(sub)
     _spike_next_stage.add_parser(sub)
