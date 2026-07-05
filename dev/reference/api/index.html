@@ -5086,6 +5086,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#chamber.evaluation.BundleSummary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        BundleSummary
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#chamber.evaluation.ConditionPair" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -5163,6 +5174,28 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#chamber.evaluation.PlatformFingerprint" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        PlatformFingerprint
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#chamber.evaluation.PreregDocument" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        PreregDocument
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#chamber.evaluation.PreregistrationError" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -5198,6 +5231,28 @@
         
       </ul>
     </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#chamber.evaluation.ResultBundle" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ResultBundle
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#chamber.evaluation.SeedSchedule" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SeedSchedule
+      
+    </span>
+  </a>
   
 </li>
       
@@ -5283,6 +5338,28 @@
     <span class="md-ellipsis">
       
         load_prereg
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#chamber.evaluation.load_prereg_document" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        load_prereg_document
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#chamber.evaluation.load_run_archive" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        load_run_archive
       
     </span>
   </a>
@@ -10698,6 +10775,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#chamber.evaluation.BundleSummary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        BundleSummary
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#chamber.evaluation.ConditionPair" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -10775,6 +10863,28 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#chamber.evaluation.PlatformFingerprint" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        PlatformFingerprint
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#chamber.evaluation.PreregDocument" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        PreregDocument
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#chamber.evaluation.PreregistrationError" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -10810,6 +10920,28 @@
         
       </ul>
     </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#chamber.evaluation.ResultBundle" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ResultBundle
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#chamber.evaluation.SeedSchedule" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SeedSchedule
+      
+    </span>
+  </a>
   
 </li>
       
@@ -10895,6 +11027,28 @@
     <span class="md-ellipsis">
       
         load_prereg
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#chamber.evaluation.load_prereg_document" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        load_prereg_document
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#chamber.evaluation.load_run_archive" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        load_run_archive
       
     </span>
   </a>
@@ -58762,6 +58916,185 @@ interval.</p>
 
 
 
+<h2 id="chamber.evaluation.BundleSummary" class="doc doc-heading">
+            <span class="doc doc-object-name doc-class-name">BundleSummary</span>
+
+
+</h2>
+
+
+    <div class="doc doc-contents ">
+            <p class="doc doc-class-bases">
+              Bases: <code><span title="pydantic.BaseModel">BaseModel</span></code></p>
+
+
+
+        <p>Recomputable summary statistics of a result bundle (ADR-028 §Decision 3).</p>
+<p><code>chamber-eval verify</code> recomputes these from the bundle's raw
+per-seed episode records and compares within tolerance — so every
+field here must be a pure function of the episode records plus the
+pinned bootstrap parameters (<code>n_resamples</code> +
+<code>bootstrap_root_seed</code> routed through <code>derive_substream</code>, so
+the recomputation is byte-reproducible per ADR-002 P6).</p>
+
+
+<p><span class="doc-section-title">Attributes:</span></p>
+    <ul>
+        <li class="doc-section-item field-body">
+          <b><code><span title="chamber.evaluation.BundleSummary.n_episodes">n_episodes</span></code></b>
+              (<code><span title="pydantic.NonNegativeInt">NonNegativeInt</span></code>)
+          –
+          <div class="doc-md-description">
+            <p>Total episode count across all seeds.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+          <b><code><span title="chamber.evaluation.BundleSummary.success_mean">success_mean</span></code></b>
+              (<code><span title="float">float</span></code>)
+          –
+          <div class="doc-md-description">
+            <p>Plain mean success over all episodes.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+          <b><code><span title="chamber.evaluation.BundleSummary.success_iqm">success_iqm</span></code></b>
+              (<code><span title="float">float</span></code>)
+          –
+          <div class="doc-md-description">
+            <p>Interquartile-mean success from the seed-cluster
+bootstrap (ADR-008 reporting discipline).</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+          <b><code><span title="chamber.evaluation.BundleSummary.success_ci_low">success_ci_low</span></code></b>
+              (<code><span title="float">float</span></code>)
+          –
+          <div class="doc-md-description">
+            <p>2.5th percentile of the cluster bootstrap.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+          <b><code><span title="chamber.evaluation.BundleSummary.success_ci_high">success_ci_high</span></code></b>
+              (<code><span title="float">float</span></code>)
+          –
+          <div class="doc-md-description">
+            <p>97.5th percentile of the cluster bootstrap.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+          <b><code><span title="chamber.evaluation.BundleSummary.n_resamples">n_resamples</span></code></b>
+              (<code><span title="pydantic.NonNegativeInt">NonNegativeInt</span></code>)
+          –
+          <div class="doc-md-description">
+            <p>Bootstrap resample count used.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+          <b><code><span title="chamber.evaluation.BundleSummary.bootstrap_root_seed">bootstrap_root_seed</span></code></b>
+              (<code><span title="int">int</span></code>)
+          –
+          <div class="doc-md-description">
+            <p>Root seed of the bootstrap substream.</p>
+          </div>
+        </li>
+    </ul>
+
+
+
+
+
+
+
+
+              <details class="mkdocstrings-source">
+                <summary>Source code in <code>src/chamber/evaluation/results.py</code></summary>
+                <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">349</span>
+<span class="normal">350</span>
+<span class="normal">351</span>
+<span class="normal">352</span>
+<span class="normal">353</span>
+<span class="normal">354</span>
+<span class="normal">355</span>
+<span class="normal">356</span>
+<span class="normal">357</span>
+<span class="normal">358</span>
+<span class="normal">359</span>
+<span class="normal">360</span>
+<span class="normal">361</span>
+<span class="normal">362</span>
+<span class="normal">363</span>
+<span class="normal">364</span>
+<span class="normal">365</span>
+<span class="normal">366</span>
+<span class="normal">367</span>
+<span class="normal">368</span>
+<span class="normal">369</span>
+<span class="normal">370</span>
+<span class="normal">371</span>
+<span class="normal">372</span>
+<span class="normal">373</span>
+<span class="normal">374</span>
+<span class="normal">375</span>
+<span class="normal">376</span>
+<span class="normal">377</span>
+<span class="normal">378</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">BundleSummary</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Recomputable summary statistics of a result bundle (ADR-028 §Decision 3).</span>
+
+<span class="sd">    ``chamber-eval verify`` recomputes these from the bundle&#39;s raw</span>
+<span class="sd">    per-seed episode records and compares within tolerance — so every</span>
+<span class="sd">    field here must be a pure function of the episode records plus the</span>
+<span class="sd">    pinned bootstrap parameters (``n_resamples`` +</span>
+<span class="sd">    ``bootstrap_root_seed`` routed through ``derive_substream``, so</span>
+<span class="sd">    the recomputation is byte-reproducible per ADR-002 P6).</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        n_episodes: Total episode count across all seeds.</span>
+<span class="sd">        success_mean: Plain mean success over all episodes.</span>
+<span class="sd">        success_iqm: Interquartile-mean success from the seed-cluster</span>
+<span class="sd">            bootstrap (ADR-008 reporting discipline).</span>
+<span class="sd">        success_ci_low: 2.5th percentile of the cluster bootstrap.</span>
+<span class="sd">        success_ci_high: 97.5th percentile of the cluster bootstrap.</span>
+<span class="sd">        n_resamples: Bootstrap resample count used.</span>
+<span class="sd">        bootstrap_root_seed: Root seed of the bootstrap substream.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">model_config</span> <span class="o">=</span> <span class="n">ConfigDict</span><span class="p">(</span><span class="n">extra</span><span class="o">=</span><span class="s2">&quot;forbid&quot;</span><span class="p">,</span> <span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="n">n_episodes</span><span class="p">:</span> <span class="n">NonNegativeInt</span>
+    <span class="n">success_mean</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">success_iqm</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">success_ci_low</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">success_ci_high</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">n_resamples</span><span class="p">:</span> <span class="n">NonNegativeInt</span>
+    <span class="n">bootstrap_root_seed</span><span class="p">:</span> <span class="nb">int</span>
+</code></pre></div></td></tr></table></div>
+              </details>
+
+
+
+<div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+
+
+  </div>
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-class">
+
+
+
 <h2 id="chamber.evaluation.ConditionPair" class="doc doc-heading">
             <span class="doc doc-object-name doc-class-name">ConditionPair</span>
 
@@ -58811,14 +59144,7 @@ must match the labels in the pre-registration YAML.</p>
 
               <details class="mkdocstrings-source">
                 <summary>Source code in <code>src/chamber/evaluation/results.py</code></summary>
-                <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">106</span>
-<span class="normal">107</span>
-<span class="normal">108</span>
-<span class="normal">109</span>
-<span class="normal">110</span>
-<span class="normal">111</span>
-<span class="normal">112</span>
-<span class="normal">113</span>
+                <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">113</span>
 <span class="normal">114</span>
 <span class="normal">115</span>
 <span class="normal">116</span>
@@ -58827,7 +59153,14 @@ must match the labels in the pre-registration YAML.</p>
 <span class="normal">119</span>
 <span class="normal">120</span>
 <span class="normal">121</span>
-<span class="normal">122</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">ConditionPair</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+<span class="normal">122</span>
+<span class="normal">123</span>
+<span class="normal">124</span>
+<span class="normal">125</span>
+<span class="normal">126</span>
+<span class="normal">127</span>
+<span class="normal">128</span>
+<span class="normal">129</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">ConditionPair</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Pre-registered homogeneous-vs-heterogeneous baseline pair (ADR-007 §Validation criteria).</span>
 
 <span class="sd">    Each Phase-0 spike runs at least one homogeneous baseline (the</span>
@@ -58986,14 +59319,7 @@ fallback fired at least once (separate from
 
               <details class="mkdocstrings-source">
                 <summary>Source code in <code>src/chamber/evaluation/results.py</code></summary>
-                <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">172</span>
-<span class="normal">173</span>
-<span class="normal">174</span>
-<span class="normal">175</span>
-<span class="normal">176</span>
-<span class="normal">177</span>
-<span class="normal">178</span>
-<span class="normal">179</span>
+                <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">179</span>
 <span class="normal">180</span>
 <span class="normal">181</span>
 <span class="normal">182</span>
@@ -59025,7 +59351,14 @@ fallback fired at least once (separate from
 <span class="normal">208</span>
 <span class="normal">209</span>
 <span class="normal">210</span>
-<span class="normal">211</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">ConditionResult</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+<span class="normal">211</span>
+<span class="normal">212</span>
+<span class="normal">213</span>
+<span class="normal">214</span>
+<span class="normal">215</span>
+<span class="normal">216</span>
+<span class="normal">217</span>
+<span class="normal">218</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">ConditionResult</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Aggregated result for one ADR-007 axis (ADR-008 §Decision).</span>
 
 <span class="sd">    Carries the homogeneous-vs-heterogeneous success-rate gap and the</span>
@@ -59202,14 +59535,7 @@ the SA spike (ADR-007 Stage 3).</p>
 
               <details class="mkdocstrings-source">
                 <summary>Source code in <code>src/chamber/evaluation/results.py</code></summary>
-                <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 63</span>
-<span class="normal"> 64</span>
-<span class="normal"> 65</span>
-<span class="normal"> 66</span>
-<span class="normal"> 67</span>
-<span class="normal"> 68</span>
-<span class="normal"> 69</span>
-<span class="normal"> 70</span>
+                <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 70</span>
 <span class="normal"> 71</span>
 <span class="normal"> 72</span>
 <span class="normal"> 73</span>
@@ -59242,7 +59568,14 @@ the SA spike (ADR-007 Stage 3).</p>
 <span class="normal">100</span>
 <span class="normal">101</span>
 <span class="normal">102</span>
-<span class="normal">103</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">EpisodeResult</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+<span class="normal">103</span>
+<span class="normal">104</span>
+<span class="normal">105</span>
+<span class="normal">106</span>
+<span class="normal">107</span>
+<span class="normal">108</span>
+<span class="normal">109</span>
+<span class="normal">110</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">EpisodeResult</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;A single evaluation episode of a CHAMBER spike (ADR-007 §Validation criteria).</span>
 
 <span class="sd">    The fields cover the three observable quantities the project</span>
@@ -59353,14 +59686,7 @@ entries that carry only the scalar.</p>
 
               <details class="mkdocstrings-source">
                 <summary>Source code in <code>src/chamber/evaluation/results.py</code></summary>
-                <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">240</span>
-<span class="normal">241</span>
-<span class="normal">242</span>
-<span class="normal">243</span>
-<span class="normal">244</span>
-<span class="normal">245</span>
-<span class="normal">246</span>
-<span class="normal">247</span>
+                <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">247</span>
 <span class="normal">248</span>
 <span class="normal">249</span>
 <span class="normal">250</span>
@@ -59368,7 +59694,14 @@ entries that carry only the scalar.</p>
 <span class="normal">252</span>
 <span class="normal">253</span>
 <span class="normal">254</span>
-<span class="normal">255</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">HRSVector</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+<span class="normal">255</span>
+<span class="normal">256</span>
+<span class="normal">257</span>
+<span class="normal">258</span>
+<span class="normal">259</span>
+<span class="normal">260</span>
+<span class="normal">261</span>
+<span class="normal">262</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">HRSVector</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Per-axis HRS vector emitted alongside the scalar (ADR-008 §Decision).</span>
 
 <span class="sd">    Reviewer P1-8 requires the vector to be emitted *unconditionally*</span>
@@ -59480,14 +59813,7 @@ aggregation (defaults to ADR-008 Option D ordering).</p>
 
               <details class="mkdocstrings-source">
                 <summary>Source code in <code>src/chamber/evaluation/results.py</code></summary>
-                <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">214</span>
-<span class="normal">215</span>
-<span class="normal">216</span>
-<span class="normal">217</span>
-<span class="normal">218</span>
-<span class="normal">219</span>
-<span class="normal">220</span>
-<span class="normal">221</span>
+                <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">221</span>
 <span class="normal">222</span>
 <span class="normal">223</span>
 <span class="normal">224</span>
@@ -59503,7 +59829,14 @@ aggregation (defaults to ADR-008 Option D ordering).</p>
 <span class="normal">234</span>
 <span class="normal">235</span>
 <span class="normal">236</span>
-<span class="normal">237</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">HRSVectorEntry</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+<span class="normal">237</span>
+<span class="normal">238</span>
+<span class="normal">239</span>
+<span class="normal">240</span>
+<span class="normal">241</span>
+<span class="normal">242</span>
+<span class="normal">243</span>
+<span class="normal">244</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">HRSVectorEntry</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;One axis row of the HRS vector (ADR-008 §Decision).</span>
 
 <span class="sd">    ADR-008 binds the HRS bundle to the surviving ADR-007 axes and</span>
@@ -59649,14 +59982,7 @@ braking fallback (ADR-014 §Decision).</p>
 
               <details class="mkdocstrings-source">
                 <summary>Source code in <code>src/chamber/evaluation/results.py</code></summary>
-                <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">258</span>
-<span class="normal">259</span>
-<span class="normal">260</span>
-<span class="normal">261</span>
-<span class="normal">262</span>
-<span class="normal">263</span>
-<span class="normal">264</span>
-<span class="normal">265</span>
+                <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">265</span>
 <span class="normal">266</span>
 <span class="normal">267</span>
 <span class="normal">268</span>
@@ -59680,7 +60006,14 @@ braking fallback (ADR-014 §Decision).</p>
 <span class="normal">286</span>
 <span class="normal">287</span>
 <span class="normal">288</span>
-<span class="normal">289</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">LeaderboardEntry</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+<span class="normal">289</span>
+<span class="normal">290</span>
+<span class="normal">291</span>
+<span class="normal">292</span>
+<span class="normal">293</span>
+<span class="normal">294</span>
+<span class="normal">295</span>
+<span class="normal">296</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">LeaderboardEntry</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;A single method/result pair as it appears on the CHAMBER leaderboard (ADR-008 §Decision).</span>
 
 <span class="sd">    Ranks by ``hrs_scalar``. The accompanying :class:`HRSVector` is</span>
@@ -59883,6 +60216,337 @@ matched pairs rather than on pooled means (reviewer P1-9).</p>
 
 
 
+<h2 id="chamber.evaluation.PlatformFingerprint" class="doc doc-heading">
+            <span class="doc doc-object-name doc-class-name">PlatformFingerprint</span>
+
+
+</h2>
+
+
+    <div class="doc doc-contents ">
+            <p class="doc doc-class-bases">
+              Bases: <code><span title="pydantic.BaseModel">BaseModel</span></code></p>
+
+
+
+        <p>Platform fingerprint of a result bundle (ADR-028 §Decision 1).</p>
+<p>ADR-028: "OS, Python, key dependency versions, device". CPU-only
+verification (ADR-028 §Decision 3) never <em>compares</em> this block —
+it is provenance for the reader, not a reproducibility gate.</p>
+
+
+<p><span class="doc-section-title">Attributes:</span></p>
+    <ul>
+        <li class="doc-section-item field-body">
+          <b><code><span title="chamber.evaluation.PlatformFingerprint.os">os</span></code></b>
+              (<code><span title="str">str</span></code>)
+          –
+          <div class="doc-md-description">
+            <p><code>platform.platform()</code> string.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+          <b><code><span title="chamber.evaluation.PlatformFingerprint.python">python</span></code></b>
+              (<code><span title="str">str</span></code>)
+          –
+          <div class="doc-md-description">
+            <p><code>platform.python_version()</code> string.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+          <b><code><span title="chamber.evaluation.PlatformFingerprint.numpy">numpy</span></code></b>
+              (<code><span title="str">str</span></code>)
+          –
+          <div class="doc-md-description">
+            <p>Installed numpy version.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+          <b><code><span title="chamber.evaluation.PlatformFingerprint.torch">torch</span></code></b>
+              (<code><span title="str">str</span> | None</code>)
+          –
+          <div class="doc-md-description">
+            <p>Installed torch version, or <code>None</code> if absent.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+          <b><code><span title="chamber.evaluation.PlatformFingerprint.device">device</span></code></b>
+              (<code><span title="str">str</span></code>)
+          –
+          <div class="doc-md-description">
+            <p>Compute device the run used (GPU name or <code>"cpu"</code>).</p>
+          </div>
+        </li>
+    </ul>
+
+
+
+
+
+
+
+
+              <details class="mkdocstrings-source">
+                <summary>Source code in <code>src/chamber/evaluation/results.py</code></summary>
+                <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">325</span>
+<span class="normal">326</span>
+<span class="normal">327</span>
+<span class="normal">328</span>
+<span class="normal">329</span>
+<span class="normal">330</span>
+<span class="normal">331</span>
+<span class="normal">332</span>
+<span class="normal">333</span>
+<span class="normal">334</span>
+<span class="normal">335</span>
+<span class="normal">336</span>
+<span class="normal">337</span>
+<span class="normal">338</span>
+<span class="normal">339</span>
+<span class="normal">340</span>
+<span class="normal">341</span>
+<span class="normal">342</span>
+<span class="normal">343</span>
+<span class="normal">344</span>
+<span class="normal">345</span>
+<span class="normal">346</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">PlatformFingerprint</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Platform fingerprint of a result bundle (ADR-028 §Decision 1).</span>
+
+<span class="sd">    ADR-028: &quot;OS, Python, key dependency versions, device&quot;. CPU-only</span>
+<span class="sd">    verification (ADR-028 §Decision 3) never *compares* this block —</span>
+<span class="sd">    it is provenance for the reader, not a reproducibility gate.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        os: ``platform.platform()`` string.</span>
+<span class="sd">        python: ``platform.python_version()`` string.</span>
+<span class="sd">        numpy: Installed numpy version.</span>
+<span class="sd">        torch: Installed torch version, or ``None`` if absent.</span>
+<span class="sd">        device: Compute device the run used (GPU name or ``&quot;cpu&quot;``).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">model_config</span> <span class="o">=</span> <span class="n">ConfigDict</span><span class="p">(</span><span class="n">extra</span><span class="o">=</span><span class="s2">&quot;forbid&quot;</span><span class="p">,</span> <span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="n">os</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">python</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">numpy</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">torch</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span>
+    <span class="n">device</span><span class="p">:</span> <span class="nb">str</span>
+</code></pre></div></td></tr></table></div>
+              </details>
+
+
+
+<div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+
+
+  </div>
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-class">
+
+
+
+<h2 id="chamber.evaluation.PreregDocument" class="doc doc-heading">
+            <span class="doc doc-object-name doc-class-name">PreregDocument</span>
+
+
+</h2>
+
+
+    <div class="doc doc-contents ">
+            <p class="doc doc-class-bases">
+              Bases: <code><span title="pydantic.BaseModel">BaseModel</span></code></p>
+
+
+
+        <p>Document-form pre-registration (ADR-028 §Decision 2).</p>
+<p>The generalized Gate-0-style prereg: task-keyed, with arbitrary
+committed parameter blocks (frozen thresholds, verdict spaces,
+power/pre-check artefacts) and decision-rule text, locked to a git
+tag exactly like the axis-form. "The prereg is frozen" becomes
+machine-verifiable — :func:<code>verify_git_tag</code> runs the same
+file-blob-vs-tag-blob check Gate-0 did by hand.</p>
+
+
+<p><span class="doc-section-title">Attributes:</span></p>
+    <ul>
+        <li class="doc-section-item field-body">
+          <b><code><span title="chamber.evaluation.PreregDocument.schema_version">schema_version</span></code></b>
+              (<code><span title="int">int</span></code>)
+          –
+          <div class="doc-md-description">
+            <p>Pre-registration schema version
+(:data:<code>PREREG_SCHEMA_VERSION</code>).</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+          <b><code><span title="chamber.evaluation.PreregDocument.task_id">task_id</span></code></b>
+              (<code><span title="str">str</span></code>)
+          –
+          <div class="doc-md-description">
+            <p>ADR-027 task the prereg keys on.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+          <b><code><span title="chamber.evaluation.PreregDocument.git_tag">git_tag</span></code></b>
+              (<code><span title="str">str</span></code>)
+          –
+          <div class="doc-md-description">
+            <p>Tag locking the document (ADR-007 §Discipline).</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+          <b><code><span title="chamber.evaluation.PreregDocument.parameters">parameters</span></code></b>
+              (<code><span title="dict">dict</span>[<span title="str">str</span>, <span title="typing.Any">Any</span>]</code>)
+          –
+          <div class="doc-md-description">
+            <p>Arbitrary committed parameter blocks — thresholds,
+cell tables, power artefacts. Frozen verbatim; the tag
+blob check covers the bytes, this model only checks shape.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+          <b><code><span title="chamber.evaluation.PreregDocument.decision_rules">decision_rules</span></code></b>
+              (<code><span title="str">str</span></code>)
+          –
+          <div class="doc-md-description">
+            <p>The pre-committed decision-rule text (verdict
+space + stop rules).</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+          <b><code><span title="chamber.evaluation.PreregDocument.revision">revision</span></code></b>
+              (<code><span title="str">str</span></code>)
+          –
+          <div class="doc-md-description">
+            <p>Human-readable revision label (e.g. <code>"rev2"</code>).</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+          <b><code><span title="chamber.evaluation.PreregDocument.notes">notes</span></code></b>
+              (<code><span title="str">str</span></code>)
+          –
+          <div class="doc-md-description">
+            <p>Free-text caveats.</p>
+          </div>
+        </li>
+    </ul>
+
+
+
+
+
+
+
+
+              <details class="mkdocstrings-source">
+                <summary>Source code in <code>src/chamber/evaluation/prereg.py</code></summary>
+                <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">180</span>
+<span class="normal">181</span>
+<span class="normal">182</span>
+<span class="normal">183</span>
+<span class="normal">184</span>
+<span class="normal">185</span>
+<span class="normal">186</span>
+<span class="normal">187</span>
+<span class="normal">188</span>
+<span class="normal">189</span>
+<span class="normal">190</span>
+<span class="normal">191</span>
+<span class="normal">192</span>
+<span class="normal">193</span>
+<span class="normal">194</span>
+<span class="normal">195</span>
+<span class="normal">196</span>
+<span class="normal">197</span>
+<span class="normal">198</span>
+<span class="normal">199</span>
+<span class="normal">200</span>
+<span class="normal">201</span>
+<span class="normal">202</span>
+<span class="normal">203</span>
+<span class="normal">204</span>
+<span class="normal">205</span>
+<span class="normal">206</span>
+<span class="normal">207</span>
+<span class="normal">208</span>
+<span class="normal">209</span>
+<span class="normal">210</span>
+<span class="normal">211</span>
+<span class="normal">212</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">PreregDocument</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Document-form pre-registration (ADR-028 §Decision 2).</span>
+
+<span class="sd">    The generalized Gate-0-style prereg: task-keyed, with arbitrary</span>
+<span class="sd">    committed parameter blocks (frozen thresholds, verdict spaces,</span>
+<span class="sd">    power/pre-check artefacts) and decision-rule text, locked to a git</span>
+<span class="sd">    tag exactly like the axis-form. &quot;The prereg is frozen&quot; becomes</span>
+<span class="sd">    machine-verifiable — :func:`verify_git_tag` runs the same</span>
+<span class="sd">    file-blob-vs-tag-blob check Gate-0 did by hand.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        schema_version: Pre-registration schema version</span>
+<span class="sd">            (:data:`PREREG_SCHEMA_VERSION`).</span>
+<span class="sd">        task_id: ADR-027 task the prereg keys on.</span>
+<span class="sd">        git_tag: Tag locking the document (ADR-007 §Discipline).</span>
+<span class="sd">        parameters: Arbitrary committed parameter blocks — thresholds,</span>
+<span class="sd">            cell tables, power artefacts. Frozen verbatim; the tag</span>
+<span class="sd">            blob check covers the bytes, this model only checks shape.</span>
+<span class="sd">        decision_rules: The pre-committed decision-rule text (verdict</span>
+<span class="sd">            space + stop rules).</span>
+<span class="sd">        revision: Human-readable revision label (e.g. ``&quot;rev2&quot;``).</span>
+<span class="sd">        notes: Free-text caveats.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">model_config</span> <span class="o">=</span> <span class="n">ConfigDict</span><span class="p">(</span><span class="n">extra</span><span class="o">=</span><span class="s2">&quot;forbid&quot;</span><span class="p">,</span> <span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="n">schema_version</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">PREREG_SCHEMA_VERSION</span>
+    <span class="n">task_id</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">git_tag</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">parameters</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span>
+    <span class="n">decision_rules</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">revision</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+    <span class="n">notes</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+</code></pre></div></td></tr></table></div>
+              </details>
+
+
+
+<div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+
+
+  </div>
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-class">
+
+
+
 <h2 id="chamber.evaluation.PreregistrationError" class="doc doc-heading">
             <span class="doc doc-object-name doc-class-name">PreregistrationError</span>
 
@@ -59907,8 +60571,8 @@ matched pairs rather than on pooled means (reviewer P1-9).</p>
 
               <details class="mkdocstrings-source">
                 <summary>Source code in <code>src/chamber/evaluation/prereg.py</code></summary>
-                <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">160</span>
-<span class="normal">161</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">PreregistrationError</span><span class="p">(</span><span class="ne">RuntimeError</span><span class="p">):</span>
+                <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">215</span>
+<span class="normal">216</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">PreregistrationError</span><span class="p">(</span><span class="ne">RuntimeError</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Raised when a pre-registration fails the ADR-007 §Discipline check (ADR-007 §Discipline).&quot;&quot;&quot;</span>
 </code></pre></div></td></tr></table></div>
               </details>
@@ -60052,27 +60716,7 @@ local debug runs can still use a pooled iid baseline.</p>
 
               <details class="mkdocstrings-source">
                 <summary>Source code in <code>src/chamber/evaluation/prereg.py</code></summary>
-                <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 74</span>
-<span class="normal"> 75</span>
-<span class="normal"> 76</span>
-<span class="normal"> 77</span>
-<span class="normal"> 78</span>
-<span class="normal"> 79</span>
-<span class="normal"> 80</span>
-<span class="normal"> 81</span>
-<span class="normal"> 82</span>
-<span class="normal"> 83</span>
-<span class="normal"> 84</span>
-<span class="normal"> 85</span>
-<span class="normal"> 86</span>
-<span class="normal"> 87</span>
-<span class="normal"> 88</span>
-<span class="normal"> 89</span>
-<span class="normal"> 90</span>
-<span class="normal"> 91</span>
-<span class="normal"> 92</span>
-<span class="normal"> 93</span>
-<span class="normal"> 94</span>
+                <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 94</span>
 <span class="normal"> 95</span>
 <span class="normal"> 96</span>
 <span class="normal"> 97</span>
@@ -60135,7 +60779,27 @@ local debug runs can still use a pooled iid baseline.</p>
 <span class="normal">154</span>
 <span class="normal">155</span>
 <span class="normal">156</span>
-<span class="normal">157</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">PreregistrationSpec</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+<span class="normal">157</span>
+<span class="normal">158</span>
+<span class="normal">159</span>
+<span class="normal">160</span>
+<span class="normal">161</span>
+<span class="normal">162</span>
+<span class="normal">163</span>
+<span class="normal">164</span>
+<span class="normal">165</span>
+<span class="normal">166</span>
+<span class="normal">167</span>
+<span class="normal">168</span>
+<span class="normal">169</span>
+<span class="normal">170</span>
+<span class="normal">171</span>
+<span class="normal">172</span>
+<span class="normal">173</span>
+<span class="normal">174</span>
+<span class="normal">175</span>
+<span class="normal">176</span>
+<span class="normal">177</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">PreregistrationSpec</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Schema for an ADR-007 pre-registration YAML (ADR-007 §Discipline).</span>
 
 <span class="sd">    Required fields mirror the operational contract in</span>
@@ -60266,20 +60930,20 @@ local debug runs can still use a pooled iid baseline.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/chamber/evaluation/prereg.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">144</span>
-<span class="normal">145</span>
-<span class="normal">146</span>
-<span class="normal">147</span>
-<span class="normal">148</span>
-<span class="normal">149</span>
-<span class="normal">150</span>
-<span class="normal">151</span>
-<span class="normal">152</span>
-<span class="normal">153</span>
-<span class="normal">154</span>
-<span class="normal">155</span>
-<span class="normal">156</span>
-<span class="normal">157</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">normalised_axis</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">164</span>
+<span class="normal">165</span>
+<span class="normal">166</span>
+<span class="normal">167</span>
+<span class="normal">168</span>
+<span class="normal">169</span>
+<span class="normal">170</span>
+<span class="normal">171</span>
+<span class="normal">172</span>
+<span class="normal">173</span>
+<span class="normal">174</span>
+<span class="normal">175</span>
+<span class="normal">176</span>
+<span class="normal">177</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">normalised_axis</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Return the validated ADR-007 axis label (ADR-007 §Decision).</span>
 
 <span class="sd">    Raises:</span>
@@ -60298,6 +60962,481 @@ local debug runs can still use a pooled iid baseline.</p>
     </div>
 
 </div>
+
+
+
+  </div>
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-class">
+
+
+
+<h2 id="chamber.evaluation.ResultBundle" class="doc doc-heading">
+            <span class="doc doc-object-name doc-class-name">ResultBundle</span>
+
+
+</h2>
+
+
+    <div class="doc doc-contents ">
+            <p class="doc doc-class-bases">
+              Bases: <code><span title="pydantic.BaseModel">BaseModel</span></code></p>
+
+
+
+        <p>The v3 result-bundle record — <code>bundle.json</code> (ADR-028 §Decision 1).</p>
+<p>Wraps the existing :class:<code>EpisodeResult</code> machinery: the raw
+episode records live in the bundle directory's per-seed JSONL
+files (one :class:<code>EpisodeResult</code> JSON object per line), listed in
+<code>manifest</code>; <code>bundle.json</code> carries the provenance fields ADR-028
+authorizes plus the recomputable :class:<code>BundleSummary</code>.</p>
+
+
+<p><span class="doc-section-title">Attributes:</span></p>
+    <ul>
+        <li class="doc-section-item field-body">
+          <b><code><span title="chamber.evaluation.ResultBundle.schema_version">schema_version</span></code></b>
+              (<code><span title="int">int</span></code>)
+          –
+          <div class="doc-md-description">
+            <p>Result-archive schema version (v3;
+:data:<code>SCHEMA_VERSION</code>).</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+          <b><code><span title="chamber.evaluation.ResultBundle.task_id">task_id</span></code></b>
+              (<code><span title="str">str</span></code>)
+          –
+          <div class="doc-md-description">
+            <p>ADR-027 task identity (with <code>task_version</code>:
+<code>task_id@vN</code>).</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+          <b><code><span title="chamber.evaluation.ResultBundle.task_version">task_version</span></code></b>
+              (<code><span title="int">int</span></code>)
+          –
+          <div class="doc-md-description">
+            <p>ADR-027 task version.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+          <b><code><span title="chamber.evaluation.ResultBundle.policy_id">policy_id</span></code></b>
+              (<code><span title="str">str</span></code>)
+          –
+          <div class="doc-md-description">
+            <p>Ego policy reference the bundle evaluates (ADR-011
+baseline IDs; e.g. <code>"random"</code> = B-RND).</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+          <b><code><span title="chamber.evaluation.ResultBundle.partner_set_id">partner_set_id</span></code></b>
+              (<code><span title="str">str</span></code>)
+          –
+          <div class="doc-md-description">
+            <p>Partner-set identity (ADR-009 as amended).
+Ad-hoc single-partner runs use <code>"adhoc:&lt;registry-name&gt;"</code>
+until partner sets ship.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+          <b><code><span title="chamber.evaluation.ResultBundle.partner_hashes">partner_hashes</span></code></b>
+              (<code><span title="dict">dict</span>[<span title="str">str</span>, <span title="str">str</span>]</code>)
+          –
+          <div class="doc-md-description">
+            <p>Per-member partner identity hashes —
+<code>PartnerSpec.partner_id</code> (SHA-256 custody hash, ADR-018)
+keyed by member name.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+          <b><code><span title="chamber.evaluation.ResultBundle.git_sha">git_sha</span></code></b>
+              (<code><span title="str">str</span></code>)
+          –
+          <div class="doc-md-description">
+            <p>Launch commit, captured once per run (ADR-002
+§Rev 2026-06-12 process-cache discipline).</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+          <b><code><span title="chamber.evaluation.ResultBundle.dirty">dirty</span></code></b>
+              (<code><span title="bool">bool</span></code>)
+          –
+          <div class="doc-md-description">
+            <p><code>True</code> iff the bundle was produced from a dirty
+working tree under <code>--allow-dirty</code>. Dirty bundles are
+ineligible for leaderboard use (ADR-028 §Rev 2026-07-05).</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+          <b><code><span title="chamber.evaluation.ResultBundle.package_version">package_version</span></code></b>
+              (<code><span title="str">str</span></code>)
+          –
+          <div class="doc-md-description">
+            <p>Installed <code>concerto-multirobot</code>
+distribution version.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+          <b><code><span title="chamber.evaluation.ResultBundle.seed_schedule">seed_schedule</span></code></b>
+              (<code><a class="autorefs autorefs-internal" title="SeedSchedule (chamber.evaluation.results.SeedSchedule)" href="#chamber.evaluation.SeedSchedule">SeedSchedule</a></code>)
+          –
+          <div class="doc-md-description">
+            <p>Explicit seed schedule (ADR-028 §Decision 1).</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+          <b><code><span title="chamber.evaluation.ResultBundle.repro_command">repro_command</span></code></b>
+              (<code><span title="str">str</span></code>)
+          –
+          <div class="doc-md-description">
+            <p>Exact reproduction invocation (the
+<code>repro_command.txt</code> convention promoted into the
+bundle).</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+          <b><code><span title="chamber.evaluation.ResultBundle.platform">platform</span></code></b>
+              (<code><a class="autorefs autorefs-internal" title="PlatformFingerprint (chamber.evaluation.results.PlatformFingerprint)" href="#chamber.evaluation.PlatformFingerprint">PlatformFingerprint</a></code>)
+          –
+          <div class="doc-md-description">
+            <p>Platform fingerprint (ADR-028 §Decision 1).</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+          <b><code><span title="chamber.evaluation.ResultBundle.manifest">manifest</span></code></b>
+              (<code><span title="dict">dict</span>[<span title="str">str</span>, <span title="str">str</span>]</code>)
+          –
+          <div class="doc-md-description">
+            <p>SHA-256 hex digest of every file in the bundle
+directory except <code>bundle.json</code> itself (which cannot
+contain its own hash), keyed by file name.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+          <b><code><span title="chamber.evaluation.ResultBundle.summary">summary</span></code></b>
+              (<code><a class="autorefs autorefs-internal" title="BundleSummary (chamber.evaluation.results.BundleSummary)" href="#chamber.evaluation.BundleSummary">BundleSummary</a></code>)
+          –
+          <div class="doc-md-description">
+            <p>Recomputable summary statistics (ADR-028 §Decision 3).</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+          <b><code><span title="chamber.evaluation.ResultBundle.prereg_git_tag">prereg_git_tag</span></code></b>
+              (<code><span title="str">str</span> | None</code>)
+          –
+          <div class="doc-md-description">
+            <p>Pre-registration tag the run was gated on, or
+<code>None</code> for unpreregistered (diagnostic) runs.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+          <b><code><span title="chamber.evaluation.ResultBundle.prereg_blob_sha">prereg_blob_sha</span></code></b>
+              (<code><span title="str">str</span> | None</code>)
+          –
+          <div class="doc-md-description">
+            <p>Verified prereg blob SHA at the tag, or
+<code>None</code>.</p>
+          </div>
+        </li>
+    </ul>
+
+
+
+
+
+
+
+
+              <details class="mkdocstrings-source">
+                <summary>Source code in <code>src/chamber/evaluation/results.py</code></summary>
+                <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">381</span>
+<span class="normal">382</span>
+<span class="normal">383</span>
+<span class="normal">384</span>
+<span class="normal">385</span>
+<span class="normal">386</span>
+<span class="normal">387</span>
+<span class="normal">388</span>
+<span class="normal">389</span>
+<span class="normal">390</span>
+<span class="normal">391</span>
+<span class="normal">392</span>
+<span class="normal">393</span>
+<span class="normal">394</span>
+<span class="normal">395</span>
+<span class="normal">396</span>
+<span class="normal">397</span>
+<span class="normal">398</span>
+<span class="normal">399</span>
+<span class="normal">400</span>
+<span class="normal">401</span>
+<span class="normal">402</span>
+<span class="normal">403</span>
+<span class="normal">404</span>
+<span class="normal">405</span>
+<span class="normal">406</span>
+<span class="normal">407</span>
+<span class="normal">408</span>
+<span class="normal">409</span>
+<span class="normal">410</span>
+<span class="normal">411</span>
+<span class="normal">412</span>
+<span class="normal">413</span>
+<span class="normal">414</span>
+<span class="normal">415</span>
+<span class="normal">416</span>
+<span class="normal">417</span>
+<span class="normal">418</span>
+<span class="normal">419</span>
+<span class="normal">420</span>
+<span class="normal">421</span>
+<span class="normal">422</span>
+<span class="normal">423</span>
+<span class="normal">424</span>
+<span class="normal">425</span>
+<span class="normal">426</span>
+<span class="normal">427</span>
+<span class="normal">428</span>
+<span class="normal">429</span>
+<span class="normal">430</span>
+<span class="normal">431</span>
+<span class="normal">432</span>
+<span class="normal">433</span>
+<span class="normal">434</span>
+<span class="normal">435</span>
+<span class="normal">436</span>
+<span class="normal">437</span>
+<span class="normal">438</span>
+<span class="normal">439</span>
+<span class="normal">440</span>
+<span class="normal">441</span>
+<span class="normal">442</span>
+<span class="normal">443</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">ResultBundle</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;The v3 result-bundle record — ``bundle.json`` (ADR-028 §Decision 1).</span>
+
+<span class="sd">    Wraps the existing :class:`EpisodeResult` machinery: the raw</span>
+<span class="sd">    episode records live in the bundle directory&#39;s per-seed JSONL</span>
+<span class="sd">    files (one :class:`EpisodeResult` JSON object per line), listed in</span>
+<span class="sd">    ``manifest``; ``bundle.json`` carries the provenance fields ADR-028</span>
+<span class="sd">    authorizes plus the recomputable :class:`BundleSummary`.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        schema_version: Result-archive schema version (v3;</span>
+<span class="sd">            :data:`SCHEMA_VERSION`).</span>
+<span class="sd">        task_id: ADR-027 task identity (with ``task_version``:</span>
+<span class="sd">            ``task_id@vN``).</span>
+<span class="sd">        task_version: ADR-027 task version.</span>
+<span class="sd">        policy_id: Ego policy reference the bundle evaluates (ADR-011</span>
+<span class="sd">            baseline IDs; e.g. ``&quot;random&quot;`` = B-RND).</span>
+<span class="sd">        partner_set_id: Partner-set identity (ADR-009 as amended).</span>
+<span class="sd">            Ad-hoc single-partner runs use ``&quot;adhoc:&lt;registry-name&gt;&quot;``</span>
+<span class="sd">            until partner sets ship.</span>
+<span class="sd">        partner_hashes: Per-member partner identity hashes —</span>
+<span class="sd">            ``PartnerSpec.partner_id`` (SHA-256 custody hash, ADR-018)</span>
+<span class="sd">            keyed by member name.</span>
+<span class="sd">        git_sha: Launch commit, captured once per run (ADR-002</span>
+<span class="sd">            §Rev 2026-06-12 process-cache discipline).</span>
+<span class="sd">        dirty: ``True`` iff the bundle was produced from a dirty</span>
+<span class="sd">            working tree under ``--allow-dirty``. Dirty bundles are</span>
+<span class="sd">            ineligible for leaderboard use (ADR-028 §Rev 2026-07-05).</span>
+<span class="sd">        package_version: Installed ``concerto-multirobot``</span>
+<span class="sd">            distribution version.</span>
+<span class="sd">        seed_schedule: Explicit seed schedule (ADR-028 §Decision 1).</span>
+<span class="sd">        repro_command: Exact reproduction invocation (the</span>
+<span class="sd">            ``repro_command.txt`` convention promoted into the</span>
+<span class="sd">            bundle).</span>
+<span class="sd">        platform: Platform fingerprint (ADR-028 §Decision 1).</span>
+<span class="sd">        manifest: SHA-256 hex digest of every file in the bundle</span>
+<span class="sd">            directory except ``bundle.json`` itself (which cannot</span>
+<span class="sd">            contain its own hash), keyed by file name.</span>
+<span class="sd">        summary: Recomputable summary statistics (ADR-028 §Decision 3).</span>
+<span class="sd">        prereg_git_tag: Pre-registration tag the run was gated on, or</span>
+<span class="sd">            ``None`` for unpreregistered (diagnostic) runs.</span>
+<span class="sd">        prereg_blob_sha: Verified prereg blob SHA at the tag, or</span>
+<span class="sd">            ``None``.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">model_config</span> <span class="o">=</span> <span class="n">ConfigDict</span><span class="p">(</span><span class="n">extra</span><span class="o">=</span><span class="s2">&quot;forbid&quot;</span><span class="p">,</span> <span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="n">schema_version</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">SCHEMA_VERSION</span>
+    <span class="n">task_id</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">task_version</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">policy_id</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">partner_set_id</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">partner_hashes</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span>
+    <span class="n">git_sha</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">dirty</span><span class="p">:</span> <span class="nb">bool</span>
+    <span class="n">package_version</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">seed_schedule</span><span class="p">:</span> <span class="n">SeedSchedule</span>
+    <span class="n">repro_command</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">platform</span><span class="p">:</span> <span class="n">PlatformFingerprint</span>
+    <span class="n">manifest</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span>
+    <span class="n">summary</span><span class="p">:</span> <span class="n">BundleSummary</span>
+    <span class="n">prereg_git_tag</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">prereg_blob_sha</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+</code></pre></div></td></tr></table></div>
+              </details>
+
+
+
+<div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+
+
+  </div>
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-class">
+
+
+
+<h2 id="chamber.evaluation.SeedSchedule" class="doc doc-heading">
+            <span class="doc doc-object-name doc-class-name">SeedSchedule</span>
+
+
+</h2>
+
+
+    <div class="doc doc-contents ">
+            <p class="doc doc-class-bases">
+              Bases: <code><span title="pydantic.BaseModel">BaseModel</span></code></p>
+
+
+
+        <p>Explicit seed schedule of a result bundle (ADR-028 §Decision 1).</p>
+<p>ADR-028 requires "the explicit seed list/derivation, not just a
+root seed": <code>root_seed</code> is the run-level pin, <code>seeds</code> the
+exact per-episode-cluster seed list, and <code>substream_labels</code> the
+:func:<code>concerto.training.seeding.derive_substream</code> name patterns
+the run used (ADR-002 P6 — the schedule is re-derivable from these
+three facts alone).</p>
+
+
+<p><span class="doc-section-title">Attributes:</span></p>
+    <ul>
+        <li class="doc-section-item field-body">
+          <b><code><span title="chamber.evaluation.SeedSchedule.root_seed">root_seed</span></code></b>
+              (<code><span title="int">int</span></code>)
+          –
+          <div class="doc-md-description">
+            <p>Run-level root seed (ADR-002 P6).</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+          <b><code><span title="chamber.evaluation.SeedSchedule.seeds">seeds</span></code></b>
+              (<code><span title="list">list</span>[<span title="int">int</span>]</code>)
+          –
+          <div class="doc-md-description">
+            <p>Exact per-cluster seed list, in run order.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+          <b><code><span title="chamber.evaluation.SeedSchedule.episodes_per_seed">episodes_per_seed</span></code></b>
+              (<code><span title="pydantic.NonNegativeInt">NonNegativeInt</span></code>)
+          –
+          <div class="doc-md-description">
+            <p>Episodes run per seed cluster.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+          <b><code><span title="chamber.evaluation.SeedSchedule.substream_labels">substream_labels</span></code></b>
+              (<code><span title="list">list</span>[<span title="str">str</span>]</code>)
+          –
+          <div class="doc-md-description">
+            <p><code>derive_substream</code> name patterns used
+(<code>{seed}</code> / <code>{episode}</code> placeholders literal).</p>
+          </div>
+        </li>
+    </ul>
+
+
+
+
+
+
+
+
+              <details class="mkdocstrings-source">
+                <summary>Source code in <code>src/chamber/evaluation/results.py</code></summary>
+                <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">299</span>
+<span class="normal">300</span>
+<span class="normal">301</span>
+<span class="normal">302</span>
+<span class="normal">303</span>
+<span class="normal">304</span>
+<span class="normal">305</span>
+<span class="normal">306</span>
+<span class="normal">307</span>
+<span class="normal">308</span>
+<span class="normal">309</span>
+<span class="normal">310</span>
+<span class="normal">311</span>
+<span class="normal">312</span>
+<span class="normal">313</span>
+<span class="normal">314</span>
+<span class="normal">315</span>
+<span class="normal">316</span>
+<span class="normal">317</span>
+<span class="normal">318</span>
+<span class="normal">319</span>
+<span class="normal">320</span>
+<span class="normal">321</span>
+<span class="normal">322</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">SeedSchedule</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Explicit seed schedule of a result bundle (ADR-028 §Decision 1).</span>
+
+<span class="sd">    ADR-028 requires &quot;the explicit seed list/derivation, not just a</span>
+<span class="sd">    root seed&quot;: ``root_seed`` is the run-level pin, ``seeds`` the</span>
+<span class="sd">    exact per-episode-cluster seed list, and ``substream_labels`` the</span>
+<span class="sd">    :func:`concerto.training.seeding.derive_substream` name patterns</span>
+<span class="sd">    the run used (ADR-002 P6 — the schedule is re-derivable from these</span>
+<span class="sd">    three facts alone).</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        root_seed: Run-level root seed (ADR-002 P6).</span>
+<span class="sd">        seeds: Exact per-cluster seed list, in run order.</span>
+<span class="sd">        episodes_per_seed: Episodes run per seed cluster.</span>
+<span class="sd">        substream_labels: ``derive_substream`` name patterns used</span>
+<span class="sd">            (``{seed}`` / ``{episode}`` placeholders literal).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">model_config</span> <span class="o">=</span> <span class="n">ConfigDict</span><span class="p">(</span><span class="n">extra</span><span class="o">=</span><span class="s2">&quot;forbid&quot;</span><span class="p">,</span> <span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="n">root_seed</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">seeds</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span>
+    <span class="n">episodes_per_seed</span><span class="p">:</span> <span class="n">NonNegativeInt</span>
+    <span class="n">substream_labels</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
+</code></pre></div></td></tr></table></div>
+              </details>
+
+
+
+<div class="doc doc-children">
+
+
+
+
+
+
+
+
+
 
 
 
@@ -60558,14 +61697,7 @@ ADR-016 §Decision).</p>
 
               <details class="mkdocstrings-source">
                 <summary>Source code in <code>src/chamber/evaluation/results.py</code></summary>
-                <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">125</span>
-<span class="normal">126</span>
-<span class="normal">127</span>
-<span class="normal">128</span>
-<span class="normal">129</span>
-<span class="normal">130</span>
-<span class="normal">131</span>
-<span class="normal">132</span>
+                <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">132</span>
 <span class="normal">133</span>
 <span class="normal">134</span>
 <span class="normal">135</span>
@@ -60602,7 +61734,14 @@ ADR-016 §Decision).</p>
 <span class="normal">166</span>
 <span class="normal">167</span>
 <span class="normal">168</span>
-<span class="normal">169</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">SpikeRun</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+<span class="normal">169</span>
+<span class="normal">170</span>
+<span class="normal">171</span>
+<span class="normal">172</span>
+<span class="normal">173</span>
+<span class="normal">174</span>
+<span class="normal">175</span>
+<span class="normal">176</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">SpikeRun</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Full record of one ADR-007 staged spike (ADR-007 §Discipline; ADR-016 §Decision).</span>
 
 <span class="sd">    Carries the pre-registration provenance (``prereg_sha`` /</span>
@@ -61597,27 +62736,27 @@ the ADR-007 §3.4 shortlist.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/chamber/evaluation/prereg.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">164</span>
-<span class="normal">165</span>
-<span class="normal">166</span>
-<span class="normal">167</span>
-<span class="normal">168</span>
-<span class="normal">169</span>
-<span class="normal">170</span>
-<span class="normal">171</span>
-<span class="normal">172</span>
-<span class="normal">173</span>
-<span class="normal">174</span>
-<span class="normal">175</span>
-<span class="normal">176</span>
-<span class="normal">177</span>
-<span class="normal">178</span>
-<span class="normal">179</span>
-<span class="normal">180</span>
-<span class="normal">181</span>
-<span class="normal">182</span>
-<span class="normal">183</span>
-<span class="normal">184</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">load_prereg</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">PreregistrationSpec</span><span class="p">:</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">219</span>
+<span class="normal">220</span>
+<span class="normal">221</span>
+<span class="normal">222</span>
+<span class="normal">223</span>
+<span class="normal">224</span>
+<span class="normal">225</span>
+<span class="normal">226</span>
+<span class="normal">227</span>
+<span class="normal">228</span>
+<span class="normal">229</span>
+<span class="normal">230</span>
+<span class="normal">231</span>
+<span class="normal">232</span>
+<span class="normal">233</span>
+<span class="normal">234</span>
+<span class="normal">235</span>
+<span class="normal">236</span>
+<span class="normal">237</span>
+<span class="normal">238</span>
+<span class="normal">239</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">load_prereg</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">PreregistrationSpec</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Load and validate a pre-registration YAML (ADR-007 §Discipline).</span>
 
 <span class="sd">    Args:</span>
@@ -61638,6 +62777,244 @@ the ADR-007 §3.4 shortlist.</p>
     <span class="n">spec</span> <span class="o">=</span> <span class="n">PreregistrationSpec</span><span class="o">.</span><span class="n">model_validate</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
     <span class="n">spec</span><span class="o">.</span><span class="n">normalised_axis</span><span class="p">()</span>
     <span class="k">return</span> <span class="n">spec</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h2 id="chamber.evaluation.load_prereg_document" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">load_prereg_document</span>
+
+
+</h2>
+<div class="doc-signature highlight"><pre><span></span><code><span class="nf">load_prereg_document</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">PreregDocument</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Load and validate a document-form pre-registration YAML (ADR-028 §Decision 2).</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <ul>
+        <li class="doc-section-item field-body">
+            <b><code>path</code></b>
+              (<code><span title="pathlib.Path">Path</span></code>)
+          –
+          <div class="doc-md-description">
+            <p>Absolute path to the YAML file.</p>
+          </div>
+        </li>
+    </ul>
+
+
+<p><span class="doc-section-title">Returns:</span></p>
+    <ul>
+        <li class="doc-section-item field-body">
+              <code><a class="autorefs autorefs-internal" title="PreregDocument (chamber.evaluation.prereg.PreregDocument)" href="#chamber.evaluation.PreregDocument">PreregDocument</a></code>
+          –
+          <div class="doc-md-description">
+            <p>The validated :class:<code>PreregDocument</code>.</p>
+          </div>
+        </li>
+    </ul>
+
+
+<p><span class="doc-section-title">Raises:</span></p>
+    <ul>
+        <li class="doc-section-item field-body">
+              <code><span title="FileNotFoundError">FileNotFoundError</span></code>
+            –
+          <div class="doc-md-description">
+            <p>When <code>path</code> does not exist.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+              <code><span title="pydantic.ValidationError">ValidationError</span></code>
+            –
+          <div class="doc-md-description">
+            <p>When the YAML payload does not match
+the document-form schema (unknown keys fail loudly —
+<code>extra="forbid"</code>).</p>
+          </div>
+        </li>
+    </ul>
+
+
+            <details class="mkdocstrings-source">
+              <summary>Source code in <code>src/chamber/evaluation/prereg.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">242</span>
+<span class="normal">243</span>
+<span class="normal">244</span>
+<span class="normal">245</span>
+<span class="normal">246</span>
+<span class="normal">247</span>
+<span class="normal">248</span>
+<span class="normal">249</span>
+<span class="normal">250</span>
+<span class="normal">251</span>
+<span class="normal">252</span>
+<span class="normal">253</span>
+<span class="normal">254</span>
+<span class="normal">255</span>
+<span class="normal">256</span>
+<span class="normal">257</span>
+<span class="normal">258</span>
+<span class="normal">259</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">load_prereg_document</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">PreregDocument</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Load and validate a document-form pre-registration YAML (ADR-028 §Decision 2).</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        path: Absolute path to the YAML file.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        The validated :class:`PreregDocument`.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">        FileNotFoundError: When ``path`` does not exist.</span>
+<span class="sd">        pydantic.ValidationError: When the YAML payload does not match</span>
+<span class="sd">            the document-form schema (unknown keys fail loudly —</span>
+<span class="sd">            ``extra=&quot;forbid&quot;``).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">raw</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">read_text</span><span class="p">(</span><span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">yaml</span><span class="o">.</span><span class="n">safe_load</span><span class="p">(</span><span class="n">raw</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{}</span>
+    <span class="k">return</span> <span class="n">PreregDocument</span><span class="o">.</span><span class="n">model_validate</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h2 id="chamber.evaluation.load_run_archive" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">load_run_archive</span>
+
+
+</h2>
+<div class="doc-signature highlight"><pre><span></span><code><span class="nf">load_run_archive</span><span class="p">(</span>
+    <span class="n">path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">PathLike</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SpikeRun</span> <span class="o">|</span> <span class="n">ResultBundle</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Load a result archive, dispatching on <code>schema_version</code> (ADR-028 §Decision 4).</p>
+<p>v3 archives (<code>bundle.json</code>) validate as :class:<code>ResultBundle</code>;
+v1/v2 archives validate as :class:<code>SpikeRun</code> — the read-only
+compatibility path: v2 archives are readable forever, never
+migrated in place (invariant I8), and treated as historical inputs
+with explicitly-absent provenance, never as errors.</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <ul>
+        <li class="doc-section-item field-body">
+            <b><code>path</code></b>
+              (<code><span title="str">str</span> | <span title="os.PathLike">PathLike</span>[<span title="str">str</span>]</code>)
+          –
+          <div class="doc-md-description">
+            <p>Path to the archive JSON file (<code>os.PathLike</code>/<code>str</code>).</p>
+          </div>
+        </li>
+    </ul>
+
+
+<p><span class="doc-section-title">Returns:</span></p>
+    <ul>
+        <li class="doc-section-item field-body">
+<b><code>A</code></b> (              <code><a class="autorefs autorefs-internal" title="SpikeRun (chamber.evaluation.results.SpikeRun)" href="#chamber.evaluation.SpikeRun">SpikeRun</a> | <a class="autorefs autorefs-internal" title="ResultBundle (chamber.evaluation.results.ResultBundle)" href="#chamber.evaluation.ResultBundle">ResultBundle</a></code>
+)          –
+          <div class="doc-md-description">
+            <p>class:<code>ResultBundle</code> (v3) or :class:<code>SpikeRun</code> (v1/v2).</p>
+          </div>
+        </li>
+    </ul>
+
+
+<p><span class="doc-section-title">Raises:</span></p>
+    <ul>
+        <li class="doc-section-item field-body">
+              <code><span title="ValueError">ValueError</span></code>
+            –
+          <div class="doc-md-description">
+            <p>If the file carries no integer <code>schema_version</code>.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+              <code><span title="pydantic.ValidationError">ValidationError</span></code>
+            –
+          <div class="doc-md-description">
+            <p>If the payload does not match the
+model its version claims (the ADR-016 loud-fail mode).</p>
+          </div>
+        </li>
+    </ul>
+
+
+            <details class="mkdocstrings-source">
+              <summary>Source code in <code>src/chamber/evaluation/results.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">451</span>
+<span class="normal">452</span>
+<span class="normal">453</span>
+<span class="normal">454</span>
+<span class="normal">455</span>
+<span class="normal">456</span>
+<span class="normal">457</span>
+<span class="normal">458</span>
+<span class="normal">459</span>
+<span class="normal">460</span>
+<span class="normal">461</span>
+<span class="normal">462</span>
+<span class="normal">463</span>
+<span class="normal">464</span>
+<span class="normal">465</span>
+<span class="normal">466</span>
+<span class="normal">467</span>
+<span class="normal">468</span>
+<span class="normal">469</span>
+<span class="normal">470</span>
+<span class="normal">471</span>
+<span class="normal">472</span>
+<span class="normal">473</span>
+<span class="normal">474</span>
+<span class="normal">475</span>
+<span class="normal">476</span>
+<span class="normal">477</span>
+<span class="normal">478</span>
+<span class="normal">479</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">load_run_archive</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">os</span><span class="o">.</span><span class="n">PathLike</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">SpikeRun</span> <span class="o">|</span> <span class="n">ResultBundle</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Load a result archive, dispatching on ``schema_version`` (ADR-028 §Decision 4).</span>
+
+<span class="sd">    v3 archives (``bundle.json``) validate as :class:`ResultBundle`;</span>
+<span class="sd">    v1/v2 archives validate as :class:`SpikeRun` — the read-only</span>
+<span class="sd">    compatibility path: v2 archives are readable forever, never</span>
+<span class="sd">    migrated in place (invariant I8), and treated as historical inputs</span>
+<span class="sd">    with explicitly-absent provenance, never as errors.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        path: Path to the archive JSON file (``os.PathLike``/``str``).</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        A :class:`ResultBundle` (v3) or :class:`SpikeRun` (v1/v2).</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">        ValueError: If the file carries no integer ``schema_version``.</span>
+<span class="sd">        pydantic.ValidationError: If the payload does not match the</span>
+<span class="sd">            model its version claims (the ADR-016 loud-fail mode).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">raw</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">path</span><span class="p">)</span><span class="o">.</span><span class="n">read_text</span><span class="p">(</span><span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span>
+    <span class="n">payload</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">raw</span><span class="p">)</span>
+    <span class="n">version</span> <span class="o">=</span> <span class="n">payload</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;schema_version&quot;</span><span class="p">)</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">payload</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="k">else</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">version</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2">: no integer schema_version field; not a CHAMBER result archive&quot;</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">version</span> <span class="o">&gt;=</span> <span class="n">_RESULT_BUNDLE_MIN_SCHEMA_VERSION</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">ResultBundle</span><span class="o">.</span><span class="n">model_validate</span><span class="p">(</span><span class="n">payload</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">SpikeRun</span><span class="o">.</span><span class="n">model_validate</span><span class="p">(</span><span class="n">payload</span><span class="p">)</span>
 </code></pre></div></td></tr></table></div>
             </details>
     </div>
@@ -62463,7 +63840,7 @@ formats, or the report dict is missing required keys.</p>
 
 </h2>
 <div class="doc-signature highlight"><pre><span></span><code><span class="nf">verify_git_tag</span><span class="p">(</span>
-    <span class="n">spec</span><span class="p">:</span> <span class="n">PreregistrationSpec</span><span class="p">,</span>
+    <span class="n">spec</span><span class="p">:</span> <span class="n">PreregistrationSpec</span> <span class="o">|</span> <span class="n">PreregDocument</span><span class="p">,</span>
     <span class="n">prereg_path</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span>
     <span class="o">*</span><span class="p">,</span>
     <span class="n">repo_path</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span>
@@ -62479,16 +63856,20 @@ file as stored at the tag. The second check is the lock that
 catches the "edit-the-YAML-after-launch" anti-pattern: any change
 to the YAML's bytes after the tag was cut shifts the on-disk
 blob SHA but not the tagged blob SHA.</p>
+<p>Works for both prereg forms (ADR-028 §Decision 2): the check only
+reads <code>spec.git_tag</code>, which the axis-form and document-form
+models share.</p>
 
 
 <p><span class="doc-section-title">Parameters:</span></p>
     <ul>
         <li class="doc-section-item field-body">
             <b><code>spec</code></b>
-              (<code><a class="autorefs autorefs-internal" title="PreregistrationSpec (chamber.evaluation.prereg.PreregistrationSpec)" href="#chamber.evaluation.PreregistrationSpec">PreregistrationSpec</a></code>)
+              (<code><a class="autorefs autorefs-internal" title="PreregistrationSpec (chamber.evaluation.prereg.PreregistrationSpec)" href="#chamber.evaluation.PreregistrationSpec">PreregistrationSpec</a> | <a class="autorefs autorefs-internal" title="PreregDocument (chamber.evaluation.prereg.PreregDocument)" href="#chamber.evaluation.PreregDocument">PreregDocument</a></code>)
           –
           <div class="doc-md-description">
-            <p>The loaded :class:<code>PreregistrationSpec</code>.</p>
+            <p>The loaded :class:<code>PreregistrationSpec</code> or
+:class:<code>PreregDocument</code>.</p>
           </div>
         </li>
         <li class="doc-section-item field-body">
@@ -62538,57 +63919,62 @@ outside the repo, or the blob SHAs disagree.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/chamber/evaluation/prereg.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">217</span>
-<span class="normal">218</span>
-<span class="normal">219</span>
-<span class="normal">220</span>
-<span class="normal">221</span>
-<span class="normal">222</span>
-<span class="normal">223</span>
-<span class="normal">224</span>
-<span class="normal">225</span>
-<span class="normal">226</span>
-<span class="normal">227</span>
-<span class="normal">228</span>
-<span class="normal">229</span>
-<span class="normal">230</span>
-<span class="normal">231</span>
-<span class="normal">232</span>
-<span class="normal">233</span>
-<span class="normal">234</span>
-<span class="normal">235</span>
-<span class="normal">236</span>
-<span class="normal">237</span>
-<span class="normal">238</span>
-<span class="normal">239</span>
-<span class="normal">240</span>
-<span class="normal">241</span>
-<span class="normal">242</span>
-<span class="normal">243</span>
-<span class="normal">244</span>
-<span class="normal">245</span>
-<span class="normal">246</span>
-<span class="normal">247</span>
-<span class="normal">248</span>
-<span class="normal">249</span>
-<span class="normal">250</span>
-<span class="normal">251</span>
-<span class="normal">252</span>
-<span class="normal">253</span>
-<span class="normal">254</span>
-<span class="normal">255</span>
-<span class="normal">256</span>
-<span class="normal">257</span>
-<span class="normal">258</span>
-<span class="normal">259</span>
-<span class="normal">260</span>
-<span class="normal">261</span>
-<span class="normal">262</span>
-<span class="normal">263</span>
-<span class="normal">264</span>
-<span class="normal">265</span>
-<span class="normal">266</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">verify_git_tag</span><span class="p">(</span>
-    <span class="n">spec</span><span class="p">:</span> <span class="n">PreregistrationSpec</span><span class="p">,</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">292</span>
+<span class="normal">293</span>
+<span class="normal">294</span>
+<span class="normal">295</span>
+<span class="normal">296</span>
+<span class="normal">297</span>
+<span class="normal">298</span>
+<span class="normal">299</span>
+<span class="normal">300</span>
+<span class="normal">301</span>
+<span class="normal">302</span>
+<span class="normal">303</span>
+<span class="normal">304</span>
+<span class="normal">305</span>
+<span class="normal">306</span>
+<span class="normal">307</span>
+<span class="normal">308</span>
+<span class="normal">309</span>
+<span class="normal">310</span>
+<span class="normal">311</span>
+<span class="normal">312</span>
+<span class="normal">313</span>
+<span class="normal">314</span>
+<span class="normal">315</span>
+<span class="normal">316</span>
+<span class="normal">317</span>
+<span class="normal">318</span>
+<span class="normal">319</span>
+<span class="normal">320</span>
+<span class="normal">321</span>
+<span class="normal">322</span>
+<span class="normal">323</span>
+<span class="normal">324</span>
+<span class="normal">325</span>
+<span class="normal">326</span>
+<span class="normal">327</span>
+<span class="normal">328</span>
+<span class="normal">329</span>
+<span class="normal">330</span>
+<span class="normal">331</span>
+<span class="normal">332</span>
+<span class="normal">333</span>
+<span class="normal">334</span>
+<span class="normal">335</span>
+<span class="normal">336</span>
+<span class="normal">337</span>
+<span class="normal">338</span>
+<span class="normal">339</span>
+<span class="normal">340</span>
+<span class="normal">341</span>
+<span class="normal">342</span>
+<span class="normal">343</span>
+<span class="normal">344</span>
+<span class="normal">345</span>
+<span class="normal">346</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">verify_git_tag</span><span class="p">(</span>
+    <span class="n">spec</span><span class="p">:</span> <span class="n">PreregistrationSpec</span> <span class="o">|</span> <span class="n">PreregDocument</span><span class="p">,</span>
     <span class="n">prereg_path</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span>
     <span class="o">*</span><span class="p">,</span>
     <span class="n">repo_path</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span>
@@ -62602,8 +63988,13 @@ outside the repo, or the blob SHAs disagree.</p>
 <span class="sd">    to the YAML&#39;s bytes after the tag was cut shifts the on-disk</span>
 <span class="sd">    blob SHA but not the tagged blob SHA.</span>
 
+<span class="sd">    Works for both prereg forms (ADR-028 §Decision 2): the check only</span>
+<span class="sd">    reads ``spec.git_tag``, which the axis-form and document-form</span>
+<span class="sd">    models share.</span>
+
 <span class="sd">    Args:</span>
-<span class="sd">        spec: The loaded :class:`PreregistrationSpec`.</span>
+<span class="sd">        spec: The loaded :class:`PreregistrationSpec` or</span>
+<span class="sd">            :class:`PreregDocument`.</span>
 <span class="sd">        prereg_path: Path to the YAML file on disk (absolute or</span>
 <span class="sd">            repo-relative; will be resolved against ``repo_path``).</span>
 <span class="sd">        repo_path: Root of the git working tree.</span>
