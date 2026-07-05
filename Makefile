@@ -67,6 +67,7 @@ verify-readme-tables:
 	uv run python scripts/render_task_table.py --check
 	uv run python scripts/render_task_cards.py --check
 	uv run python scripts/render_partner_cards.py --check
+	uv run python scripts/render_leaderboard_table.py --check
 
 # Regenerate the README task table + docs/reference/tasks/ cards +
 # docs/reference/partners/ cards (the write mode of verify-readme-tables).
@@ -74,6 +75,7 @@ render-task-docs:
 	uv run python scripts/render_task_table.py
 	uv run python scripts/render_task_cards.py
 	uv run python scripts/render_partner_cards.py
+	uv run python scripts/render_leaderboard_table.py
 
 sbom:
 	uv run cyclonedx-py environment -o sbom.spdx.json
