@@ -1,0 +1,14 @@
+[
+  {
+    "checkpoint_step": null,
+    "class_name": "scripted_heuristic",
+    "extra": {
+      "action_dim": "13",
+      "target_xy": "-0.006,-0.0065",
+      "uid": "fetch"
+    },
+    "name": "heuristic_center",
+    "seed": 0,
+    "weights_uri": "member://scripted_heuristic/963dcf2d674c69aae31b4417422e62465c21bd7ac99ab592706ecf8771e9c88e"
+  }
+]

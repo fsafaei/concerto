@@ -1,0 +1,12 @@
+[
+  {
+    "checkpoint_step": null,
+    "class_name": "handover_presenter",
+    "extra": {
+      "withheld_params_sha256": "d4f8fcf58e750c8dcd223ff4e78cb08da29f758d8b2fb03b9886789711915123"
+    },
+    "name": "presenter_matched",
+    "seed": 0,
+    "weights_uri": "member://handover_presenter/d4f8fcf58e750c8dcd223ff4e78cb08da29f758d8b2fb03b9886789711915123"
+  }
+]

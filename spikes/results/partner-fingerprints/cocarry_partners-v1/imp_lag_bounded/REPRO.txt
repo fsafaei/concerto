@@ -1,0 +1,1 @@
+generate_partner_fingerprints.py --render-backend none
