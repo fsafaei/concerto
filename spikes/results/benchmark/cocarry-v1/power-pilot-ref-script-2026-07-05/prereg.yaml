@@ -11,8 +11,8 @@
 # bad ones — the leaderboard's honesty is the product.
 schema_version: 1
 task_id: cocarry
-git_tag: prereg-cocarry-baselines-v1-rev2-2026-07-05
-revision: rev2
+git_tag: prereg-cocarry-baselines-v1-2026-07-05
+revision: rev1
 parameters:
   campaign:
     campaign_id: cocarry_baselines_v1
@@ -151,11 +151,11 @@ parameters:
     # learned rows); learned rows' cluster seed s drives training seed
     # s's SELECTED checkpoint via the committed manifest.
     eval_seeds: [0, 1, 2, 3, 4]
-    # Episodes per (seed x partner cell): LOCKED at 50 by the power
-    # pilot below (the rev1->rev2 change; rev1 committed this value as
-    # provisional plus the locking rule verbatim; tags are never
-    # reused — rev1 stays at prereg-cocarry-baselines-v1-2026-07-05).
-    episodes_per_seed_per_partner: 50
+    # Episodes per (seed x partner cell): provisional 50; the FINAL n
+    # is locked by the power pilot below and re-issued as rev2 under a
+    # NEW tag before the first leaderboard episode (prereg versioning,
+    # ADR-028; tags are never reused).
+    episodes_per_seed_per_partner_provisional: 50
     power_pilot:
       run_purpose: power           # excluded from results (ADR-028)
       row: B-RND and REF-SCRIPT    # the variance bracket: floor + ceiling
@@ -167,22 +167,6 @@ parameters:
         extrapolated from the pilot's per-episode variance) is <= 10
         percentage points; if even n=100 misses the target, n=100 is
         locked and the achieved width is reported.
-      outcome_2026_07_05: >
-        Ran under rev1 (tag prereg-cocarry-baselines-v1-2026-07-05).
-        Bundles (committed, verify-passing, EXCLUDED from results and
-        from every leaderboard manifest):
-        spikes/results/benchmark/cocarry-v1/power-pilot-b-rnd-2026-07-05
-        (350 episodes, success IQM 0.000 [0.000, 0.000]; per-member
-        success 0.00 on all 7 eval members; stress p90 287.5 N) and
-        .../power-pilot-ref-script-2026-07-05 (350 episodes, success
-        IQM 1.000 [1.000, 1.000]; per-member success 1.00 on all 7;
-        stress p90 103.1 N). Both bracket rows are degenerate
-        (variance 0), so the projected CI width at n=50 is 0 <= 10
-        points and the rule locks n = 50. Honest caveat, stated
-        rather than tuned away: a 1-seed pilot cannot estimate
-        between-seed variance, and the learned rows may land between
-        the brackets with wider intervals — the achieved CI widths
-        ship in the row reports regardless (all rows ship).
     pairing: >
       every row and every partner cell sees the same matched
       initial-state draws (initial_state_seed = seed*1000 + episode —

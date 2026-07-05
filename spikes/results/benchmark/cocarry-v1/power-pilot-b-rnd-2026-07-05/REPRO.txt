@@ -1,0 +1,1 @@
+chamber-eval run --task cocarry --policy random --partner-set cocarry_partners@v1 --exclude-member imp_nominal --seeds 1 --episodes 50 --out spikes/results/benchmark/cocarry-v1/power-pilot-b-rnd-2026-07-05 --prereg spikes/preregistration/benchmark/cocarry_baselines_v1.yaml
