@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: Apache-2.0
-"""Result schema for CHAMBER spike runs and leaderboard entries (ADR-007, ADR-008, ADR-016).
+"""Result schema for CHAMBER runs, bundles, and leaderboard entries (ADR-007/008/016/028).
 
 ADR-007 §Discipline requires every spike run to be traceable to a
 pre-registration YAML pinned to a git tag whose tree-SHA matches the
@@ -28,26 +28,33 @@ the 2026-05-17 incident's root cause.
 
 from __future__ import annotations
 
-from typing import Any, Literal
+import json
+from pathlib import Path
+from typing import TYPE_CHECKING, Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, NonNegativeFloat, NonNegativeInt
 
+if TYPE_CHECKING:
+    import os
+
 #: Schema version for the CHAMBER evaluation result archive
-#: (ADR-008 §Decision; ADR-016 §Decision).
+#: (ADR-008 §Decision; ADR-016 §Decision; ADR-028 §Decision).
 #:
 #: Distinct from :data:`chamber.comm.SCHEMA_VERSION`. Bumping is a
-#: breaking change to :class:`SpikeRun` / :class:`LeaderboardEntry`
-#: serialised shape and requires a new ADR. The current value is 2
-#: per ADR-016 (introduces :attr:`SpikeRun.sub_stage`); v1 archives
-#: produced before that ADR do not load against this schema and must
-#: be regenerated (the migration is one-shot per ADR-016 §Decision).
+#: breaking change to the serialised result-archive shape and requires
+#: a new ADR. The current value is 3 per ADR-028 (introduces the
+#: :class:`ResultBundle` provenance wrapper); ADR-016 bumped 1 → 2 to
+#: introduce :attr:`SpikeRun.sub_stage`. Per ADR-028 §Decision 4, v2
+#: archives are readable forever and are never migrated in place
+#: (invariant I8) — readers dispatch on ``schema_version`` (see
+#: :func:`load_run_archive`); anything writing results writes v3 only.
 #:
-#: Both :class:`SpikeRun` and :class:`LeaderboardEntry` alias this
-#: constant for their ``schema_version`` defaults; bumping it
-#: co-bumps both. ADR-008's 2026-05-17 §Consequences amendment
-#: documents the LeaderboardEntry wire-shape at v2 is identical to
-#: v1 — the bump is driven entirely by SpikeRun's new field.
-SCHEMA_VERSION: int = 2
+#: :class:`SpikeRun`, :class:`LeaderboardEntry`, and
+#: :class:`ResultBundle` alias this constant for their
+#: ``schema_version`` defaults; bumping it co-bumps all three (the
+#: ADR-016 co-bump precedent: the stamp marks the archive era, the
+#: wire shape of the untouched models is unchanged).
+SCHEMA_VERSION: int = 3
 
 #: ADR-007 §Implementation-staging sub-stage labels (ADR-016 §Decision).
 #:
@@ -289,14 +296,202 @@ class LeaderboardEntry(BaseModel):
     schema_version: int = SCHEMA_VERSION
 
 
+class SeedSchedule(BaseModel):
+    """Explicit seed schedule of a result bundle (ADR-028 §Decision 1).
+
+    ADR-028 requires "the explicit seed list/derivation, not just a
+    root seed": ``root_seed`` is the run-level pin, ``seeds`` the
+    exact per-episode-cluster seed list, and ``substream_labels`` the
+    :func:`concerto.training.seeding.derive_substream` name patterns
+    the run used (ADR-002 P6 — the schedule is re-derivable from these
+    three facts alone).
+
+    Attributes:
+        root_seed: Run-level root seed (ADR-002 P6).
+        seeds: Exact per-cluster seed list, in run order.
+        episodes_per_seed: Episodes run per seed cluster.
+        substream_labels: ``derive_substream`` name patterns used
+            (``{seed}`` / ``{episode}`` placeholders literal).
+    """
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    root_seed: int
+    seeds: list[int]
+    episodes_per_seed: NonNegativeInt
+    substream_labels: list[str]
+
+
+class PlatformFingerprint(BaseModel):
+    """Platform fingerprint of a result bundle (ADR-028 §Decision 1).
+
+    ADR-028: "OS, Python, key dependency versions, device". CPU-only
+    verification (ADR-028 §Decision 3) never *compares* this block —
+    it is provenance for the reader, not a reproducibility gate.
+
+    Attributes:
+        os: ``platform.platform()`` string.
+        python: ``platform.python_version()`` string.
+        numpy: Installed numpy version.
+        torch: Installed torch version, or ``None`` if absent.
+        device: Compute device the run used (GPU name or ``"cpu"``).
+    """
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    os: str
+    python: str
+    numpy: str
+    torch: str | None
+    device: str
+
+
+class BundleSummary(BaseModel):
+    """Recomputable summary statistics of a result bundle (ADR-028 §Decision 3).
+
+    ``chamber-eval verify`` recomputes these from the bundle's raw
+    per-seed episode records and compares within tolerance — so every
+    field here must be a pure function of the episode records plus the
+    pinned bootstrap parameters (``n_resamples`` +
+    ``bootstrap_root_seed`` routed through ``derive_substream``, so
+    the recomputation is byte-reproducible per ADR-002 P6).
+
+    Attributes:
+        n_episodes: Total episode count across all seeds.
+        success_mean: Plain mean success over all episodes.
+        success_iqm: Interquartile-mean success from the seed-cluster
+            bootstrap (ADR-008 reporting discipline).
+        success_ci_low: 2.5th percentile of the cluster bootstrap.
+        success_ci_high: 97.5th percentile of the cluster bootstrap.
+        n_resamples: Bootstrap resample count used.
+        bootstrap_root_seed: Root seed of the bootstrap substream.
+    """
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    n_episodes: NonNegativeInt
+    success_mean: float
+    success_iqm: float
+    success_ci_low: float
+    success_ci_high: float
+    n_resamples: NonNegativeInt
+    bootstrap_root_seed: int
+
+
+class ResultBundle(BaseModel):
+    """The v3 result-bundle record — ``bundle.json`` (ADR-028 §Decision 1).
+
+    Wraps the existing :class:`EpisodeResult` machinery: the raw
+    episode records live in the bundle directory's per-seed JSONL
+    files (one :class:`EpisodeResult` JSON object per line), listed in
+    ``manifest``; ``bundle.json`` carries the provenance fields ADR-028
+    authorizes plus the recomputable :class:`BundleSummary`.
+
+    Attributes:
+        schema_version: Result-archive schema version (v3;
+            :data:`SCHEMA_VERSION`).
+        task_id: ADR-027 task identity (with ``task_version``:
+            ``task_id@vN``).
+        task_version: ADR-027 task version.
+        policy_id: Ego policy reference the bundle evaluates (ADR-011
+            baseline IDs; e.g. ``"random"`` = B-RND).
+        partner_set_id: Partner-set identity (ADR-009 as amended).
+            Ad-hoc single-partner runs use ``"adhoc:<registry-name>"``
+            until partner sets ship.
+        partner_hashes: Per-member partner identity hashes —
+            ``PartnerSpec.partner_id`` (SHA-256 custody hash, ADR-018)
+            keyed by member name.
+        git_sha: Launch commit, captured once per run (ADR-002
+            §Rev 2026-06-12 process-cache discipline).
+        dirty: ``True`` iff the bundle was produced from a dirty
+            working tree under ``--allow-dirty``. Dirty bundles are
+            ineligible for leaderboard use (ADR-028 §Rev 2026-07-05).
+        package_version: Installed ``concerto-multirobot``
+            distribution version.
+        seed_schedule: Explicit seed schedule (ADR-028 §Decision 1).
+        repro_command: Exact reproduction invocation (the
+            ``repro_command.txt`` convention promoted into the
+            bundle).
+        platform: Platform fingerprint (ADR-028 §Decision 1).
+        manifest: SHA-256 hex digest of every file in the bundle
+            directory except ``bundle.json`` itself (which cannot
+            contain its own hash), keyed by file name.
+        summary: Recomputable summary statistics (ADR-028 §Decision 3).
+        prereg_git_tag: Pre-registration tag the run was gated on, or
+            ``None`` for unpreregistered (diagnostic) runs.
+        prereg_blob_sha: Verified prereg blob SHA at the tag, or
+            ``None``.
+    """
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    schema_version: int = SCHEMA_VERSION
+    task_id: str
+    task_version: int
+    policy_id: str
+    partner_set_id: str
+    partner_hashes: dict[str, str]
+    git_sha: str
+    dirty: bool
+    package_version: str
+    seed_schedule: SeedSchedule
+    repro_command: str
+    platform: PlatformFingerprint
+    manifest: dict[str, str]
+    summary: BundleSummary
+    prereg_git_tag: str | None = None
+    prereg_blob_sha: str | None = None
+
+
+#: First schema version carried by :class:`ResultBundle` archives
+#: (ADR-028 §Decision 1) — the :func:`load_run_archive` dispatch pivot.
+_RESULT_BUNDLE_MIN_SCHEMA_VERSION: int = 3
+
+
+def load_run_archive(path: str | os.PathLike[str]) -> SpikeRun | ResultBundle:
+    """Load a result archive, dispatching on ``schema_version`` (ADR-028 §Decision 4).
+
+    v3 archives (``bundle.json``) validate as :class:`ResultBundle`;
+    v1/v2 archives validate as :class:`SpikeRun` — the read-only
+    compatibility path: v2 archives are readable forever, never
+    migrated in place (invariant I8), and treated as historical inputs
+    with explicitly-absent provenance, never as errors.
+
+    Args:
+        path: Path to the archive JSON file (``os.PathLike``/``str``).
+
+    Returns:
+        A :class:`ResultBundle` (v3) or :class:`SpikeRun` (v1/v2).
+
+    Raises:
+        ValueError: If the file carries no integer ``schema_version``.
+        pydantic.ValidationError: If the payload does not match the
+            model its version claims (the ADR-016 loud-fail mode).
+    """
+    raw = Path(path).read_text(encoding="utf-8")
+    payload = json.loads(raw)
+    version = payload.get("schema_version") if isinstance(payload, dict) else None
+    if not isinstance(version, int):
+        msg = f"{path}: no integer schema_version field; not a CHAMBER result archive"
+        raise ValueError(msg)
+    if version >= _RESULT_BUNDLE_MIN_SCHEMA_VERSION:
+        return ResultBundle.model_validate(payload)
+    return SpikeRun.model_validate(payload)
+
+
 __all__ = [
     "SCHEMA_VERSION",
+    "BundleSummary",
     "ConditionPair",
     "ConditionResult",
     "EpisodeResult",
     "HRSVector",
     "HRSVectorEntry",
     "LeaderboardEntry",
+    "PlatformFingerprint",
+    "ResultBundle",
+    "SeedSchedule",
     "SpikeRun",
     "SubStage",
+    "load_run_archive",
 ]

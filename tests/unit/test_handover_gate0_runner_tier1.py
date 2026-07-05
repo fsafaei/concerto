@@ -10,6 +10,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from chamber.evaluation.results import SCHEMA_VERSION
 from chamber.spikes.handover_place_gate0.decision import VERDICT_LIMB1_FAIL
 from chamber.spikes.handover_place_gate0.runner import (
     analyze,
@@ -110,7 +111,9 @@ class TestRunGate0Pipeline:
             "git_tag": "tiny-smoke",
         }
         spike_run, analysis = run_gate0(params)
-        assert spike_run.schema_version == 2
+        # ADR-028: freshly-built runs stamp the current archive era (the
+        # committed 2026-06-26 archive stays at its immutable v2, I8).
+        assert spike_run.schema_version == SCHEMA_VERSION
         assert spike_run.episode_results
         assert analysis["verdict"] in {
             "COUPLING_VALID",

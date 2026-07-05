@@ -241,3 +241,17 @@ jobs:
       - run: uv sync --group dev
       - run: uv run python scripts/render_task_table.py --check
       - run: uv run python scripts/render_task_cards.py --check
+
+  smoke-eval:
+    # ADR-028 §Validation criteria 1: chamber-eval run → verify on a
+    # fresh v3 bundle, then a one-byte tamper must make verify fail.
+    # CPU-only, Tier-0 task; target < 5 minutes.
+    name: smoke-eval
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
+      - uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b  # v5.4.1
+        with:
+          python-version: "3.11"
+      - run: uv sync --group dev
+      - run: bash scripts/smoke_eval.sh

@@ -7,13 +7,19 @@ HRS vector + scalar over the full set of axes, and emit the
 leaderboard entry. The renderer is in :mod:`chamber.evaluation.render`;
 ``chamber-eval`` is the orchestration shim.
 
-One subcommand rides alongside the evaluation pipeline:
-``chamber-eval manifest`` emits the pinned CHAMBER-Bench suite
-composition as JSON from the :mod:`chamber.tasks` registry (ADR-027
-§Versioning: "suite composition is pinned in a generated manifest").
-It is dispatched by first positional token before the evaluation
-argument parser runs, so the historical flat invocation
-(``chamber-eval SPIKE_RUN.json …``) is untouched.
+Three subcommands ride alongside the evaluation pipeline, dispatched
+by first positional token before the evaluation argument parser runs
+(so the historical flat invocation ``chamber-eval SPIKE_RUN.json …``
+is untouched):
+
+- ``chamber-eval manifest`` emits the pinned CHAMBER-Bench suite
+  composition as JSON from the :mod:`chamber.tasks` registry (ADR-027
+  §Versioning).
+- ``chamber-eval run`` produces a v3 result bundle
+  (:mod:`chamber.cli._eval_run`; ADR-028 §Decision 3).
+- ``chamber-eval verify`` re-checks a bundle — the leaderboard
+  admission gate (:mod:`chamber.cli._eval_verify`; ADR-028
+  §Decision 3).
 
 ADR-008 §Decision binds the HRS bundle to the *surviving ADR-007
 axes* — i.e. a leaderboard row is only complete once the spikes that
@@ -37,6 +43,7 @@ from typing import TYPE_CHECKING
 
 import chamber
 import chamber.tasks
+from chamber.cli import _eval_run, _eval_verify
 from chamber.evaluation import (
     ConditionResult,
     LeaderboardEntry,
@@ -238,6 +245,14 @@ def _weights_for(keys_in_order: list[tuple[str, str]]) -> dict[str, float]:
     return weights
 
 
+#: First-token subcommand dispatch (ADR-027 manifest; ADR-028 run/verify).
+_SUBCOMMANDS = {
+    "manifest": _run_manifest,
+    "run": _eval_run.run,
+    "verify": _eval_verify.run,
+}
+
+
 def main(argv: list[str] | None = None) -> int:
     """``chamber-eval`` entry point (ADR-008 §Decision; ADR-027 §Versioning for ``manifest``).
 
@@ -249,8 +264,8 @@ def main(argv: list[str] | None = None) -> int:
         duplicate axes are passed without ``--allow-duplicate-axes``.
     """
     argv_list = list(sys.argv[1:]) if argv is None else list(argv)
-    if argv_list[:1] == ["manifest"]:
-        return _run_manifest(argv_list[1:])
+    if argv_list[:1] and argv_list[0] in _SUBCOMMANDS:
+        return _SUBCOMMANDS[argv_list[0]](argv_list[1:])
     args = _parse_args(argv_list)
     if not args.spike_runs:
         print(f"chamber-eval  (CHAMBER {chamber.__version__})")
@@ -259,6 +274,11 @@ def main(argv: list[str] | None = None) -> int:
             "[--method-id ID] [--allow-duplicate-axes] [--output OUT.json]"
         )
         print("       chamber-eval manifest [--output MANIFEST.json]")
+        print(
+            "       chamber-eval run --task ID [--partner NAME | --partner-set ID] "
+            "--policy ID --seeds N --episodes N --out DIR [--prereg YAML]"
+        )
+        print("       chamber-eval verify BUNDLE_DIR")
         return 0
 
     for path in args.spike_runs:

@@ -116,13 +116,13 @@ class TestSubStageJSONRoundTrip:
 
 
 class TestSchemaVersionPin:
-    """ADR-016 §Decision: SCHEMA_VERSION bumped 1 → 2 in PR 2."""
+    """ADR-016 §Decision bumped 1 → 2; ADR-028 §Decision bumped 2 → 3."""
 
-    def test_schema_version_is_two(self) -> None:
+    def test_schema_version_is_three(self) -> None:
         """Bumping further is a breaking change; requires a new ADR amendment."""
-        assert SCHEMA_VERSION == 2
+        assert SCHEMA_VERSION == 3
 
-    def test_new_spike_run_carries_schema_version_two(self) -> None:
-        """``SpikeRun.schema_version`` default tracks the module constant."""
+    def test_new_spike_run_carries_current_schema_version(self) -> None:
+        """Default tracks the module constant (v3 stamps the era; ADR-016 co-bump precedent)."""
         run = SpikeRun(**_minimal_spike_run_kwargs())
-        assert run.schema_version == 2
+        assert run.schema_version == SCHEMA_VERSION

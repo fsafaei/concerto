@@ -13,13 +13,22 @@ The loader uses Pydantic v2 for the YAML schema so unknown keys or
 missing required fields fail loudly; the verifier shells out to
 ``git`` for blob-SHA comparison (we don't depend on libgit2 to keep
 the wheel light).
+
+Two pre-registration forms coexist under
+:data:`PREREG_SCHEMA_VERSION` (ADR-028 §Decision 2): the legacy
+axis-form :class:`PreregistrationSpec` (condition tables; unchanged,
+still valid for old YAMLs) and the document-form
+:class:`PreregDocument` (task-keyed, arbitrary committed parameter
+blocks + decision-rule text — the Gate-0-style prereg, now
+machine-verifiable instead of hand-checked). :func:`verify_git_tag`
+accepts either form.
 """
 
 from __future__ import annotations
 
 import shutil
 import subprocess
-from typing import TYPE_CHECKING, Literal
+from typing import TYPE_CHECKING, Any, Literal
 
 import yaml
 from pydantic import BaseModel, ConfigDict, Field, PositiveInt, model_validator
@@ -54,6 +63,17 @@ CANONICAL_AXIS_ORDER: tuple[str, ...] = ("AS", "OM", "CR", "CM", "PF", "SA")
 #: launch (B7's ``chamber-spike run``) should reuse the same constant rather
 #: than re-deriving the integer.
 PREREG_MISMATCH_EXIT_CODE: int = 4
+
+#: Pre-registration schema version (ADR-028 §Decision 2).
+#:
+#: Version 1 covers the two coexisting forms: the legacy axis-form
+#: :class:`PreregistrationSpec` and the document-form
+#: :class:`PreregDocument`. Distinct from
+#: :data:`chamber.evaluation.results.SCHEMA_VERSION` (the result-archive
+#: version); bumping requires a new ADR (invariant I9). This makes the
+#: forward-reference in :mod:`chamber.benchmarks.cocarry_freeze` a
+#: defined constant (ADR-028 §Validation criteria 4).
+PREREG_SCHEMA_VERSION: int = 1
 
 #: Permitted bootstrap-method labels (ADR-008 §Decision + reviewer P1-9).
 BootstrapMethod = Literal["cluster", "hierarchical", "iid"]
@@ -157,6 +177,41 @@ class PreregistrationSpec(BaseModel):
         return self.axis
 
 
+class PreregDocument(BaseModel):
+    """Document-form pre-registration (ADR-028 §Decision 2).
+
+    The generalized Gate-0-style prereg: task-keyed, with arbitrary
+    committed parameter blocks (frozen thresholds, verdict spaces,
+    power/pre-check artefacts) and decision-rule text, locked to a git
+    tag exactly like the axis-form. "The prereg is frozen" becomes
+    machine-verifiable — :func:`verify_git_tag` runs the same
+    file-blob-vs-tag-blob check Gate-0 did by hand.
+
+    Attributes:
+        schema_version: Pre-registration schema version
+            (:data:`PREREG_SCHEMA_VERSION`).
+        task_id: ADR-027 task the prereg keys on.
+        git_tag: Tag locking the document (ADR-007 §Discipline).
+        parameters: Arbitrary committed parameter blocks — thresholds,
+            cell tables, power artefacts. Frozen verbatim; the tag
+            blob check covers the bytes, this model only checks shape.
+        decision_rules: The pre-committed decision-rule text (verdict
+            space + stop rules).
+        revision: Human-readable revision label (e.g. ``"rev2"``).
+        notes: Free-text caveats.
+    """
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    schema_version: int = PREREG_SCHEMA_VERSION
+    task_id: str
+    git_tag: str
+    parameters: dict[str, Any]
+    decision_rules: str
+    revision: str = ""
+    notes: str = ""
+
+
 class PreregistrationError(RuntimeError):
     """Raised when a pre-registration fails the ADR-007 §Discipline check (ADR-007 §Discipline)."""
 
@@ -182,6 +237,26 @@ def load_prereg(path: Path) -> PreregistrationSpec:
     spec = PreregistrationSpec.model_validate(data)
     spec.normalised_axis()
     return spec
+
+
+def load_prereg_document(path: Path) -> PreregDocument:
+    """Load and validate a document-form pre-registration YAML (ADR-028 §Decision 2).
+
+    Args:
+        path: Absolute path to the YAML file.
+
+    Returns:
+        The validated :class:`PreregDocument`.
+
+    Raises:
+        FileNotFoundError: When ``path`` does not exist.
+        pydantic.ValidationError: When the YAML payload does not match
+            the document-form schema (unknown keys fail loudly —
+            ``extra="forbid"``).
+    """
+    raw = path.read_text(encoding="utf-8")
+    data = yaml.safe_load(raw) or {}
+    return PreregDocument.model_validate(data)
 
 
 def _git(*args: str, repo_path: Path) -> str:
@@ -215,7 +290,7 @@ def _blob_sha_on_disk(*, path: Path, repo_path: Path) -> str:
 
 
 def verify_git_tag(
-    spec: PreregistrationSpec,
+    spec: PreregistrationSpec | PreregDocument,
     prereg_path: Path,
     *,
     repo_path: Path,
@@ -229,8 +304,13 @@ def verify_git_tag(
     to the YAML's bytes after the tag was cut shifts the on-disk
     blob SHA but not the tagged blob SHA.
 
+    Works for both prereg forms (ADR-028 §Decision 2): the check only
+    reads ``spec.git_tag``, which the axis-form and document-form
+    models share.
+
     Args:
-        spec: The loaded :class:`PreregistrationSpec`.
+        spec: The loaded :class:`PreregistrationSpec` or
+            :class:`PreregDocument`.
         prereg_path: Path to the YAML file on disk (absolute or
             repo-relative; will be resolved against ``repo_path``).
         repo_path: Root of the git working tree.
@@ -269,11 +349,14 @@ def verify_git_tag(
 __all__ = [
     "CANONICAL_AXIS_ORDER",
     "PREREG_MISMATCH_EXIT_CODE",
+    "PREREG_SCHEMA_VERSION",
     "BootstrapMethod",
     "FailurePolicy",
+    "PreregDocument",
     "PreregistrationError",
     "PreregistrationSpec",
     "RunPurpose",
     "load_prereg",
+    "load_prereg_document",
     "verify_git_tag",
 ]
