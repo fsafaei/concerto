@@ -49,8 +49,23 @@ from chamber.partners.heuristic import ScriptedHeuristicPartner
 from chamber.partners.interface import PartnerBase
 from chamber.partners.registry import list_registered, load_partner, register_partner
 from chamber.partners.selection import make_phase0_draft_zoo, select_zoo
+from chamber.partners.sets import (
+    PartnerMemberSpec,
+    PartnerSetSpec,
+    WithheldParametersError,
+    compute_split,
+    get_partner_set,
+    list_partner_sets,
+    register_partner_set,
+    resolve_set_members,
+)
 from chamber.partners.stubs.crossformer import CrossFormerPartner
 from chamber.partners.stubs.openvla import OpenVLAPartner
+
+# Imported for the @register_partner_set side effects: the v1 sets register
+# on package import, mirroring how chamber.tasks populates its registry
+# via chamber.tasks.ladder (ADR-027 §Versioning; ADR-009 as amended).
+import chamber.partners.set_definitions  # noqa: F401  isort: skip
 
 __all__ = [
     "CoCarryBlindImpedancePartner",
@@ -65,11 +80,19 @@ __all__ = [
     "OpenVLAPartner",
     "PartnerAblatedZero",
     "PartnerBase",
+    "PartnerMemberSpec",
+    "PartnerSetSpec",
     "PartnerSpec",
     "ScriptedHeuristicPartner",
+    "WithheldParametersError",
+    "compute_split",
+    "get_partner_set",
+    "list_partner_sets",
     "list_registered",
     "load_partner",
     "make_phase0_draft_zoo",
     "register_partner",
+    "register_partner_set",
+    "resolve_set_members",
     "select_zoo",
 ]

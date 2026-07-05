@@ -21,7 +21,11 @@ from pydantic import ValidationError
 
 import chamber
 import chamber.tasks
-from chamber.benchmarks.bundle_runner import EGO_SUBSTREAM_PATTERN, run_task_episodes
+from chamber.benchmarks.bundle_runner import (
+    EGO_SUBSTREAM_PATTERN,
+    run_task_episodes,
+    run_task_episodes_for_set,
+)
 from chamber.evaluation.bundles import (
     BOOTSTRAP_SUBSTREAM,
     DEFAULT_N_RESAMPLES,
@@ -41,6 +45,14 @@ from chamber.evaluation.prereg import (
     verify_git_tag,
 )
 from chamber.evaluation.results import ResultBundle, SeedSchedule
+from chamber.partners.sets import (
+    PartnerMemberSpec,
+    PartnerSetSpec,
+    WithheldParametersError,
+    get_partner_set,
+    parse_set_slug,
+    resolve_set_members,
+)
 
 _USAGE_EXIT_CODE = 2
 
@@ -82,8 +94,21 @@ def _build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--task", required=True, help="Task id, optionally id@vN (ADR-027).")
     parser.add_argument("--policy", required=True, help="Ego policy id (e.g. 'random' = B-RND).")
     group = parser.add_mutually_exclusive_group(required=True)
-    group.add_argument("--partner-set", help="Partner-set id (ADR-009 as amended).")
+    group.add_argument(
+        "--partner-set",
+        help="Partner-set slug set_id[@vN] from the ADR-009 set registry (as amended).",
+    )
     group.add_argument("--partner", help="Single partner registry name (ad-hoc set).")
+    parser.add_argument(
+        "--include-private",
+        action="store_true",
+        help=(
+            "Also run the set's private members. Requires the withheld "
+            "parameters to be derivable locally (the maintainer-held "
+            "CHAMBER_PRIVATE_PARTNER_SEED; ADR-009 as amended — published "
+            "hashes, withheld parameters)."
+        ),
+    )
     parser.add_argument("--seeds", required=True, help="Seed count N (0..N-1) or comma list.")
     parser.add_argument("--episodes", type=int, required=True, help="Episodes per seed.")
     parser.add_argument("--out", type=Path, required=True, help="Bundle directory to create.")
@@ -132,19 +157,48 @@ def _prereg_gate(prereg_path: Path, *, repo_path: Path) -> tuple[str, str]:
     return spec.git_tag, blob
 
 
+def _resolve_partner_set(
+    args: argparse.Namespace, task_id: str
+) -> tuple[PartnerSetSpec, list[tuple[PartnerMemberSpec, dict[str, str]]]]:
+    """Resolve ``--partner-set`` to (set, runnable members) (ADR-009 as amended).
+
+    Public members only unless ``--include-private``, which requires the
+    withheld parameters to be derivable locally (the maintainer-held
+    seed); every resolution is digest-verified (ADR-018 custody).
+    """
+    set_id, set_version = parse_set_slug(args.partner_set)
+    try:
+        set_spec = get_partner_set(set_id, version=set_version)
+    except KeyError as exc:
+        raise _CliExitError(str(exc), _USAGE_EXIT_CODE) from exc
+    if set_spec.task_id != task_id:
+        msg = (
+            f"partner set {set_spec.slug} serves task {set_spec.task_id!r}, "
+            f"not {task_id!r} (ADR-009 as amended: sets are per-task)"
+        )
+        raise _CliExitError(msg, _USAGE_EXIT_CODE)
+    try:
+        members = resolve_set_members(set_spec, include_private=args.include_private)
+    except WithheldParametersError as exc:
+        raise _CliExitError(str(exc), _USAGE_EXIT_CODE) from exc
+    return set_spec, members
+
+
 def _run_impl(args: argparse.Namespace, argv: list[str]) -> int:
     repo_path = Path.cwd()
-    if args.partner_set is not None:
-        msg = (
-            "no partner sets are registered yet (the ADR-009 partner-zoo v1 "
-            "build-out is future work); use --partner <registry-name>."
-        )
+    if args.include_private and args.partner_set is None:
+        msg = "--include-private only applies to --partner-set runs"
         raise _CliExitError(msg, _USAGE_EXIT_CODE)
     try:
         seeds = _parse_seeds(args.seeds)
     except ValueError as exc:
         raise _CliExitError(str(exc), _USAGE_EXIT_CODE) from exc
     task_id, task_version = _parse_task(args.task)
+
+    set_spec: PartnerSetSpec | None = None
+    set_members: list[tuple[PartnerMemberSpec, dict[str, str]]] = []
+    if args.partner_set is not None:
+        set_spec, set_members = _resolve_partner_set(args, task_id)
 
     provenance = git_provenance(repo_path)
     if provenance.dirty and not args.allow_dirty:
@@ -162,16 +216,45 @@ def _run_impl(args: argparse.Namespace, argv: list[str]) -> int:
         prereg_tag, prereg_blob = _prereg_gate(args.prereg, repo_path=repo_path)
 
     try:
-        episodes_by_seed, partner_spec = run_task_episodes(
-            task_id=task_id,
-            task_version=task_version,
-            policy_id=args.policy,
-            partner_name=args.partner,
-            seeds=seeds,
-            episodes_per_seed=args.episodes,
-            root_seed=args.root_seed,
-        )
-    except (KeyError, NotImplementedError) as exc:
+        if set_spec is not None:
+            episodes_by_seed, partner_material, partner_hashes = run_task_episodes_for_set(
+                task_id=task_id,
+                task_version=task_version,
+                policy_id=args.policy,
+                set_spec=set_spec,
+                members=set_members,
+                seeds=seeds,
+                episodes_per_seed=args.episodes,
+                root_seed=args.root_seed,
+            )
+            partner_set_id = set_spec.slug
+            # The schedule records the per-seed record count so verify's
+            # episode arithmetic holds across the member grid (ADR-028).
+            schedule_episodes = args.episodes * len(set_members)
+        else:
+            episodes_by_seed, partner_spec = run_task_episodes(
+                task_id=task_id,
+                task_version=task_version,
+                policy_id=args.policy,
+                partner_name=args.partner,
+                seeds=seeds,
+                episodes_per_seed=args.episodes,
+                root_seed=args.root_seed,
+            )
+            partner_set_id = f"adhoc:{args.partner}"
+            schedule_episodes = args.episodes
+            partner_hashes = {args.partner: partner_spec.partner_id}
+            partner_material = [
+                {
+                    "name": args.partner,
+                    "class_name": partner_spec.class_name,
+                    "seed": partner_spec.seed,
+                    "checkpoint_step": partner_spec.checkpoint_step,
+                    "weights_uri": partner_spec.weights_uri,
+                    "extra": dict(partner_spec.extra),
+                }
+            ]
+    except (KeyError, NotImplementedError, ValueError) as exc:
         raise _CliExitError(str(exc), _USAGE_EXIT_CODE) from exc
 
     spec_registered = chamber.tasks.get(task_id, version=task_version)
@@ -182,15 +265,15 @@ def _run_impl(args: argparse.Namespace, argv: list[str]) -> int:
         task_id=spec_registered.task_id,
         task_version=spec_registered.version,
         policy_id=args.policy,
-        partner_set_id=f"adhoc:{args.partner}",
-        partner_hashes={args.partner: partner_spec.partner_id},
+        partner_set_id=partner_set_id,
+        partner_hashes=partner_hashes,
         git_sha=provenance.sha,
         dirty=provenance.dirty,
         package_version=chamber.__version__,
         seed_schedule=SeedSchedule(
             root_seed=args.root_seed,
             seeds=seeds,
-            episodes_per_seed=args.episodes,
+            episodes_per_seed=schedule_episodes,
             substream_labels=[EGO_SUBSTREAM_PATTERN, BOOTSTRAP_SUBSTREAM],
         ),
         repro_command=repro_command,
@@ -202,16 +285,6 @@ def _run_impl(args: argparse.Namespace, argv: list[str]) -> int:
         prereg_git_tag=prereg_tag,
         prereg_blob_sha=prereg_blob,
     )
-    partner_material = [
-        {
-            "name": args.partner,
-            "class_name": partner_spec.class_name,
-            "seed": partner_spec.seed,
-            "checkpoint_step": partner_spec.checkpoint_step,
-            "weights_uri": partner_spec.weights_uri,
-            "extra": dict(partner_spec.extra),
-        }
-    ]
     try:
         final = write_bundle_dir(
             args.out,

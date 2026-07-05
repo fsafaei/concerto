@@ -35,6 +35,8 @@ if TYPE_CHECKING:
 
     from numpy.typing import NDArray
 
+    from chamber.partners.sets import PartnerMemberSpec, PartnerSetSpec
+
 #: Ego policy ids ``chamber-eval run --policy`` accepts (ADR-011 as
 #: amended: ``random`` is the B-RND floor baseline).
 POLICY_IDS: tuple[str, ...] = ("random",)
@@ -211,6 +213,108 @@ def run_task_episodes(
     return episodes_by_seed, partner_spec
 
 
+def run_task_episodes_for_set(
+    *,
+    task_id: str,
+    task_version: int | None = None,
+    policy_id: str,
+    set_spec: PartnerSetSpec,
+    members: list[tuple[PartnerMemberSpec, dict[str, str]]],
+    seeds: list[int],
+    episodes_per_seed: int,
+    root_seed: int = 0,
+) -> tuple[dict[int, list[EpisodeResult]], list[dict[str, object]], dict[str, str]]:
+    """Run the episode grid across a partner set's members (ADR-009 as amended 2026-07-05).
+
+    For every cluster seed, each resolved member plays the partner seat
+    for ``episodes_per_seed`` episodes on the **same** per-episode
+    initial states (``env.reset(seed=episode)`` — members are compared
+    on matched draws). ``episode_idx`` is made unique across members
+    (``member_index * episodes_per_seed + episode``) so a bundle's
+    per-seed record count matches its seed schedule (the caller records
+    ``episodes_per_seed * len(members)`` per seed, ADR-028 §Decision 3);
+    ``initial_state_seed`` keeps the env-level episode number and
+    ``metadata["member"]`` names the seat. The ego's substream is keyed
+    on the unique index so member cells draw independent ego noise
+    (ADR-002 P6).
+
+    Returns:
+        ``(episodes_by_seed, partner_material, partner_hashes)`` —
+        material rows are private-redacted per ADR-018 custody
+        (:func:`chamber.benchmarks.partner_probe.member_material`).
+
+    Raises:
+        KeyError: Unknown task or policy id.
+        NotImplementedError: Task not runnable by the bundle runner.
+        ValueError: Empty ``seeds`` / ``members``.
+    """
+    from chamber.benchmarks.partner_probe import member_material
+
+    spec = chamber.tasks.get(task_id, version=task_version)
+    if spec.task_id not in SUCCESS_PREDICATES:
+        supported = ", ".join(sorted(SUCCESS_PREDICATES))
+        msg = (
+            f"task {spec.slug} is not runnable by the bundle runner yet "
+            f"(no success predicate); supported tasks: {supported}"
+        )
+        raise NotImplementedError(msg)
+    if not seeds or not members:
+        msg = "seeds and members must be non-empty"
+        raise ValueError(msg)
+    success_fn = SUCCESS_PREDICATES[spec.task_id]
+
+    episodes_by_seed: dict[int, list[EpisodeResult]] = {}
+    material: list[dict[str, object]] = []
+    hashes: dict[str, str] = {}
+    for seed in seeds:
+        env = chamber.tasks.make(task_id, version=task_version, root_seed=seed)
+        uids = list(env.action_space.spaces)
+        ego_uid, partner_uid = uids[0], uids[1]
+        action_dim = int(env.action_space[ego_uid].shape[0])
+        partner_dim = int(env.action_space[partner_uid].shape[0])
+        ego = build_ego_policy(policy_id, action_dim=action_dim, root_seed=root_seed)
+        records: list[EpisodeResult] = []
+        for member_index, (member, params) in enumerate(members):
+            member_spec = member.partner_spec(
+                params=params,
+                seat_extra={"uid": partner_uid, "action_dim": str(partner_dim)},
+            )
+            partner = load_partner(member_spec)
+            if member.member_name not in hashes:
+                material.append(
+                    member_material(member, member_spec, redact=member.split == "private")
+                )
+                hashes[member.member_name] = member_spec.partner_id
+            for episode in range(episodes_per_seed):
+                unique_idx = member_index * episodes_per_seed + episode
+                obs, _ = env.reset(seed=episode)
+                partner.reset(seed=episode)
+                ego.reset(seed=seed, episode=unique_idx)
+                reward = 0.0
+                done = False
+                while not done:
+                    action = {ego_uid: ego.act(obs), partner_uid: partner.act(obs)}
+                    obs, reward, terminated, truncated, _ = env.step(action)
+                    done = bool(terminated or truncated)
+                final_reward = float(reward)
+                records.append(
+                    EpisodeResult(
+                        seed=seed,
+                        episode_idx=unique_idx,
+                        initial_state_seed=episode,
+                        success=success_fn(final_reward),
+                        metadata={
+                            "condition": spec.task_id,
+                            "member": member.member_name,
+                            "partner_set": set_spec.slug,
+                            "final_reward": final_reward,
+                        },
+                    )
+                )
+        episodes_by_seed[seed] = records
+    return episodes_by_seed, material, hashes
+
+
 __all__ = [
     "EGO_SUBSTREAM_PATTERN",
     "MPE_DIAGNOSTIC_SUCCESS_THRESHOLD",
@@ -221,4 +325,5 @@ __all__ = [
     "build_ego_policy",
     "build_partner_spec",
     "run_task_episodes",
+    "run_task_episodes_for_set",
 ]
