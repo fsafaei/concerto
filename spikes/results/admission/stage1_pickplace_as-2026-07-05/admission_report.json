@@ -1,0 +1,81 @@
+{
+  "schema_version": 1,
+  "task_id": "stage1_pickplace_as",
+  "task_version": 1,
+  "prereg_git_tag": "prereg-admission-stage1-pickplace-as-2026-07-05",
+  "prereg_blob_sha": "a03067490eae2917706f858fb921422358fadb6f",
+  "git_sha": "d68dee1d33277726fd18f6eaae153425261b96f0",
+  "dirty": false,
+  "date_stamp": "2026-07-05",
+  "checks": [
+    {
+      "check": "A1",
+      "outcome": "PASS",
+      "criterion": "success_ci_low >= tau_solv (0.95) with successful-episode stress peak <= stress_limit (None)",
+      "statistics": {
+        "n_episodes": 60.0,
+        "success_mean": 1.0,
+        "success_iqm": 1.0,
+        "success_ci_low": 1.0,
+        "success_ci_high": 1.0
+      },
+      "bundles": [
+        "a1_reference"
+      ],
+      "evidence": {
+        "a1_reference/bundle.json": "12330a982b7a1a196540efb83b3cd503959f8df3e41e03ea77f46d8f7b9d23fc"
+      },
+      "extended": false,
+      "notes": ""
+    },
+    {
+      "check": "A2",
+      "outcome": "FAIL",
+      "criterion": "success_ci_high <= tau_infeasible (0.05)",
+      "statistics": {
+        "n_episodes": 60.0,
+        "success_mean": 1.0,
+        "success_iqm": 1.0,
+        "success_ci_low": 1.0,
+        "success_ci_high": 1.0
+      },
+      "bundles": [
+        "a2_partner_ablated"
+      ],
+      "evidence": {
+        "a2_partner_ablated/bundle.json": "4a2209257dc7a2390a88e9750862ced38bb814105f494290d70c6212aa4822bb"
+      },
+      "extended": false,
+      "notes": ""
+    },
+    {
+      "check": "A3",
+      "outcome": "FAIL",
+      "criterion": "paired reference-minus-blind gap: delta_ci_low >= delta_min (0.2) passes; delta_ci_high < delta_min demotes to Tier-1 CONTROL",
+      "statistics": {
+        "n_pairs": 60.0,
+        "delta_iqm": 0.0,
+        "delta_mean": 0.0,
+        "delta_ci_low": 0.0,
+        "delta_ci_high": 0.0,
+        "blind_n_episodes": 60.0,
+        "blind_success_mean": 1.0,
+        "blind_success_iqm": 1.0,
+        "blind_success_ci_low": 1.0,
+        "blind_success_ci_high": 1.0
+      },
+      "bundles": [
+        "a3_partner_blind"
+      ],
+      "evidence": {
+        "a3_partner_blind/bundle.json": "772bedf79db7e07095c1f0aa2ed47c6c64c40a226974dd85ecf96a0fa80f2aa6"
+      },
+      "extended": false,
+      "notes": ""
+    }
+  ],
+  "verdict": "CONTROL",
+  "seed_extension_used": false,
+  "binding_evidence": {},
+  "notes": ""
+}

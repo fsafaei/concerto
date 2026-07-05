@@ -1,0 +1,139 @@
+# Pre-registration — cocarry@v1 Tier-2 admission report (ADR-027 §Admission protocol).
+#
+# CB-04 §2a: the coupling-validity admission protocol fired on the co-carry
+# task. All three checks are MEASURED cells driven by the committed rig
+# (ADR-026 §Decision 1-2): the scripted matched impedance pair is the A1
+# reference ("scripted allowed"); the A2 partner-ablated variant is the
+# registered single-arm positive-control condition
+# (cocarry_single_arm_positive_control — the bar is two-robot-infeasible by
+# construction; this run demonstrates it, never asserts it); the A3
+# partner-blind ego is the impedance controller variant stripped of exactly
+# its coupling channel (definition below). Thresholds are committed here,
+# before any measured run, and are never tuned afterward (ADR-007
+# §Discipline). The existing committed reference evidence (the rung-2
+# frozen-incumbent freeze-selection archives) is NOT re-verifiable by
+# chamber-eval verify-compatible re-runs (v2-era JSON, checkpoint-dependent),
+# so A1 is re-run fresh with the scripted pair — numbers are never copied
+# out of old archives into new reports.
+schema_version: 1
+task_id: cocarry
+git_tag: prereg-admission-cocarry-2026-07-05
+revision: rev1
+parameters:
+  admission:
+    task_version: 1
+    tau_solv: 0.95
+    # The committed rung stress threshold: the canonical wrist-force
+    # instrument's frozen ceiling f_max (ADR-027 §Versioning), verbatim from
+    # spikes/results/cocarry/rung2/cocarry_rung2_freeze_manifest.json.
+    stress_limit: 130.56970529556276
+    tau_infeasible: 0.05
+    delta_min: 0.20
+    seeds: [90000, 90001, 90002, 90003, 90004]
+    episodes_per_seed: 12
+    extension_seeds: [90005, 90006]
+    n_resamples: 2000
+    root_seed: 0
+    a1:
+      cell_id: a1_reference
+      runner: cocarry_scripted
+      policy_id: ref_script_impedance
+      partner_name: cocarry_impedance
+      params:
+        condition_id: cocarry_matched_panda_pair
+        ego: impedance
+    a2:
+      cell_id: a2_single_arm
+      runner: cocarry_scripted
+      policy_id: ref_script_impedance
+      partner_name: partner_ablated_zero
+      params:
+        condition_id: cocarry_single_arm_positive_control
+        ego: impedance
+    a3:
+      cell_id: a3_blind
+      runner: cocarry_scripted
+      policy_id: b_blind_impedance
+      partner_name: cocarry_impedance
+      params:
+        condition_id: cocarry_matched_panda_pair
+        ego: blind
+  blind_ego_definition: >
+    B-BLIND (ADR-011 as amended; ADR-027 A3) = the matched co-carry
+    impedance controller (chamber.partners.cocarry_impedance) stripped of
+    exactly its coupling channel and nothing else. The reference controller
+    reads no partner leaf and no force sensor; its only coupling feedback is
+    proprioceptive — the pd_joint_delta_pos law commands deltas from the
+    MEASURED joint angles, so the load transmitted through the welded bar
+    (the partner's motion) enters through qpos, and the deadzone-gated
+    Cartesian integral exists precisely to close the load-induced
+    steady-state offset. The blind variant
+    (chamber.partners.cocarry_blind.CoCarryBlindImpedancePartner,
+    registered cocarry_blind_impedance) therefore (i) reads the measured
+    qpos once, at the first control step of the episode (the published
+    ready pose — no load history at t=0), then dead-reckons its joint state
+    open-loop from its own emitted commands, and (ii) runs with ki = 0 (the
+    integral is the load-response term). The world goal remains readable
+    (task specification, not partner state). The ego seat runs the blind
+    variant; the partner seat stays the matched impedance reference.
+  measurement_geometry: >
+    One fresh env per episode with root_seed = initial_state_seed =
+    seed * 1000 + episode (the Gate-0 pairing convention): re-using a
+    stepped co-carry env across resets is a measured rig artifact (the
+    dual-hold attach carries state into the next episode and produces
+    spurious bar-fight failures — pilot episodes 5/7 fail at tilt 29-33
+    deg from a stepped env but succeed at tilt ~5-6 deg from a fresh
+    build on the SAME jitter draws), and every rung measurement drove
+    this env one stepped episode per build. A1 and A3 share the seed
+    schedule, so the paired-cluster bootstrap pairs episodes on
+    identical initial states.
+  power_pilot:
+    file: spikes/preregistration/admission/pilots/cocarry_power_pilot.json
+    run_purpose: power
+    pilot_seed: 89900
+    episodes: 12
+    excluded_from_report: true
+    summary: >
+      Fresh-build pilot (run after the rig-artifact fix): matched
+      reference 12/12 (IQM 1.000, degenerate CI at n=12), single-arm
+      0/12, blind ego 0/12; per-episode wall-clock ~2-4 s. With
+      per-episode success this deterministic-margined (reference
+      failures and blind/single-arm successes were not observed in the
+      pilot), 5 seeds x 12 episodes = 60 episodes per cell bounds the
+      seed-cluster bootstrap CI half-width well inside the 0.05 A1
+      headroom and the 0.20 A3 margin at trivial cost; 60 >= 50
+      satisfies the CB-04 floor. The single pre-committed extension
+      ([90005, 90006], +24 episodes per affected cell) is reserved for
+      a straddled CI, then final.
+  binding_evidence_rule: >
+    The A2 coupling positive-control evidence (ADR-026 §Decision 2) is the
+    stress distribution on MATCHED SUCCESSFUL episodes of the A1 reference
+    cell — the committed wrist constraint-force percentiles
+    (stress_p50/p90/p99/max) reported in the admission report's
+    binding-evidence block, against the frozen f_max 130.5697 N. The
+    single-arm cell's own telemetry is reported in its bundle as secondary
+    context.
+decision_rules: >
+  A1 PASS iff the reference cell's seed-cluster bootstrap success CI-lower
+  >= tau_solv (0.95) AND every successful episode's wrist stress peak <=
+  stress_limit (130.5697 N); FAIL iff the CI-upper < tau_solv or the
+  stress ceiling is violated on a success; a straddle consumes the single
+  pre-committed seed extension and is then final. If A1 FAILS on this
+  fresh re-verify the run STOPS before any threshold discussion
+  (NOT_SOLVABLE; thresholds do not move after the fact). A2 PASS iff the
+  single-arm cell's success CI-upper <= tau_infeasible (0.05); straddle =>
+  extension, then final. A3: paired-cluster bootstrap
+  (reference - blind, paired on identical initial_state_seed schedules)
+  — PASS iff gap CI-lower >= delta_min (0.20); FAIL (=> Tier-1 CONTROL
+  demotion) iff gap CI-upper < delta_min; straddle => extension of both
+  cells, then final. Verdict: ADMITTED iff A1, A2, A3 all PASS; A2 or A3
+  FAIL => CONTROL; any post-extension straddle => INDETERMINATE, reported
+  as such. Every cell is written as a chamber-eval verify-passing v3
+  bundle; the report cites bundle SHA-256 evidence only.
+notes: >
+  CB-04 §2a. Grounds: ADR-027 §Admission protocol; ADR-026 §Decision 1-2;
+  ADR-028 §Decisions 1-3 (bundles); ADR-018/I3 (black-box partner seats);
+  ADR-002 P6 (fresh-env-per-episode derivation recorded above). Runner:
+  chamber-eval admission --prereg
+  spikes/preregistration/admission/cocarry_admission.yaml --out
+  spikes/results/admission/cocarry-2026-07-05 --date 2026-07-05.

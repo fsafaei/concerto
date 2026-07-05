@@ -1,0 +1,115 @@
+# Pre-registration — stage1_pickplace_as@v1 admission protocol run (ADR-027 §Admission protocol).
+#
+# CB-04 §2b: the falsification demonstration. This is the task that fooled
+# the project in June (ADR-026 §Decision 3: ego-solvable as operationalized;
+# the partner does not participate in the success predicate), retained as a
+# Tier-1 CONTROL. The admission protocol must REJECT it — the expected and
+# hoped-for verdict is CONTROL via A2 (the partner-ablated variant still
+# succeeds far above tau_infeasible) and/or A3 (the partner-blind ego
+# matches the coupling-aware reference; gap upper CI < delta_min => the
+# demotion rule). Scripted-competent machinery throughout (REF-SCRIPT,
+# ADR-011 as amended): no training, CPU-scale cost. Thresholds committed
+# here before the measured run; never tuned afterward (ADR-007 §Discipline).
+schema_version: 1
+task_id: stage1_pickplace_as
+git_tag: prereg-admission-stage1-pickplace-as-2026-07-05
+revision: rev1
+parameters:
+  admission:
+    task_version: 1
+    tau_solv: 0.95
+    stress_limit: null   # the task pins no canonical stress instrument (ADR-027 §Versioning)
+    tau_infeasible: 0.05
+    delta_min: 0.20
+    seeds: [91000, 91001, 91002, 91003, 91004]
+    episodes_per_seed: 12
+    extension_seeds: [91005, 91006]
+    n_resamples: 2000
+    root_seed: 0
+    a1:
+      cell_id: a1_reference
+      runner: pickplace_scripted
+      policy_id: ref_script
+      partner_name: scripted_heuristic
+      params:
+        condition_id: stage1_pickplace_panda_plus_fetch_ego_aht_happo_per_agent
+        variant: reference
+    a2:
+      cell_id: a2_partner_ablated
+      runner: pickplace_scripted
+      policy_id: ref_script
+      partner_name: partner_ablated_zero
+      params:
+        condition_id: stage1_pickplace_panda_plus_fetch_ego_aht_happo_per_agent
+        variant: partner_ablated
+    a3:
+      cell_id: a3_partner_blind
+      runner: pickplace_scripted
+      policy_id: b_blind
+      partner_name: scripted_heuristic
+      params:
+        condition_id: stage1_pickplace_panda_plus_fetch_ego_aht_happo_per_agent
+        variant: partner_blind
+  cell_definitions: >
+    Reference (A1): the scripted-competent pick-place oracle
+    (chamber.agents.pickplace_ego_scripted.ScriptedPickPlaceEgo, REF-SCRIPT)
+    on the ego seat against the task's canonical scripted partner
+    (scripted_heuristic at target_xy=(0,0) — the registered partner whose
+    action stream is empirically a no-op, ADR-002 §Rev 2026-05-21; that
+    inertness is part of the construct fact under test). Partner-ablated
+    (A2): the same ego with the partner seat zeroed BY CONSTRUCTION
+    (partner_ablated_zero) — the partner remains in the scene, its action
+    stream is identically zero, i.e. the partner removed in the task's own
+    terms. Partner-blind (A3): the same ego with the partner's obs subtree
+    deleted before any read (mask_partner_obs=True — B-BLIND enforced by
+    construction). The oracle reads no partner leaf in any variant; on this
+    task that is the measured construct fact (ADR-026 §Decision 3), and the
+    protocol's job is to expose it as numbers: reference ~= ablated ~=
+    blind. Episodes: one env per cluster seed (root_seed=seed), consecutive
+    resets with reset seed = episode index (the env re-randomizes cube/goal
+    per reset through its own P6 substreams); A1 and A3 share the schedule
+    for the paired bootstrap.
+  power_pilot:
+    file: spikes/preregistration/admission/pilots/stage1_pickplace_as_power_pilot.json
+    run_purpose: power
+    pilot_seed: 89900
+    episodes: 12
+    excluded_from_report: true
+    summary: >
+      One-seed pilot: reference 12/12, partner-ablated 12/12,
+      partner-blind 12/12 (IQM 1.000, degenerate CIs at n=12); ~1-2 s
+      per episode. With per-episode outcomes this deterministic-margined,
+      5 seeds x 12 episodes = 60 episodes per cell (>= the CB-04 50-episode
+      floor) bounds the seed-cluster bootstrap CI half-width well inside
+      the 0.05 A1 headroom and leaves the A3 gap CI pinned near zero if
+      the construct fact holds. The single pre-committed extension
+      ([91005, 91006]) is reserved for a straddled CI, then final.
+  expectation: >
+    Pre-committed direction: this run is the protocol's negative control.
+    Expected A1 PASS (the task is solvable — by the ego alone), A2 FAIL
+    (ablated success >> 0.05: not two-robot-infeasible), A3 FAIL (gap
+    upper CI < 0.20: partner-irrelevant), verdict CONTROL. If the
+    protocol instead ADMITS this task, the protocol itself is falsified
+    and CB-04 stops for redesign — that outcome would be reported, not
+    reinterpreted.
+decision_rules: >
+  A1 PASS iff the reference cell's seed-cluster bootstrap success CI-lower
+  >= tau_solv (0.95); no stress conjunct (the task pins no canonical
+  stress instrument). A2 PASS iff the ablated cell's success CI-upper <=
+  tau_infeasible (0.05); FAIL iff CI-lower > 0.05. A3: paired-cluster
+  bootstrap (reference - blind) — PASS iff gap CI-lower >= delta_min
+  (0.20); FAIL (Tier-1 CONTROL demotion) iff gap CI-upper < 0.20. Any
+  straddle consumes the single pre-committed seed extension, then is
+  final. Verdict per ADR-027: A1 FAIL => NOT_SOLVABLE (stop); A2 or A3
+  FAIL => CONTROL; all PASS => ADMITTED (protocol falsified — see
+  expectation). Every cell is a chamber-eval verify-passing v3 bundle.
+notes: >
+  CB-04 §2b. Grounds: ADR-027 §Admission protocol; ADR-026 §Decision 3
+  (the reinterpreted 2026-06-11 AS verdict; archive immutable, I8);
+  ADR-011 §Decision as amended (REF-SCRIPT / B-BLIND); ADR-028
+  §Decisions 1-3. The stage1-AS-2026-06-11 archive is not re-run and not
+  edited; this admission run is fresh scripted-competent evidence on the
+  same registered task version. Runner: chamber-eval admission --prereg
+  spikes/preregistration/admission/stage1_pickplace_as_admission.yaml
+  --out spikes/results/admission/stage1_pickplace_as-2026-07-05 --date
+  2026-07-05.

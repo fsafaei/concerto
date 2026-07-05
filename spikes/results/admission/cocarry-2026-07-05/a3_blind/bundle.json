@@ -1,0 +1,58 @@
+{
+  "schema_version": 3,
+  "task_id": "cocarry",
+  "task_version": 1,
+  "policy_id": "b_blind_impedance",
+  "partner_set_id": "adhoc:cocarry_impedance",
+  "partner_hashes": {
+    "ego:cocarry_blind_impedance": "af124e19aef3d811",
+    "partner:cocarry_impedance": "8831ed572519c9d8"
+  },
+  "git_sha": "d68dee1d33277726fd18f6eaae153425261b96f0",
+  "dirty": false,
+  "package_version": "0.7.0",
+  "seed_schedule": {
+    "root_seed": 0,
+    "seeds": [
+      90000,
+      90001,
+      90002,
+      90003,
+      90004
+    ],
+    "episodes_per_seed": 12,
+    "substream_labels": [
+      "env.cocarry",
+      "evaluation.bundle_bootstrap"
+    ]
+  },
+  "repro_command": "chamber-eval admission --prereg spikes/preregistration/admission/cocarry_admission.yaml --out spikes/results/admission/cocarry-2026-07-05 --date 2026-07-05",
+  "platform": {
+    "os": "Linux-6.17.0-29-generic-x86_64-with-glibc2.39",
+    "python": "3.12.3",
+    "numpy": "2.1.3",
+    "torch": "2.11.0+cu128",
+    "device": "NVIDIA GeForce RTX 2080 SUPER"
+  },
+  "manifest": {
+    "REPRO.txt": "75e594ac726460f203ead1f914381b18c090d955f71b1c0fa9a5aa91b81c2bea",
+    "episodes_seed90000.jsonl": "03b4fe2b38e8a13cd3706c1074809ecbfe576f8682a9599aa9b888684667e707",
+    "episodes_seed90001.jsonl": "0f81bd2f4de81d563f2337797c482d71538bc16cbe23377edb8061ec94381c21",
+    "episodes_seed90002.jsonl": "9d2731b3eab7edd9edecd60f14f8a3de4c329ca6e9c62fd6cb51fa92b6cef1fc",
+    "episodes_seed90003.jsonl": "86aade6fc89b0cda26e24c85e85bf852af068a77a1eefe0b6aade3f23ec5cd81",
+    "episodes_seed90004.jsonl": "bd5ff930b4690648348ca188c8d6c99cd9d3bfd32d9b88bc8a169a44cd03b1cd",
+    "partners.json": "98cfc37adfea91443e1ba5bd6447d574a931c3f05dea364ce583de52823b147d",
+    "prereg.yaml": "583edacd9a469a06aa76f9012279b03014c3cacd35d69774b9e78edff0e6bdc4"
+  },
+  "summary": {
+    "n_episodes": 60,
+    "success_mean": 0.0,
+    "success_iqm": 0.0,
+    "success_ci_low": 0.0,
+    "success_ci_high": 0.0,
+    "n_resamples": 2000,
+    "bootstrap_root_seed": 0
+  },
+  "prereg_git_tag": "prereg-admission-cocarry-2026-07-05",
+  "prereg_blob_sha": "7525a066d7d55a2f98312344d7272634844617c1"
+}
