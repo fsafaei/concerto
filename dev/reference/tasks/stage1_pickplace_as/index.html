@@ -1884,6 +1884,8 @@
 <p>A single-robot bin-to-conveyor pick-and-place station with a second robot present in the same cell — the everyday case where co-presence does not imply cooperation, which is exactly what the control checks.</p>
 <h2 id="evidence">Evidence</h2>
 <ul>
+<li><a href="https://github.com/fsafaei/concerto/blob/main/spikes/results/admission/stage1_pickplace_as-2026-07-05/admission_report.json"><code>spikes/results/admission/stage1_pickplace_as-2026-07-05/admission_report.json</code></a></li>
+<li><a href="https://github.com/fsafaei/concerto/blob/main/spikes/preregistration/admission/stage1_pickplace_as_admission.yaml"><code>spikes/preregistration/admission/stage1_pickplace_as_admission.yaml</code></a></li>
 <li><a href="https://github.com/fsafaei/concerto/blob/main/adr/ADR-026-coupling-validity-criterion.md"><code>adr/ADR-026-coupling-validity-criterion.md</code></a></li>
 <li><a href="https://github.com/fsafaei/concerto/blob/main/spikes/results/stage1-AS-2026-06-11/GATE_VERDICT_REPORT_2026-06-11.md"><code>spikes/results/stage1-AS-2026-06-11/GATE_VERDICT_REPORT_2026-06-11.md</code></a></li>
 </ul>
@@ -1895,7 +1897,7 @@
 <span class="c1"># Requires a SAPIEN-capable host (Tier-2).</span>
 </code></pre></div>
 <h2 id="notes">Notes</h2>
-<p>Construct-invalid for cooperation as operationalized (ego-solvable; the AS cell is <code>invalid</code> per ADR-026's reinterpretation of the immutable 2026-06-11 archive) — retained precisely as a Tier-1 control (ADR-027 §Tier ladder): a method claiming cooperation gains here is measuring something else. Default condition is the heterogeneous panda+fetch cell; pass condition_id='stage1_pickplace_panda_only_mappo_shared_param' for the homogeneous baseline.</p>
+<p>Construct-invalid for cooperation as operationalized (ego-solvable; the AS cell is <code>invalid</code> per ADR-026's reinterpretation of the immutable 2026-06-11 archive) — retained precisely as a Tier-1 control (ADR-027 §Tier ladder): a method claiming cooperation gains here is measuring something else. CONTROL is now measured, not just recorded: the committed admission report (tag prereg-admission-stage1-pickplace-as-2026-07-05) rejects the task — A1 scripted-competent ego 60/60, A2 FAIL (partner-ablated 60/60: not two-robot-infeasible), A3 FAIL (partner-blind 60/60; gap CI [0, 0] &lt; 0.20 — the demotion rule). Default condition is the heterogeneous panda+fetch cell; pass condition_id='stage1_pickplace_panda_only_mappo_shared_param' for the homogeneous baseline.</p>
 
 
 

@@ -1847,7 +1847,7 @@
 
 <h1 id="cocarryv1-co-carry-rigid-dual-arm-bar-transport"><code>cocarry@v1</code> — Co-carry — rigid dual-arm bar transport</h1>
 <p>Two manipulators rigidly carry one shared bar to a goal while keeping it level and keeping internal stress within a frozen force ceiling. The task is infeasible for one robot, so success measures cooperation rather than a single ego's competence. Its rung archives (frozen incumbent, policy-shift and embodiment-shift measurements) are the committed evidence for Tier-2 admission.</p>
-<p><strong>Tier 2 — admitted cooperation tasks</strong> · <strong>Status: CANDIDATE</strong> · Suite: CHAMBER-Bench v1.0 (<a href="https://github.com/fsafaei/concerto/blob/main/adr/ADR-027-chamber-bench-v1-protocol.md"><code>adr/ADR-027-chamber-bench-v1-protocol.md</code></a>)</p>
+<p><strong>Tier 2 — admitted cooperation tasks</strong> · <strong>Status: ADMITTED</strong> · Suite: CHAMBER-Bench v1.0 (<a href="https://github.com/fsafaei/concerto/blob/main/adr/ADR-027-chamber-bench-v1-protocol.md"><code>adr/ADR-027-chamber-bench-v1-protocol.md</code></a>)</p>
 <h2 id="spaces">Spaces</h2>
 <ul>
 <li><strong>Action space.</strong> Dict over ego (panda_wristcam) + partner (panda_partner, or xarm6_robotiq under the embodiment-shift condition); per-agent arm control with a rigid dual-hold bar attach.</li>
@@ -1884,6 +1884,8 @@
 <p>Dual-robot handling of long or heavy payloads — two industrial arms sharing one rigid part, as in dual-arm transport of sheet-metal or chassis components in automotive body shops, where tilt and internal stress limits bind exactly because two holds share the load.</p>
 <h2 id="evidence">Evidence</h2>
 <ul>
+<li><a href="https://github.com/fsafaei/concerto/blob/main/spikes/results/admission/cocarry-2026-07-05/admission_report.json"><code>spikes/results/admission/cocarry-2026-07-05/admission_report.json</code></a></li>
+<li><a href="https://github.com/fsafaei/concerto/blob/main/spikes/preregistration/admission/cocarry_admission.yaml"><code>spikes/preregistration/admission/cocarry_admission.yaml</code></a></li>
 <li><a href="https://github.com/fsafaei/concerto/blob/main/spikes/results/cocarry/rung2/cocarry_rung2_freeze_manifest.json"><code>spikes/results/cocarry/rung2/cocarry_rung2_freeze_manifest.json</code></a></li>
 <li><a href="https://github.com/fsafaei/concerto/blob/main/spikes/results/cocarry/rung2/cocarry_rung2_freeze_selection_prereg.json"><code>spikes/results/cocarry/rung2/cocarry_rung2_freeze_selection_prereg.json</code></a></li>
 <li><a href="https://github.com/fsafaei/concerto/blob/main/spikes/results/cocarry/rung2/cocarry_rung2_freeze_selection_validation.json"><code>spikes/results/cocarry/rung2/cocarry_rung2_freeze_selection_validation.json</code></a></li>
@@ -1904,7 +1906,7 @@
 <span class="c1"># Requires a SAPIEN-capable host (Tier-2).</span>
 </code></pre></div>
 <h2 id="notes">Notes</h2>
-<p>CANDIDATE flips to ADMITTED only when the retroactive admission report (A1: matched reference 1.00, held-out validation 24/24 per the freeze-selection archives; A2: the rung positive controls; A3: measured against B-BLIND) is committed under ADR-027 §Admission protocol. The <code>null</code> AS cell records the embodiment-heterogeneity robust null established by the rung-4 archives (rung-4d pose-artifact retraction + rung-4e task-fair pose/controller search); the rung-3 policy-heterogeneity pooled null (with its stiff-impedance caveat) is recorded in the rung3 archive. Changing the canonical success predicate or stress instrument creates cocarry@2 (ADR-027 §Versioning).</p>
+<p>ADMITTED by the committed admission report (ADR-027 §Admission protocol; tag prereg-admission-cocarry-2026-07-05): A1 scripted matched reference 60/60 with wrist stress max 107.9 N &lt; f_max 130.5697; A2 single-arm positive control 0/60; A3 partner-blind ego (B-BLIND, cocarry_blind_impedance) 0/60 — paired gap CI [1.0, 1.0] &gt;= delta_min 0.20. Binding evidence: stress p50 88.6 / p99 106.4 N on matched successes. The <code>null</code> AS cell records the embodiment-heterogeneity robust null established by the rung-4 archives (rung-4d pose-artifact retraction + rung-4e task-fair pose/controller search); the rung-3 policy-heterogeneity pooled null (with its stiff-impedance caveat) is recorded in the rung3 archive. Changing the canonical success predicate or stress instrument creates cocarry@2 (ADR-027 §Versioning).</p>
 
 
 
