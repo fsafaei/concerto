@@ -11,14 +11,13 @@ pattern).
 
 from __future__ import annotations
 
+import shutil
 import subprocess
-from typing import TYPE_CHECKING
+from pathlib import Path
 
 import pytest
+import yaml
 from pydantic import ValidationError
-
-if TYPE_CHECKING:
-    from pathlib import Path
 
 from chamber.evaluation.prereg import (
     PREREG_SCHEMA_VERSION,
@@ -121,3 +120,55 @@ class TestVerifyGitTagBothForms:
         )
         with pytest.raises(PreregistrationError, match="does not exist"):
             verify_git_tag(doc, prereg, repo_path=repo)
+
+
+def _repo_root() -> Path:
+    return Path(__file__).parents[2]
+
+
+def _gate0_tag_available() -> bool:
+    git = shutil.which("git")
+    if git is None:
+        return False
+    probe = subprocess.run(  # noqa: S603
+        [
+            git,
+            "-C",
+            str(_repo_root()),
+            "rev-parse",
+            "--verify",
+            "refs/tags/prereg-handover-place-gate0-rev2-2026-06-26",
+        ],
+        capture_output=True,
+        check=False,
+    )
+    return probe.returncode == 0
+
+
+@pytest.mark.skipif(
+    not _gate0_tag_available(),
+    reason="Gate-0 prereg tag not fetched on this checkout (shallow CI clone)",
+)
+class TestGate0DocumentFormReExpression:
+    """ADR-028 §Validation criteria 3: the Gate-0 prereg, document-form."""
+
+    def test_gate0_re_expression_validates_and_tag_blob_check_passes(self) -> None:
+        repo = _repo_root()
+        original = repo / "spikes" / "preregistration" / "handover_place" / "gate0.yaml"
+        raw = yaml.safe_load(original.read_text(encoding="utf-8"))
+        doc = PreregDocument(
+            task_id="handover_place",
+            git_tag="prereg-handover-place-gate0-rev2-2026-06-26",
+            parameters={"gate0": raw},
+            decision_rules=(
+                "Verdict space + stop rules as committed in the tagged Gate-0 "
+                "pre-registration (COUPLING_VALID / WASHOUT / "
+                "WASHOUT_FOR_REAL_CELLS with the co-hold escalation clause)."
+            ),
+            revision="rev2",
+        )
+        assert doc.schema_version == PREREG_SCHEMA_VERSION
+        # The original file's tag-blob lock still passes through the shared
+        # verifier — the check Gate-0 ran by hand, now mechanised.
+        sha = verify_git_tag(doc, original, repo_path=repo)
+        assert sha == "b26cfba74a2f1bb9ac295810e4846fe23742ff1b"

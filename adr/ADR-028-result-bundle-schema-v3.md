@@ -179,3 +179,32 @@ every reference.
 - Whether `chamber-eval verify` should re-execute a bundle's
   `repro_command` in a sandboxed smoke mode (full re-run verification)
   or remain integrity-only in v1.0 (current answer: integrity-only).
+
+## Revision history
+
+- 2026-07-05 (implemented, PR #268): `SCHEMA_VERSION` 2 → 3 with
+  `ResultBundle` / `SeedSchedule` / `PlatformFingerprint` /
+  `BundleSummary` in `chamber.evaluation.results`, the
+  version-dispatching `load_run_archive` reader (§Decision 4),
+  `PREREG_SCHEMA_VERSION = 1` + document-form `PreregDocument` in
+  `chamber.evaluation.prereg` (§Decision 2), bundle IO + the
+  `chamber-eval run` / `chamber-eval verify` commands (§Decision 3),
+  and the smoke-eval CI loop (§Validation criteria 1). Three
+  implementation-reality amendments to §Decision 1, authorized here
+  rather than diverging silently: (i) a `dirty: bool` provenance field
+  — `chamber-eval run` refuses a dirty working tree unless
+  `--allow-dirty`, which stamps `dirty: true` and makes the bundle
+  ineligible for leaderboard use (`chamber-eval verify` fails its
+  eligibility row); (ii) the file manifest cannot literally cover
+  "every file" (a file cannot contain its own hash) — integrity is
+  two-layer: `bundle.json`'s `manifest` covers every file except
+  `bundle.json` and `SHA256SUMS.txt`, while `SHA256SUMS.txt` covers
+  every file except itself, including `bundle.json`; (iii) two
+  results-content fields ride alongside the provenance set —
+  `policy_id` (the ADR-011 baseline identity under evaluation) and the
+  recomputable `summary` block whose bootstrap parameters
+  (`n_resamples`, `bootstrap_root_seed` via `derive_substream`) are
+  pinned in the bundle so `chamber-eval verify` recomputes identical
+  statistics from the raw episode records (ADR-002 P6). The
+  partner-spec material the identity hashes are recomputed from ships
+  as `partners.json` inside the bundle directory.
