@@ -1,0 +1,70 @@
+{
+  "dirty": false,
+  "floor": 0.9,
+  "floor_probe": "fingerprint",
+  "git_sha": "d11e52249d69ab04bde87c57ffda23828ba58ab9",
+  "members": {
+    "heuristic_center": {
+      "fingerprint": {
+        "action_abs_mean": 0.000965,
+        "action_abs_p90": 0.006012,
+        "action_std": 0.002264,
+        "n_episodes": 20.0,
+        "success_rate": 1.0
+      },
+      "floor_pass": true,
+      "floor_probe": "fingerprint",
+      "floor_success": 1.0,
+      "params_sha256": "963dcf2d674c69aae31b4417422e62465c21bd7ac99ab592706ecf8771e9c88e",
+      "partner_id": "aa4a6fec38c0646e",
+      "registry_class": "scripted_heuristic",
+      "role": "partner",
+      "split": "public"
+    },
+    "heuristic_quadrant_neg": {
+      "fingerprint": {
+        "action_abs_mean": 0.005987,
+        "action_abs_p90": 0.034786,
+        "action_std": 0.014135,
+        "n_episodes": 20.0,
+        "success_rate": 1.0
+      },
+      "floor_pass": true,
+      "floor_probe": "fingerprint",
+      "floor_success": 1.0,
+      "params_sha256": "302d09670ddb8785079e65e76d31da8680de1c0dc882aa34d7c5bdb53a1626f7",
+      "partner_id": "afe5ae26b3665608",
+      "registry_class": "scripted_heuristic",
+      "role": "partner",
+      "split": "public"
+    },
+    "heuristic_quadrant_pos": {
+      "fingerprint": {
+        "action_abs_mean": 0.00669,
+        "action_abs_p90": 0.041448,
+        "action_std": 0.015711,
+        "n_episodes": 20.0,
+        "success_rate": 1.0
+      },
+      "floor_pass": true,
+      "floor_probe": "fingerprint",
+      "floor_success": 1.0,
+      "params_sha256": "951fdfbeb2caab78b14f33f316cb75d2af92abe3d132114d3421b02ba6488b62",
+      "partner_id": "28afd322265b96ab",
+      "registry_class": "scripted_heuristic",
+      "role": "partner",
+      "split": "public"
+    }
+  },
+  "probe_episodes_per_seed": 5,
+  "probe_seeds": [
+    7000,
+    7001,
+    7002,
+    7003
+  ],
+  "schema_version": 1,
+  "set_id": "stage1_pickplace_as_partners",
+  "set_version": 1,
+  "task": "stage1_pickplace_as@v1"
+}

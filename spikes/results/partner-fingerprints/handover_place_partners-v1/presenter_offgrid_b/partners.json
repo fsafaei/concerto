@@ -1,0 +1,19 @@
+[
+  {
+    "checkpoint_step": null,
+    "class_name": "handover_presenter",
+    "extra": {
+      "grasp_pose_bias_deg": "18.3353",
+      "grasp_pose_sigma_deg": "11.9689",
+      "lateral_offset_x_m": "0.0",
+      "lateral_offset_y_m": "0.0",
+      "lateral_sigma_m": "0.0003",
+      "timing_skew_bias_s": "0.1793",
+      "timing_skew_sigma_s": "0.1134",
+      "variant": "mismatched"
+    },
+    "name": "presenter_offgrid_b",
+    "seed": 0,
+    "weights_uri": "member://handover_presenter/493a16d55d28b33593482461eecb2dbeb77d5ff505ba4d3c6cb28dbdecfbb77d"
+  }
+]

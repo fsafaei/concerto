@@ -144,6 +144,13 @@ _INTEGRAL_ENGAGE_M: float = 0.12
 #: holding them open avoids any incidental self-collision.
 _GRIPPER_ACTION_OPEN: float = 1.0
 
+#: Upper bound on the bounded-lag buffer depth (control steps). A lag deeper
+#: than this is no longer "sluggish but competent" at the 20 Hz control rate
+#: (>0.5 s of pure transport delay destabilises the coupled carry), so the
+#: parameterized scripted family (ADR-009 §Decision, v1.0 right-sizing
+#: amendment 2026-07-05) never requests it and the constructor loud-fails.
+_LAG_STEPS_MAX: int = 10
+
 
 def _parse_vec3(raw: str) -> NDArray[np.float64]:
     """Parse an ``"x,y,z"`` string into a float64 ``(3,)`` array."""
@@ -197,6 +204,14 @@ class CoCarryImpedancePartner(PartnerBase):
       (``panda_partner`` shares the kinematic chain, so the default is
       correct for both).
     - ``kp`` / ``ki`` / ``step_max`` / ``damping`` — optional gain overrides.
+    - ``lag_steps`` — optional bounded transport lag in control steps
+      (default ``"0"`` = the historical byte-identical path). A positive
+      lag makes the controller emit the arm command it computed
+      ``lag_steps`` steps ago (holding still during the warm-up), i.e. a
+      "sluggish but competent" member: delayed but convergent tracking,
+      since the target is quasi-static and the PI law keeps integrating
+      on the fresh error (ADR-009 §Decision, v1.0 right-sizing amendment
+      2026-07-05 — the bounded-lag scripted-family member).
     """
 
     def __init__(self, spec: PartnerSpec) -> None:
@@ -214,22 +229,36 @@ class CoCarryImpedancePartner(PartnerBase):
         self._ki: float = float(extra.get("ki", str(_DEFAULT_KI)))
         self._step_max: float = float(extra.get("step_max", str(_DEFAULT_STEP_MAX_M)))
         self._damping: float = float(extra.get("damping", str(_DEFAULT_DAMPING)))
+        lag_raw = extra.get("lag_steps", "0")
+        try:
+            self._lag_steps: int = int(lag_raw)
+        except ValueError as exc:
+            raise ValueError(f"lag_steps must be an int in [0, {_LAG_STEPS_MAX}]") from exc
+        if not 0 <= self._lag_steps <= _LAG_STEPS_MAX:
+            raise ValueError(
+                f"lag_steps must be an int in [0, {_LAG_STEPS_MAX}]; got {self._lag_steps}"
+            )
         urdf_path = extra.get("urdf_path")
         self._provider = PandaJacobianProvider(urdf_path)
         # Within-episode Cartesian integral (base frame); cleared in reset.
         self._integral: NDArray[np.float64] = np.zeros(_XYZ, dtype=np.float64)
+        # Within-episode bounded-lag buffer of past arm commands; cleared in
+        # reset. Empty list when lag_steps == 0 (the byte-identical path).
+        self._lag_buffer: list[NDArray[np.float32]] = []
 
     def reset(self, *, seed: int | None = None) -> None:
-        """Clear the within-episode integral (ADR-009 §Decision; stateless across episodes).
+        """Clear the within-episode integral + lag buffer (ADR-009 §Decision; stateless).
 
         The control law is a deterministic function of ``obs`` + ``spec``
-        plus a within-episode Cartesian integral that is zeroed here, so
-        the partner carries no state across episodes (ADR-009 §Decision;
-        plan/04 §2). The seed is accepted only for
+        plus within-episode state (the Cartesian integral and the
+        bounded-lag command buffer) that is zeroed here, so the partner
+        carries no state across episodes (ADR-009 §Decision; plan/04 §2).
+        The seed is accepted only for
         :class:`~chamber.partners.api.FrozenPartner` Protocol conformance.
         """
         del seed
         self._integral = np.zeros(_XYZ, dtype=np.float64)
+        self._lag_buffer = []
 
     def act(
         self,
@@ -278,7 +307,18 @@ class CoCarryImpedancePartner(PartnerBase):
         jjt = jac @ jac.T + (self._damping**2) * np.eye(_XYZ)
         dq = jac.T @ np.linalg.solve(jjt, v_cmd)
         action[:_PANDA_ARM_DOF] = np.clip(dq / _ACTION_DELTA_SCALE, -1.0, 1.0).astype(np.float32)
-        return action
+        if self._lag_steps == 0:
+            return action
+        # Bounded lag (ADR-009 §Decision, 2026-07-05 amendment): emit the arm
+        # command computed lag_steps steps ago, holding still through the
+        # warm-up. Convergent because the target is quasi-static and the PI
+        # law keeps integrating on the fresh error.
+        self._lag_buffer.append(action[:_PANDA_ARM_DOF].copy())
+        delayed = np.zeros(_PANDA_ARM_DOF + 1, dtype=np.float32)
+        delayed[_PANDA_ARM_DOF] = _GRIPPER_ACTION_OPEN
+        if len(self._lag_buffer) > self._lag_steps:
+            delayed[:_PANDA_ARM_DOF] = self._lag_buffer.pop(0)
+        return delayed
 
     def _read_goal(self, obs: Mapping[str, object]) -> NDArray[np.float64] | None:
         """Read the world goal centroid from ``obs["extra"]["goal_pos"]``."""

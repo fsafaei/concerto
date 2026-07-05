@@ -60,6 +60,11 @@ spikes/results/*
 # registry's admission_status flips cite (chamber-eval admission;
 # invariant I8) and MUST be committed.
 !spikes/results/admission/
+# Carve-out: the ADR-009 (as amended 2026-07-05) partner-set fingerprint
+# archives under spikes/results/partner-fingerprints/ are the committed
+# behavioural evidence the docs/reference/partners/ cards render from
+# (invariant I8) and MUST be committed.
+!spikes/results/partner-fingerprints/
 .local/
 sbom.spdx.json
 licences.json

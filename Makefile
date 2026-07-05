@@ -59,18 +59,21 @@ verify-coverage-floors:
 	uv run python scripts/check_coverage_floors.py
 
 # Drift gate for the generated benchmark-suite surfaces (ADR-027
-# §Versioning / §Consequences): the README task table and the
-# docs/reference/tasks/ cards must match a fresh render from the
-# chamber.tasks registry. Regenerate with `make render-task-docs`.
+# §Versioning / §Consequences): the README task table, the
+# docs/reference/tasks/ cards, and the docs/reference/partners/ cards
+# must match a fresh render from the chamber.tasks / chamber.partners
+# registries. Regenerate with `make render-task-docs`.
 verify-readme-tables:
 	uv run python scripts/render_task_table.py --check
 	uv run python scripts/render_task_cards.py --check
+	uv run python scripts/render_partner_cards.py --check
 
-# Regenerate the README task table + docs/reference/tasks/ cards from
-# the chamber.tasks registry (the write mode of verify-readme-tables).
+# Regenerate the README task table + docs/reference/tasks/ cards +
+# docs/reference/partners/ cards (the write mode of verify-readme-tables).
 render-task-docs:
 	uv run python scripts/render_task_table.py
 	uv run python scripts/render_task_cards.py
+	uv run python scripts/render_partner_cards.py
 
 sbom:
 	uv run cyclonedx-py environment -o sbom.spdx.json

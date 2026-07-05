@@ -276,8 +276,9 @@ def main(argv: list[str] | None = None) -> int:
         )
         print("       chamber-eval manifest [--output MANIFEST.json]")
         print(
-            "       chamber-eval run --task ID [--partner NAME | --partner-set ID] "
-            "--policy ID --seeds N --episodes N --out DIR [--prereg YAML]"
+            "       chamber-eval run --task ID [--partner NAME | --partner-set ID "
+            "[--include-private]] --policy ID --seeds N --episodes N --out DIR "
+            "[--prereg YAML]"
         )
         print("       chamber-eval verify BUNDLE_DIR")
         print("       chamber-eval admission --prereg YAML --out DIR --date YYYY-MM-DD")

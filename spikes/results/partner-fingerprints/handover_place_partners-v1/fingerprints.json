@@ -1,0 +1,145 @@
+{
+  "dirty": false,
+  "floor": 0.9,
+  "floor_probe": "free_regrasp",
+  "git_sha": "d11e52249d69ab04bde87c57ffda23828ba58ab9",
+  "members": {
+    "presenter_matched": {
+      "fingerprint": {
+        "action_abs_mean": 0.295963,
+        "action_abs_p90": 0.82172,
+        "action_std": 0.504541,
+        "n_episodes": 20.0,
+        "stress_max": 0.0,
+        "stress_mean": 0.0,
+        "stress_p50": 0.0,
+        "stress_p90": 0.0,
+        "success_rate": 1.0
+      },
+      "floor_pass": true,
+      "floor_probe": "free_regrasp",
+      "floor_success": 1.0,
+      "params_sha256": "d4f8fcf58e750c8dcd223ff4e78cb08da29f758d8b2fb03b9886789711915123",
+      "partner_id": "dd261cfdde60ca43",
+      "registry_class": "handover_presenter",
+      "role": "presenter",
+      "split": "private"
+    },
+    "presenter_mismatch_15": {
+      "fingerprint": {
+        "action_abs_mean": 3.285864,
+        "action_abs_p90": 9.11302,
+        "action_std": 5.582623,
+        "n_episodes": 20.0,
+        "stress_max": 14.3454,
+        "stress_mean": 0.7173,
+        "stress_p50": 0.0,
+        "stress_p90": 0.0,
+        "success_rate": 1.0
+      },
+      "floor_pass": true,
+      "floor_probe": "free_regrasp",
+      "floor_success": 1.0,
+      "params_sha256": "21dad7ccf5614c6990953b65b0287d41deeb18709d40647555c210a65f75850e",
+      "partner_id": "18820ddf850874f9",
+      "registry_class": "handover_presenter",
+      "role": "presenter",
+      "split": "public"
+    },
+    "presenter_mismatch_30": {
+      "fingerprint": {
+        "action_abs_mean": 6.828907,
+        "action_abs_p90": 19.033542,
+        "action_std": 11.702631,
+        "n_episodes": 20.0,
+        "stress_max": 126.8454,
+        "stress_mean": 32.9712,
+        "stress_p50": 2.5173,
+        "stress_p90": 103.5003,
+        "success_rate": 0.65
+      },
+      "floor_pass": true,
+      "floor_probe": "free_regrasp",
+      "floor_success": 1.0,
+      "params_sha256": "8a14dce84204dd4fad781eaa34aace8d037439a0b74ecc57e2d16ac72c3397a2",
+      "partner_id": "7ec27e8d0c2efd6e",
+      "registry_class": "handover_presenter",
+      "role": "presenter",
+      "split": "public"
+    },
+    "presenter_mismatch_45": {
+      "fingerprint": {
+        "action_abs_mean": 10.578907,
+        "action_abs_p90": 29.533542,
+        "action_std": 18.197558,
+        "n_episodes": 20.0,
+        "stress_max": 239.3454,
+        "stress_mean": 114.9974,
+        "stress_p50": 112.6952,
+        "stress_p90": 216.0003,
+        "success_rate": 0.25
+      },
+      "floor_pass": true,
+      "floor_probe": "free_regrasp",
+      "floor_success": 1.0,
+      "params_sha256": "4ad220f5eb49a4c94449ac90c074b7694c2f18f86ff72a01ad38c16d08c412f5",
+      "partner_id": "046bc72af285fbd3",
+      "registry_class": "handover_presenter",
+      "role": "presenter",
+      "split": "public"
+    },
+    "presenter_offgrid_a": {
+      "fingerprint": {
+        "action_abs_mean": 3.530752,
+        "action_abs_p90": 9.763511,
+        "action_std": 5.96111,
+        "n_episodes": 20.0,
+        "stress_max": 34.4222,
+        "stress_mean": 2.8445,
+        "stress_p50": 0.0,
+        "stress_p90": 7.1995,
+        "success_rate": 1.0
+      },
+      "floor_pass": true,
+      "floor_probe": "free_regrasp",
+      "floor_success": 1.0,
+      "params_sha256": "d4b9324e9d4f185ee33f3539bd37ccf83bf0ae8a516e16a9432437c4f19d16a0",
+      "partner_id": "7bb5130fbc52906e",
+      "registry_class": "handover_presenter",
+      "role": "presenter",
+      "split": "public"
+    },
+    "presenter_offgrid_b": {
+      "fingerprint": {
+        "action_abs_mean": 3.985548,
+        "action_abs_p90": 11.077609,
+        "action_std": 6.802681,
+        "n_episodes": 20.0,
+        "stress_max": 56.9514,
+        "stress_mean": 7.2589,
+        "stress_p50": 0.0,
+        "stress_p90": 29.0099,
+        "success_rate": 0.95
+      },
+      "floor_pass": true,
+      "floor_probe": "free_regrasp",
+      "floor_success": 1.0,
+      "params_sha256": "493a16d55d28b33593482461eecb2dbeb77d5ff505ba4d3c6cb28dbdecfbb77d",
+      "partner_id": "7c555ca368e36f86",
+      "registry_class": "handover_presenter",
+      "role": "presenter",
+      "split": "public"
+    }
+  },
+  "probe_episodes_per_seed": 5,
+  "probe_seeds": [
+    7000,
+    7001,
+    7002,
+    7003
+  ],
+  "schema_version": 1,
+  "set_id": "handover_place_partners",
+  "set_version": 1,
+  "task": "handover_place@v1"
+}
