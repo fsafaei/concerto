@@ -34,19 +34,19 @@
   <img alt="Status" src="https://img.shields.io/badge/status-alpha%20%C2%B7%20phase%200-orange"/>
 </p>
 
-> **Status &mdash; pre-release, Phase&nbsp;0.** Architecture is
-> locked in 18 ADRs (15 Accepted, 3 RFC) under the working policy
-> recorded in [`adr/ADR-INDEX.md`](adr/ADR-INDEX.md); the staged
-> Phase-0 spike protocol
-> ([ADR-007](adr/ADR-007-heterogeneity-axis-selection.md)) is the
-> validation gate. Under
+> **Status &mdash; pre-release.** Architecture is
+> locked in 21 ADRs (19 Accepted, 2 RFC) under the working policy
+> recorded in [`adr/ADR-INDEX.md`](adr/ADR-INDEX.md). Under
 > [ADR-026](adr/ADR-026-coupling-validity-criterion.md) a per-axis
 > &#8805;20&nbsp;pp gap is **necessary but not sufficient** &mdash; an
 > axis reaches **Validated** only on a task meeting the
 > coupling-validity criterion. The Stage-1 action-space axis has been
-> measured and reinterpreted as construct-invalid for cooperation; the
-> coupling-valid re-operationalization is a Phase-2 forward design, so
-> the leaderboard is unpopulated pending it. The public API is on `0.x` &mdash; MINOR bumps may break it
+> measured and reinterpreted as construct-invalid for cooperation;
+> benchmark composition and leaderboard eligibility are governed by
+> the CHAMBER-Bench v1.0 protocol
+> ([ADR-027](adr/ADR-027-chamber-bench-v1-protocol.md)), and the
+> leaderboard is unpopulated pending its first admitted-task
+> campaign. The public API is on `0.x` &mdash; MINOR bumps may break it
 > per SemVer&nbsp;&sect;4. See [Roadmap](#roadmap).
 
 **TL;DR.** CONCERTO is a three-layer safety stack &mdash; exponential
@@ -247,8 +247,9 @@ validation across the six heterogeneity sub-axes is the staged
 Phase-0 spike protocol's job (Stage 1: AS&nbsp;+&nbsp;OM &rarr;
 Stage 2: CR&nbsp;+&nbsp;CM &rarr; Stage 3: PF&nbsp;+&nbsp;SA). Under
 [ADR-026](adr/ADR-026-coupling-validity-criterion.md) the Stage-1 axes
-as operationalized are non-coupling-valid; leaderboard-eligible results
-come from the Phase-2 coupling-valid re-operationalization.
+as operationalized are non-coupling-valid; leaderboard eligibility is
+governed by the CHAMBER-Bench v1.0 admission protocol
+([ADR-027](adr/ADR-027-chamber-bench-v1-protocol.md)).
 
 See [`adr/ADR-007`](adr/ADR-007-heterogeneity-axis-selection.md) for the
 six-axis taxonomy that defines "heterogeneous" precisely, and the
@@ -259,20 +260,23 @@ the long-form positioning.
 
 ## The six heterogeneity axes CHAMBER measures
 
-| Axis | Symbol | What it varies | Where the priors come from |
-|------|--------|----------------|----------------------------|
-| Action space            | **AS** | 7&#x2011;DOF arm vs 2&#x2011;DOF mobile base on shared task | HARL, HetGPPO |
-| Observation modality    | **OM** | vision-only vs vision + force/torque + proprioception | Visual-tactile peg-in-hole literature |
-| Control rate            | **CR** | 500&nbsp;Hz arm vs 50&nbsp;Hz base, chunk size held constant | RTC, A2C2, FAVLA |
-| Communication           | **CM** | latency 1&ndash;100&nbsp;ms, jitter &micro;s&ndash;10&nbsp;ms, drop 10<sup>&minus;6</sup>&ndash;10<sup>&minus;2</sup> | 3GPP&nbsp;R17, URLLC |
-| Partner familiarity     | **PF** | trained-with vs frozen-novel partner, mid-episode swap | FCP, MEP |
-| Safety                  | **SA** | mixed-vendor force-limit / SIL-PL pairs, contact-rich | ISO&nbsp;10218-2:2025 |
+| Axis | Symbol | What it varies | Validity ([ADR-026](adr/ADR-026-coupling-validity-criterion.md)) | Where the priors come from |
+|------|--------|----------------|------------------------------|----------------------------|
+| Action space            | **AS** | 7&#x2011;DOF arm vs 2&#x2011;DOF mobile base on shared task | construct-invalid on pick-place &rarr; retained as control | HARL, HetGPPO |
+| Observation modality    | **OM** | vision-only vs vision + force/torque + proprioception | construct-invalid on pick-place &rarr; retained as control | Visual-tactile peg-in-hole literature |
+| Control rate            | **CR** | 500&nbsp;Hz arm vs 50&nbsp;Hz base, chunk size held constant | untested | RTC, A2C2, FAVLA |
+| Communication           | **CM** | latency 1&ndash;100&nbsp;ms, jitter &micro;s&ndash;10&nbsp;ms, drop 10<sup>&minus;6</sup>&ndash;10<sup>&minus;2</sup> | untested | 3GPP&nbsp;R17, URLLC |
+| Partner familiarity     | **PF** | trained-with vs frozen-novel partner, mid-episode swap | untested | FCP, MEP |
+| Safety                  | **SA** | mixed-vendor force-limit / SIL-PL pairs, contact-rich | untested | ISO&nbsp;10218-2:2025 |
 
-Every surviving axis is required to clear a pre-registered
-&#8805;20&nbsp;pp homogeneous-vs-heterogeneous gap before it ships in
-the v1 benchmark. See
+A pre-registered &#8805;20&nbsp;pp homogeneous-vs-heterogeneous gap is
+necessary but not sufficient
+([ADR-026](adr/ADR-026-coupling-validity-criterion.md)); an axis ships
+in the v1 benchmark only on a task meeting the coupling-validity
+criterion, per the CHAMBER-Bench v1.0 protocol
+([ADR-027](adr/ADR-027-chamber-bench-v1-protocol.md)). See
 [`adr/ADR-007`](adr/ADR-007-heterogeneity-axis-selection.md) for the
-staged Phase&#x2011;0 spike protocol (Stage&nbsp;1: AS&nbsp;+&nbsp;OM,
+historical staged spike protocol (Stage&nbsp;1: AS&nbsp;+&nbsp;OM,
 Stage&nbsp;2: CR&nbsp;+&nbsp;CM, Stage&nbsp;3: PF&nbsp;+&nbsp;SA).
 
 ---
@@ -294,7 +298,7 @@ src/
     ├── evaluation/#   HRS, pre-registration, leaderboard renderer
     └── benchmarks/#   Stage-0/1/2/3 spike runners
 
-adr/               # 17 Architecture Decision Records (the design rationale)
+adr/               # 21 Architecture Decision Records (the design rationale)
 docs/              # Diátaxis: tutorials / how-to / reference / explanation
 tests/             # unit / property / integration / smoke / reproduction
 spikes/            # pre-registration YAMLs + result archives
@@ -347,13 +351,14 @@ Full cookbook: [`docs/observability.md`](docs/observability.md).
 
 ## Leaderboard
 
-<sub>Stage&#x2011;0 acceptance results; rendered by
-`chamber-render-tables` after each tagged spike.
-**The leaderboard is unpopulated; under
+<sub>Rendered by `chamber-render-tables` after each tagged spike.
+**The leaderboard is unpopulated pending the first CHAMBER-Bench v1.0
+admitted-task campaign
+([ADR-027](adr/ADR-027-chamber-bench-v1-protocol.md)): per-task tables,
+IQM + 95% bootstrap CIs, no scalar composite. Under
 [ADR-026](adr/ADR-026-coupling-validity-criterion.md) the Stage-1 axes
-as operationalized are non-coupling-valid, and leaderboard-eligible
-results come from the Phase-2 coupling-valid re-operationalization
-&mdash; see [Roadmap](#roadmap).**</sub>
+as operationalized are non-coupling-valid and are retained as
+controls &mdash; see [Roadmap](#roadmap).**</sub>
 
 <details>
 <summary>Show placeholder table</summary>
@@ -499,8 +504,9 @@ Safety filters implement the `SafetyFilter` Protocol in
 
 The leaderboard is unpopulated. Under
 [ADR-026](adr/ADR-026-coupling-validity-criterion.md) the Stage-1 axes
-as operationalized are non-coupling-valid; leaderboard-eligible results
-come from the Phase-2 coupling-valid re-operationalization. See
+as operationalized are non-coupling-valid; leaderboard eligibility is
+governed by the CHAMBER-Bench v1.0 admission protocol
+([ADR-027](adr/ADR-027-chamber-bench-v1-protocol.md)). See
 [Roadmap](#roadmap).
 
 </details>

@@ -90,8 +90,8 @@ zoo-seed-gpu:
 # re-running the 2 h GPU training (plan/05 §6 #5).
 #
 # TODO(maintainer): replace ZOO_SEED_BASE_URL with the canonical hosting
-# location once the artefact is uploaded (Zenodo is the natural home —
-# see the existing `zenodo_announcement/` folder). Until then this
+# location once the artefact is uploaded (Zenodo is the natural home;
+# hosting is a separate v1.0 work item). Until then this
 # target prints a friendly error so a copy-paste invocation does not
 # silently leak a placeholder URL into someone's shell history.
 ZOO_SEED_BASE_URL ?=
