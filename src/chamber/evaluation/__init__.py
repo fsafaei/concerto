@@ -40,9 +40,12 @@ from chamber.evaluation.oscbf_aggregate import (
     make_condition_row,
 )
 from chamber.evaluation.prereg import (
+    PREREG_SCHEMA_VERSION,
+    PreregDocument,
     PreregistrationError,
     PreregistrationSpec,
     load_prereg,
+    load_prereg_document,
     verify_git_tag,
 )
 from chamber.evaluation.render import (
@@ -51,19 +54,26 @@ from chamber.evaluation.render import (
 )
 from chamber.evaluation.results import (
     SCHEMA_VERSION,
+    BundleSummary,
     ConditionPair,
     ConditionResult,
     EpisodeResult,
     HRSVector,
     HRSVectorEntry,
     LeaderboardEntry,
+    PlatformFingerprint,
+    ResultBundle,
+    SeedSchedule,
     SpikeRun,
+    load_run_archive,
 )
 
 __all__ = [
     "DEFAULT_AXIS_WEIGHTS",
+    "PREREG_SCHEMA_VERSION",
     "SCHEMA_VERSION",
     "BootstrapCI",
+    "BundleSummary",
     "ConditionPair",
     "ConditionResult",
     "EpisodeResult",
@@ -71,8 +81,12 @@ __all__ = [
     "HRSVectorEntry",
     "LeaderboardEntry",
     "PairedEpisode",
+    "PlatformFingerprint",
+    "PreregDocument",
     "PreregistrationError",
     "PreregistrationSpec",
+    "ResultBundle",
+    "SeedSchedule",
     "SlackAggregate",
     "SpikeRun",
     "aggregate_metrics",
@@ -81,6 +95,8 @@ __all__ = [
     "compute_hrs_scalar",
     "compute_hrs_vector",
     "load_prereg",
+    "load_prereg_document",
+    "load_run_archive",
     "make_condition_row",
     "pacluster_bootstrap",
     "render_leaderboard",

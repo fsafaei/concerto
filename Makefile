@@ -1,7 +1,7 @@
 .PHONY: install test lint typecheck format docs docs-build \
         verify-licences verify-no-ai-mentions verify-coverage-floors \
         verify-changelog-completeness verify-readme-tables \
-        sbom smoke verify release-preflight \
+        sbom smoke smoke-eval verify release-preflight \
         empirical-guarantee zoo-seed-gpu zoo-seed-pull zoo-seed-verify \
         stage1-as stage1-om render-task-docs
 
@@ -92,6 +92,12 @@ release-preflight:
 
 smoke:
 	uv run pytest -m smoke -x -v
+
+# ADR-028 §Validation criteria 1: run → verify → tamper → verify-fails,
+# end to end through the chamber-eval CLI on the Tier-0 CPU task.
+# On a dirty local tree: SMOKE_EVAL_ALLOW_DIRTY=1 make smoke-eval
+smoke-eval:
+	bash scripts/smoke_eval.sh
 
 empirical-guarantee:
 	uv run pytest tests/integration/test_empirical_guarantee.py -m slow --no-cov -v
