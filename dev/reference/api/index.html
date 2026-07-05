@@ -22425,7 +22425,7 @@ ADR, not a config edit.</p>
             <p>When <code>True</code>,
 :func:<code>chamber.benchmarks.training_runner.run_training</code>
 wraps the built partner in the zero-action
-:class:<code>chamber.partners.static_override.ExploratoryStaticPartnerOverride</code>
+:class:<code>chamber.partners.exploratory.static_override.ExploratoryStaticPartnerOverride</code>
 (the partner stands motionless at its reset pose; partner
 classes and registry untouched). EXPLORATORY only — the
 2026-06-11 homo-static slice
@@ -22488,7 +22488,7 @@ static-partner run silently.</p>
 <span class="sd">        partner_static_override: When ``True``,</span>
 <span class="sd">            :func:`chamber.benchmarks.training_runner.run_training`</span>
 <span class="sd">            wraps the built partner in the zero-action</span>
-<span class="sd">            :class:`chamber.partners.static_override.ExploratoryStaticPartnerOverride`</span>
+<span class="sd">            :class:`chamber.partners.exploratory.static_override.ExploratoryStaticPartnerOverride`</span>
 <span class="sd">            (the partner stands motionless at its reset pose; partner</span>
 <span class="sd">            classes and registry untouched). EXPLORATORY only — the</span>
 <span class="sd">            2026-06-11 homo-static slice</span>
@@ -64407,7 +64407,7 @@ via :func:<code>build_emergency_controllers</code>.</p>
     <span class="c1"># reach here with the flag set - TrainedPolicyFactory refuses it at</span>
     <span class="c1"># construction (the safety-loud-fail pattern).</span>
     <span class="k">if</span> <span class="n">cfg</span><span class="o">.</span><span class="n">exploratory</span><span class="o">.</span><span class="n">partner_static_override</span><span class="p">:</span>
-        <span class="kn">from</span><span class="w"> </span><span class="nn">chamber.partners.static_override</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">chamber.partners.exploratory.static_override</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
             <span class="n">ExploratoryStaticPartnerOverride</span><span class="p">,</span>
         <span class="p">)</span>
 
