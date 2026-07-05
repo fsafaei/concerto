@@ -13,6 +13,7 @@ on:
       - "docs/**"
       - "adr/**"
       - "mkdocs.yml"
+      - "scripts/**"
   pull_request:
     branches: [main]
     paths:
@@ -28,7 +29,9 @@ on:
       # Catch release-please PRs (which only touch CHANGELOG + pyproject) for
       # the verify-changelog-completeness job below — closes #126.
       - "CHANGELOG.md"
-      - "scripts/check_changelog_completeness.py"
+      # Scripts backing CI gates (smoke-eval, README-table/cards drift,
+      # changelog completeness): a script-only change must re-run its gate.
+      - "scripts/**"
 
 permissions:
   contents: read
