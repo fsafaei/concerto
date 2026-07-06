@@ -552,14 +552,19 @@ class TestLearnedStratumV2:
 
     def test_v2_roster_and_split(self) -> None:
         v2 = get_partner_set("cocarry_partners", version=2)
-        assert len(v2.members) == 16
-        assert len(v2.public_members) == 12
-        assert len(v2.private_members) == 4
+        # 11 scripted + the ONE floor-passing learned member (four of
+        # the five preregistered jointly-trained candidates failed the
+        # 0.75 cross-play floor and were dropped per the set rule).
+        assert len(v2.members) == 12
+        assert len(v2.public_members) == 9
+        assert len(v2.private_members) == 3
         learned = [m for m in v2.members if m.checkpoint_uri is not None]
-        assert [m.member_name for m in learned] == [f"joint_s{i}" for i in range(5)]
-        for m in learned:
-            assert "trained jointly with" in m.provenance
-        # The one recorded flip: imp_lag_bounded public (v1) -> private (v2).
-        flipped = next(m for m in v2.members if m.member_name == "imp_lag_bounded")
-        assert flipped.split == "private"
-        assert flipped.params is None
+        assert [m.member_name for m in learned] == ["joint_s4"]
+        assert "trained jointly with" in learned[0].provenance
+        assert learned[0].split == "public"
+        # Every v1 split label is reproduced over the 12-member roster.
+        v1 = get_partner_set("cocarry_partners", version=1)
+        v1_split = {m.member_name: m.split for m in v1.members}
+        for m in v2.members:
+            if m.member_name in v1_split:
+                assert m.split == v1_split[m.member_name]
