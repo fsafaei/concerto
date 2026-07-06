@@ -58,6 +58,8 @@ nav:
       - Add a new safety filter: how-to/add-filter.md
       - Run a spike with a custom hypothesis: how-to/run-spike.md
       - Run on a GPU host: how-to/run-on-gpu.md
+      - Verified-install record: how-to/verified-install.md
+      - Release follow-ups: how-to/RELEASE_FOLLOWUPS.md
   - Reference:
       - API: reference/api.md
       - ADRs: reference/adrs.md

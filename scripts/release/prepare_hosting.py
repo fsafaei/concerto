@@ -36,10 +36,40 @@ REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(REPO_ROOT / "src"))
 
 from chamber.evaluation.hosting import (  # noqa: E402
+    HOSTING_ARTIFACTS,
     HOSTING_DEST_DIRNAME,
+    HOSTING_SOURCE_DIRNAME,
+    PACKAGE_CARD_NAME,
     PACKAGE_MANIFEST_NAME,
     build_all,
 )
+
+
+def _ensure_viewer_disabled(repo_root: Path) -> list[Path]:
+    """Write ``viewer: false`` into each committed dataset card's frontmatter.
+
+    The packages are download-and-verify evidence archives with
+    deliberately heterogeneous per-episode schemas, not row-browseable
+    tables; without ``viewer: false`` the Hugging Face auto-viewer
+    raises a CastError banner on the dataset page. Idempotent: cards
+    that already carry the key are left byte-identical. Returns the
+    cards that were modified (the caller fails the dirty-tree gate so
+    the fix gets committed rather than shipped silently).
+    """
+    modified: list[Path] = []
+    for name in HOSTING_ARTIFACTS:
+        card = repo_root / HOSTING_SOURCE_DIRNAME / name / PACKAGE_CARD_NAME
+        text = card.read_text(encoding="utf-8")
+        if not text.startswith("---\n"):
+            card.write_text(f"---\nviewer: false\n---\n\n{text}", encoding="utf-8")
+            modified.append(card)
+            continue
+        frontmatter, _, _ = text[4:].partition("\n---\n")
+        if "viewer:" in frontmatter:
+            continue
+        card.write_text("---\nviewer: false\n" + text[4:], encoding="utf-8")
+        modified.append(card)
+    return modified
 
 
 def _git(*args: str) -> str:
@@ -71,12 +101,21 @@ def main(argv: list[str] | None = None) -> int:
     )
     args = parser.parse_args(argv)
 
+    fixed_cards = _ensure_viewer_disabled(REPO_ROOT)
+    for card in fixed_cards:
+        print(f"prepare-hosting: wrote 'viewer: false' into {card.relative_to(REPO_ROOT)}")
+
     dirty = bool(_git("status", "--porcelain"))
     if dirty and not args.allow_dirty:
         print(
             "prepare-hosting: FAIL — working tree is dirty; commit first or "
             "pass --allow-dirty (a hosted artifact must correspond to a commit)."
         )
+        if fixed_cards:
+            print(
+                "prepare-hosting: (the dataset-card fixes above are part of the "
+                "dirt — commit them and re-run)"
+            )
         return 7
     git_sha = _git("rev-parse", "HEAD") + ("-dirty" if dirty else "")
 

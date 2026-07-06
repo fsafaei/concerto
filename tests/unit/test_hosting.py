@@ -309,6 +309,9 @@ class TestCommittedCroissantSources:
         card = REPO_ROOT / "release/hosting" / name / "README.md"
         text = card.read_text(encoding="utf-8")
         # Hugging Face dataset-card YAML frontmatter, then the heading.
-        assert text.startswith("---\nlicense: apache-2.0\n")
+        # ``viewer: false`` leads: the packages are download-and-verify
+        # evidence archives, not row-browseable tables, and without it
+        # the hub's auto-viewer raises a CastError banner.
+        assert text.startswith("---\nviewer: false\nlicense: apache-2.0\n")
         assert f"\n# {name}\n" in text
         assert "Apache-2.0" in text

@@ -1,4 +1,5 @@
 ---
+viewer: false
 license: apache-2.0
 pretty_name: CHAMBER-Bench v1.0 leaderboard bundles
 tags:
