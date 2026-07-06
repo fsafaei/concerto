@@ -1,0 +1,77 @@
+{
+  "episodes_per_seed": 3,
+  "policy_prefix": "happo_blind",
+  "schema": "cocarry_baselines_checkpoint_selection/v1",
+  "scores": [
+    {
+      "compliant_successes": 6,
+      "n_episodes": 12,
+      "step": 50000,
+      "stress_max": 88.72278594970703,
+      "stress_p90": 83.46782150268555,
+      "successes": 6,
+      "tilt_max_deg": 19.94886016845703,
+      "uri": "local://artifacts/2a8899089138a837_step50000.pt"
+    },
+    {
+      "compliant_successes": 12,
+      "n_episodes": 12,
+      "step": 100000,
+      "stress_max": 92.78429412841797,
+      "stress_p90": 89.74095840454102,
+      "successes": 12,
+      "tilt_max_deg": 14.131340980529785,
+      "uri": "local://artifacts/2a8899089138a837_step100000.pt"
+    },
+    {
+      "compliant_successes": 12,
+      "n_episodes": 12,
+      "step": 150000,
+      "stress_max": 125.06497955322266,
+      "stress_p90": 120.68459091186523,
+      "successes": 12,
+      "tilt_max_deg": 13.975424766540527,
+      "uri": "local://artifacts/2a8899089138a837_step150000.pt"
+    },
+    {
+      "compliant_successes": 12,
+      "n_episodes": 12,
+      "step": 200000,
+      "stress_max": 64.50288391113281,
+      "stress_p90": 63.13720474243164,
+      "successes": 12,
+      "tilt_max_deg": 13.668097496032715,
+      "uri": "local://artifacts/2a8899089138a837_step200000.pt"
+    },
+    {
+      "compliant_successes": 5,
+      "n_episodes": 12,
+      "step": 250000,
+      "stress_max": 133.33447265625,
+      "stress_p90": 127.78291397094726,
+      "successes": 5,
+      "tilt_max_deg": 70.27146911621094,
+      "uri": "local://artifacts/2a8899089138a837_step250000.pt"
+    },
+    {
+      "compliant_successes": 2,
+      "n_episodes": 12,
+      "step": 300000,
+      "stress_max": 113.4854965209961,
+      "stress_p90": 112.26019287109375,
+      "successes": 2,
+      "tilt_max_deg": 23.280717849731445,
+      "uri": "local://artifacts/2a8899089138a837_step300000.pt"
+    }
+  ],
+  "selected_step": 100000,
+  "selected_uri": "local://artifacts/2a8899089138a837_step100000.pt",
+  "selection_rule": "per seed: highest stress-compliant success on the held-out validation partner over the preregistered selection seeds; ties break to the earliest checkpoint step",
+  "selection_seeds": [
+    9000,
+    9001,
+    9002,
+    9003
+  ],
+  "validation_partner": "imp_nominal"
+}
