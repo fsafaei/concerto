@@ -1,0 +1,113 @@
+# Pre-registration — CHAMBER-Bench v1.0 handover-place scripted-ego rows
+# (ADR-027 §Reporting rules; ADR-011 §Decision as amended; ADR-007
+# §Discipline; ADR-028 §Decision 2 document-form).
+#
+# Scripted-ego rows ONLY (REF-SCRIPT, B-RND, B-STAT); learned-ego
+# handover cells are explicitly v1.1 roadmap and are NOT preregistered
+# here. Cells are pinned to the MEASURED coupling-valid region from the
+# committed Gate-0 verdict report; cells outside it are not
+# leaderboard cells. CPU-scale; same bundle discipline as co-carry.
+schema_version: 1
+task_id: handover_place
+git_tag: prereg-handover-baselines-v1-2026-07-06
+revision: rev1
+parameters:
+  campaign:
+    campaign_id: handover_baselines_v1
+    task: handover_place@v1
+    results_root: spikes/results/benchmark/handover-v1
+    rows:
+      REF-SCRIPT: {policy: ref_script_handover_ego, label: oracle reference}
+      B-RND: {policy: random, label: floor (uniform over the physical command ranges)}
+      B-STAT: {policy: static, label: stationary control (zero action)}
+  coupling_valid_region:
+    # Quoted VERBATIM from spikes/results/handover-place-gate0-2026-06-26/
+    # GATE_VERDICT_REPORT_2026-06-26.md (verdict COUPLING_VALID):
+    # - "realistic takt band = [1.0, 5.0] s; COUPLING_VALID fires iff a
+    #   window overlaps it."
+    # - (clearance x mismatch) measured region: "clr 0.2 / 15deg :
+    #   coupling=False / max_gap_CI_lower=0.0 pp; clr 0.2 / 30deg :
+    #   coupling=True / max_gap_CI_lower=46.5 pp; clr 0.2 / 45deg :
+    #   coupling=True / max_gap_CI_lower=100.0 pp; clr 0.35 / 45deg :
+    #   coupling=False / max_gap_CI_lower=17.5 pp" (all other
+    #   combinations coupling=False, 0.0 pp).
+    # - clearance-0.2 family GAP cells (matched-vs-mismatched success
+    #   gap, percentage points): every "clr 0.2 / 45d" cell = 100.0
+    #   [100.0, 100.0] (fast and slow, all takts); "clr 0.2 / 30d"
+    #   cells = 58.5 [46.5, 70.5] except fast/1.5s = 45.5 [32.5, 59.0].
+    #   These are GAPS, not success rates: matched success is 1.000, so
+    #   mismatched-cell success ~= 1 - gap/100 (the leaderboard rows
+    #   measure the mismatched side directly).
+    # - crossover windows: 30deg/clr 0.2/fast window_takts_s =
+    #   [0.3, 0.5, 0.75, 1.0, 1.5] (in-band ceiling 1.5 s).
+    clearance_factor: 0.2
+    mismatch_bias_deg: [30.0, 45.0]
+    realistic_takt_band_s: [1.0, 5.0]
+  env_cell:
+    # The committed coupling-valid ANCHOR cell — the CB-04 admission
+    # prereg numbers, verbatim (clearance 0.2 -> wrist_correction 25
+    # deg, fast arm basis, takt 1.5 s -> regrasp budget 1.13 s; the
+    # fast-basis in-band window ceiling). Single source of truth:
+    # chamber.benchmarks.partner_probe.HANDOVER_PROBE_ENV_PARAMS.
+    lateral_window_m: 1.0e-3
+    angular_window_deg: 5.0
+    seating_force_limit_n: 75.0
+    translation_range_m: 0.10
+    wrist_correction_deg: 25.0
+    reacquire_range_deg: 170.0
+    contact_stiffness_n_per_m: 3.75e4
+    angular_stiffness_n_per_deg: 7.5
+    regrasp_budget_s: 1.13
+    regrasp_duration_s: 1.06
+  partner_grid:
+    partner_set: handover_place_partners@v1
+    # The Gate-0 mismatch sweep re-expressed as leaderboard cells,
+    # RESTRICTED to the coupling-valid region: only the 30/45-degree
+    # mismatch presenters qualify. presenter_mismatch_15 (15 deg:
+    # coupling=False, 0.0 pp) and the off-grid members (15.6982 /
+    # 18.3353 deg — outside the measured 30/45 family) are NOT
+    # leaderboard cells; presenter_matched is the private floor
+    # anchor, not an eval cell. No learned rows -> no validation
+    # partner is needed (checkpoint selection does not apply).
+    eval_members: [presenter_mismatch_30, presenter_mismatch_45]
+  evaluation:
+    root_seed: 0
+    n_resamples: 2000
+    eval_seeds: [0, 1, 2, 3, 4]
+    # Same n the co-carry pilot locked (the tasks share the campaign's
+    # CI-width target; the handover env is deterministic-kinematic per
+    # (iss, presenter draw), so per-cell variance is presenter-driven).
+    episodes_per_seed_per_partner: 50
+    pairing: >
+      initial_state_seed = seed*1000 + episode (the Gate-0 pairing
+      convention); every row and member sees the same draws.
+  metrics:
+    primary: success (seat within the lateral/angular windows inside the re-grasp budget)
+    secondary:
+      - peak_seating_force (force_peak — the canonical seating-force proxy, N)
+      - residual_lateral_m / residual_angular_deg / failure_mode (metadata)
+    estimators: >
+      IQM + 95% cluster-bootstrap CIs (2000 resamples, root seed 0);
+      paired-cluster bootstrap for row deltas on matched draws;
+      mandatory per-partner breakdown; no single-seed claims.
+decision_rules: >
+  (1) This document's tag precedes the first measured episode; history
+  proves it. (2) Eval-only rows: no training, no checkpoint selection,
+  no compute-cap clause beyond the fixed episode grid. (3) All rows
+  ship, including bad ones; REF-SCRIPT is labeled oracle reference.
+  (4) Nothing outside the cell list above runs, and no run outside it
+  appears under spikes/results/benchmark/handover-v1/. (5) Every
+  reported number is a committed chamber-eval verify-passing bundle
+  with repro command, seeds, git SHA; archives immutable (I8).
+notes: >
+  Grounds: ADR-011 §Decision (as amended), ADR-027 §Reporting rules,
+  ADR-028, ADR-018, ADR-002 P6. The admission grounding is the
+  committed CB-04 report (verdict ADMITTED,
+  spikes/results/admission/handover_place-2026-07-05/) whose Gate-0
+  verdict COUPLING_VALID this prereg quotes. Learned-ego handover
+  cells are v1.1 roadmap. Takt-band note: the anchor cell sits at the
+  fast-basis crossover-window ceiling (takt 1.5 s, inside the
+  realistic band [1.0, 5.0] s); the full multi-takt family remains
+  quoted above as region context — additional takt cells would need a
+  re-derived budget per takt and are deferred to v1.1 rather than
+  approximated here.
