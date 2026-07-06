@@ -74,5 +74,5 @@ upload corresponds to the versions named in the roster files.
 ## Licence and citation
 
 Apache-2.0, same as the repository. Cite via the repository's
-`CITATION.cff` (DOI `10.5281/zenodo.20128469`). Maintainer contact
+`CITATION.cff` (DOI `10.5281/zenodo.20128468`). Maintainer contact
 and deprecation policy: `MAINTENANCE.md` in the repository.
