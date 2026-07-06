@@ -1,0 +1,1 @@
+chamber-eval run --task cocarry --policy joint_ego:local://artifacts/e9040cbc3c3b2456_step150000.pt --partner frozen_cocarry_joint --partner-weights local://artifacts/e9040cbc3c3b2456_step150000.pt --seeds 4, --episodes 50 --out spikes/results/benchmark/cocarry-v1/b-joint-seed4-2026-07-06 --prereg spikes/preregistration/benchmark/cocarry_baselines_v1.yaml
