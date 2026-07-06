@@ -257,6 +257,134 @@ def cocarry_partners_v1() -> PartnerSetSpec:
     )
 
 
+#: The empty-parameter digest every learned member commits
+#: (:func:`chamber.partners.sets.params_sha256` of ``{}`` — the learned
+#: stratum's "parameters" are its weights; custody rides on
+#: ``checkpoint_sha256`` instead).
+_EMPTY_PARAMS_SHA256: str = "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+
+#: The five jointly-trained partner-side members admitted at v2
+#: (ADR-011 §Decision as amended; ADR-027 §Versioning). Each entry is
+#: ``(training seed, selected checkpoint step, payload URI, payload
+#: SHA-256)`` — the per-seed SELECTED pair checkpoints from the
+#: committed campaign checkpoint-selection artifacts
+#: (``spikes/results/benchmark/cocarry-v1/selection/b-joint-seed*.json``;
+#: the ADR-027 rule on the held-out validation partner, pair mode).
+#: The partner-side actor (``actor_partner``) plays the seat; the same
+#: payload's SHA-256 is the "ego hash" in the provenance line because
+#: the pair checkpoint IS the joint artifact containing the ego it was
+#: trained with.
+_JOINT_V2_MEMBERS: tuple[tuple[int, int, str, str], ...] = (
+    (
+        0,
+        150000,
+        "local://artifacts/4ace772a2efe7dd3_step150000.pt",
+        "99a4d53760f8a191cbc96a9dd43721d4d314984460a21a782395617159d0fdb4",
+    ),
+    (
+        1,
+        200000,
+        "local://artifacts/24e5f7483ad7b86e_step200000.pt",
+        "5ec0ba22da82db62a8e3dacac864ce160a29ae92677e32b9ecdf6f9e91d4a019",
+    ),
+    (
+        2,
+        50000,
+        "local://artifacts/e2f99cc34a4c5356_step50000.pt",
+        "3289d6de61465d9bf8c9f133a4dc4319d86eaf89343b9a1b8a2f22a8b09f4ace",
+    ),
+    (
+        3,
+        150000,
+        "local://artifacts/461dbbcae360f85e_step150000.pt",
+        "74bd1db7e5ba31f9094164566bb0f2918852cf6d67194d08565ec53fb2817658",
+    ),
+    (
+        4,
+        150000,
+        "local://artifacts/e9040cbc3c3b2456_step150000.pt",
+        "3107b1bde5201d0350221f527839cda7ee6ac5698c20df6f80eb80453fb5ae18",
+    ),
+)
+
+
+@register_partner_set
+def cocarry_partners_v2() -> PartnerSetSpec:
+    """Co-carry set v2 — the scripted stratum + the jointly-trained stratum (ADR-027 §Versioning).
+
+    The eleven v1 members (identities byte-stable — the parameter
+    substream is keyed on ``set_id`` + ``member_name``, not version)
+    plus five :class:`chamber.partners.frozen_cocarry_joint.FrozenCoCarryJointPartner`
+    members: the partner-side actors of the campaign's per-seed
+    SELECTED jointly-trained MAPPO pair checkpoints (ADR-011 §Decision
+    as amended — provenance "trained jointly with <ego hash>" rides on
+    every learned card). Old result bundles keep referencing
+    ``cocarry_partners@v1`` (ADR-027 §Versioning).
+
+    The public/private split is re-derived over the full 16-member
+    roster by the deterministic rule (ADR-009 as amended: order by
+    ``partner_id``, first ``⌈0.7·16⌉ = 12`` public). One label flips
+    vs v1 — ``imp_lag_bounded`` becomes private. Recorded, not hidden:
+    its exact v1 literals are already public knowledge (committed at
+    v1 and unchanged), so the v2 withholding is formal only; the rule
+    is applied verbatim rather than hand-adjusted around the corner
+    case (no hand-picking is the stronger property).
+    """
+    v2_split: dict[str, str] = {"imp_lag_bounded": "private"}
+    members: list[PartnerMemberSpec] = []
+    for member in cocarry_partners_v1().members:
+        split = v2_split.get(member.member_name, member.split)
+        if split == member.split:
+            members.append(member)
+            continue
+        payload = member.model_dump()
+        payload["split"] = split
+        payload["params"] = None if split == "private" else payload["params"]
+        members.append(PartnerMemberSpec.model_validate(payload))
+    for seed, step, uri, sha in _JOINT_V2_MEMBERS:
+        members.append(
+            PartnerMemberSpec(
+                member_name=f"joint_s{seed}",
+                registry_class="frozen_cocarry_joint",
+                role="partner_arm",
+                split="public",
+                seed=seed,
+                checkpoint_step=step,
+                param_box={},
+                params={},
+                params_sha256=_EMPTY_PARAMS_SHA256,
+                checkpoint_uri=uri,
+                checkpoint_sha256=sha,
+                provenance=(
+                    f"trained jointly with the ego actor of pair checkpoint "
+                    f"sha256 {sha} (training seed {seed}, selected step {step} "
+                    "under the ADR-027 checkpoint-selection rule)"
+                ),
+            )
+        )
+    return PartnerSetSpec(
+        set_id="cocarry_partners",
+        version=2,
+        task_id="cocarry",
+        task_version=1,
+        floor=0.75,
+        floor_probe="fingerprint",
+        probe_seeds=list(PROBE_SEEDS_V1),
+        probe_episodes_per_seed=PROBE_EPISODES_PER_SEED_V1,
+        notes=(
+            "v1's scripted stratum plus the campaign's jointly-trained "
+            "partner-side stratum (ADR-027 §Versioning; ADR-011 §Decision as "
+            "amended). Learned members carry real checkpoint URIs + committed "
+            "payload SHA-256 custody; their cross-play competence with the "
+            "scripted reference ego is measured by the fingerprint/floor "
+            "probe, not assumed. Split re-derived over 16 members; the "
+            "imp_lag_bounded public→private flip is formal only (v1 literals "
+            "remain committed history)."
+        ),
+        members=members,
+    )
+
+
 @register_partner_set
 def stage1_pickplace_as_partners_v1() -> PartnerSetSpec:
     """Pick-place control set v1 — minimal 3-member scripted set (ADR-009 as amended).
@@ -501,6 +629,7 @@ __all__ = [
     "PROBE_EPISODES_PER_SEED_V1",
     "PROBE_SEEDS_V1",
     "cocarry_partners_v1",
+    "cocarry_partners_v2",
     "handover_place_partners_v1",
     "stage1_pickplace_as_partners_v1",
 ]
