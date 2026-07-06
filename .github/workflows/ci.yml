@@ -238,6 +238,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
+        with:
+          # The leaderboard drift check re-verifies every listed result
+          # bundle, and the bundle verifier's prereg check `git
+          # rev-parse`s the campaign pre-registration tags (ADR-007
+          # §Discipline; ADR-028 §Decision 3). Default checkout ships
+          # without tags — same rationale as the test-integration and
+          # coverage-gate jobs above.
+          fetch-tags: true
       - uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b  # v5.4.1
         with:
           python-version: "3.11"
