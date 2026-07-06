@@ -132,7 +132,7 @@ restate the labels; consumers should carry them along.
 
 Hosted as three datasets on Hugging Face under the maintainer's
 namespace, with a Zenodo archival deposit per release
-(DOI `10.5281/zenodo.20128469` is the software concept DOI; the
+(DOI `10.5281/zenodo.20128468` is the software concept DOI; the
 data deposit carries its own versioned DOI). Licence: Apache-2.0,
 same as the repository. Each artifact ships `manifest.json` (file
 list with sizes and SHA-256), `SHA256SUMS.txt`, a `README.md`
