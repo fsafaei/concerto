@@ -1,0 +1,49 @@
+{
+  "schema_version": 3,
+  "task_id": "cocarry",
+  "task_version": 1,
+  "policy_id": "joint_ego:local://artifacts/4ace772a2efe7dd3_step150000.pt",
+  "partner_set_id": "adhoc:frozen_cocarry_joint",
+  "partner_hashes": {
+    "frozen_cocarry_joint": "198de26c79cd0598"
+  },
+  "git_sha": "9d3cf35c81d0fa6c9894fe9e7b5fbb1a0a91bd12",
+  "dirty": false,
+  "package_version": "0.7.0",
+  "seed_schedule": {
+    "root_seed": 0,
+    "seeds": [
+      0
+    ],
+    "episodes_per_seed": 50,
+    "substream_labels": [
+      "benchmarks.bundle_runner.ego_random.{seed}.{episode}",
+      "evaluation.bundle_bootstrap"
+    ]
+  },
+  "repro_command": "chamber-eval run --task cocarry --policy joint_ego:local://artifacts/4ace772a2efe7dd3_step150000.pt --partner frozen_cocarry_joint --partner-weights local://artifacts/4ace772a2efe7dd3_step150000.pt --seeds 0, --episodes 50 --out spikes/results/benchmark/cocarry-v1/b-joint-seed0-2026-07-06 --prereg spikes/preregistration/benchmark/cocarry_baselines_v1.yaml",
+  "platform": {
+    "os": "Linux-6.17.0-29-generic-x86_64-with-glibc2.39",
+    "python": "3.12.3",
+    "numpy": "2.1.3",
+    "torch": "2.11.0+cu128",
+    "device": "NVIDIA GeForce RTX 2080 SUPER"
+  },
+  "manifest": {
+    "REPRO.txt": "b0134d4a34a44d3da26f32bdfaa7bcbb50f3e8fba406e6335d2dea153bc9fa28",
+    "episodes_seed0.jsonl": "80dabbc8b0e42c7cdfb8b72f2a514168b18837fd50a116297c986b4595cfd653",
+    "partners.json": "3fd583f551db0676cde4df40ffed759d425ebfc02239ad2bf560768e7adbda80",
+    "prereg.yaml": "2f2fb55e927e630f6c585c0a98dd51e6eae299b0067160c318720c6b65477c5e"
+  },
+  "summary": {
+    "n_episodes": 50,
+    "success_mean": 1.0,
+    "success_iqm": 1.0,
+    "success_ci_low": 1.0,
+    "success_ci_high": 1.0,
+    "n_resamples": 2000,
+    "bootstrap_root_seed": 0
+  },
+  "prereg_git_tag": "prereg-cocarry-baselines-v1-rev2-2026-07-05",
+  "prereg_blob_sha": "3191459939fb99a024bf7349fe71dfafc1d5caef"
+}

@@ -1,0 +1,18 @@
+[
+  {
+    "checkpoint_step": null,
+    "class_name": "frozen_cocarry_joint",
+    "extra": {
+      "action_dim": "8",
+      "bar_half_len": "0.115",
+      "base_xyz": "0.5,0.0,0.0",
+      "base_yaw_deg": "180",
+      "end_sign": "-1",
+      "other_uid": "panda_wristcam",
+      "uid": "panda_partner"
+    },
+    "name": "frozen_cocarry_joint",
+    "seed": 0,
+    "weights_uri": "local://artifacts/4ace772a2efe7dd3_step150000.pt"
+  }
+]
