@@ -10,6 +10,24 @@ per SemVer §4.
 
 ## [Unreleased]
 
+July 2026 benchmark-campaign catch-up (hand-written; the next
+release-please cut regenerates its own section from Conventional
+Commits and does not depend on this one).
+
+### CHAMBER-Bench v1.0 (2026-07-05/06)
+
+* **tasks:** task registry, manifest, and task cards — the ADR-027 tier ladder as code ([#267](https://github.com/fsafaei/concerto/pull/267), 2026-07-05)
+* **evaluation:** result-bundle schema v3, prereg versioning, `chamber-eval run`/`verify` ([#268](https://github.com/fsafaei/concerto/pull/268), 2026-07-05)
+* **evaluation:** the coupling-validity admission protocol, executed — cocarry ADMITTED, stage1 pick-place CONTROL, handover-place ADMITTED ([#269](https://github.com/fsafaei/concerto/pull/269), 2026-07-05)
+* **partners:** partner zoo v1 — sets, hash-ordered 70/30 split, cards, fingerprints ([#270](https://github.com/fsafaei/concerto/pull/270), 2026-07-05)
+* **benchmarks:** baseline-campaign wiring — B-RND/B-STAT/B-BLIND mask/B-JOINT joint-MAPPO pair trainer, co-carry eval driver, ADR-027 checkpoint selection ([#271](https://github.com/fsafaei/concerto/pull/271), 2026-07-06)
+* **evaluation:** co-carry baseline campaign pre-registration, tagged before any measured episode; rev2 locks eval n=50 from the power pilot ([#272](https://github.com/fsafaei/concerto/pull/272), 2026-07-06)
+* **evaluation:** per-task leaderboard renderer — verified bundles only, CI-checked README block ([#273](https://github.com/fsafaei/concerto/pull/273), 2026-07-06)
+* **evaluation:** the populated cocarry@v1 leaderboard — all six preregistered rows as verify-passing bundles, campaign report ([#275](https://github.com/fsafaei/concerto/pull/275), 2026-07-06)
+* **partners:** co-carry partner set v2 — one jointly-trained member admitted (floor 0.800), four dropped on the cross-play floor gate ([#274](https://github.com/fsafaei/concerto/pull/274), 2026-07-06)
+* **evaluation:** handover-place scripted-ego leaderboard rows on the measured coupling-valid cells ([#276](https://github.com/fsafaei/concerto/pull/276), 2026-07-06)
+* **docs:** ADR-027 A3 ruling — the admission instrument is the preregistered scripted/ablated check; the learned B-AHT-vs-B-BLIND contrast is a reported finding (ADR-027 §Revision history, 2026-07-06)
+
 June 2026 catch-up, reconstructed from git history (hand-written; the
 next release-please cut regenerates its own section from Conventional
 Commits and does not depend on this one).
