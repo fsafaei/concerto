@@ -1,4 +1,14 @@
-# chamber-leaderboard-bundles
+---
+license: apache-2.0
+pretty_name: CHAMBER-Bench v1.0 leaderboard bundles
+tags:
+  - robotics
+  - reinforcement-learning
+  - multi-agent
+  - benchmark
+---
+
+# chamber-bench-leaderboard-bundles
 
 The complete evidence behind every **CHAMBER-Bench v1.0** leaderboard
 row, released with the
@@ -17,18 +27,26 @@ the preregistration it ran under, and SHA-256 integrity manifests
   Each bundle contains `bundle.json`, `episodes_seed*.jsonl` (raw
   per-episode records), `partners.json`, `REPRO.txt` (the exact
   command), `prereg.yaml`, and `SHA256SUMS.txt`.
+- `admission/` — the admission-report archive for each task-admission
+  decision the rows depend on: `cocarry-2026-07-05` (ADMITTED),
+  `handover_place-2026-07-05` (ADMITTED), and
+  `stage1_pickplace_as-2026-07-05` (CONTROL — the protocol's
+  falsification example). Each contains the human-readable report,
+  the machine-readable `admission_report.json`, and one verifiable
+  sub-bundle per check (A1 solvability, A2 single-robot
+  infeasibility, A3 partner-relevance).
 - `checkpoints/` — the content-addressed PyTorch checkpoints the
   learned rows (B-BLIND, B-AHT, B-JOINT) load via their
   `local://artifacts/...` URIs, with JSON sidecars.
-- `manifest.json`, `SHA256SUMS` — file list and digests; check a
-  download with `sha256sum -c SHA256SUMS`.
+- `manifest.json`, `SHA256SUMS.txt` — file list and digests; check a
+  download with `sha256sum -c SHA256SUMS.txt`.
 
 ## How to verify
 
-From a checkout of the repository, every bundle re-verifies with one
-command that re-checks all file hashes and recomputes the summary
-statistics (interquartile mean and bootstrap confidence interval)
-from the raw records:
+From a checkout of the repository, every bundle (including each
+admission sub-bundle) re-verifies with one command that re-checks all
+file hashes and recomputes the summary statistics (interquartile mean
+and bootstrap confidence interval) from the raw records:
 
 ```bash
 uv run chamber-eval verify <bundle-directory>
@@ -52,9 +70,12 @@ breakdown when quoting numbers.
 ## Provenance
 
 Generated in simulation by the repository's evaluation harness under
-tag-locked preregistrations, July 2026. Each bundle records its git
-commit, dependency-lock hash, platform fingerprint, and seed
-schedule. No personal data of any kind.
+tag-locked preregistrations, July 2026 (admission runs under tags
+`prereg-admission-cocarry-2026-07-05`,
+`prereg-admission-handover-place-2026-07-05`,
+`prereg-admission-stage1-pickplace-as-2026-07-05`). Each bundle
+records its git commit, dependency-lock hash, platform fingerprint,
+and seed schedule. No personal data of any kind.
 
 ## Limitations
 

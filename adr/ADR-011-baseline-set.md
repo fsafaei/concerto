@@ -53,7 +53,7 @@ The four evidence notes collectively justify the plan-default scope with B5 defe
 ## Risks and mitigations
 - **B3 AHT fork infeasible in VMAS+RLlib** (`notes/tier1/23_hetgppo.md` §3.8 open question): HetGPPO's DTDE GNN training may not support freezing only the partner's parameters while updating the ego. → Mitigation: run the AHT-fork feasibility spike in the first four weeks of Phase 1; if blocked, fall back to MAPPO with per-agent parameters as B3 proxy and document the deviation.
 - **B5 slip undermines comparative story against HARL** (`notes/tier1/25_harl.md` §5.2): without B5, the Phase 1 baseline table lacks a formal HMARL comparison on the bimanual manipulation task. → Mitigation: include HAPPO's published Bi-DexHands numbers from the HARL paper as a reference-only row in Phase 1 results, explicitly noting no in-house replication; flag as deferred to Phase 2. If B5 porting spike completes early, promote to Option C by amending this ADR.
-- **B1 LLM latency incompatible with §6 safety loop** (`notes/tier1/15_liu_2024_rss.md` §IV): GPT-4 latency (seconds per call) is incompatible with the sub-100 ms CBF safety filter. → Mitigation: B1 runs in an offline planning mode with a pre-computed safety envelope; the CBF filter operates on the B1 trajectory, not inside the LLM call loop. Document this split clearly in the evaluation protocol.
+- **B1 LLM latency incompatible with §6 safety loop** (`notes/tier1/15_liu_2024_rss.md` §IV): frontier-LLM latency (seconds per call; the cited reading note records the concrete model measurements) is incompatible with the sub-100 ms CBF safety filter. → Mitigation: B1 runs in an offline planning mode with a pre-computed safety envelope; the CBF filter operates on the B1 trajectory, not inside the LLM call loop. Document this split clearly in the evaluation protocol.
 
 ## Reversibility
 **Type-2** — this scope decision is easily reversible. If the B5 porting spike completes ahead of schedule, this ADR is amended to Option C by updating the Decision section and re-reviewing. No infrastructure commitment locks B5 out of Phase 1 before the spike finishes.
@@ -69,6 +69,13 @@ By Phase 1 end: (1) all five shipped baselines (B1, B2, B3, B6, B7) reproduce ta
 
 ## Revision history
 
+- 2026-07-06 hygiene rewording: the §Risks B1 entry now says
+  "frontier-LLM latency" instead of naming the specific commercial
+  model, so the widened repository hygiene pattern
+  (`scripts/check_no_ai_mentions.sh`) stays clean tree-wide; the
+  concrete per-model latency measurement lives in the cited reading
+  note (`notes/tier1/15_liu_2024_rss.md` §IV). No Decision content is
+  altered.
 - 2026-07-05 amendment (per ADR-027 CHAMBER-Bench v1.0): §Decision
   extended with the v1.0 baseline set — REF-SCRIPT (oracle-reference),
   B-RND, B-STAT, B-BLIND (realizes B2; doubles as ADR-027 admission

@@ -4,24 +4,26 @@ Three dataset artifacts leave the repository for hosting (ADR-028
 §Decision provenance contract; ADR-027 §Versioning; licence per
 ADR-012 §Decision):
 
-1. ``chamber-partner-sets`` — the versioned partner zoo: rendered
-   cards, per-set machine-readable rosters (public members' committed
-   parameter literals; private members' identity hashes only — the
-   withheld-parameter custody rule of ADR-009 as amended), per-set
-   behavioural fingerprints, and the public learned members'
+1. ``chamber-bench-partner-sets`` — the versioned partner zoo:
+   rendered cards, per-set machine-readable rosters (public members'
+   committed parameter literals; private members' identity hashes
+   only — the withheld-parameter custody rule of ADR-009 as amended),
+   per-set behavioural fingerprints, and the public learned members'
    checkpoints.
-2. ``chamber-leaderboard-bundles`` — the verbatim result bundles
-   listed in the per-task ``LEADERBOARD_BUNDLES.txt`` manifests, the
-   campaign reports, the committed checkpoint-selection artifacts,
-   and the checkpoints the learned rows load.
-3. ``chamber-reference-trajectories`` — the fingerprint probe
-   archives and the admission-report archives.
+2. ``chamber-bench-leaderboard-bundles`` — the verbatim result
+   bundles listed in the per-task ``LEADERBOARD_BUNDLES.txt``
+   manifests, the campaign reports, the committed
+   checkpoint-selection artifacts, the checkpoints the learned rows
+   load, and the admission-report archives.
+3. ``chamber-bench-reference-trajectories`` — the fingerprint probe
+   archives and the power-pilot bundles.
 
 Every package is built deterministically from the committed tree
 (sorted walks, no timestamps): building twice from the same tree
-yields byte-identical ``manifest.json`` and ``SHA256SUMS`` files.
-Each package also carries its committed ``DATASET_CARD.md`` and
-Croissant ``croissant.json`` (sources under ``release/hosting/``).
+yields byte-identical ``manifest.json`` and ``SHA256SUMS.txt`` files.
+Each package also carries its committed ``README.md`` dataset card
+and Croissant ``croissant.jsonld`` (sources under
+``release/hosting/``).
 
 The thin CLI wrapper is ``scripts/release/prepare_hosting.py``; the
 founder-side upload lives in ``scripts/release/upload_hosting.py``.
@@ -46,9 +48,9 @@ _ = _set_definitions
 
 #: Package names, in build order (ADR-028 §Decision; stable public ids).
 HOSTING_ARTIFACTS: tuple[str, str, str] = (
-    "chamber-partner-sets",
-    "chamber-leaderboard-bundles",
-    "chamber-reference-trajectories",
+    "chamber-bench-partner-sets",
+    "chamber-bench-leaderboard-bundles",
+    "chamber-bench-reference-trajectories",
 )
 
 #: Committed per-artifact sources (dataset card + Croissant metadata).
@@ -57,11 +59,14 @@ HOSTING_SOURCE_DIRNAME: str = "release/hosting"
 #: Default build destination (git-ignored; ADR-028 §Decision).
 HOSTING_DEST_DIRNAME: str = "dist/hosting"
 
-#: Files every package must carry besides its payload.
-PACKAGE_CARD_NAME: str = "DATASET_CARD.md"
-PACKAGE_CROISSANT_NAME: str = "croissant.json"
+#: Files every package must carry besides its payload. The card is
+#: named ``README.md`` so the Hugging Face hub renders it as the
+#: dataset card; the Croissant file uses the ``.jsonld`` suffix the
+#: hub's croissant auto-detection expects.
+PACKAGE_CARD_NAME: str = "README.md"
+PACKAGE_CROISSANT_NAME: str = "croissant.jsonld"
 PACKAGE_MANIFEST_NAME: str = "manifest.json"
-PACKAGE_SUMS_NAME: str = "SHA256SUMS"
+PACKAGE_SUMS_NAME: str = "SHA256SUMS.txt"
 
 _BENCHMARK_ROOT = Path("spikes/results/benchmark")
 _FINGERPRINTS_ROOT = Path("spikes/results/partner-fingerprints")
@@ -168,7 +173,7 @@ def _set_roster_json(slug: str) -> str:
 
 
 def plan_partner_sets(repo_root: Path) -> PackagePlan:
-    """Plan the ``chamber-partner-sets`` package (ADR-009 as amended; ADR-027 §Versioning)."""
+    """Plan the ``chamber-bench-partner-sets`` package (ADR-009 as amended; ADR-027 §Versioning)."""
     copies: dict[str, Path] = {}
     generated: dict[str, str] = {}
     _copy_tree(copies, "cards", repo_root / _PARTNER_CARDS_ROOT)
@@ -204,7 +209,13 @@ def _leaderboard_bundle_dirs(task_dir: Path, repo_root: Path) -> list[Path]:
 
 
 def plan_leaderboard_bundles(repo_root: Path) -> PackagePlan:
-    """Plan the ``chamber-leaderboard-bundles`` package (ADR-028; ADR-027 §Reporting rules)."""
+    """Plan the ``chamber-bench-leaderboard-bundles`` package (ADR-028; ADR-027 §Reporting rules).
+
+    The manifest-listed row bundles, campaign reports, and
+    checkpoint-selection artifacts, plus the admission-report archives
+    (the evidence behind every ``ADMITTED``/``CONTROL`` status the
+    rows depend on) and the checkpoints the learned rows load.
+    """
     copies: dict[str, Path] = {}
     checkpoint_uris: set[str] = set()
     benchmark_root = repo_root / _BENCHMARK_ROOT
@@ -228,21 +239,35 @@ def plan_leaderboard_bundles(repo_root: Path) -> PackagePlan:
             _copy_tree(copies, f"{prefix}/{bundle.name}", bundle)
             repro = (bundle / "REPRO.txt").read_text(encoding="utf-8")
             checkpoint_uris.update(_REPRO_CHECKPOINT_URI.findall(repro))
+    admission_root = repo_root / _ADMISSION_ROOT
+    if not admission_root.is_dir():
+        msg = f"required evidence tree missing: {admission_root}"
+        raise HostingSourceError(msg)
+    _copy_tree(copies, "admission", admission_root)
     copies.update(_checkpoint_copies(checkpoint_uris, repo_root))
     return PackagePlan(name=HOSTING_ARTIFACTS[1], copies=copies, generated={})
 
 
 def plan_reference_trajectories(repo_root: Path) -> PackagePlan:
-    """Plan the ``chamber-reference-trajectories`` package (ADR-027 §Decision)."""
+    """Plan the ``chamber-bench-reference-trajectories`` package (ADR-027 §Decision).
+
+    The fingerprint probe archives plus the power-pilot bundles (the
+    ``run_purpose: power`` exploratory runs that sized the campaigns —
+    committed evidence, excluded from every leaderboard manifest).
+    """
     copies: dict[str, Path] = {}
-    for prefix, root in (
-        ("partner-fingerprints", repo_root / _FINGERPRINTS_ROOT),
-        ("admission", repo_root / _ADMISSION_ROOT),
-    ):
-        if not root.is_dir():
-            msg = f"required evidence tree missing: {root}"
-            raise HostingSourceError(msg)
-        _copy_tree(copies, prefix, root)
+    fingerprints_root = repo_root / _FINGERPRINTS_ROOT
+    if not fingerprints_root.is_dir():
+        msg = f"required evidence tree missing: {fingerprints_root}"
+        raise HostingSourceError(msg)
+    _copy_tree(copies, "partner-fingerprints", fingerprints_root)
+    benchmark_root = repo_root / _BENCHMARK_ROOT
+    pilots = sorted(benchmark_root.glob("*/power-pilot-*"))
+    if not pilots:
+        msg = f"no power-pilot bundles under {benchmark_root}"
+        raise HostingSourceError(msg)
+    for pilot in pilots:
+        _copy_tree(copies, f"power-pilots/{pilot.parent.name}/{pilot.name}", pilot)
     return PackagePlan(name=HOSTING_ARTIFACTS[2], copies=copies, generated={})
 
 
@@ -264,11 +289,12 @@ def build_package(
 ) -> Path:
     """Materialise one package under ``dest_root/<name>`` (ADR-028 §Decision).
 
-    Layout: payload files, the committed ``DATASET_CARD.md`` and
-    ``croissant.json`` (from ``release/hosting/<name>/``), then
+    Layout: payload files, the committed ``README.md`` dataset card
+    and ``croissant.jsonld`` (from ``release/hosting/<name>/``), then
     ``manifest.json`` (path → size + SHA-256 over everything except
-    itself and ``SHA256SUMS``), then ``SHA256SUMS`` (everything except
-    itself) — the same two-layer integrity shape as a result bundle.
+    itself and the root ``SHA256SUMS.txt``), then the root
+    ``SHA256SUMS.txt`` (everything except itself) — the same two-layer
+    integrity shape as a result bundle.
     Deterministic: identical inputs produce identical bytes.
 
     Returns:
@@ -304,10 +330,12 @@ def build_package(
     shutil.copyfile(source_dir / PACKAGE_CARD_NAME, package_dir / PACKAGE_CARD_NAME)
     shutil.copyfile(source_dir / PACKAGE_CROISSANT_NAME, package_dir / PACKAGE_CROISSANT_NAME)
 
+    # Exclude only the package-root manifest and digest list; result
+    # bundles nested in the payload carry their own SHA256SUMS.txt,
+    # which is payload like any other file.
+    root_files = (package_dir / PACKAGE_MANIFEST_NAME, package_dir / PACKAGE_SUMS_NAME)
     payload = sorted(
-        path
-        for path in package_dir.rglob("*")
-        if path.is_file() and path.name not in (PACKAGE_MANIFEST_NAME, PACKAGE_SUMS_NAME)
+        path for path in package_dir.rglob("*") if path.is_file() and path not in root_files
     )
     manifest = {
         "artifact": plan.name,

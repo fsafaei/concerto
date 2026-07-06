@@ -47,11 +47,11 @@
     "transform": "cr:transform"
   },
   "@type": "sc:Dataset",
-  "name": "chamber-partner-sets",
-  "description": "The versioned CHAMBER-Bench v1.0 partner zoo: machine-readable rosters for every partner-set version (public members with committed parameter literals; private members with identity hashes only), rendered partner cards, per-set behavioural fingerprints, and the public learned members' checkpoint files. Partners are the frozen black-box teammates a benchmarked method is evaluated against.",
+  "name": "chamber-bench-partner-sets",
+  "description": "The versioned CHAMBER-Bench v1.0 partner zoo: machine-readable rosters for every committed partner-set version (public members with committed parameter literals; private members with identity hashes only), rendered partner cards, per-set behavioural fingerprints, and the public learned members' checkpoint files. Partners are the frozen black-box teammates a benchmarked method is evaluated against.",
   "conformsTo": "http://mlcommons.org/croissant/1.0",
   "license": "https://www.apache.org/licenses/LICENSE-2.0",
-  "url": "https://huggingface.co/datasets/fsafaei/chamber-partner-sets",
+  "url": "https://huggingface.co/datasets/fsafaei/chamber-bench-partner-sets",
   "version": "1.0.0",
   "citeAs": "Safaei, F. (2026). CONCERTO and CHAMBER: Contact-rich Coordination with Opaque, Heterogeneous Teammates. Zenodo. https://doi.org/10.5281/zenodo.20128469",
   "creator": {
@@ -72,7 +72,7 @@
       "@id": "repo",
       "name": "repo",
       "description": "The Hugging Face dataset repository hosting this artifact.",
-      "contentUrl": "https://huggingface.co/datasets/fsafaei/chamber-partner-sets",
+      "contentUrl": "https://huggingface.co/datasets/fsafaei/chamber-bench-partner-sets",
       "encodingFormat": "git+https",
       "sha256": "main"
     },
@@ -89,24 +89,24 @@
     },
     {
       "@type": "cr:FileObject",
-      "@id": "SHA256SUMS",
-      "name": "SHA256SUMS",
+      "@id": "SHA256SUMS.txt",
+      "name": "SHA256SUMS.txt",
       "description": "sha256sum -c checkable digest list covering every file including manifest.json.",
       "containedIn": {
         "@id": "repo"
       },
-      "contentUrl": "SHA256SUMS",
+      "contentUrl": "SHA256SUMS.txt",
       "encodingFormat": "text/plain"
     },
     {
       "@type": "cr:FileObject",
-      "@id": "DATASET_CARD.md",
-      "name": "DATASET_CARD.md",
+      "@id": "README.md",
+      "name": "README.md",
       "description": "The human-readable dataset card (plain language, licence, provenance, intended use, limitations).",
       "containedIn": {
         "@id": "repo"
       },
-      "contentUrl": "DATASET_CARD.md",
+      "contentUrl": "README.md",
       "encodingFormat": "text/markdown"
     },
     {

@@ -178,6 +178,21 @@ Expected bundle: `spikes/results/benchmark/handover-v1/b-stat-2026-07-06`
 uv run chamber-eval verify spikes/results/benchmark/handover-v1/b-stat-2026-07-06
 ```
 
+## Hosted artifacts
+
+The data artifacts behind the leaderboard are hosted as three
+Hugging Face datasets (Croissant metadata included; see the
+[datasheet](../reference/datasheet.md)):
+
+| Dataset | Location |
+|---|---|
+| `chamber-bench-partner-sets` | `<pending first upload>` |
+| `chamber-bench-leaderboard-bundles` | `<pending first upload>` |
+| `chamber-bench-reference-trajectories` | `<pending first upload>` |
+
+The placeholders are replaced with the live URLs at the first upload
+(CB-08).
+
 ## Note on checkpoints for the learned rows
 
 The learned rows (B-BLIND, B-AHT, B-JOINT) load training checkpoints

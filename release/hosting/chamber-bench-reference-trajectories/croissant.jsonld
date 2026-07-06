@@ -47,11 +47,11 @@
     "transform": "cr:transform"
   },
   "@type": "sc:Dataset",
-  "name": "chamber-reference-trajectories",
-  "description": "The reference and probe evidence for CHAMBER-Bench v1.0: the behavioural fingerprint probe episodes for every partner-set member (including the dropped-candidates record) and the admission-report archives for every admission decision (co-carry ADMITTED, handover-place ADMITTED, pick-and-place CONTROL), each an ADR-028 verifiable bundle tree.",
+  "name": "chamber-bench-reference-trajectories",
+  "description": "The reference and probe episodes for CHAMBER-Bench v1.0: the behavioural fingerprint probe bundles for every partner-set member (including the dropped-candidates record) and the power-pilot bundles (the preregistered exploratory runs that sized the campaigns' episode counts). Each is an ADR-028 verifiable bundle tree.",
   "conformsTo": "http://mlcommons.org/croissant/1.0",
   "license": "https://www.apache.org/licenses/LICENSE-2.0",
-  "url": "https://huggingface.co/datasets/fsafaei/chamber-reference-trajectories",
+  "url": "https://huggingface.co/datasets/fsafaei/chamber-bench-reference-trajectories",
   "version": "1.0.0",
   "citeAs": "Safaei, F. (2026). CONCERTO and CHAMBER: Contact-rich Coordination with Opaque, Heterogeneous Teammates. Zenodo. https://doi.org/10.5281/zenodo.20128469",
   "creator": {
@@ -64,15 +64,15 @@
   "rai:dataCollectionType": "Machine Generated",
   "rai:personalSensitiveInformation": "None. The data contains no people, no personal data, no customer or workplace data; every byte is simulator or tooling output.",
   "rai:dataLimitations": "Simulation only (no real-robot data); exactly two agents per task; only the embodiments named in the task cards; measured heterogeneity effects on co-carry are null so far, so the data supports ad-hoc-teamwork competence claims, not heterogeneity-robustness claims; no vision-based partners in v1.0.",
-  "rai:dataBiases": "Probe episodes use the preregistered probe grid and the scripted reference ego; admission evidence covers the three tasks that entered the v1.0 admission campaign.",
-  "rai:dataUseCases": "Auditing partner identity and competence floors; auditing the A1/A2/A3 admission verdicts; regression-testing partner behaviour against committed fingerprints.",
+  "rai:dataBiases": "Probe episodes use the preregistered probe grid and the scripted reference ego; power pilots cover the rows the campaign preregistration named for sizing (run_purpose: power, excluded from every leaderboard manifest by rule).",
+  "rai:dataUseCases": "Auditing partner identity and competence floors; regression-testing partner behaviour against committed fingerprints; auditing the power analysis behind the campaigns' preregistered episode counts.",
   "distribution": [
     {
       "@type": "cr:FileObject",
       "@id": "repo",
       "name": "repo",
       "description": "The Hugging Face dataset repository hosting this artifact.",
-      "contentUrl": "https://huggingface.co/datasets/fsafaei/chamber-reference-trajectories",
+      "contentUrl": "https://huggingface.co/datasets/fsafaei/chamber-bench-reference-trajectories",
       "encodingFormat": "git+https",
       "sha256": "main"
     },
@@ -89,24 +89,24 @@
     },
     {
       "@type": "cr:FileObject",
-      "@id": "SHA256SUMS",
-      "name": "SHA256SUMS",
+      "@id": "SHA256SUMS.txt",
+      "name": "SHA256SUMS.txt",
       "description": "sha256sum -c checkable digest list covering every file including manifest.json.",
       "containedIn": {
         "@id": "repo"
       },
-      "contentUrl": "SHA256SUMS",
+      "contentUrl": "SHA256SUMS.txt",
       "encodingFormat": "text/plain"
     },
     {
       "@type": "cr:FileObject",
-      "@id": "DATASET_CARD.md",
-      "name": "DATASET_CARD.md",
+      "@id": "README.md",
+      "name": "README.md",
       "description": "The human-readable dataset card (plain language, licence, provenance, intended use, limitations).",
       "containedIn": {
         "@id": "repo"
       },
-      "contentUrl": "DATASET_CARD.md",
+      "contentUrl": "README.md",
       "encodingFormat": "text/markdown"
     },
     {
@@ -122,14 +122,14 @@
     },
     {
       "@type": "cr:FileSet",
-      "@id": "admission-reports",
-      "name": "admission-reports",
-      "description": "Per-task admission report archives with per-check sub-bundles.",
+      "@id": "power-pilots",
+      "name": "power-pilots",
+      "description": "Power-pilot result bundles, one directory per piloted row.",
       "containedIn": {
         "@id": "repo"
       },
       "encodingFormat": "application/octet-stream",
-      "includes": "admission/**"
+      "includes": "power-pilots/**"
     }
   ]
 }

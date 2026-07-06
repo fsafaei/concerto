@@ -47,11 +47,11 @@
     "transform": "cr:transform"
   },
   "@type": "sc:Dataset",
-  "name": "chamber-leaderboard-bundles",
-  "description": "The complete evidence behind every CHAMBER-Bench v1.0 leaderboard row: the verbatim ADR-028 schema-v3 result bundles (per-episode records, reproduction command, preregistration copy, integrity manifests), the campaign reports, the committed checkpoint-selection artifacts, and the checkpoints the learned rows load. Every bundle passes the chamber-eval verify recomputation check.",
+  "name": "chamber-bench-leaderboard-bundles",
+  "description": "The complete evidence behind every CHAMBER-Bench v1.0 leaderboard row: the verbatim ADR-028 schema-v3 result bundles (per-episode records, reproduction command, preregistration copy, integrity manifests), the campaign reports, the committed checkpoint-selection artifacts, the checkpoints the learned rows load, and the admission-report archives (the A1/A2/A3 evidence behind each task's ADMITTED or CONTROL status). Every bundle passes the chamber-eval verify recomputation check.",
   "conformsTo": "http://mlcommons.org/croissant/1.0",
   "license": "https://www.apache.org/licenses/LICENSE-2.0",
-  "url": "https://huggingface.co/datasets/fsafaei/chamber-leaderboard-bundles",
+  "url": "https://huggingface.co/datasets/fsafaei/chamber-bench-leaderboard-bundles",
   "version": "1.0.0",
   "citeAs": "Safaei, F. (2026). CONCERTO and CHAMBER: Contact-rich Coordination with Opaque, Heterogeneous Teammates. Zenodo. https://doi.org/10.5281/zenodo.20128469",
   "creator": {
@@ -64,15 +64,15 @@
   "rai:dataCollectionType": "Machine Generated",
   "rai:personalSensitiveInformation": "None. The data contains no people, no personal data, no customer or workplace data; every byte is simulator or tooling output.",
   "rai:dataLimitations": "Simulation only (no real-robot data); exactly two agents per task; only the embodiments named in the task cards; measured heterogeneity effects on co-carry are null so far, so the data supports ad-hoc-teamwork competence claims, not heterogeneity-robustness claims; no vision-based partners in v1.0.",
-  "rai:dataBiases": "Rows exist only for the two admitted tasks (cocarry@v1, handover_place@v1) and the preregistered baseline methods; two rows carry honest labels (oracle reference; non-AHT upper anchor) and must not be read as competitors.",
-  "rai:dataUseCases": "Recomputing leaderboard statistics from raw episode records; re-running any row via its recorded command; comparing new methods against the committed baselines.",
+  "rai:dataBiases": "Rows exist only for the two admitted tasks (cocarry@v1, handover_place@v1) and the preregistered baseline methods; two rows carry honest labels (oracle reference; non-AHT upper anchor) and must not be read as competitors. Admission evidence covers the three tasks that entered the v1.0 admission campaign.",
+  "rai:dataUseCases": "Recomputing leaderboard statistics from raw episode records; re-running any row via its recorded command; comparing new methods against the committed baselines; auditing the A1/A2/A3 admission verdicts.",
   "distribution": [
     {
       "@type": "cr:FileObject",
       "@id": "repo",
       "name": "repo",
       "description": "The Hugging Face dataset repository hosting this artifact.",
-      "contentUrl": "https://huggingface.co/datasets/fsafaei/chamber-leaderboard-bundles",
+      "contentUrl": "https://huggingface.co/datasets/fsafaei/chamber-bench-leaderboard-bundles",
       "encodingFormat": "git+https",
       "sha256": "main"
     },
@@ -89,24 +89,24 @@
     },
     {
       "@type": "cr:FileObject",
-      "@id": "SHA256SUMS",
-      "name": "SHA256SUMS",
+      "@id": "SHA256SUMS.txt",
+      "name": "SHA256SUMS.txt",
       "description": "sha256sum -c checkable digest list covering every file including manifest.json.",
       "containedIn": {
         "@id": "repo"
       },
-      "contentUrl": "SHA256SUMS",
+      "contentUrl": "SHA256SUMS.txt",
       "encodingFormat": "text/plain"
     },
     {
       "@type": "cr:FileObject",
-      "@id": "DATASET_CARD.md",
-      "name": "DATASET_CARD.md",
+      "@id": "README.md",
+      "name": "README.md",
       "description": "The human-readable dataset card (plain language, licence, provenance, intended use, limitations).",
       "containedIn": {
         "@id": "repo"
       },
-      "contentUrl": "DATASET_CARD.md",
+      "contentUrl": "README.md",
       "encodingFormat": "text/markdown"
     },
     {
@@ -133,17 +133,6 @@
     },
     {
       "@type": "cr:FileSet",
-      "@id": "bundle-integrity",
-      "name": "bundle-integrity",
-      "description": "Per-bundle reproduction commands, preregistration copies, partner serializations, and digest lists.",
-      "containedIn": {
-        "@id": "repo"
-      },
-      "encodingFormat": "text/plain",
-      "includes": "benchmark/**/*.{txt,yaml,json}"
-    },
-    {
-      "@type": "cr:FileSet",
       "@id": "campaign-reports",
       "name": "campaign-reports",
       "description": "Per-task campaign reports and leaderboard bundle manifests.",
@@ -152,6 +141,17 @@
       },
       "encodingFormat": "text/markdown",
       "includes": "benchmark/*/CAMPAIGN_REPORT.md"
+    },
+    {
+      "@type": "cr:FileSet",
+      "@id": "admission-reports",
+      "name": "admission-reports",
+      "description": "Per-task admission report archives with per-check sub-bundles (A1 solvability, A2 single-robot infeasibility, A3 partner-relevance).",
+      "containedIn": {
+        "@id": "repo"
+      },
+      "encodingFormat": "application/octet-stream",
+      "includes": "admission/**"
     },
     {
       "@type": "cr:FileSet",

@@ -1,4 +1,14 @@
-# chamber-partner-sets
+---
+license: apache-2.0
+pretty_name: CHAMBER-Bench v1.0 partner sets
+tags:
+  - robotics
+  - reinforcement-learning
+  - multi-agent
+  - benchmark
+---
+
+# chamber-bench-partner-sets
 
 The versioned partner zoo of **CHAMBER-Bench v1.0** — the benchmark
 for physically-coupled ad-hoc cooperation released with the
@@ -23,18 +33,18 @@ parameters.
 - `fingerprints/*.json` — per-set behavioural fingerprint summaries.
 - `checkpoints/` — the public learned members' PyTorch checkpoints
   (content-addressed, with JSON sidecars).
-- `manifest.json`, `SHA256SUMS` — file list and digests; check a
-  download with `sha256sum -c SHA256SUMS`.
+- `manifest.json`, `SHA256SUMS.txt` — file list and digests; check a
+  download with `sha256sum -c SHA256SUMS.txt`.
 
 ## Why private members are hashes only
 
 The benchmark keeps 30% of each partner set private so a submitted
 method can be spot-checked against partners it cannot have overfitted.
 Publishing the identity hashes (and the fingerprints measured from
-probe episodes, released in `chamber-reference-trajectories`) makes
-that spot-check verifiable without revealing the parameters. This is
-a benchmark-integrity measure; there is no personal or confidential
-third-party data anywhere in this artifact.
+probe episodes, released in `chamber-bench-reference-trajectories`)
+makes that spot-check verifiable without revealing the parameters.
+This is a benchmark-integrity measure; there is no personal or
+confidential third-party data anywhere in this artifact.
 
 ## Provenance
 

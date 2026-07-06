@@ -96,19 +96,23 @@ def mini_repo(tmp_path: Path) -> Path:
     admission = repo / "spikes/results/admission/cocarry-2026-07-05"
     admission.mkdir(parents=True)
     (admission / "admission_report.json").write_text('{"verdict": "ADMITTED"}\n', encoding="utf-8")
+    # One power-pilot bundle (excluded from the leaderboard manifest).
+    pilot = task_dir / "power-pilot-ref-script-2026-07-05"
+    pilot.mkdir()
+    (pilot / "bundle.json").write_text('{"run_purpose": "power"}\n', encoding="utf-8")
     # Committed card + croissant sources for all three artifacts.
     for name in HOSTING_ARTIFACTS:
         source = repo / "release/hosting" / name
         source.mkdir(parents=True)
-        (source / "DATASET_CARD.md").write_text(f"# {name}\n", encoding="utf-8")
-        (source / "croissant.json").write_text('{"@type": "sc:Dataset"}\n', encoding="utf-8")
+        (source / "README.md").write_text(f"# {name}\n", encoding="utf-8")
+        (source / "croissant.jsonld").write_text('{"@type": "sc:Dataset"}\n', encoding="utf-8")
     return repo
 
 
 class TestPlanPartnerSets:
     def test_rosters_cards_fingerprints_checkpoints(self, mini_repo: Path) -> None:
         plan = plan_partner_sets(mini_repo)
-        assert plan.name == "chamber-partner-sets"
+        assert plan.name == "chamber-bench-partner-sets"
         assert "cards/index.md" in plan.copies
         assert "cards/some_set-v1/member.md" in plan.copies
         for slug in list_partner_sets():
@@ -154,6 +158,16 @@ class TestPlanLeaderboardBundles:
             assert f"{prefix}/row-a/{name}" in plan.copies
         assert "checkpoints/fake_pair.pt" in plan.copies
         assert "checkpoints/fake_pair.pt.json" in plan.copies
+        assert "admission/cocarry-2026-07-05/admission_report.json" in plan.copies
+        # Power pilots are reference evidence, not leaderboard evidence.
+        assert not any("power-pilot" in rel for rel in plan.copies)
+
+    def test_missing_admission_tree_fails(self, mini_repo: Path) -> None:
+        import shutil
+
+        shutil.rmtree(mini_repo / "spikes/results/admission")
+        with pytest.raises(HostingSourceError, match="admission"):
+            plan_leaderboard_bundles(mini_repo)
 
     def test_missing_checkpoint_is_listed(self, mini_repo: Path) -> None:
         (mini_repo / "artifacts/artifacts/fake_pair.pt").unlink()
@@ -173,16 +187,29 @@ class TestPlanLeaderboardBundles:
 
 
 class TestPlanReferenceTrajectories:
-    def test_covers_fingerprints_and_admission(self, mini_repo: Path) -> None:
+    def test_covers_fingerprints_and_power_pilots(self, mini_repo: Path) -> None:
         plan = plan_reference_trajectories(mini_repo)
         assert any(rel.startswith("partner-fingerprints/") for rel in plan.copies)
-        assert "admission/cocarry-2026-07-05/admission_report.json" in plan.copies
+        assert (
+            "power-pilots/cocarry-v1/power-pilot-ref-script-2026-07-05/bundle.json" in plan.copies
+        )
+        # Admission evidence ships with the leaderboard bundles instead.
+        assert not any(rel.startswith("admission/") for rel in plan.copies)
 
-    def test_missing_evidence_tree_fails(self, mini_repo: Path) -> None:
+    def test_missing_fingerprints_tree_fails(self, mini_repo: Path) -> None:
         import shutil
 
-        shutil.rmtree(mini_repo / "spikes/results/admission")
-        with pytest.raises(HostingSourceError, match="admission"):
+        shutil.rmtree(mini_repo / "spikes/results/partner-fingerprints")
+        with pytest.raises(HostingSourceError, match="partner-fingerprints"):
+            plan_reference_trajectories(mini_repo)
+
+    def test_no_power_pilots_fails(self, mini_repo: Path) -> None:
+        import shutil
+
+        shutil.rmtree(
+            mini_repo / "spikes/results/benchmark/cocarry-v1/power-pilot-ref-script-2026-07-05"
+        )
+        with pytest.raises(HostingSourceError, match="power-pilot"):
             plan_reference_trajectories(mini_repo)
 
 
@@ -192,29 +219,34 @@ class TestBuildPackage:
         second = build_all(mini_repo, tmp_path / "b", git_sha="deadbeef")
         assert [p.name for p in first] == list(HOSTING_ARTIFACTS)
         for pkg_a, pkg_b in zip(first, second, strict=True):
-            for name in ("manifest.json", "SHA256SUMS"):
+            for name in ("manifest.json", "SHA256SUMS.txt"):
                 assert (pkg_a / name).read_bytes() == (pkg_b / name).read_bytes()
 
     def test_manifest_and_sums_cover_everything(self, mini_repo: Path, tmp_path: Path) -> None:
         package = build_all(mini_repo, tmp_path / "dist", git_sha="deadbeef")[2]
         manifest = json.loads((package / "manifest.json").read_text(encoding="utf-8"))
-        assert manifest["artifact"] == "chamber-reference-trajectories"
+        assert manifest["artifact"] == "chamber-bench-reference-trajectories"
         assert manifest["git_sha"] == "deadbeef"
+        # Only the package-root manifest and digest list are excluded;
+        # nested payload files that happen to be named SHA256SUMS.txt
+        # (result bundles carry their own) are payload.
         on_disk = {
             p.relative_to(package).as_posix()
             for p in package.rglob("*")
-            if p.is_file() and p.name not in ("manifest.json", "SHA256SUMS")
+            if p.is_file()
+            and p.relative_to(package).as_posix() not in ("manifest.json", "SHA256SUMS.txt")
         }
         listed = {entry["path"] for entry in manifest["files"]}
         assert listed == on_disk
-        assert "DATASET_CARD.md" in listed
-        assert "croissant.json" in listed
+        assert any(rel.endswith("SHA256SUMS.txt") for rel in listed)  # nested bundle sums
+        assert "README.md" in listed
+        assert "croissant.jsonld" in listed
         for entry in manifest["files"]:
             digest = hashlib.sha256((package / entry["path"]).read_bytes()).hexdigest()
             assert digest == entry["sha256"]
         sums = {
             line.split("  ", 1)[1]
-            for line in (package / "SHA256SUMS").read_text(encoding="utf-8").splitlines()
+            for line in (package / "SHA256SUMS.txt").read_text(encoding="utf-8").splitlines()
         }
         assert sums == on_disk | {"manifest.json"}
 
@@ -226,9 +258,11 @@ class TestBuildPackage:
             build_package(plan, mini_repo, dest, git_sha=None)
 
     def test_missing_committed_sources_fail(self, mini_repo: Path, tmp_path: Path) -> None:
-        (mini_repo / "release/hosting/chamber-reference-trajectories/croissant.json").unlink()
+        (
+            mini_repo / "release/hosting/chamber-bench-reference-trajectories/croissant.jsonld"
+        ).unlink()
         plan = plan_reference_trajectories(mini_repo)
-        with pytest.raises(HostingSourceError, match=r"croissant\.json"):
+        with pytest.raises(HostingSourceError, match=r"croissant\.jsonld"):
             build_package(plan, mini_repo, tmp_path / "dist", git_sha=None)
 
     def test_missing_planned_payload_fails(self, mini_repo: Path, tmp_path: Path) -> None:
@@ -243,7 +277,7 @@ class TestBuildPackage:
 
 
 class TestCommittedCroissantSources:
-    """The committed croissant.json files stay structurally sound."""
+    """The committed croissant.jsonld files stay structurally sound."""
 
     RAI_KEYS = (
         "rai:dataCollection",
@@ -256,7 +290,7 @@ class TestCommittedCroissantSources:
 
     @pytest.mark.parametrize("name", HOSTING_ARTIFACTS)
     def test_croissant_structure(self, name: str) -> None:
-        path = REPO_ROOT / "release/hosting" / name / "croissant.json"
+        path = REPO_ROOT / "release/hosting" / name / "croissant.jsonld"
         data = json.loads(path.read_text(encoding="utf-8"))
         assert data["@type"] == "sc:Dataset"
         assert data["name"] == name
@@ -267,11 +301,14 @@ class TestCommittedCroissantSources:
         ids = [entry["@id"] for entry in data["distribution"]]
         assert "repo" in ids
         assert "manifest.json" in ids
-        assert "SHA256SUMS" in ids
+        assert "SHA256SUMS.txt" in ids
+        assert "README.md" in ids
 
     @pytest.mark.parametrize("name", HOSTING_ARTIFACTS)
     def test_dataset_card_exists(self, name: str) -> None:
-        card = REPO_ROOT / "release/hosting" / name / "DATASET_CARD.md"
+        card = REPO_ROOT / "release/hosting" / name / "README.md"
         text = card.read_text(encoding="utf-8")
-        assert text.startswith(f"# {name}")
+        # Hugging Face dataset-card YAML frontmatter, then the heading.
+        assert text.startswith("---\nlicense: apache-2.0\n")
+        assert f"\n# {name}\n" in text
         assert "Apache-2.0" in text

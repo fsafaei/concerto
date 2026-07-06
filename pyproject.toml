@@ -129,6 +129,14 @@ oracle = [
   "mujoco>=3.1",
 ]
 
+# CB-07 hosting: founder-side upload of the three dataset packages
+# (scripts/release/upload_hosting.py). Dev-only tooling — NOT a runtime
+# dependency of the wheel. huggingface_hub is Apache-2.0
+# (ADR-012-compatible). Install with ``uv sync --group hosting``.
+hosting = [
+  "huggingface_hub>=0.34",
+]
+
 # harl-aht ships to TestPyPI for the v0.x release line (mirrors
 # concerto-multirobot's own TestPyPI-for-v0.x policy in the release
 # workflow). Promote to real PyPI at v1.x; this block goes away
