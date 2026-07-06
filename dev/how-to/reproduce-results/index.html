@@ -782,6 +782,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#hosted-artifacts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Hosted artifacts
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#note-on-checkpoints-for-the-learned-rows" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3473,6 +3484,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#hosted-artifacts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Hosted artifacts
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#note-on-checkpoints-for-the-learned-rows" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3635,6 +3657,34 @@ uv<span class="w"> </span>run<span class="w"> </span>chamber-eval<span class="w"
 <p>Expected bundle: <code>spikes/results/benchmark/handover-v1/b-stat-2026-07-06</code></p>
 <div class="highlight"><pre><span></span><code>uv<span class="w"> </span>run<span class="w"> </span>chamber-eval<span class="w"> </span>verify<span class="w"> </span>spikes/results/benchmark/handover-v1/b-stat-2026-07-06
 </code></pre></div>
+<h2 id="hosted-artifacts">Hosted artifacts</h2>
+<p>The data artifacts behind the leaderboard are hosted as three
+Hugging Face datasets (Croissant metadata included; see the
+<a href="../../reference/datasheet/">datasheet</a>):</p>
+<table>
+<thead>
+<tr>
+<th>Dataset</th>
+<th>Location</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>chamber-bench-partner-sets</code></td>
+<td><code>&lt;pending first upload&gt;</code></td>
+</tr>
+<tr>
+<td><code>chamber-bench-leaderboard-bundles</code></td>
+<td><code>&lt;pending first upload&gt;</code></td>
+</tr>
+<tr>
+<td><code>chamber-bench-reference-trajectories</code></td>
+<td><code>&lt;pending first upload&gt;</code></td>
+</tr>
+</tbody>
+</table>
+<p>The placeholders are replaced with the live URLs at the first upload
+(CB-08).</p>
 <h2 id="note-on-checkpoints-for-the-learned-rows">Note on checkpoints for the learned rows</h2>
 <p>The learned rows (B-BLIND, B-AHT, B-JOINT) load training checkpoints
 via <code>local://artifacts/...</code> URIs. The checkpoint files (~3 MB each)
