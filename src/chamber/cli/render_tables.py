@@ -47,6 +47,18 @@ def _parse_args(argv: list[str] | None) -> argparse.Namespace:
         help="Path to a leaderboard.json (list of LeaderboardEntry dicts).",
     )
     parser.add_argument(
+        "--benchmark-leaderboard",
+        type=Path,
+        default=None,
+        metavar="TASK_DIR",
+        help=(
+            "Render the per-task CHAMBER-Bench leaderboard (ADR-027) from the "
+            "verified bundles listed in TASK_DIR/LEADERBOARD_BUNDLES.txt "
+            "(e.g. spikes/results/benchmark/cocarry-v1). Every input bundle "
+            "is re-verified; unverifiable entries refuse the render."
+        ),
+    )
+    parser.add_argument(
         "--fmt",
         choices=("markdown", "latex"),
         default="markdown",
@@ -61,7 +73,7 @@ def _parse_args(argv: list[str] | None) -> argparse.Namespace:
     return parser.parse_args(argv)
 
 
-def main(argv: list[str] | None = None) -> int:
+def main(argv: list[str] | None = None) -> int:  # noqa: PLR0911 - one early return per input artefact's missing-file path (the thin-CLI error style)
     """Entry point for the ``chamber-render-tables`` console script (ADR-014 §Decision).
 
     Without arguments, prints the banner so the install can be smoke-
@@ -76,9 +88,17 @@ def main(argv: list[str] | None = None) -> int:
         ``0`` on success; ``2`` when required JSON files are missing.
     """
     args = _parse_args(argv)
-    if args.safety_report is None and args.leaderboard is None:
+    no_inputs = (
+        args.safety_report is None
+        and args.leaderboard is None
+        and args.benchmark_leaderboard is None
+    )
+    if no_inputs:
         print(f"chamber-render-tables  (CHAMBER {chamber.__version__})")
-        print("Usage: chamber-render-tables --safety-report PATH | --leaderboard PATH")
+        print(
+            "Usage: chamber-render-tables --safety-report PATH | --leaderboard PATH "
+            "| --benchmark-leaderboard TASK_DIR"
+        )
         return 0
 
     chunks: list[str] = []
@@ -108,6 +128,23 @@ def main(argv: list[str] | None = None) -> int:
             return 2
         entries = [LeaderboardEntry.model_validate(item) for item in raw]
         chunks.append(render_leaderboard(entries))
+
+    if args.benchmark_leaderboard is not None:
+        # Lazy import: keeps the banner path free of the evaluation
+        # bundle machinery (mirrors the module's thin-CLI rule).
+        from chamber.evaluation.leaderboard import (  # noqa: PLC0415 - lazy by design (see comment above)
+            LeaderboardInputError,
+            render_task_leaderboard,
+        )
+
+        if not args.benchmark_leaderboard.is_dir():
+            print(f"error: {args.benchmark_leaderboard} not found", file=sys.stderr)
+            return 2
+        try:
+            chunks.append(render_task_leaderboard(args.benchmark_leaderboard, repo_path=Path.cwd()))
+        except LeaderboardInputError as exc:
+            print(f"error: {exc}", file=sys.stderr)
+            return 2
 
     rendered = "\n".join(chunks)
     if args.output is not None:
