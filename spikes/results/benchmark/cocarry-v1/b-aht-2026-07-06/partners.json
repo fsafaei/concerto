@@ -1,0 +1,185 @@
+[
+  {
+    "checkpoint_step": null,
+    "class_name": "frozen_harl",
+    "extra": {
+      "uid": "panda_wristcam"
+    },
+    "name": "ego:happo:local://artifacts/4f114f4bf72c1125_step100000.pt",
+    "seed": 0,
+    "weights_uri": "local://artifacts/4f114f4bf72c1125_step100000.pt"
+  },
+  {
+    "checkpoint_step": null,
+    "class_name": "cocarry_impedance",
+    "extra": {
+      "bar_half_len": "0.115",
+      "base_xyz": "0.5,0.0,0.0",
+      "base_yaw_deg": "180",
+      "damping": "0.0442",
+      "end_sign": "-1",
+      "ki": "0.6616",
+      "kp": "1.1991",
+      "lag_steps": "0",
+      "step_max": "0.0286",
+      "uid": "panda_partner"
+    },
+    "name": "imp_stiff_low",
+    "seed": 0,
+    "weights_uri": "member://cocarry_impedance/a5d61ee76a1a7a8a7f9241d25fca8db825215da0babb8fcda096e2bec36073a0"
+  },
+  {
+    "checkpoint_step": null,
+    "class_name": "cocarry_impedance",
+    "extra": {
+      "bar_half_len": "0.115",
+      "base_xyz": "0.5,0.0,0.0",
+      "base_yaw_deg": "180",
+      "damping": "0.0364",
+      "end_sign": "-1",
+      "ki": "0.6856",
+      "kp": "3.6431",
+      "lag_steps": "0",
+      "step_max": "0.029",
+      "uid": "panda_partner"
+    },
+    "name": "imp_stiff_high",
+    "seed": 0,
+    "weights_uri": "member://cocarry_impedance/212f054214340e8e69849cf63594c71bf92fdf026cddaf37c8e4f67e3999e8ff"
+  },
+  {
+    "checkpoint_step": null,
+    "class_name": "cocarry_impedance",
+    "extra": {
+      "bar_half_len": "0.115",
+      "base_xyz": "0.5,0.0,0.0",
+      "base_yaw_deg": "180",
+      "damping": "0.0165",
+      "end_sign": "-1",
+      "ki": "0.5409",
+      "kp": "2.6044",
+      "lag_steps": "0",
+      "step_max": "0.0308",
+      "uid": "panda_partner"
+    },
+    "name": "imp_damp_low",
+    "seed": 0,
+    "weights_uri": "member://cocarry_impedance/25c318a230e97df9c9168d0e8f98dc9c3227e4cdada4cb45dff7d09f31f64633"
+  },
+  {
+    "checkpoint_step": null,
+    "class_name": "cocarry_impedance",
+    "extra": {
+      "bar_half_len": "0.115",
+      "base_xyz": "0.5,0.0,0.0",
+      "base_yaw_deg": "180",
+      "damping": "0.0817",
+      "end_sign": "-1",
+      "ki": "0.5119",
+      "kp": "2.3582",
+      "lag_steps": "0",
+      "step_max": "0.0302",
+      "uid": "panda_partner"
+    },
+    "name": "imp_damp_high",
+    "seed": 0,
+    "weights_uri": "member://cocarry_impedance/509cec1613d436a03d9538961436f9c9653f74bff53abb625207043f8c4c9ad4"
+  },
+  {
+    "checkpoint_step": null,
+    "class_name": "cocarry_impedance",
+    "extra": {
+      "bar_half_len": "0.115",
+      "base_xyz": "0.5,0.0,0.0",
+      "base_yaw_deg": "180",
+      "damping": "0.0353",
+      "end_sign": "-1",
+      "ki": "0.6211",
+      "kp": "2.5576",
+      "lag_steps": "5",
+      "step_max": "0.0294",
+      "uid": "panda_partner"
+    },
+    "name": "imp_lag_bounded",
+    "seed": 0,
+    "weights_uri": "member://cocarry_impedance/fc385b64d1b4fc869b62c8d0f19b5959693ad7b634337667d25a8716d546b74f"
+  },
+  {
+    "checkpoint_step": null,
+    "class_name": "cocarry_impedance",
+    "extra": {
+      "bar_half_len": "0.115",
+      "base_xyz": "0.5,0.0,0.0",
+      "base_yaw_deg": "180",
+      "damping": "0.0232",
+      "end_sign": "-1",
+      "ki": "0.6453",
+      "kp": "1.6573",
+      "lag_steps": "1",
+      "step_max": "0.0398",
+      "uid": "panda_partner"
+    },
+    "name": "imp_blend_b",
+    "seed": 0,
+    "weights_uri": "member://cocarry_impedance/b1a0fa0aa3ee2d96af0073a70ed040fa6d90efffaeb3a956396cd5704912ddb2"
+  },
+  {
+    "checkpoint_step": null,
+    "class_name": "cocarry_impedance",
+    "extra": {
+      "bar_half_len": "0.115",
+      "base_xyz": "0.5,0.0,0.0",
+      "base_yaw_deg": "180",
+      "damping": "0.0281",
+      "end_sign": "-1",
+      "ki": "0.7293",
+      "kp": "1.4134",
+      "lag_steps": "2",
+      "step_max": "0.0391",
+      "uid": "panda_partner"
+    },
+    "name": "imp_blend_c",
+    "seed": 0,
+    "weights_uri": "member://cocarry_impedance/cc417fc13ef686b0d64ab6feca899ccf5f19c57f0ff874ae4a57dbaf7f6fdcf0"
+  },
+  {
+    "checkpoint_step": null,
+    "class_name": "frozen_harl",
+    "extra": {
+      "uid": "panda_wristcam"
+    },
+    "name": "ego:happo:local://artifacts/9f548510c7c0841f_step150000.pt",
+    "seed": 0,
+    "weights_uri": "local://artifacts/9f548510c7c0841f_step150000.pt"
+  },
+  {
+    "checkpoint_step": null,
+    "class_name": "frozen_harl",
+    "extra": {
+      "uid": "panda_wristcam"
+    },
+    "name": "ego:happo:local://artifacts/a156b94137ff38da_step150000.pt",
+    "seed": 0,
+    "weights_uri": "local://artifacts/a156b94137ff38da_step150000.pt"
+  },
+  {
+    "checkpoint_step": null,
+    "class_name": "frozen_harl",
+    "extra": {
+      "uid": "panda_wristcam"
+    },
+    "name": "ego:happo:local://artifacts/cb4b477f2806aa86_step50000.pt",
+    "seed": 0,
+    "weights_uri": "local://artifacts/cb4b477f2806aa86_step50000.pt"
+  },
+  {
+    "checkpoint_step": null,
+    "class_name": "frozen_harl",
+    "extra": {
+      "uid": "panda_wristcam"
+    },
+    "name": "ego:happo:local://artifacts/060e27831f8f1f43_step50000.pt",
+    "seed": 0,
+    "weights_uri": "local://artifacts/060e27831f8f1f43_step50000.pt"
+  }
+]
