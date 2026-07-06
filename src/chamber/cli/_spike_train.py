@@ -122,7 +122,11 @@ def _train_command(
     curve = run_training(cfg).curve
     rewards = list(curve.per_episode_ego_rewards)
     tail = rewards[-_SUMMARY_WINDOW:] if rewards else []
-    mean_tail = sum(tail) / len(tail) if tail else 0.0
+    # float() coercion: SAPIEN-tier envs (co-carry) emit per-step rewards
+    # as batch-1 torch tensors, which accumulate into the curve and do
+    # not support the ``:.4f`` format spec (observed on the CB-06 B-BLIND
+    # smoke; the MPE/Stage-1 paths emit plain floats and are unchanged).
+    mean_tail = float(sum(float(r) for r in tail) / len(tail)) if tail else 0.0
     print(
         f"run_id={curve.run_id} n_episodes={len(rewards)} "
         f"n_checkpoints={len(curve.checkpoint_paths)} "

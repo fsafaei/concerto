@@ -104,6 +104,13 @@ def build_env(env_cfg: EnvConfig, *, root_seed: int) -> EnvLike:
             (``stage0_smoke`` / ``stage1_pickplace``) is requested and
             SAPIEN / Vulkan is unavailable (see ADR-001 §Risks).
     """
+    if env_cfg.mask_partner_obs and env_cfg.task != "cocarry":
+        msg = (
+            "build_env: EnvConfig.mask_partner_obs=True is only wired for "
+            "task='cocarry' (the B-BLIND baseline, ADR-011 §Decision as "
+            f"amended); got task={env_cfg.task!r}."
+        )
+        raise ValueError(msg)
     if env_cfg.task == "mpe_cooperative_push":
         return MPECooperativePushEnv(
             agent_uids=env_cfg.agent_uids,
@@ -180,15 +187,21 @@ def build_env(env_cfg: EnvConfig, *, root_seed: int) -> EnvLike:
                 "env.condition_id carries 'cocarry_matched_panda_pair' as default."
             )
             raise ValueError(msg)
-        return cast(
-            "EnvLike",
-            make_cocarry_training_env(
-                condition_id=env_cfg.condition_id,
-                episode_length=env_cfg.episode_length,
-                root_seed=root_seed,
-                num_envs=env_cfg.num_envs,
-            ),
+        cocarry_env = make_cocarry_training_env(
+            condition_id=env_cfg.condition_id,
+            episode_length=env_cfg.episode_length,
+            root_seed=root_seed,
+            num_envs=env_cfg.num_envs,
         )
+        if env_cfg.mask_partner_obs:
+            # B-BLIND (ADR-011 §Decision as amended): zero the ego-state
+            # partner + coupling slice OUTSIDE the synthesizer — a pure
+            # observation transform, no trainer changes. The masked cell
+            # trains the same 46-D actor on the blinded interface.
+            from chamber.envs.cocarry_blind_mask import CoCarryEgoBlindMask
+
+            cocarry_env = CoCarryEgoBlindMask(cocarry_env)
+        return cast("EnvLike", cocarry_env)
     raise ValueError(
         f"Unknown env task {env_cfg.task!r}; supported: "
         "'mpe_cooperative_push', 'stage0_smoke', 'stage1_pickplace', 'cocarry'."

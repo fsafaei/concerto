@@ -100,6 +100,28 @@ def _build_parser() -> argparse.ArgumentParser:
     )
     group.add_argument("--partner", help="Single partner registry name (ad-hoc set).")
     parser.add_argument(
+        "--partner-weights",
+        default=None,
+        help=(
+            "Checkpoint URI (local://artifacts/...) for a frozen learned "
+            "--partner class — the B-JOINT evaluated-as-a-pair path "
+            "(ADR-011 §Decision as amended: pass the pair checkpoint here "
+            "with --partner frozen_cocarry_joint)."
+        ),
+    )
+    parser.add_argument(
+        "--exclude-member",
+        action="append",
+        default=[],
+        metavar="NAME",
+        help=(
+            "Exclude a named set member from the run, repeatable — the "
+            "held-out validation-partner discipline (ADR-027 §Reporting "
+            "rules: the checkpoint-selection partner is excluded from every "
+            "eval cell). Loud-fails on a name the set does not contain."
+        ),
+    )
+    parser.add_argument(
         "--include-private",
         action="store_true",
         help=(
@@ -181,6 +203,20 @@ def _resolve_partner_set(
         members = resolve_set_members(set_spec, include_private=args.include_private)
     except WithheldParametersError as exc:
         raise _CliExitError(str(exc), _USAGE_EXIT_CODE) from exc
+    excluded = set(args.exclude_member)
+    if excluded:
+        known = {member.member_name for member, _ in members}
+        missing = sorted(excluded - known)
+        if missing:
+            msg = (
+                f"--exclude-member {', '.join(missing)}: not member(s) of "
+                f"{set_spec.slug} (members: {', '.join(sorted(known))})"
+            )
+            raise _CliExitError(msg, _USAGE_EXIT_CODE)
+        members = [(m, p) for m, p in members if m.member_name not in excluded]
+        if not members:
+            msg = f"--exclude-member removed every member of {set_spec.slug}"
+            raise _CliExitError(msg, _USAGE_EXIT_CODE)
     return set_spec, members
 
 
@@ -188,6 +224,9 @@ def _run_impl(args: argparse.Namespace, argv: list[str]) -> int:
     repo_path = Path.cwd()
     if args.include_private and args.partner_set is None:
         msg = "--include-private only applies to --partner-set runs"
+        raise _CliExitError(msg, _USAGE_EXIT_CODE)
+    if args.partner_weights is not None and args.partner is None:
+        msg = "--partner-weights only applies to single --partner runs"
         raise _CliExitError(msg, _USAGE_EXIT_CODE)
     try:
         seeds = _parse_seeds(args.seeds)
@@ -237,6 +276,7 @@ def _run_impl(args: argparse.Namespace, argv: list[str]) -> int:
                 task_version=task_version,
                 policy_id=args.policy,
                 partner_name=args.partner,
+                partner_weights=args.partner_weights,
                 seeds=seeds,
                 episodes_per_seed=args.episodes,
                 root_seed=args.root_seed,
