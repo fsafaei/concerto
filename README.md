@@ -334,6 +334,14 @@ by `scripts/render_leaderboard_table.py`; CI fails if it drifts.
 | B-BLIND |  | 1.000 [1.000, 1.000] | 107.6 | 0.86 (imp_lag_bounded) … 1.00 (imp_stiff_low) | 0, 1, 2, 3, 4 | `spikes/results/benchmark/cocarry-v1/b-blind-2026-07-06` |
 | B-AHT |  | 1.000 [1.000, 1.000] | 108.4 | 0.88 (imp_lag_bounded) … 1.00 (imp_stiff_low) | 0, 1, 2, 3, 4 | `spikes/results/benchmark/cocarry-v1/b-aht-2026-07-06` |
 | B-JOINT | *non-AHT upper anchor* | 1.000 [1.000, 1.000] | 41.2 | 0.94 (frozen_cocarry_joint) … 0.94 (frozen_cocarry_joint) | 0, 1, 2, 3, 4 | `spikes/results/benchmark/cocarry-v1/b-joint-seed0-2026-07-06`<br>`spikes/results/benchmark/cocarry-v1/b-joint-seed1-2026-07-06`<br>`spikes/results/benchmark/cocarry-v1/b-joint-seed2-2026-07-06`<br>`spikes/results/benchmark/cocarry-v1/b-joint-seed3-2026-07-06`<br>`spikes/results/benchmark/cocarry-v1/b-joint-seed4-2026-07-06` |
+
+#### handover-v1
+
+| Row | Label | Success IQM [95% CI] | Stress p90 (N) | Per-partner range | Seeds | Bundles |
+|---|---|---|---|---|---|---|
+| B-RND |  | 0.000 [0.000, 0.000] | 3858.1 | 0.00 (presenter_mismatch_30) … 0.00 (presenter_mismatch_30) | 0, 1, 2, 3, 4 | `spikes/results/benchmark/handover-v1/b-rnd-2026-07-06` |
+| B-STAT |  | 0.048 [0.000, 0.140] | 225.6 | 0.05 (presenter_mismatch_45) … 0.50 (presenter_mismatch_30) | 0, 1, 2, 3, 4 | `spikes/results/benchmark/handover-v1/b-stat-2026-07-06` |
+| ref_script_handover_ego |  | 0.176 [0.072, 0.284] | 211.5 | 0.13 (presenter_mismatch_45) … 0.55 (presenter_mismatch_30) | 0, 1, 2, 3, 4 | `spikes/results/benchmark/handover-v1/ref-script-2026-07-06` |
 <!-- CHAMBER-BENCH-LEADERBOARD:END -->
 
 ---

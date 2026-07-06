@@ -1,0 +1,1 @@
+chamber-eval run --task handover_place --policy static --partner-set handover_place_partners@v1 --exclude-member presenter_mismatch_15 --exclude-member presenter_offgrid_a --exclude-member presenter_offgrid_b --seeds 5 --episodes 50 --out spikes/results/benchmark/handover-v1/b-stat-2026-07-06 --prereg spikes/preregistration/benchmark/handover_baselines_v1.yaml
