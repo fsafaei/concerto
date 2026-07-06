@@ -1,0 +1,168 @@
+{
+  "@context": {
+    "@language": "en",
+    "@vocab": "https://schema.org/",
+    "citeAs": "cr:citeAs",
+    "column": "cr:column",
+    "conformsTo": "dct:conformsTo",
+    "cr": "http://mlcommons.org/croissant/",
+    "rai": "http://mlcommons.org/croissant/RAI/",
+    "data": {
+      "@id": "cr:data",
+      "@type": "@json"
+    },
+    "dataType": {
+      "@id": "cr:dataType",
+      "@type": "@vocab"
+    },
+    "dct": "http://purl.org/dc/terms/",
+    "examples": {
+      "@id": "cr:examples",
+      "@type": "@json"
+    },
+    "equivalentProperty": "cr:equivalentProperty",
+    "extract": "cr:extract",
+    "field": "cr:field",
+    "fileProperty": "cr:fileProperty",
+    "fileObject": "cr:fileObject",
+    "fileSet": "cr:fileSet",
+    "format": "cr:format",
+    "includes": "cr:includes",
+    "isLiveDataset": "cr:isLiveDataset",
+    "jsonPath": "cr:jsonPath",
+    "key": "cr:key",
+    "md5": "cr:md5",
+    "parentField": "cr:parentField",
+    "path": "cr:path",
+    "recordSet": "cr:recordSet",
+    "references": "cr:references",
+    "regex": "cr:regex",
+    "repeated": "cr:repeated",
+    "replace": "cr:replace",
+    "samplingRate": "cr:samplingRate",
+    "sc": "https://schema.org/",
+    "separator": "cr:separator",
+    "source": "cr:source",
+    "subField": "cr:subField",
+    "transform": "cr:transform"
+  },
+  "@type": "sc:Dataset",
+  "name": "chamber-leaderboard-bundles",
+  "description": "The complete evidence behind every CHAMBER-Bench v1.0 leaderboard row: the verbatim ADR-028 schema-v3 result bundles (per-episode records, reproduction command, preregistration copy, integrity manifests), the campaign reports, the committed checkpoint-selection artifacts, and the checkpoints the learned rows load. Every bundle passes the chamber-eval verify recomputation check.",
+  "conformsTo": "http://mlcommons.org/croissant/1.0",
+  "license": "https://www.apache.org/licenses/LICENSE-2.0",
+  "url": "https://huggingface.co/datasets/fsafaei/chamber-leaderboard-bundles",
+  "version": "1.0.0",
+  "citeAs": "Safaei, F. (2026). CONCERTO and CHAMBER: Contact-rich Coordination with Opaque, Heterogeneous Teammates. Zenodo. https://doi.org/10.5281/zenodo.20128469",
+  "creator": {
+    "@type": "sc:Person",
+    "name": "Farhad Safaei",
+    "email": "cooperative.physical.ai@gmail.com"
+  },
+  "datePublished": "2026-07-06",
+  "rai:dataCollection": "Every record was generated in simulation (ManiSkill v3 / SAPIEN, plus one CPU diagnostic task) by the evaluation tooling committed in the fsafaei/concerto repository, under preregistered specifications locked with signed git tags before the runs. Each result bundle records the producing command, git commit, dependency-lock hash, platform fingerprint, and seed schedule, and passes the chamber-eval verify integrity and recomputation checks.",
+  "rai:dataCollectionType": "Machine Generated",
+  "rai:personalSensitiveInformation": "None. The data contains no people, no personal data, no customer or workplace data; every byte is simulator or tooling output.",
+  "rai:dataLimitations": "Simulation only (no real-robot data); exactly two agents per task; only the embodiments named in the task cards; measured heterogeneity effects on co-carry are null so far, so the data supports ad-hoc-teamwork competence claims, not heterogeneity-robustness claims; no vision-based partners in v1.0.",
+  "rai:dataBiases": "Rows exist only for the two admitted tasks (cocarry@v1, handover_place@v1) and the preregistered baseline methods; two rows carry honest labels (oracle reference; non-AHT upper anchor) and must not be read as competitors.",
+  "rai:dataUseCases": "Recomputing leaderboard statistics from raw episode records; re-running any row via its recorded command; comparing new methods against the committed baselines.",
+  "distribution": [
+    {
+      "@type": "cr:FileObject",
+      "@id": "repo",
+      "name": "repo",
+      "description": "The Hugging Face dataset repository hosting this artifact.",
+      "contentUrl": "https://huggingface.co/datasets/fsafaei/chamber-leaderboard-bundles",
+      "encodingFormat": "git+https",
+      "sha256": "main"
+    },
+    {
+      "@type": "cr:FileObject",
+      "@id": "manifest.json",
+      "name": "manifest.json",
+      "description": "File list with byte sizes and SHA-256 digests for every payload file.",
+      "containedIn": {
+        "@id": "repo"
+      },
+      "contentUrl": "manifest.json",
+      "encodingFormat": "application/json"
+    },
+    {
+      "@type": "cr:FileObject",
+      "@id": "SHA256SUMS",
+      "name": "SHA256SUMS",
+      "description": "sha256sum -c checkable digest list covering every file including manifest.json.",
+      "containedIn": {
+        "@id": "repo"
+      },
+      "contentUrl": "SHA256SUMS",
+      "encodingFormat": "text/plain"
+    },
+    {
+      "@type": "cr:FileObject",
+      "@id": "DATASET_CARD.md",
+      "name": "DATASET_CARD.md",
+      "description": "The human-readable dataset card (plain language, licence, provenance, intended use, limitations).",
+      "containedIn": {
+        "@id": "repo"
+      },
+      "contentUrl": "DATASET_CARD.md",
+      "encodingFormat": "text/markdown"
+    },
+    {
+      "@type": "cr:FileSet",
+      "@id": "bundle-metadata",
+      "name": "bundle-metadata",
+      "description": "One bundle.json per result bundle (schema v3: task, method, partner hashes, seed schedule, platform, summary statistics).",
+      "containedIn": {
+        "@id": "repo"
+      },
+      "encodingFormat": "application/json",
+      "includes": "benchmark/**/bundle.json"
+    },
+    {
+      "@type": "cr:FileSet",
+      "@id": "episode-records",
+      "name": "episode-records",
+      "description": "Per-seed raw episode records inside each result bundle.",
+      "containedIn": {
+        "@id": "repo"
+      },
+      "encodingFormat": "application/jsonlines",
+      "includes": "benchmark/**/episodes_seed*.jsonl"
+    },
+    {
+      "@type": "cr:FileSet",
+      "@id": "bundle-integrity",
+      "name": "bundle-integrity",
+      "description": "Per-bundle reproduction commands, preregistration copies, partner serializations, and digest lists.",
+      "containedIn": {
+        "@id": "repo"
+      },
+      "encodingFormat": "text/plain",
+      "includes": "benchmark/**/*.{txt,yaml,json}"
+    },
+    {
+      "@type": "cr:FileSet",
+      "@id": "campaign-reports",
+      "name": "campaign-reports",
+      "description": "Per-task campaign reports and leaderboard bundle manifests.",
+      "containedIn": {
+        "@id": "repo"
+      },
+      "encodingFormat": "text/markdown",
+      "includes": "benchmark/*/CAMPAIGN_REPORT.md"
+    },
+    {
+      "@type": "cr:FileSet",
+      "@id": "checkpoints",
+      "name": "checkpoints",
+      "description": "Selected ego and pair checkpoints the learned rows load (content-addressed PyTorch files with JSON sidecars).",
+      "containedIn": {
+        "@id": "repo"
+      },
+      "encodingFormat": "application/octet-stream",
+      "includes": "checkpoints/*"
+    }
+  ]
+}
