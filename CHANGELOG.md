@@ -10,10 +10,42 @@ per SemVer §4.
 
 ## [0.8.0](https://github.com/fsafaei/concerto/compare/v0.7.0...v0.8.0) (2026-07-06)
 
+CHAMBER-Bench v1.0. Releases of the benchmark suite and releases of
+this package are now distinct, linked things: the suite composition is
+pinned at `release/chamber-bench-v1.0.manifest.json` (the committed
+`chamber-eval manifest` output), fixed independent of code drift, and
+v0.8.0 is the package release that implements it.
 
-### Features
+### Highlights
+
+- CHAMBER-Bench v1.0: the task registry and tier ladder as code
+  (ADR-027) ([#267](https://github.com/fsafaei/concerto/pull/267)).
+- The coupling-validity admission protocol, executable and executed:
+  the co-carry admission and the stage-1 pick-place control rejection
+  (ADR-026/ADR-027) ([#269](https://github.com/fsafaei/concerto/pull/269)).
+- Result-bundle schema v3 and `chamber-eval run` / `chamber-eval verify`
+  (ADR-028) ([#268](https://github.com/fsafaei/concerto/pull/268)).
+- Partner sets with the realized public/private split
+  ([#270](https://github.com/fsafaei/concerto/pull/270),
+  [#274](https://github.com/fsafaei/concerto/pull/274)).
+- The six-row co-carry baseline table and the first populated
+  leaderboard ([#271](https://github.com/fsafaei/concerto/pull/271),
+  [#272](https://github.com/fsafaei/concerto/pull/272),
+  [#275](https://github.com/fsafaei/concerto/pull/275),
+  [#276](https://github.com/fsafaei/concerto/pull/276)).
+- Hosted datasets with Croissant metadata
+  ([#280](https://github.com/fsafaei/concerto/pull/280),
+  [#281](https://github.com/fsafaei/concerto/pull/281)):
+  [partner sets](https://huggingface.co/datasets/fsafaei/chamber-bench-partner-sets),
+  [leaderboard bundles](https://huggingface.co/datasets/fsafaei/chamber-bench-leaderboard-bundles),
+  [reference trajectories](https://huggingface.co/datasets/fsafaei/chamber-bench-reference-trajectories).
+- ADR-018 formalized; ADR-026 Accepted
+  ([#265](https://github.com/fsafaei/concerto/pull/265)).
+
+### Added
 
 * **benchmarks:** CB-06 wiring — baseline rows, joint-MAPPO pair, checkpoint selection ([#271](https://github.com/fsafaei/concerto/issues/271)) ([c498dd4](https://github.com/fsafaei/concerto/commit/c498dd485f549d738a8c05b1aa8bc097a6652689))
+* **benchmarks,cli:** Stage-1b dispatch on stage1_{as,om} adapters (P1.05 engineering; ADR-007 §Stage 1b Rev 9) ([#175](https://github.com/fsafaei/concerto/issues/175)) ([df02dcd](https://github.com/fsafaei/concerto/commit/df02dcd65b832597e498855a9d87c3b077948ed7))
 * **benchmarks:** TrainedPolicyFactory — Phase-1 EgoActionFactory wiring concerto.training.ego_aht.train (ADR-007 §Stage 1b; plan/07 §T5b.2) ([#162](https://github.com/fsafaei/concerto/issues/162)) ([c436a80](https://github.com/fsafaei/concerto/commit/c436a8073e3f934315513b5c6db6f50fae0d06c5))
 * **cocarry:** Rung-2 frozen learned incumbent (training + freeze) per ADR-026 ([#246](https://github.com/fsafaei/concerto/issues/246)) ([41ddcc7](https://github.com/fsafaei/concerto/commit/41ddcc7d5d4da7faa025db1a86779dc46bdee167))
 * **cocarry:** Rung-3 policy-heterogeneity (PH) measurement — pooled null, one stiff-teammate drop ([#248](https://github.com/fsafaei/concerto/issues/248)) ([7e5b88a](https://github.com/fsafaei/concerto/commit/7e5b88a4f286cfc25dbbaf66b1fc698fc2d3f4fc))
@@ -48,7 +80,7 @@ per SemVer §4.
 * **training:** potential-based settle shaping behind shaping.settle_alpha (ADR-007 Rev 18) ([#219](https://github.com/fsafaei/concerto/issues/219)) ([87f8deb](https://github.com/fsafaei/concerto/commit/87f8deb0e842e8c1c6000b9b037755a152c8b84e))
 
 
-### Bug Fixes
+### Fixed
 
 * **ci:** fetch tags in verify-readme-tables — the leaderboard check verifies prereg tags ([#277](https://github.com/fsafaei/concerto/issues/277)) ([20aae11](https://github.com/fsafaei/concerto/commit/20aae118f6e4977ba987eb9d6d0db27d268180f1))
 * **cli:** chamber-spike next-stage skips Stage-1a archives with stderr note (closes ADR-016 §Open questions) ([#155](https://github.com/fsafaei/concerto/issues/155)) ([01ff673](https://github.com/fsafaei/concerto/commit/01ff67309ab5e48d8b16cf7c5895172fe0435ffe))
@@ -95,13 +127,13 @@ per SemVer §4.
 * **spikes:** Stage-1b AS gate verdict — exit 5; the gap is sign-reversed (hetero 12/100 vs homo 1/100) ([#226](https://github.com/fsafaei/concerto/issues/226)) ([4150c7f](https://github.com/fsafaei/concerto/commit/4150c7f6d17e85591dd2cd6f9b29ef42392e4369))
 * **spikes:** success-static decomposition probe — C1 verdict + options + gate-spike readiness ([#216](https://github.com/fsafaei/concerto/issues/216)) ([c3efb0f](https://github.com/fsafaei/concerto/commit/c3efb0f3f4e8848819007cd70bcce8ad918cb37e))
 
-## [Unreleased]
+### Campaign record
 
-July 2026 benchmark-campaign catch-up (hand-written; the next
-release-please cut regenerates its own section from Conventional
-Commits and does not depend on this one).
+The hand-curated narrative behind the commit-level lists above — the
+July 2026 benchmark campaign and the June 2026 measurement campaigns
+it built on.
 
-### CHAMBER-Bench v1.0 (2026-07-05/06)
+#### CHAMBER-Bench v1.0 (2026-07-05/06)
 
 * **tasks:** task registry, manifest, and task cards — the ADR-027 tier ladder as code ([#267](https://github.com/fsafaei/concerto/pull/267), 2026-07-05)
 * **evaluation:** result-bundle schema v3, prereg versioning, `chamber-eval run`/`verify` ([#268](https://github.com/fsafaei/concerto/pull/268), 2026-07-05)
@@ -115,11 +147,7 @@ Commits and does not depend on this one).
 * **evaluation:** handover-place scripted-ego leaderboard rows on the measured coupling-valid cells ([#276](https://github.com/fsafaei/concerto/pull/276), 2026-07-06)
 * **docs:** ADR-027 A3 ruling — the admission instrument is the preregistered scripted/ablated check; the learned B-AHT-vs-B-BLIND contrast is a reported finding (ADR-027 §Revision history, 2026-07-06)
 
-June 2026 catch-up, reconstructed from git history (hand-written; the
-next release-please cut regenerates its own section from Conventional
-Commits and does not depend on this one).
-
-### Stage-1 AS gate verdict and its reinterpretation
+#### Stage-1 AS gate verdict and its reinterpretation
 
 - 2026-06-11 — Stage-1b Action-Space gate fired at scale: exit 5, the
   gap is sign-reversed (hetero 12/100 vs homo 1/100)
@@ -138,7 +166,7 @@ Commits and does not depend on this one).
   CI runs on `adr/**` and `uv.lock`
   ([#244](https://github.com/fsafaei/concerto/pull/244)).
 
-### Co-carry (coupling-valid re-operationalization) rungs
+#### Co-carry (coupling-valid re-operationalization) rungs
 
 - 2026-06-16 — co-carry coupling-valid rig, Rungs 0–1, per ADR-026
   ([#245](https://github.com/fsafaei/concerto/pull/245)).
@@ -163,7 +191,7 @@ Commits and does not depend on this one).
   hard regime; only tilt-tolerance does
   ([#254](https://github.com/fsafaei/concerto/pull/254)).
 
-### Co-insert (hold-and-insert) — honest close
+#### Co-insert (hold-and-insert) — honest close
 
 - 2026-06-24 — S0 env skeleton + pre-registration
   ([#256](https://github.com/fsafaei/concerto/pull/256)); S1
@@ -175,7 +203,7 @@ Commits and does not depend on this one).
   figure reconciled to the 38 mm seated threshold
   ([#259](https://github.com/fsafaei/concerto/pull/259)).
 
-### Handover-and-place Gate-0
+#### Handover-and-place Gate-0
 
 - 2026-06-27 — Gate-0 harness + Stage-0 pre-check + tagged Rev-2
   pre-registration ([#262](https://github.com/fsafaei/concerto/pull/262));
@@ -183,7 +211,7 @@ Commits and does not depend on this one).
   verdict `COUPLING_VALID`, `SOLVABLE`
   ([#263](https://github.com/fsafaei/concerto/pull/263)).
 
-### Other fixes and features (June 2026)
+#### Other fixes and features (June 2026)
 
 - 2026-06-06/09 — Stage-1b horizon enforcement
   ([#206](https://github.com/fsafaei/concerto/pull/206)), canonical
