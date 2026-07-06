@@ -1,0 +1,35 @@
+[
+  {
+    "checkpoint_step": null,
+    "class_name": "cocarry_impedance",
+    "extra": {
+      "bar_half_len": "0.115",
+      "base_xyz": "-0.5,0.0,0.0",
+      "base_yaw_deg": "0",
+      "end_sign": "1",
+      "uid": "panda_wristcam"
+    },
+    "name": "ego:cocarry_impedance",
+    "seed": 0,
+    "weights_uri": null
+  },
+  {
+    "checkpoint_step": null,
+    "class_name": "cocarry_impedance",
+    "extra": {
+      "bar_half_len": "0.115",
+      "base_xyz": "0.5,0.0,0.0",
+      "base_yaw_deg": "180",
+      "damping": "0.0364",
+      "end_sign": "-1",
+      "ki": "0.6856",
+      "kp": "3.6431",
+      "lag_steps": "0",
+      "step_max": "0.029",
+      "uid": "panda_partner"
+    },
+    "name": "imp_stiff_high",
+    "seed": 0,
+    "weights_uri": "member://cocarry_impedance/212f054214340e8e69849cf63594c71bf92fdf026cddaf37c8e4f67e3999e8ff"
+  }
+]
