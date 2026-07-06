@@ -17,7 +17,7 @@ Thank you for your interest in contributing.
 ## Development setup
 
 ```bash
-git clone https://github.com/concerto-org/concerto.git
+git clone https://github.com/fsafaei/concerto.git
 cd concerto
 pip install uv
 uv sync --group dev
@@ -45,6 +45,43 @@ supersession of the prior `[dependency-groups].train` workaround.
 5. Sign off: `git commit --signoff` (DCO). External contributors also need to
    sign the CLA (the CLA-assistant bot will prompt you on the first PR).
 6. Open a PR against `main`. Use the [PR template](.github/PULL_REQUEST_TEMPLATE.md).
+
+## Contributor license agreement (CLA)
+
+Contributions are licensed Apache-2.0, and substantial contributions
+require signing the project CLA — this is the accepted decision of
+[ADR-012](adr/ADR-012-license.md), chosen to keep the project's
+licensing path open. The CLA-assistant bot prompts on your first PR;
+DCO sign-off (`--signoff`) is required on every commit regardless.
+
+## Submitting a leaderboard entry
+
+Leaderboard entries are a special kind of PR with their own
+protocol: preregister your evaluation cells under a signed tag, run
+them against the **public** partner set on a clean tree, commit the
+resulting verifiable bundle plus a manifest line, and open a PR. CI
+re-runs `chamber-eval verify` on every listed bundle, and the
+maintainer may spot-check your method against the private partner
+split before merge. The step-by-step guide is
+[docs/how-to/submit-leaderboard.md](docs/how-to/submit-leaderboard.md);
+the rules it implements are the CHAMBER-Bench v1.0 protocol
+([ADR-027](adr/ADR-027-chamber-bench-v1-protocol.md)) and the
+result-bundle schema
+([ADR-028](adr/ADR-028-result-bundle-schema-v3.md)).
+
+## Protocol changes need an ADR first
+
+Anything that changes what a published number means is
+decision-bearing: the evaluation protocol (tiers, admission,
+reporting, checkpoint selection), the result-bundle or wire-format
+schemas, a task's success predicate or stress instrument, or a
+partner set's composition. Propose a new ADR **before**
+implementing (see [`adr/ADR-INDEX.md`](adr/ADR-INDEX.md) and
+[MAINTENANCE.md](MAINTENANCE.md)); PRs that change these surfaces
+without an ADR are declined. Tasks and partner sets are versioned,
+never mutated — a change is a new `@vN`, and committed evidence
+(admission reports, preregistration tags, result bundles) is
+immutable.
 
 ## Code style
 
@@ -141,5 +178,7 @@ cites a paper, standard, project, or model.
 
 ## Questions?
 
-Open an [issue](https://github.com/concerto-org/concerto/issues) or start
-a [discussion](https://github.com/concerto-org/concerto/discussions).
+Open an [issue](https://github.com/fsafaei/concerto/issues) or start
+a [discussion](https://github.com/fsafaei/concerto/discussions).
+Maintenance cadence, versioning discipline, and contact details are
+in [MAINTENANCE.md](MAINTENANCE.md).

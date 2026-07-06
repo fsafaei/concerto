@@ -253,6 +253,12 @@ jobs:
       - run: uv run python scripts/render_task_table.py --check
       - run: uv run python scripts/render_task_cards.py --check
       - run: uv run python scripts/render_leaderboard_table.py --check
+      # Every leaderboard row must trace to a documented, REPRO.txt-
+      # faithful reproduction command (docs/how-to/reproduce-results.md).
+      - run: uv run python scripts/check_repro_docs.py
+      # The README quickstart must match what the smoke-eval /
+      # readme-quickstart jobs actually execute.
+      - run: uv run python scripts/check_readme_quickstart.py
 
   smoke-eval:
     # ADR-028 §Validation criteria 1: chamber-eval run → verify on a
@@ -267,3 +273,22 @@ jobs:
           python-version: "3.11"
       - run: uv sync --group dev
       - run: bash scripts/smoke_eval.sh
+
+  readme-quickstart:
+    # The README's five-minute quickstart promises its command blocks
+    # run verbatim on a clean checkout; this job extracts the blocks
+    # from README.md itself and executes them (no parallel copy that
+    # could drift). Includes `chamber-eval verify` on a committed
+    # leaderboard bundle, whose prereg check resolves the campaign tag
+    # — hence fetch-tags.
+    name: readme-quickstart
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
+        with:
+          fetch-tags: true
+      - uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b  # v5.4.1
+        with:
+          python-version: "3.11"
+      - run: uv sync --group dev
+      - run: uv run python scripts/check_readme_quickstart.py --execute

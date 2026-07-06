@@ -68,6 +68,8 @@ verify-readme-tables:
 	uv run python scripts/render_task_cards.py --check
 	uv run python scripts/render_partner_cards.py --check
 	uv run python scripts/render_leaderboard_table.py --check
+	uv run python scripts/check_repro_docs.py
+	uv run python scripts/check_readme_quickstart.py
 
 # Regenerate the README task table + docs/reference/tasks/ cards +
 # docs/reference/partners/ cards (the write mode of verify-readme-tables).

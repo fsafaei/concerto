@@ -111,3 +111,4 @@ Desktop.ini
 # is a committed chamber-eval verify-passing bundle, and the power-pilot
 # bundles are the committed evidence behind the prereg's locked n.
 !spikes/results/benchmark/
+out/

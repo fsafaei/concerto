@@ -52,10 +52,11 @@ nav:
       - Hello-spike: tutorials/hello-spike.md
       - Run Stage 0 smoke: tutorials/stage0-smoke.md
   - How-to:
+      - Reproduce the leaderboard results: how-to/reproduce-results.md
+      - Submit a leaderboard entry: how-to/submit-leaderboard.md
       - Add a new partner class: how-to/add-partner.md
       - Add a new safety filter: how-to/add-filter.md
       - Run a spike with a custom hypothesis: how-to/run-spike.md
-      - Submit a leaderboard entry: how-to/submit-leaderboard.md
       - Run on a GPU host: how-to/run-on-gpu.md
   - Reference:
       - API: reference/api.md
@@ -95,6 +96,20 @@ nav:
               - imp_blend_a: reference/partners/cocarry_partners-v1/imp_blend_a.md
               - imp_blend_b: reference/partners/cocarry_partners-v1/imp_blend_b.md
               - imp_blend_c: reference/partners/cocarry_partners-v1/imp_blend_c.md
+          - cocarry_partners v2:
+              - reference/partners/cocarry_partners-v2/index.md
+              - imp_nominal: reference/partners/cocarry_partners-v2/imp_nominal.md
+              - imp_stiff_low: reference/partners/cocarry_partners-v2/imp_stiff_low.md
+              - imp_stiff_high: reference/partners/cocarry_partners-v2/imp_stiff_high.md
+              - imp_damp_low: reference/partners/cocarry_partners-v2/imp_damp_low.md
+              - imp_damp_high: reference/partners/cocarry_partners-v2/imp_damp_high.md
+              - imp_slow: reference/partners/cocarry_partners-v2/imp_slow.md
+              - imp_fast: reference/partners/cocarry_partners-v2/imp_fast.md
+              - imp_lag_bounded: reference/partners/cocarry_partners-v2/imp_lag_bounded.md
+              - imp_blend_a: reference/partners/cocarry_partners-v2/imp_blend_a.md
+              - imp_blend_b: reference/partners/cocarry_partners-v2/imp_blend_b.md
+              - imp_blend_c: reference/partners/cocarry_partners-v2/imp_blend_c.md
+              - joint_s4: reference/partners/cocarry_partners-v2/joint_s4.md
           - handover_place_partners v1:
               - reference/partners/handover_place_partners-v1/index.md
               - presenter_matched: reference/partners/handover_place_partners-v1/presenter_matched.md
@@ -112,8 +127,13 @@ nav:
       - Literature: reference/literature.md
       - Standards: reference/standards.md
       - Evaluation: reference/evaluation.md
+      - Datasheet: reference/datasheet.md
       - Observability: observability.md
   - Explanation:
+      - The evaluation protocol: explanation/evaluation-protocol.md
+      - Architecture: explanation/architecture.md
+      - Positioning: explanation/positioning.md
+      - FAQ: explanation/faq.md
       - Why heterogeneous AHT?: explanation/why-aht.md
       - Why fork ManiSkill v3?: explanation/why-maniskill.md
       - Why conformal CBFs?: explanation/why-conformal.md

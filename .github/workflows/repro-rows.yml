@@ -1,0 +1,60 @@
+# Full CPU re-runs of the scripted leaderboard rows (ADR-027 §Reporting
+# rules; ADR-028 §Decision). Each matrix job re-executes one committed
+# bundle's REPRO.txt with a fresh output directory and requires the
+# fresh summary (IQM, mean, CI endpoints, episode count) to match the
+# committed bundle exactly — the byte-identical CPU determinism
+# contract (principle P6), enforced end to end.
+#
+# Scheduled weekly rather than per-PR because a cocarry row is ~1750
+# episodes (~80 minutes CPU). Per-PR protection is the cheap layer:
+# `chamber-eval verify` on every committed bundle plus the
+# check_repro_docs.py traceability gate, both in ci.yml.
+#
+# The learned rows (B-BLIND, B-AHT, B-JOINT) load training checkpoints
+# that are not in git (see docs/how-to/reproduce-results.md §Note on
+# checkpoints), so only the scripted rows run here — that scope cut is
+# deliberate and documented, not silent.
+name: repro-rows
+
+on:
+  schedule:
+    - cron: "17 3 * * 1"  # Mondays 03:17 UTC
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+jobs:
+  repro:
+    name: ${{ matrix.row }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 150
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - row: cocarry-ref-script
+            bundle: spikes/results/benchmark/cocarry-v1/ref-script-2026-07-05
+          - row: cocarry-b-rnd
+            bundle: spikes/results/benchmark/cocarry-v1/b-rnd-2026-07-05
+          - row: cocarry-b-stat
+            bundle: spikes/results/benchmark/cocarry-v1/b-stat-2026-07-05
+          - row: handover-ref-script
+            bundle: spikes/results/benchmark/handover-v1/ref-script-2026-07-06
+          - row: handover-b-rnd
+            bundle: spikes/results/benchmark/handover-v1/b-rnd-2026-07-06
+          - row: handover-b-stat
+            bundle: spikes/results/benchmark/handover-v1/b-stat-2026-07-06
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
+        with:
+          # The re-run passes --prereg, and the preregistration gate
+          # `git rev-parse`s the campaign tag.
+          fetch-tags: true
+      - uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b  # v5.4.1
+        with:
+          python-version: "3.11"
+      - run: uv sync --group dev
+      - run: >
+          uv run python scripts/repro_row.py ${{ matrix.bundle }}
+          --out out/repro/${{ matrix.row }}

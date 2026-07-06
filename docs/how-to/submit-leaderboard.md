@@ -1,109 +1,115 @@
 # How-to: Submit a leaderboard entry
 
-!!! note "Phase-0 placeholder"
-    The leaderboard is unpopulated. Under
-    [ADR-026 (coupling-validity criterion)](https://github.com/fsafaei/concerto/blob/main/adr/ADR-026-coupling-validity-criterion.md)
-    the Stage-1 (AS + OM) axes as operationalized are non-coupling-valid;
-    leaderboard-eligible results come from the Phase-2 coupling-valid
-    re-operationalization. This page documents the submission protocol so
-    that external contributors can prepare entries against the same
-    contract used by the in-tree spikes.
+The leaderboard accepts entries produced under the CHAMBER-Bench
+v1.0 protocol (ADR-027): preregistered runs, verifiable result
+bundles (ADR-028), the public partner set, and per-task reporting.
+The end-to-end flow is: **fork → preregister → run the preregistered
+cells against the public partner set → open a PR containing the
+bundle → CI runs `chamber-eval verify` → maintainer spot-check →
+merge.**
 
-Leaderboard entries follow the same preregistration discipline as every
-other spike in the project: the hypothesis, threshold, and comparison
-conditions are committed before the run starts, the YAML is tagged in
-git, and the resulting rows are rendered into the leaderboard table by
-`chamber-render-tables`. The pre-registration YAML schema, the result
-archive schema, and the bootstrap / HRS pipeline live in
-[`chamber.evaluation`](../reference/api.md):
-`results.py` defines the Pydantic models for `SpikeRun` /
-`EpisodeResult` / `LeaderboardEntry`; `prereg.py` validates the YAML
-and verifies the git-tag SHA per
-[ADR-007 §Discipline](https://github.com/fsafaei/concerto/blob/main/adr/ADR-007-heterogeneity-axis-selection.md);
-`bootstrap.py` ships the cluster + paired-cluster bootstrap used for
-the ≥20 pp gap test (reviewer P1-9; necessary but not sufficient — coupling-validity per ADR-026); `hrs.py` computes the per-axis
-HRS vector and the headline scalar per
-[ADR-008 §Decision](https://github.com/fsafaei/concerto/blob/main/adr/ADR-008-hrs-bundle.md).
+Before starting, read the
+[evaluation protocol](../explanation/evaluation-protocol.md) — it
+defines the terms used below (admission, preregistration, result
+bundle, checkpoint-selection rule) — and reproduce at least one
+existing row via
+[Reproduce the results](reproduce-results.md) so you know your
+environment matches.
 
-## Prerequisites
-
-Install CHAMBER with the `eval` optional extra so the renderer can
-emit the rliable-style performance-profile column alongside the
-native IQM and optimality-gap columns:
+## 1. Fork and set up
 
 ```bash
-uv sync --extra eval
+git clone https://github.com/<you>/concerto.git
+cd concerto
+git fetch --tags        # the preregistration gate resolves tags
+uv sync --group dev
 ```
 
-The `eval` extra pulls in `rliable` (Agarwal et al. 2021). IQM and
-optimality gap are computed natively in
-[`chamber.evaluation.bootstrap`](../reference/evaluation.md) and do
-not require the extra; only performance profiles do. Without the
-extra, `chamber-render-tables` still produces a valid leaderboard
-row — the performance-profile column is emitted as `None` and a
-`RuntimeWarning` points back here.
+## 2. Register your method
 
-## Protocol
+Your method controls the ego arm. Implement it as a registered
+policy (for learned methods, a checkpoint-loading policy; for
+scripted methods, a policy class) so `chamber-eval run --policy
+<your-method-id>` can construct it. See
+[Add a partner](add-partner.md) for the registry pattern — ego
+policies follow the same shape. Your PR must include the method
+code (or a pinned dependency on it) so the maintainer and CI can
+re-run your cells.
 
-1. Copy the nearest existing pre-registration YAML from
-   `spikes/preregistration/` as a template for your method's entry.
-   The YAML schema is validated by
-   `chamber.evaluation.prereg.load_prereg`; the required fields are
-   `axis`, `condition_pair` (homogeneous / heterogeneous ids),
-   `seeds`, `episodes_per_seed`, `estimator`, `bootstrap_method`
-   (defaults to `cluster`), `failure_policy`, and `git_tag`.
-2. Edit the hypothesis, threshold, comparison conditions, and the
-   `method:` name that will appear in the leaderboard row. Set
-   `bootstrap_method: cluster` unless you have a written reason to
-   use `hierarchical` (alias) or `iid` (power-calc only — not
-   admitted to the leaderboard).
-3. Commit the YAML and create a signed git tag of the form
-   `leaderboard-<method>-<stage>-<date>`. **Editing the YAML after
-   the tag exists is a project anti-pattern** —
-   `chamber.evaluation.prereg.verify_git_tag` refuses any submission
-   whose on-disk blob SHA disagrees with the SHA stored at the tag,
-   so re-tag with a new YAML instead.
-4. Run the spike via `chamber-spike run --axis <axis>` against the
-   tagged YAML. See [Run a spike with a custom
-   hypothesis](run-spike.md) for the end-to-end flow, including the
-   M2 comm-degradation surface that the Stage-2 CM rows consume.
-5. Compose the leaderboard entry with `chamber-eval`. The HRS bundle
-   per [ADR-008 §Decision](https://github.com/fsafaei/concerto/blob/main/adr/ADR-008-hrs-bundle.md)
-   covers the surviving ADR-007 axes, so pass one spike-run archive
-   per surviving axis in a single invocation — the CLI builds the
-   full HRS vector + scalar over the union (reviewer P1-3). Example:
+## 3. Preregister your cells
 
-    ```bash
-    chamber-eval stage1_as.json stage1_om.json stage2_cm.json \
-      --method-id concerto --output entry.json
-    ```
+Copy the campaign preregistration for the task you target
+(`spikes/preregistration/benchmark/cocarry_baselines_v1.yaml` or
+`handover_baselines_v1.yaml`) and add your method as a row: method
+id, the same seeds and episode counts as the existing rows, the same
+estimator, and — for learned methods — the checkpoint-selection rule
+(per seed, highest stress-compliant success on the held-out
+validation partner; never on the evaluation set). Commit the YAML
+and create a signed tag:
 
-    Passing a single spike-run archive is still supported, but the
-    rendered row is tagged `[PARTIAL: <axis>]` so a one-axis result
-    is never mistaken for a complete HRS-bundle row. If your run
-    legitimately covers the same axis twice (e.g. two AS spikes with
-    different control rates), pass `--allow-duplicate-axes` and the
-    axis name is suffixed with the `spike_id` in the rendered output
-    for disambiguation; without the flag the CLI exits with status 2.
-    The pipeline (cluster bootstrap → paired-cluster gap test → HRS
-    vector → HRS scalar) uses
-    `concerto.training.seeding.derive_substream` for deterministic
-    resampling; identical inputs and seed produce byte-identical
-    outputs.
-6. Render the headline tables with `chamber-render-tables
-   --leaderboard entry.json` and (if your spike emits the ADR-014
-   three-table safety report) `chamber-render-tables --safety-report
-   three_tables.json [--fmt latex]`.
-7. Open a PR that adds the tagged YAML and the result archive under
-   `spikes/results/`. The CI gate re-renders the leaderboard table
-   from the tagged result archives; no hand-edit of the README is
-   required.
+```bash
+git tag -s prereg-<task>-<your-method>-<date>
+```
 
-External contributors who do not have write access to the upstream
-repository can attach the signed result archive to a PR as a release
-asset and reference it from the preregistration YAML.
+Editing a preregistration after its tag exists is refused by the
+tooling — re-issue under a new tag instead.
 
-The HRS vector is emitted alongside the scalar on every entry per
-ADR-008 §Decision (reviewer P1-8); the renderer refuses entries that
-carry only the scalar, so consumers can always recompute the headline
-under a different weighting without re-running the spikes.
+## 4. Run the preregistered cells against the public partner set
+
+One `chamber-eval run` per cell, mirroring the committed rows (see
+each bundle's `REPRO.txt` for the exact shape):
+
+```bash
+uv run chamber-eval run --task cocarry --policy <your-method-id> \
+  --partner-set cocarry_partners@v1 --exclude-member imp_nominal \
+  --seeds 5 --episodes 50 --out spikes/results/benchmark/cocarry-v1/<your-method>-<date> \
+  --prereg spikes/preregistration/benchmark/<your-prereg>.yaml
+uv run chamber-eval verify spikes/results/benchmark/cocarry-v1/<your-method>-<date>
+```
+
+Requirements the tooling enforces:
+
+- **Clean tree.** Bundles from a locally-modified checkout are
+  stamped dirty and are leaderboard-ineligible.
+- **Public partner set only.** You run against the public members;
+  private members' parameters are withheld by design (their identity
+  hashes are published, so the maintainer's spot-check is
+  verifiable). Do not pass `--include-private`.
+- **Held-out validation partner.** Keep the campaign's
+  `--exclude-member` flags exactly — the excluded member is the
+  checkpoint-selection partner and must not appear in evaluation.
+- **All seeds.** Single-seed submissions are not accepted
+  (ADR-027 reporting rules).
+
+## 5. Open the PR
+
+The PR contains: the tagged preregistration YAML, your method code,
+the result bundle directory (or directories), and one line per
+bundle added to
+`spikes/results/benchmark/<task>/LEADERBOARD_BUNDLES.txt`. Then run
+the renderer so the README table includes your row:
+
+```bash
+uv run python scripts/render_leaderboard_table.py
+```
+
+CI re-runs the full `chamber-eval verify` check table on every
+listed bundle and fails on any drift between the bundles and the
+rendered table. Large learned-method checkpoints do not go in git —
+attach them as a release asset on your fork or a public download,
+reference the URL and SHA-256 in the PR, and keep the
+`local://artifacts/...` URIs in `REPRO.txt` accurate.
+
+## 6. Maintainer verification and merge
+
+Before merge the maintainer may spot-check your method against the
+**private partner split** — the withheld 30% of the partner set —
+to detect overfitting to the public members. A public/private gap is
+reported alongside your row if found; a method that collapses on
+private partners is not merged. Method class labels (baseline,
+oracle reference, non-AHT upper anchor) are assigned per ADR-027's
+honest-label rules, not self-declared.
+
+Contributions are accepted under the project CLA (ADR-012) with DCO
+sign-off and signed commits — see
+[CONTRIBUTING](https://github.com/fsafaei/concerto/blob/main/CONTRIBUTING.md).
