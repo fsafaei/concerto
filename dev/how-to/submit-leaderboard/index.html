@@ -11,10 +11,10 @@
         <link rel="canonical" href="https://fsafaei.github.io/concerto/dev/how-to/submit-leaderboard/">
       
       
-        <link rel="prev" href="../run-spike/">
+        <link rel="prev" href="../reproduce-results/">
       
       
-        <link rel="next" href="../run-on-gpu/">
+        <link rel="next" href="../add-partner/">
       
       
         
@@ -261,7 +261,7 @@
     
     
       <li class="md-tabs__item md-tabs__item--active">
-        <a href="../add-partner/" class="md-tabs__link">
+        <a href="../reproduce-results/" class="md-tabs__link">
           
   
   
@@ -305,7 +305,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="../../explanation/why-aht/" class="md-tabs__link">
+        <a href="../../explanation/evaluation-protocol/" class="md-tabs__link">
           
   
   
@@ -532,6 +532,8 @@
       
         
       
+        
+      
     
     
     
@@ -579,6 +581,175 @@
 
           </label>
           <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reproduce-results/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reproduce the leaderboard results
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Submit a leaderboard entry
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Submit a leaderboard entry
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1-fork-and-set-up" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Fork and set up
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-register-your-method" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Register your method
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-preregister-your-cells" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Preregister your cells
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-run-the-preregistered-cells-against-the-public-partner-set" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Run the preregistered cells against the public partner set
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-open-the-pr" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Open the PR
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-maintainer-verification-and-merge" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. Maintainer verification and merge
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
             
               
                 
@@ -668,103 +839,6 @@
                 
   
   
-    
-  
-  
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Submit a leaderboard entry
-  
-
-    
-  </span>
-  
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Submit a leaderboard entry
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#prerequisites" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Prerequisites
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#protocol" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Protocol
-      
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
   
   
     <li class="md-nav__item">
@@ -804,6 +878,8 @@
   
     
     
+      
+        
       
         
       
@@ -1280,6 +1356,8 @@
       
         
           
+        
+      
         
       
         
@@ -1772,6 +1850,18 @@
       
         
       
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
     
     
     
@@ -1786,6 +1876,429 @@
         
         
         <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_4_3" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../reference/partners/cocarry_partners-v2/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    cocarry_partners v2
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_4_4_3" id="__nav_4_4_3_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_4_4_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_4_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    cocarry_partners v2
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/partners/cocarry_partners-v2/imp_nominal/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    imp_nominal
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/partners/cocarry_partners-v2/imp_stiff_low/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    imp_stiff_low
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/partners/cocarry_partners-v2/imp_stiff_high/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    imp_stiff_high
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/partners/cocarry_partners-v2/imp_damp_low/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    imp_damp_low
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/partners/cocarry_partners-v2/imp_damp_high/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    imp_damp_high
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/partners/cocarry_partners-v2/imp_slow/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    imp_slow
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/partners/cocarry_partners-v2/imp_fast/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    imp_fast
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/partners/cocarry_partners-v2/imp_lag_bounded/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    imp_lag_bounded
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/partners/cocarry_partners-v2/imp_blend_a/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    imp_blend_a
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/partners/cocarry_partners-v2/imp_blend_b/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    imp_blend_b
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/partners/cocarry_partners-v2/imp_blend_c/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    imp_blend_c
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/partners/cocarry_partners-v2/joint_s4/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    joint_s4
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_4_4" >
         
           
           <div class="md-nav__link md-nav__container">
@@ -1807,14 +2320,14 @@
             </a>
             
               
-              <label class="md-nav__link " for="__nav_4_4_3" id="__nav_4_4_3_label" tabindex="0">
+              <label class="md-nav__link " for="__nav_4_4_4" id="__nav_4_4_4_label" tabindex="0">
                 <span class="md-nav__icon md-icon"></span>
               </label>
             
           </div>
         
-        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_4_4_3_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_4_4_3">
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_4_4_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_4_4">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -2034,7 +2547,7 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_4_4" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_4_5" >
         
           
           <div class="md-nav__link md-nav__container">
@@ -2056,14 +2569,14 @@
             </a>
             
               
-              <label class="md-nav__link " for="__nav_4_4_4" id="__nav_4_4_4_label" tabindex="0">
+              <label class="md-nav__link " for="__nav_4_4_5" id="__nav_4_4_5_label" tabindex="0">
                 <span class="md-nav__icon md-icon"></span>
               </label>
             
           </div>
         
-        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_4_4_4_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_4_4_4">
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_4_4_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_4_5">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -2294,6 +2807,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../../reference/datasheet/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Datasheet
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../observability/" class="md-nav__link">
         
   
@@ -2330,6 +2871,14 @@
   
     
     
+      
+        
+      
+        
+      
+        
+      
+        
       
         
       
@@ -2387,6 +2936,118 @@
 
           </label>
           <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../explanation/evaluation-protocol/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    The evaluation protocol
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../explanation/architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../explanation/positioning/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Positioning
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../explanation/faq/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    FAQ
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
             
               
                 
@@ -2590,10 +3251,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#prerequisites" class="md-nav__link">
+  <a href="#1-fork-and-set-up" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Prerequisites
+        1. Fork and set up
       
     </span>
   </a>
@@ -2601,10 +3262,54 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#protocol" class="md-nav__link">
+  <a href="#2-register-your-method" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Protocol
+        2. Register your method
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-preregister-your-cells" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Preregister your cells
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-run-the-preregistered-cells-against-the-public-partner-set" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Run the preregistered cells against the public partner set
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-open-the-pr" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Open the PR
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-maintainer-verification-and-merge" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. Maintainer verification and merge
       
     </span>
   </a>
@@ -2637,106 +3342,96 @@
 
 
 <h1 id="how-to-submit-a-leaderboard-entry">How-to: Submit a leaderboard entry</h1>
-<div class="admonition note">
-<p class="admonition-title">Phase-0 placeholder</p>
-<p>The leaderboard is unpopulated. Under
-<a href="https://github.com/fsafaei/concerto/blob/main/adr/ADR-026-coupling-validity-criterion.md">ADR-026 (coupling-validity criterion)</a>
-the Stage-1 (AS + OM) axes as operationalized are non-coupling-valid;
-leaderboard-eligible results come from the Phase-2 coupling-valid
-re-operationalization. This page documents the submission protocol so
-that external contributors can prepare entries against the same
-contract used by the in-tree spikes.</p>
-</div>
-<p>Leaderboard entries follow the same preregistration discipline as every
-other spike in the project: the hypothesis, threshold, and comparison
-conditions are committed before the run starts, the YAML is tagged in
-git, and the resulting rows are rendered into the leaderboard table by
-<code>chamber-render-tables</code>. The pre-registration YAML schema, the result
-archive schema, and the bootstrap / HRS pipeline live in
-<a href="../../reference/api/"><code>chamber.evaluation</code></a>:
-<code>results.py</code> defines the Pydantic models for <code>SpikeRun</code> /
-<code>EpisodeResult</code> / <code>LeaderboardEntry</code>; <code>prereg.py</code> validates the YAML
-and verifies the git-tag SHA per
-<a href="https://github.com/fsafaei/concerto/blob/main/adr/ADR-007-heterogeneity-axis-selection.md">ADR-007 §Discipline</a>;
-<code>bootstrap.py</code> ships the cluster + paired-cluster bootstrap used for
-the ≥20 pp gap test (reviewer P1-9; necessary but not sufficient — coupling-validity per ADR-026); <code>hrs.py</code> computes the per-axis
-HRS vector and the headline scalar per
-<a href="https://github.com/fsafaei/concerto/blob/main/adr/ADR-008-hrs-bundle.md">ADR-008 §Decision</a>.</p>
-<h2 id="prerequisites">Prerequisites</h2>
-<p>Install CHAMBER with the <code>eval</code> optional extra so the renderer can
-emit the rliable-style performance-profile column alongside the
-native IQM and optimality-gap columns:</p>
-<div class="highlight"><pre><span></span><code>uv<span class="w"> </span>sync<span class="w"> </span>--extra<span class="w"> </span><span class="nb">eval</span>
+<p>The leaderboard accepts entries produced under the CHAMBER-Bench
+v1.0 protocol (ADR-027): preregistered runs, verifiable result
+bundles (ADR-028), the public partner set, and per-task reporting.
+The end-to-end flow is: <strong>fork → preregister → run the preregistered
+cells against the public partner set → open a PR containing the
+bundle → CI runs <code>chamber-eval verify</code> → maintainer spot-check →
+merge.</strong></p>
+<p>Before starting, read the
+<a href="../../explanation/evaluation-protocol/">evaluation protocol</a> — it
+defines the terms used below (admission, preregistration, result
+bundle, checkpoint-selection rule) — and reproduce at least one
+existing row via
+<a href="../reproduce-results/">Reproduce the results</a> so you know your
+environment matches.</p>
+<h2 id="1-fork-and-set-up">1. Fork and set up</h2>
+<div class="highlight"><pre><span></span><code>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/&lt;you&gt;/concerto.git
+<span class="nb">cd</span><span class="w"> </span>concerto
+git<span class="w"> </span>fetch<span class="w"> </span>--tags<span class="w">        </span><span class="c1"># the preregistration gate resolves tags</span>
+uv<span class="w"> </span>sync<span class="w"> </span>--group<span class="w"> </span>dev
 </code></pre></div>
-<p>The <code>eval</code> extra pulls in <code>rliable</code> (Agarwal et al. 2021). IQM and
-optimality gap are computed natively in
-<a href="../../reference/evaluation/"><code>chamber.evaluation.bootstrap</code></a> and do
-not require the extra; only performance profiles do. Without the
-extra, <code>chamber-render-tables</code> still produces a valid leaderboard
-row — the performance-profile column is emitted as <code>None</code> and a
-<code>RuntimeWarning</code> points back here.</p>
-<h2 id="protocol">Protocol</h2>
-<ol>
-<li>Copy the nearest existing pre-registration YAML from
-   <code>spikes/preregistration/</code> as a template for your method's entry.
-   The YAML schema is validated by
-   <code>chamber.evaluation.prereg.load_prereg</code>; the required fields are
-   <code>axis</code>, <code>condition_pair</code> (homogeneous / heterogeneous ids),
-   <code>seeds</code>, <code>episodes_per_seed</code>, <code>estimator</code>, <code>bootstrap_method</code>
-   (defaults to <code>cluster</code>), <code>failure_policy</code>, and <code>git_tag</code>.</li>
-<li>Edit the hypothesis, threshold, comparison conditions, and the
-   <code>method:</code> name that will appear in the leaderboard row. Set
-   <code>bootstrap_method: cluster</code> unless you have a written reason to
-   use <code>hierarchical</code> (alias) or <code>iid</code> (power-calc only — not
-   admitted to the leaderboard).</li>
-<li>Commit the YAML and create a signed git tag of the form
-   <code>leaderboard-&lt;method&gt;-&lt;stage&gt;-&lt;date&gt;</code>. <strong>Editing the YAML after
-   the tag exists is a project anti-pattern</strong> —
-   <code>chamber.evaluation.prereg.verify_git_tag</code> refuses any submission
-   whose on-disk blob SHA disagrees with the SHA stored at the tag,
-   so re-tag with a new YAML instead.</li>
-<li>Run the spike via <code>chamber-spike run --axis &lt;axis&gt;</code> against the
-   tagged YAML. See <a href="../run-spike/">Run a spike with a custom
-   hypothesis</a> for the end-to-end flow, including the
-   M2 comm-degradation surface that the Stage-2 CM rows consume.</li>
-<li>
-<p>Compose the leaderboard entry with <code>chamber-eval</code>. The HRS bundle
-   per <a href="https://github.com/fsafaei/concerto/blob/main/adr/ADR-008-hrs-bundle.md">ADR-008 §Decision</a>
-   covers the surviving ADR-007 axes, so pass one spike-run archive
-   per surviving axis in a single invocation — the CLI builds the
-   full HRS vector + scalar over the union (reviewer P1-3). Example:</p>
-<div class="highlight"><pre><span></span><code>chamber-eval<span class="w"> </span>stage1_as.json<span class="w"> </span>stage1_om.json<span class="w"> </span>stage2_cm.json<span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>--method-id<span class="w"> </span>concerto<span class="w"> </span>--output<span class="w"> </span>entry.json
+<h2 id="2-register-your-method">2. Register your method</h2>
+<p>Your method controls the ego arm. Implement it as a registered
+policy (for learned methods, a checkpoint-loading policy; for
+scripted methods, a policy class) so <code>chamber-eval run --policy
+&lt;your-method-id&gt;</code> can construct it. See
+<a href="../add-partner/">Add a partner</a> for the registry pattern — ego
+policies follow the same shape. Your PR must include the method
+code (or a pinned dependency on it) so the maintainer and CI can
+re-run your cells.</p>
+<h2 id="3-preregister-your-cells">3. Preregister your cells</h2>
+<p>Copy the campaign preregistration for the task you target
+(<code>spikes/preregistration/benchmark/cocarry_baselines_v1.yaml</code> or
+<code>handover_baselines_v1.yaml</code>) and add your method as a row: method
+id, the same seeds and episode counts as the existing rows, the same
+estimator, and — for learned methods — the checkpoint-selection rule
+(per seed, highest stress-compliant success on the held-out
+validation partner; never on the evaluation set). Commit the YAML
+and create a signed tag:</p>
+<div class="highlight"><pre><span></span><code>git<span class="w"> </span>tag<span class="w"> </span>-s<span class="w"> </span>prereg-&lt;task&gt;-&lt;your-method&gt;-&lt;date&gt;
 </code></pre></div>
-<p>Passing a single spike-run archive is still supported, but the
-rendered row is tagged <code>[PARTIAL: &lt;axis&gt;]</code> so a one-axis result
-is never mistaken for a complete HRS-bundle row. If your run
-legitimately covers the same axis twice (e.g. two AS spikes with
-different control rates), pass <code>--allow-duplicate-axes</code> and the
-axis name is suffixed with the <code>spike_id</code> in the rendered output
-for disambiguation; without the flag the CLI exits with status 2.
-The pipeline (cluster bootstrap → paired-cluster gap test → HRS
-vector → HRS scalar) uses
-<code>concerto.training.seeding.derive_substream</code> for deterministic
-resampling; identical inputs and seed produce byte-identical
-outputs.
-6. Render the headline tables with <code>chamber-render-tables
-   --leaderboard entry.json</code> and (if your spike emits the ADR-014
-   three-table safety report) <code>chamber-render-tables --safety-report
-   three_tables.json [--fmt latex]</code>.
-7. Open a PR that adds the tagged YAML and the result archive under
-   <code>spikes/results/</code>. The CI gate re-renders the leaderboard table
-   from the tagged result archives; no hand-edit of the README is
-   required.</p>
-</li>
-</ol>
-<p>External contributors who do not have write access to the upstream
-repository can attach the signed result archive to a PR as a release
-asset and reference it from the preregistration YAML.</p>
-<p>The HRS vector is emitted alongside the scalar on every entry per
-ADR-008 §Decision (reviewer P1-8); the renderer refuses entries that
-carry only the scalar, so consumers can always recompute the headline
-under a different weighting without re-running the spikes.</p>
+<p>Editing a preregistration after its tag exists is refused by the
+tooling — re-issue under a new tag instead.</p>
+<h2 id="4-run-the-preregistered-cells-against-the-public-partner-set">4. Run the preregistered cells against the public partner set</h2>
+<p>One <code>chamber-eval run</code> per cell, mirroring the committed rows (see
+each bundle's <code>REPRO.txt</code> for the exact shape):</p>
+<div class="highlight"><pre><span></span><code>uv<span class="w"> </span>run<span class="w"> </span>chamber-eval<span class="w"> </span>run<span class="w"> </span>--task<span class="w"> </span>cocarry<span class="w"> </span>--policy<span class="w"> </span>&lt;your-method-id&gt;<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--partner-set<span class="w"> </span>cocarry_partners@v1<span class="w"> </span>--exclude-member<span class="w"> </span>imp_nominal<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--seeds<span class="w"> </span><span class="m">5</span><span class="w"> </span>--episodes<span class="w"> </span><span class="m">50</span><span class="w"> </span>--out<span class="w"> </span>spikes/results/benchmark/cocarry-v1/&lt;your-method&gt;-&lt;date&gt;<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--prereg<span class="w"> </span>spikes/preregistration/benchmark/&lt;your-prereg&gt;.yaml
+uv<span class="w"> </span>run<span class="w"> </span>chamber-eval<span class="w"> </span>verify<span class="w"> </span>spikes/results/benchmark/cocarry-v1/&lt;your-method&gt;-&lt;date&gt;
+</code></pre></div>
+<p>Requirements the tooling enforces:</p>
+<ul>
+<li><strong>Clean tree.</strong> Bundles from a locally-modified checkout are
+  stamped dirty and are leaderboard-ineligible.</li>
+<li><strong>Public partner set only.</strong> You run against the public members;
+  private members' parameters are withheld by design (their identity
+  hashes are published, so the maintainer's spot-check is
+  verifiable). Do not pass <code>--include-private</code>.</li>
+<li><strong>Held-out validation partner.</strong> Keep the campaign's
+  <code>--exclude-member</code> flags exactly — the excluded member is the
+  checkpoint-selection partner and must not appear in evaluation.</li>
+<li><strong>All seeds.</strong> Single-seed submissions are not accepted
+  (ADR-027 reporting rules).</li>
+</ul>
+<h2 id="5-open-the-pr">5. Open the PR</h2>
+<p>The PR contains: the tagged preregistration YAML, your method code,
+the result bundle directory (or directories), and one line per
+bundle added to
+<code>spikes/results/benchmark/&lt;task&gt;/LEADERBOARD_BUNDLES.txt</code>. Then run
+the renderer so the README table includes your row:</p>
+<div class="highlight"><pre><span></span><code>uv<span class="w"> </span>run<span class="w"> </span>python<span class="w"> </span>scripts/render_leaderboard_table.py
+</code></pre></div>
+<p>CI re-runs the full <code>chamber-eval verify</code> check table on every
+listed bundle and fails on any drift between the bundles and the
+rendered table. Large learned-method checkpoints do not go in git —
+attach them as a release asset on your fork or a public download,
+reference the URL and SHA-256 in the PR, and keep the
+<code>local://artifacts/...</code> URIs in <code>REPRO.txt</code> accurate.</p>
+<h2 id="6-maintainer-verification-and-merge">6. Maintainer verification and merge</h2>
+<p>Before merge the maintainer may spot-check your method against the
+<strong>private partner split</strong> — the withheld 30% of the partner set —
+to detect overfitting to the public members. A public/private gap is
+reported alongside your row if found; a method that collapses on
+private partners is not merged. Method class labels (baseline,
+oracle reference, non-AHT upper anchor) are assigned per ADR-027's
+honest-label rules, not self-declared.</p>
+<p>Contributions are accepted under the project CLA (ADR-012) with DCO
+sign-off and signed commits — see
+<a href="https://github.com/fsafaei/concerto/blob/main/CONTRIBUTING.md">CONTRIBUTING</a>.</p>
 
 
 

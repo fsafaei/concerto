@@ -9,7 +9,23 @@
          <lastmod>2026-07-06</lastmod>
     </url>
     <url>
+         <loc>https://fsafaei.github.io/concerto/dev/explanation/architecture/</loc>
+         <lastmod>2026-07-06</lastmod>
+    </url>
+    <url>
+         <loc>https://fsafaei.github.io/concerto/dev/explanation/evaluation-protocol/</loc>
+         <lastmod>2026-07-06</lastmod>
+    </url>
+    <url>
+         <loc>https://fsafaei.github.io/concerto/dev/explanation/faq/</loc>
+         <lastmod>2026-07-06</lastmod>
+    </url>
+    <url>
          <loc>https://fsafaei.github.io/concerto/dev/explanation/phase0-results/</loc>
+         <lastmod>2026-07-06</lastmod>
+    </url>
+    <url>
+         <loc>https://fsafaei.github.io/concerto/dev/explanation/positioning/</loc>
          <lastmod>2026-07-06</lastmod>
     </url>
     <url>
@@ -45,6 +61,10 @@
          <lastmod>2026-07-06</lastmod>
     </url>
     <url>
+         <loc>https://fsafaei.github.io/concerto/dev/how-to/reproduce-results/</loc>
+         <lastmod>2026-07-06</lastmod>
+    </url>
+    <url>
          <loc>https://fsafaei.github.io/concerto/dev/how-to/run-on-gpu/</loc>
          <lastmod>2026-07-06</lastmod>
     </url>
@@ -62,6 +82,10 @@
     </url>
     <url>
          <loc>https://fsafaei.github.io/concerto/dev/reference/api/</loc>
+         <lastmod>2026-07-06</lastmod>
+    </url>
+    <url>
+         <loc>https://fsafaei.github.io/concerto/dev/reference/datasheet/</loc>
          <lastmod>2026-07-06</lastmod>
     </url>
     <url>

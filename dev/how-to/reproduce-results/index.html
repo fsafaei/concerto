@@ -8,13 +8,13 @@
       
       
       
-        <link rel="canonical" href="https://fsafaei.github.io/concerto/dev/reference/glossary/">
+        <link rel="canonical" href="https://fsafaei.github.io/concerto/dev/how-to/reproduce-results/">
       
       
-        <link rel="prev" href="../partners/stage1_pickplace_as_partners-v1/heuristic_quadrant_neg/">
+        <link rel="prev" href="../../tutorials/stage0-smoke/">
       
       
-        <link rel="next" href="../literature/">
+        <link rel="next" href="../submit-leaderboard/">
       
       
         
@@ -25,7 +25,7 @@
     
     
       
-        <title>Glossary - CONCERTO</title>
+        <title>Reproduce the leaderboard results - CONCERTO</title>
       
     
     
@@ -80,7 +80,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#glossary" class="md-skip">
+        <a href="#how-to-reproduce-the-leaderboard-results" class="md-skip">
           Skip to content
         </a>
       
@@ -113,7 +113,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Glossary
+              Reproduce the leaderboard results
             
           </span>
         </div>
@@ -255,11 +255,13 @@
   
   
   
+    
+  
   
     
     
-      <li class="md-tabs__item">
-        <a href="../../how-to/reproduce-results/" class="md-tabs__link">
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="./" class="md-tabs__link">
           
   
   
@@ -277,13 +279,11 @@
   
   
   
-    
-  
   
     
     
-      <li class="md-tabs__item md-tabs__item--active">
-        <a href="../api/" class="md-tabs__link">
+      <li class="md-tabs__item">
+        <a href="../../reference/api/" class="md-tabs__link">
           
   
   
@@ -515,8 +515,10 @@
       
   
   
+    
   
   
+  
     
     
       
@@ -536,19 +538,22 @@
     
     
       
+        
+        
+      
       
         
       
     
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
         
           
-          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
             
   
   
@@ -566,7 +571,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_3">
             <span class="md-nav__icon md-icon"></span>
             
@@ -581,10 +586,37 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../../how-to/reproduce-results/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reproduce the leaderboard results
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
@@ -600,6 +632,181 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#cocarryv1-campaign-tag-prereg-cocarry-baselines-v1-rev2-2026-07-05" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        cocarry@v1 (campaign tag prereg-cocarry-baselines-v1-rev2-2026-07-05)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="cocarry@v1 (campaign tag prereg-cocarry-baselines-v1-rev2-2026-07-05)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#ref-script-oracle-reference" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        REF-SCRIPT — oracle reference
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#b-rnd-random-ego" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        B-RND — random ego
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#b-stat-static-hold-position-ego" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        B-STAT — static (hold-position) ego
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#b-blind-learned-ego-partner-observations-masked" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        B-BLIND — learned ego, partner observations masked
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#b-aht-learned-ad-hoc-teamwork-ego" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        B-AHT — learned ad-hoc-teamwork ego
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#b-joint-non-aht-upper-anchor-one-bundle-per-training-seed" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        B-JOINT — non-AHT upper anchor (one bundle per training seed)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#handover_placev1-campaign-tag-prereg-handover-baselines-v1-2026-07-06" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        handover_place@v1 (campaign tag prereg-handover-baselines-v1-2026-07-06)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="handover_place@v1 (campaign tag prereg-handover-baselines-v1-2026-07-06)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#ref-script-oracle-reference_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        REF-SCRIPT — oracle reference
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#b-rnd-random-ego_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        B-RND — random ego
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#b-stat-static-hold-position-ego_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        B-STAT — static (hold-position) ego
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#note-on-checkpoints-for-the-learned-rows" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Note on checkpoints for the learned rows
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#what-match-means" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What "match" means
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -612,7 +819,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../how-to/submit-leaderboard/" class="md-nav__link">
+      <a href="../submit-leaderboard/" class="md-nav__link">
         
   
   
@@ -640,7 +847,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../how-to/add-partner/" class="md-nav__link">
+      <a href="../add-partner/" class="md-nav__link">
         
   
   
@@ -668,7 +875,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../how-to/add-filter/" class="md-nav__link">
+      <a href="../add-filter/" class="md-nav__link">
         
   
   
@@ -696,7 +903,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../how-to/run-spike/" class="md-nav__link">
+      <a href="../run-spike/" class="md-nav__link">
         
   
   
@@ -724,7 +931,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../how-to/run-on-gpu/" class="md-nav__link">
+      <a href="../run-on-gpu/" class="md-nav__link">
         
   
   
@@ -756,10 +963,8 @@
       
   
   
-    
   
   
-  
     
     
       
@@ -787,22 +992,19 @@
     
     
       
-        
-        
-      
       
         
       
     
     
-    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" checked>
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
         
           
-          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
             
   
   
@@ -820,7 +1022,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="true">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_4">
             <span class="md-nav__icon md-icon"></span>
             
@@ -838,7 +1040,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../api/" class="md-nav__link">
+      <a href="../../reference/api/" class="md-nav__link">
         
   
   
@@ -866,7 +1068,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../adrs/" class="md-nav__link">
+      <a href="../../reference/adrs/" class="md-nav__link">
         
   
   
@@ -924,13 +1126,10 @@
       
       
         
-          
-          
-        
       
     
     
-    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--nested">
       
         
         
@@ -938,7 +1137,7 @@
         
           
           <div class="md-nav__link md-nav__container">
-            <a href="../tasks/" class="md-nav__link ">
+            <a href="../../reference/tasks/" class="md-nav__link ">
               
   
   
@@ -956,7 +1155,7 @@
             </a>
             
               
-              <label class="md-nav__link " for="__nav_4_3" id="__nav_4_3_label" tabindex="">
+              <label class="md-nav__link " for="__nav_4_3" id="__nav_4_3_label" tabindex="0">
                 <span class="md-nav__icon md-icon"></span>
               </label>
             
@@ -982,7 +1181,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../tasks/stage0_smoke/" class="md-nav__link">
+      <a href="../../reference/tasks/stage0_smoke/" class="md-nav__link">
         
   
   
@@ -1010,7 +1209,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../tasks/mpe_cooperative_push/" class="md-nav__link">
+      <a href="../../reference/tasks/mpe_cooperative_push/" class="md-nav__link">
         
   
   
@@ -1038,7 +1237,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../tasks/stage1_pickplace_as/" class="md-nav__link">
+      <a href="../../reference/tasks/stage1_pickplace_as/" class="md-nav__link">
         
   
   
@@ -1066,7 +1265,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../tasks/stage1_pickplace_om/" class="md-nav__link">
+      <a href="../../reference/tasks/stage1_pickplace_om/" class="md-nav__link">
         
   
   
@@ -1094,7 +1293,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../tasks/cocarry/" class="md-nav__link">
+      <a href="../../reference/tasks/cocarry/" class="md-nav__link">
         
   
   
@@ -1122,7 +1321,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../tasks/handover_place/" class="md-nav__link">
+      <a href="../../reference/tasks/handover_place/" class="md-nav__link">
         
   
   
@@ -1150,7 +1349,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../tasks/coinsert/" class="md-nav__link">
+      <a href="../../reference/tasks/coinsert/" class="md-nav__link">
         
   
   
@@ -1178,7 +1377,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../tasks/co_hold_secure/" class="md-nav__link">
+      <a href="../../reference/tasks/co_hold_secure/" class="md-nav__link">
         
   
   
@@ -1206,7 +1405,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../tasks/amr_handover_dynamic/" class="md-nav__link">
+      <a href="../../reference/tasks/amr_handover_dynamic/" class="md-nav__link">
         
   
   
@@ -1262,13 +1461,10 @@
       
       
         
-          
-          
-        
       
     
     
-    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--nested">
       
         
         
@@ -1276,7 +1472,7 @@
         
           
           <div class="md-nav__link md-nav__container">
-            <a href="../partners/" class="md-nav__link ">
+            <a href="../../reference/partners/" class="md-nav__link ">
               
   
   
@@ -1294,7 +1490,7 @@
             </a>
             
               
-              <label class="md-nav__link " for="__nav_4_4" id="__nav_4_4_label" tabindex="">
+              <label class="md-nav__link " for="__nav_4_4" id="__nav_4_4_label" tabindex="0">
                 <span class="md-nav__icon md-icon"></span>
               </label>
             
@@ -1365,7 +1561,7 @@
         
           
           <div class="md-nav__link md-nav__container">
-            <a href="../partners/cocarry_partners-v1/" class="md-nav__link ">
+            <a href="../../reference/partners/cocarry_partners-v1/" class="md-nav__link ">
               
   
   
@@ -1409,7 +1605,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../partners/cocarry_partners-v1/imp_nominal/" class="md-nav__link">
+      <a href="../../reference/partners/cocarry_partners-v1/imp_nominal/" class="md-nav__link">
         
   
   
@@ -1437,7 +1633,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../partners/cocarry_partners-v1/imp_stiff_low/" class="md-nav__link">
+      <a href="../../reference/partners/cocarry_partners-v1/imp_stiff_low/" class="md-nav__link">
         
   
   
@@ -1465,7 +1661,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../partners/cocarry_partners-v1/imp_stiff_high/" class="md-nav__link">
+      <a href="../../reference/partners/cocarry_partners-v1/imp_stiff_high/" class="md-nav__link">
         
   
   
@@ -1493,7 +1689,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../partners/cocarry_partners-v1/imp_damp_low/" class="md-nav__link">
+      <a href="../../reference/partners/cocarry_partners-v1/imp_damp_low/" class="md-nav__link">
         
   
   
@@ -1521,7 +1717,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../partners/cocarry_partners-v1/imp_damp_high/" class="md-nav__link">
+      <a href="../../reference/partners/cocarry_partners-v1/imp_damp_high/" class="md-nav__link">
         
   
   
@@ -1549,7 +1745,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../partners/cocarry_partners-v1/imp_slow/" class="md-nav__link">
+      <a href="../../reference/partners/cocarry_partners-v1/imp_slow/" class="md-nav__link">
         
   
   
@@ -1577,7 +1773,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../partners/cocarry_partners-v1/imp_fast/" class="md-nav__link">
+      <a href="../../reference/partners/cocarry_partners-v1/imp_fast/" class="md-nav__link">
         
   
   
@@ -1605,7 +1801,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../partners/cocarry_partners-v1/imp_lag_bounded/" class="md-nav__link">
+      <a href="../../reference/partners/cocarry_partners-v1/imp_lag_bounded/" class="md-nav__link">
         
   
   
@@ -1633,7 +1829,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../partners/cocarry_partners-v1/imp_blend_a/" class="md-nav__link">
+      <a href="../../reference/partners/cocarry_partners-v1/imp_blend_a/" class="md-nav__link">
         
   
   
@@ -1661,7 +1857,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../partners/cocarry_partners-v1/imp_blend_b/" class="md-nav__link">
+      <a href="../../reference/partners/cocarry_partners-v1/imp_blend_b/" class="md-nav__link">
         
   
   
@@ -1689,7 +1885,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../partners/cocarry_partners-v1/imp_blend_c/" class="md-nav__link">
+      <a href="../../reference/partners/cocarry_partners-v1/imp_blend_c/" class="md-nav__link">
         
   
   
@@ -1772,7 +1968,7 @@
         
           
           <div class="md-nav__link md-nav__container">
-            <a href="../partners/cocarry_partners-v2/" class="md-nav__link ">
+            <a href="../../reference/partners/cocarry_partners-v2/" class="md-nav__link ">
               
   
   
@@ -1816,7 +2012,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../partners/cocarry_partners-v2/imp_nominal/" class="md-nav__link">
+      <a href="../../reference/partners/cocarry_partners-v2/imp_nominal/" class="md-nav__link">
         
   
   
@@ -1844,7 +2040,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../partners/cocarry_partners-v2/imp_stiff_low/" class="md-nav__link">
+      <a href="../../reference/partners/cocarry_partners-v2/imp_stiff_low/" class="md-nav__link">
         
   
   
@@ -1872,7 +2068,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../partners/cocarry_partners-v2/imp_stiff_high/" class="md-nav__link">
+      <a href="../../reference/partners/cocarry_partners-v2/imp_stiff_high/" class="md-nav__link">
         
   
   
@@ -1900,7 +2096,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../partners/cocarry_partners-v2/imp_damp_low/" class="md-nav__link">
+      <a href="../../reference/partners/cocarry_partners-v2/imp_damp_low/" class="md-nav__link">
         
   
   
@@ -1928,7 +2124,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../partners/cocarry_partners-v2/imp_damp_high/" class="md-nav__link">
+      <a href="../../reference/partners/cocarry_partners-v2/imp_damp_high/" class="md-nav__link">
         
   
   
@@ -1956,7 +2152,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../partners/cocarry_partners-v2/imp_slow/" class="md-nav__link">
+      <a href="../../reference/partners/cocarry_partners-v2/imp_slow/" class="md-nav__link">
         
   
   
@@ -1984,7 +2180,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../partners/cocarry_partners-v2/imp_fast/" class="md-nav__link">
+      <a href="../../reference/partners/cocarry_partners-v2/imp_fast/" class="md-nav__link">
         
   
   
@@ -2012,7 +2208,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../partners/cocarry_partners-v2/imp_lag_bounded/" class="md-nav__link">
+      <a href="../../reference/partners/cocarry_partners-v2/imp_lag_bounded/" class="md-nav__link">
         
   
   
@@ -2040,7 +2236,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../partners/cocarry_partners-v2/imp_blend_a/" class="md-nav__link">
+      <a href="../../reference/partners/cocarry_partners-v2/imp_blend_a/" class="md-nav__link">
         
   
   
@@ -2068,7 +2264,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../partners/cocarry_partners-v2/imp_blend_b/" class="md-nav__link">
+      <a href="../../reference/partners/cocarry_partners-v2/imp_blend_b/" class="md-nav__link">
         
   
   
@@ -2096,7 +2292,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../partners/cocarry_partners-v2/imp_blend_c/" class="md-nav__link">
+      <a href="../../reference/partners/cocarry_partners-v2/imp_blend_c/" class="md-nav__link">
         
   
   
@@ -2124,7 +2320,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../partners/cocarry_partners-v2/joint_s4/" class="md-nav__link">
+      <a href="../../reference/partners/cocarry_partners-v2/joint_s4/" class="md-nav__link">
         
   
   
@@ -2195,7 +2391,7 @@
         
           
           <div class="md-nav__link md-nav__container">
-            <a href="../partners/handover_place_partners-v1/" class="md-nav__link ">
+            <a href="../../reference/partners/handover_place_partners-v1/" class="md-nav__link ">
               
   
   
@@ -2239,7 +2435,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../partners/handover_place_partners-v1/presenter_matched/" class="md-nav__link">
+      <a href="../../reference/partners/handover_place_partners-v1/presenter_matched/" class="md-nav__link">
         
   
   
@@ -2267,7 +2463,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../partners/handover_place_partners-v1/presenter_mismatch_15/" class="md-nav__link">
+      <a href="../../reference/partners/handover_place_partners-v1/presenter_mismatch_15/" class="md-nav__link">
         
   
   
@@ -2295,7 +2491,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../partners/handover_place_partners-v1/presenter_mismatch_30/" class="md-nav__link">
+      <a href="../../reference/partners/handover_place_partners-v1/presenter_mismatch_30/" class="md-nav__link">
         
   
   
@@ -2323,7 +2519,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../partners/handover_place_partners-v1/presenter_mismatch_45/" class="md-nav__link">
+      <a href="../../reference/partners/handover_place_partners-v1/presenter_mismatch_45/" class="md-nav__link">
         
   
   
@@ -2351,7 +2547,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../partners/handover_place_partners-v1/presenter_offgrid_a/" class="md-nav__link">
+      <a href="../../reference/partners/handover_place_partners-v1/presenter_offgrid_a/" class="md-nav__link">
         
   
   
@@ -2379,7 +2575,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../partners/handover_place_partners-v1/presenter_offgrid_b/" class="md-nav__link">
+      <a href="../../reference/partners/handover_place_partners-v1/presenter_offgrid_b/" class="md-nav__link">
         
   
   
@@ -2444,7 +2640,7 @@
         
           
           <div class="md-nav__link md-nav__container">
-            <a href="../partners/stage1_pickplace_as_partners-v1/" class="md-nav__link ">
+            <a href="../../reference/partners/stage1_pickplace_as_partners-v1/" class="md-nav__link ">
               
   
   
@@ -2488,7 +2684,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../partners/stage1_pickplace_as_partners-v1/heuristic_center/" class="md-nav__link">
+      <a href="../../reference/partners/stage1_pickplace_as_partners-v1/heuristic_center/" class="md-nav__link">
         
   
   
@@ -2516,7 +2712,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../partners/stage1_pickplace_as_partners-v1/heuristic_quadrant_pos/" class="md-nav__link">
+      <a href="../../reference/partners/stage1_pickplace_as_partners-v1/heuristic_quadrant_pos/" class="md-nav__link">
         
   
   
@@ -2544,7 +2740,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../partners/stage1_pickplace_as_partners-v1/heuristic_quadrant_neg/" class="md-nav__link">
+      <a href="../../reference/partners/stage1_pickplace_as_partners-v1/heuristic_quadrant_neg/" class="md-nav__link">
         
   
   
@@ -2585,19 +2781,10 @@
                 
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../../reference/glossary/" class="md-nav__link">
         
   
   
@@ -2613,7 +2800,6 @@
   
 
       </a>
-      
     </li>
   
 
@@ -2626,7 +2812,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../literature/" class="md-nav__link">
+      <a href="../../reference/literature/" class="md-nav__link">
         
   
   
@@ -2654,7 +2840,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../standards/" class="md-nav__link">
+      <a href="../../reference/standards/" class="md-nav__link">
         
   
   
@@ -2682,7 +2868,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../evaluation/" class="md-nav__link">
+      <a href="../../reference/evaluation/" class="md-nav__link">
         
   
   
@@ -2710,7 +2896,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../datasheet/" class="md-nav__link">
+      <a href="../../reference/datasheet/" class="md-nav__link">
         
   
   
@@ -3147,6 +3333,169 @@
     
   
   
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#cocarryv1-campaign-tag-prereg-cocarry-baselines-v1-rev2-2026-07-05" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        cocarry@v1 (campaign tag prereg-cocarry-baselines-v1-rev2-2026-07-05)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="cocarry@v1 (campaign tag prereg-cocarry-baselines-v1-rev2-2026-07-05)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#ref-script-oracle-reference" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        REF-SCRIPT — oracle reference
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#b-rnd-random-ego" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        B-RND — random ego
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#b-stat-static-hold-position-ego" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        B-STAT — static (hold-position) ego
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#b-blind-learned-ego-partner-observations-masked" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        B-BLIND — learned ego, partner observations masked
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#b-aht-learned-ad-hoc-teamwork-ego" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        B-AHT — learned ad-hoc-teamwork ego
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#b-joint-non-aht-upper-anchor-one-bundle-per-training-seed" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        B-JOINT — non-AHT upper anchor (one bundle per training seed)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#handover_placev1-campaign-tag-prereg-handover-baselines-v1-2026-07-06" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        handover_place@v1 (campaign tag prereg-handover-baselines-v1-2026-07-06)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="handover_place@v1 (campaign tag prereg-handover-baselines-v1-2026-07-06)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#ref-script-oracle-reference_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        REF-SCRIPT — oracle reference
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#b-rnd-random-ego_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        B-RND — random ego
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#b-stat-static-hold-position-ego_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        B-STAT — static (hold-position) ego
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#note-on-checkpoints-for-the-learned-rows" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Note on checkpoints for the learned rows
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#what-match-means" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What "match" means
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
 </nav>
                   </div>
                 </div>
@@ -3162,7 +3511,7 @@
 
 
   
-    <a href="https://github.com/fsafaei/concerto/edit/main/docs/reference/glossary.md" title="Edit this page" class="md-content__button md-icon" rel="edit">
+    <a href="https://github.com/fsafaei/concerto/edit/main/docs/how-to/reproduce-results.md" title="Edit this page" class="md-content__button md-icon" rel="edit">
       
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 20H6V4h7v5h5v3.1l2-2V8l-6-6H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h4zm10.2-7c.1 0 .3.1.4.2l1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2m0 3.9L14.1 23H12v-2.1l6.1-6.1z"/></svg>
     </a>
@@ -3170,29 +3519,144 @@
   
 
 
-<h1 id="glossary">Glossary</h1>
-<p>Definitions for terms used throughout the CONCERTO and CHAMBER documentation.
-The canonical glossary lives in <code>PROJECT_STATUS.md §2</code> (founder's local
-planning kit).</p>
-<p><strong>AoI</strong> — Age of Information. A timestamp metric for the staleness of
-communicated state. See <code>chamber.comm</code>.</p>
-<p><strong>CBF</strong> — Control Barrier Function. A Lyapunov-like certificate for
-forward-invariant safe sets. See <code>concerto.safety</code>.</p>
-<p><strong>CHAMBER</strong> — Contact-rich Heterogeneous Ad-hoc Manipulation Benchmark for
-Embodied Robots. The benchmark suite that wraps ManiSkill v3.</p>
-<p><strong>CONCERTO</strong> — Contact-rich cOoperation with Novel CooperaTors under Embodiment
-heteROgeneity. The method: safety stack + ego-AHT training.</p>
-<p><strong>ego-AHT</strong> — Ego-centric Ad-Hoc Teamwork. Training paradigm where a single
-ego agent learns to cooperate with heterogeneous, opaque partners.</p>
-<p><strong>FCP</strong> — Fictitious Co-Play. Partner-population training strategy. See ADR-009.</p>
-<p><strong>HRS</strong> — Heterogeneity Robustness Score. The composite evaluation metric.
-See ADR-008.</p>
-<p><strong>HetMR-AHT</strong> — Heterogeneous Multi-Robot Ad-Hoc Teamwork.</p>
-<p><strong>MEP</strong> — Maximum Entropy Partner. Partner diversity filter. See ADR-009.</p>
-<p><strong>OSCBF</strong> — Operator-Splitting CBF. A two-level QP formulation for
-within-arm safety. See ADR-004.</p>
-<p><strong>URLLC</strong> — Ultra-Reliable Low-Latency Communication. 3GPP standard anchoring
-the comm-degradation parameter sweep. See ADR-006.</p>
+<h1 id="how-to-reproduce-the-leaderboard-results">How-to: Reproduce the leaderboard results</h1>
+<p>Every leaderboard row is backed by a committed result bundle, and
+every bundle records the exact command that produced it (its
+<code>REPRO.txt</code>). This page lists, for each row: the reproduction
+command, the committed bundle it must match, and the verification
+command. The command blocks below are checked against the committed
+<code>REPRO.txt</code> files by CI (<code>scripts/check_repro_docs.py</code>), so they
+cannot drift from the evidence.</p>
+<p>Two levels of reproduction, from cheap to thorough:</p>
+<ol>
+<li><strong>Verify</strong> (seconds per row, no simulation): re-check every file
+   hash in the committed bundle, recompute the summary statistics
+   from the raw episode records, and re-derive the preregistration
+   tag. This is what CI does on every push.</li>
+<li><strong>Re-run</strong> (minutes to hours per row, CPU): execute the row's
+   command with a fresh output directory. CPU evaluation is
+   byte-identical under the committed <code>uv.lock</code> and the recorded
+   seeds, so the fresh bundle's summary must equal the committed
+   one's exactly. The scheduled <code>repro-rows</code> workflow
+   (<code>.github/workflows/repro-rows.yml</code>) re-runs every scripted row
+   this way weekly and on demand.</li>
+</ol>
+<p>Setup, once per checkout (the preregistration gate resolves git
+tags, so fetch them):</p>
+<div class="highlight"><pre><span></span><code>git<span class="w"> </span>fetch<span class="w"> </span>--tags
+uv<span class="w"> </span>sync<span class="w"> </span>--group<span class="w"> </span>dev
+</code></pre></div>
+<p>Notes that apply to every block below:</p>
+<ul>
+<li>Re-run commands write to a fresh directory under <code>out/repro/</code>;
+  point <code>--out</code> anywhere empty. The committed bundle path is listed
+  as <em>expected bundle</em> — do not write into it (committed archives
+  are immutable).</li>
+<li>On a locally-modified checkout, add <code>--allow-dirty</code> to <code>run</code>
+  commands (the resulting bundle is marked dirty and is
+  leaderboard-ineligible).</li>
+<li>Approximate CPU runtimes are for one modern core-count laptop/CI
+  runner; scripted cocarry rows are ~80 minutes (1750 episodes),
+  scripted handover rows are lighter.</li>
+</ul>
+<h2 id="cocarryv1-campaign-tag-prereg-cocarry-baselines-v1-rev2-2026-07-05">cocarry@v1 (campaign tag <code>prereg-cocarry-baselines-v1-rev2-2026-07-05</code>)</h2>
+<h3 id="ref-script-oracle-reference">REF-SCRIPT — oracle reference</h3>
+<div class="highlight"><pre><span></span><code>uv<span class="w"> </span>run<span class="w"> </span>chamber-eval<span class="w"> </span>run<span class="w"> </span>--task<span class="w"> </span>cocarry<span class="w"> </span>--policy<span class="w"> </span>ref_script_cocarry_impedance<span class="w"> </span>--partner-set<span class="w"> </span>cocarry_partners@v1<span class="w"> </span>--exclude-member<span class="w"> </span>imp_nominal<span class="w"> </span>--seeds<span class="w"> </span><span class="m">5</span><span class="w"> </span>--episodes<span class="w"> </span><span class="m">50</span><span class="w"> </span>--out<span class="w"> </span>out/repro/cocarry-ref-script<span class="w"> </span>--prereg<span class="w"> </span>spikes/preregistration/benchmark/cocarry_baselines_v1.yaml
+</code></pre></div>
+<p>Expected bundle: <code>spikes/results/benchmark/cocarry-v1/ref-script-2026-07-05</code></p>
+<div class="highlight"><pre><span></span><code>uv<span class="w"> </span>run<span class="w"> </span>chamber-eval<span class="w"> </span>verify<span class="w"> </span>spikes/results/benchmark/cocarry-v1/ref-script-2026-07-05
+</code></pre></div>
+<h3 id="b-rnd-random-ego">B-RND — random ego</h3>
+<div class="highlight"><pre><span></span><code>uv<span class="w"> </span>run<span class="w"> </span>chamber-eval<span class="w"> </span>run<span class="w"> </span>--task<span class="w"> </span>cocarry<span class="w"> </span>--policy<span class="w"> </span>random<span class="w"> </span>--partner-set<span class="w"> </span>cocarry_partners@v1<span class="w"> </span>--exclude-member<span class="w"> </span>imp_nominal<span class="w"> </span>--seeds<span class="w"> </span><span class="m">5</span><span class="w"> </span>--episodes<span class="w"> </span><span class="m">50</span><span class="w"> </span>--out<span class="w"> </span>out/repro/cocarry-b-rnd<span class="w"> </span>--prereg<span class="w"> </span>spikes/preregistration/benchmark/cocarry_baselines_v1.yaml
+</code></pre></div>
+<p>Expected bundle: <code>spikes/results/benchmark/cocarry-v1/b-rnd-2026-07-05</code></p>
+<div class="highlight"><pre><span></span><code>uv<span class="w"> </span>run<span class="w"> </span>chamber-eval<span class="w"> </span>verify<span class="w"> </span>spikes/results/benchmark/cocarry-v1/b-rnd-2026-07-05
+</code></pre></div>
+<h3 id="b-stat-static-hold-position-ego">B-STAT — static (hold-position) ego</h3>
+<div class="highlight"><pre><span></span><code>uv<span class="w"> </span>run<span class="w"> </span>chamber-eval<span class="w"> </span>run<span class="w"> </span>--task<span class="w"> </span>cocarry<span class="w"> </span>--policy<span class="w"> </span>static<span class="w"> </span>--partner-set<span class="w"> </span>cocarry_partners@v1<span class="w"> </span>--exclude-member<span class="w"> </span>imp_nominal<span class="w"> </span>--seeds<span class="w"> </span><span class="m">5</span><span class="w"> </span>--episodes<span class="w"> </span><span class="m">50</span><span class="w"> </span>--out<span class="w"> </span>out/repro/cocarry-b-stat<span class="w"> </span>--prereg<span class="w"> </span>spikes/preregistration/benchmark/cocarry_baselines_v1.yaml
+</code></pre></div>
+<p>Expected bundle: <code>spikes/results/benchmark/cocarry-v1/b-stat-2026-07-05</code></p>
+<div class="highlight"><pre><span></span><code>uv<span class="w"> </span>run<span class="w"> </span>chamber-eval<span class="w"> </span>verify<span class="w"> </span>spikes/results/benchmark/cocarry-v1/b-stat-2026-07-05
+</code></pre></div>
+<h3 id="b-blind-learned-ego-partner-observations-masked">B-BLIND — learned ego, partner observations masked</h3>
+<p>Requires the selected training checkpoints referenced by the
+committed selection manifest (see the note on checkpoints below).</p>
+<div class="highlight"><pre><span></span><code>uv<span class="w"> </span>run<span class="w"> </span>chamber-eval<span class="w"> </span>run<span class="w"> </span>--task<span class="w"> </span>cocarry<span class="w"> </span>--policy<span class="w"> </span>happo_blind_manifest:spikes/results/benchmark/cocarry-v1/selection/b-blind_selected_manifest.json<span class="w"> </span>--partner-set<span class="w"> </span>cocarry_partners@v1<span class="w"> </span>--exclude-member<span class="w"> </span>imp_nominal<span class="w"> </span>--seeds<span class="w"> </span><span class="m">5</span><span class="w"> </span>--episodes<span class="w"> </span><span class="m">50</span><span class="w"> </span>--out<span class="w"> </span>out/repro/cocarry-b-blind<span class="w"> </span>--prereg<span class="w"> </span>spikes/preregistration/benchmark/cocarry_baselines_v1.yaml
+</code></pre></div>
+<p>Expected bundle: <code>spikes/results/benchmark/cocarry-v1/b-blind-2026-07-06</code></p>
+<div class="highlight"><pre><span></span><code>uv<span class="w"> </span>run<span class="w"> </span>chamber-eval<span class="w"> </span>verify<span class="w"> </span>spikes/results/benchmark/cocarry-v1/b-blind-2026-07-06
+</code></pre></div>
+<h3 id="b-aht-learned-ad-hoc-teamwork-ego">B-AHT — learned ad-hoc-teamwork ego</h3>
+<p>Requires the selected training checkpoints referenced by the
+committed selection manifest (see the note on checkpoints below).</p>
+<div class="highlight"><pre><span></span><code>uv<span class="w"> </span>run<span class="w"> </span>chamber-eval<span class="w"> </span>run<span class="w"> </span>--task<span class="w"> </span>cocarry<span class="w"> </span>--policy<span class="w"> </span>happo_manifest:spikes/results/benchmark/cocarry-v1/selection/b-aht_selected_manifest.json<span class="w"> </span>--partner-set<span class="w"> </span>cocarry_partners@v1<span class="w"> </span>--exclude-member<span class="w"> </span>imp_nominal<span class="w"> </span>--seeds<span class="w"> </span><span class="m">5</span><span class="w"> </span>--episodes<span class="w"> </span><span class="m">50</span><span class="w"> </span>--out<span class="w"> </span>out/repro/cocarry-b-aht<span class="w"> </span>--prereg<span class="w"> </span>spikes/preregistration/benchmark/cocarry_baselines_v1.yaml
+</code></pre></div>
+<p>Expected bundle: <code>spikes/results/benchmark/cocarry-v1/b-aht-2026-07-06</code></p>
+<div class="highlight"><pre><span></span><code>uv<span class="w"> </span>run<span class="w"> </span>chamber-eval<span class="w"> </span>verify<span class="w"> </span>spikes/results/benchmark/cocarry-v1/b-aht-2026-07-06
+</code></pre></div>
+<h3 id="b-joint-non-aht-upper-anchor-one-bundle-per-training-seed">B-JOINT — non-AHT upper anchor (one bundle per training seed)</h3>
+<p>Each jointly-trained pair is evaluated as the pair it trained as, so
+the row ships five single-seed bundles. Requires the pair checkpoints
+(see the note on checkpoints below).</p>
+<div class="highlight"><pre><span></span><code>uv<span class="w"> </span>run<span class="w"> </span>chamber-eval<span class="w"> </span>run<span class="w"> </span>--task<span class="w"> </span>cocarry<span class="w"> </span>--policy<span class="w"> </span>joint_ego:local://artifacts/4ace772a2efe7dd3_step150000.pt<span class="w"> </span>--partner<span class="w"> </span>frozen_cocarry_joint<span class="w"> </span>--partner-weights<span class="w"> </span>local://artifacts/4ace772a2efe7dd3_step150000.pt<span class="w"> </span>--seeds<span class="w"> </span><span class="m">0</span>,<span class="w"> </span>--episodes<span class="w"> </span><span class="m">50</span><span class="w"> </span>--out<span class="w"> </span>out/repro/cocarry-b-joint-seed0<span class="w"> </span>--prereg<span class="w"> </span>spikes/preregistration/benchmark/cocarry_baselines_v1.yaml
+uv<span class="w"> </span>run<span class="w"> </span>chamber-eval<span class="w"> </span>run<span class="w"> </span>--task<span class="w"> </span>cocarry<span class="w"> </span>--policy<span class="w"> </span>joint_ego:local://artifacts/24e5f7483ad7b86e_step200000.pt<span class="w"> </span>--partner<span class="w"> </span>frozen_cocarry_joint<span class="w"> </span>--partner-weights<span class="w"> </span>local://artifacts/24e5f7483ad7b86e_step200000.pt<span class="w"> </span>--seeds<span class="w"> </span><span class="m">1</span>,<span class="w"> </span>--episodes<span class="w"> </span><span class="m">50</span><span class="w"> </span>--out<span class="w"> </span>out/repro/cocarry-b-joint-seed1<span class="w"> </span>--prereg<span class="w"> </span>spikes/preregistration/benchmark/cocarry_baselines_v1.yaml
+uv<span class="w"> </span>run<span class="w"> </span>chamber-eval<span class="w"> </span>run<span class="w"> </span>--task<span class="w"> </span>cocarry<span class="w"> </span>--policy<span class="w"> </span>joint_ego:local://artifacts/e2f99cc34a4c5356_step50000.pt<span class="w"> </span>--partner<span class="w"> </span>frozen_cocarry_joint<span class="w"> </span>--partner-weights<span class="w"> </span>local://artifacts/e2f99cc34a4c5356_step50000.pt<span class="w"> </span>--seeds<span class="w"> </span><span class="m">2</span>,<span class="w"> </span>--episodes<span class="w"> </span><span class="m">50</span><span class="w"> </span>--out<span class="w"> </span>out/repro/cocarry-b-joint-seed2<span class="w"> </span>--prereg<span class="w"> </span>spikes/preregistration/benchmark/cocarry_baselines_v1.yaml
+uv<span class="w"> </span>run<span class="w"> </span>chamber-eval<span class="w"> </span>run<span class="w"> </span>--task<span class="w"> </span>cocarry<span class="w"> </span>--policy<span class="w"> </span>joint_ego:local://artifacts/461dbbcae360f85e_step150000.pt<span class="w"> </span>--partner<span class="w"> </span>frozen_cocarry_joint<span class="w"> </span>--partner-weights<span class="w"> </span>local://artifacts/461dbbcae360f85e_step150000.pt<span class="w"> </span>--seeds<span class="w"> </span><span class="m">3</span>,<span class="w"> </span>--episodes<span class="w"> </span><span class="m">50</span><span class="w"> </span>--out<span class="w"> </span>out/repro/cocarry-b-joint-seed3<span class="w"> </span>--prereg<span class="w"> </span>spikes/preregistration/benchmark/cocarry_baselines_v1.yaml
+uv<span class="w"> </span>run<span class="w"> </span>chamber-eval<span class="w"> </span>run<span class="w"> </span>--task<span class="w"> </span>cocarry<span class="w"> </span>--policy<span class="w"> </span>joint_ego:local://artifacts/e9040cbc3c3b2456_step150000.pt<span class="w"> </span>--partner<span class="w"> </span>frozen_cocarry_joint<span class="w"> </span>--partner-weights<span class="w"> </span>local://artifacts/e9040cbc3c3b2456_step150000.pt<span class="w"> </span>--seeds<span class="w"> </span><span class="m">4</span>,<span class="w"> </span>--episodes<span class="w"> </span><span class="m">50</span><span class="w"> </span>--out<span class="w"> </span>out/repro/cocarry-b-joint-seed4<span class="w"> </span>--prereg<span class="w"> </span>spikes/preregistration/benchmark/cocarry_baselines_v1.yaml
+</code></pre></div>
+<p>Expected bundles:
+<code>spikes/results/benchmark/cocarry-v1/b-joint-seed0-2026-07-06</code>
+<code>spikes/results/benchmark/cocarry-v1/b-joint-seed1-2026-07-06</code>
+<code>spikes/results/benchmark/cocarry-v1/b-joint-seed2-2026-07-06</code>
+<code>spikes/results/benchmark/cocarry-v1/b-joint-seed3-2026-07-06</code>
+<code>spikes/results/benchmark/cocarry-v1/b-joint-seed4-2026-07-06</code></p>
+<div class="highlight"><pre><span></span><code>uv<span class="w"> </span>run<span class="w"> </span>chamber-eval<span class="w"> </span>verify<span class="w"> </span>spikes/results/benchmark/cocarry-v1/b-joint-seed0-2026-07-06
+uv<span class="w"> </span>run<span class="w"> </span>chamber-eval<span class="w"> </span>verify<span class="w"> </span>spikes/results/benchmark/cocarry-v1/b-joint-seed1-2026-07-06
+uv<span class="w"> </span>run<span class="w"> </span>chamber-eval<span class="w"> </span>verify<span class="w"> </span>spikes/results/benchmark/cocarry-v1/b-joint-seed2-2026-07-06
+uv<span class="w"> </span>run<span class="w"> </span>chamber-eval<span class="w"> </span>verify<span class="w"> </span>spikes/results/benchmark/cocarry-v1/b-joint-seed3-2026-07-06
+uv<span class="w"> </span>run<span class="w"> </span>chamber-eval<span class="w"> </span>verify<span class="w"> </span>spikes/results/benchmark/cocarry-v1/b-joint-seed4-2026-07-06
+</code></pre></div>
+<h2 id="handover_placev1-campaign-tag-prereg-handover-baselines-v1-2026-07-06">handover_place@v1 (campaign tag <code>prereg-handover-baselines-v1-2026-07-06</code>)</h2>
+<h3 id="ref-script-oracle-reference_1">REF-SCRIPT — oracle reference</h3>
+<div class="highlight"><pre><span></span><code>uv<span class="w"> </span>run<span class="w"> </span>chamber-eval<span class="w"> </span>run<span class="w"> </span>--task<span class="w"> </span>handover_place<span class="w"> </span>--policy<span class="w"> </span>ref_script_handover_ego<span class="w"> </span>--partner-set<span class="w"> </span>handover_place_partners@v1<span class="w"> </span>--exclude-member<span class="w"> </span>presenter_mismatch_15<span class="w"> </span>--exclude-member<span class="w"> </span>presenter_offgrid_a<span class="w"> </span>--exclude-member<span class="w"> </span>presenter_offgrid_b<span class="w"> </span>--seeds<span class="w"> </span><span class="m">5</span><span class="w"> </span>--episodes<span class="w"> </span><span class="m">50</span><span class="w"> </span>--out<span class="w"> </span>out/repro/handover-ref-script<span class="w"> </span>--prereg<span class="w"> </span>spikes/preregistration/benchmark/handover_baselines_v1.yaml
+</code></pre></div>
+<p>Expected bundle: <code>spikes/results/benchmark/handover-v1/ref-script-2026-07-06</code></p>
+<div class="highlight"><pre><span></span><code>uv<span class="w"> </span>run<span class="w"> </span>chamber-eval<span class="w"> </span>verify<span class="w"> </span>spikes/results/benchmark/handover-v1/ref-script-2026-07-06
+</code></pre></div>
+<h3 id="b-rnd-random-ego_1">B-RND — random ego</h3>
+<div class="highlight"><pre><span></span><code>uv<span class="w"> </span>run<span class="w"> </span>chamber-eval<span class="w"> </span>run<span class="w"> </span>--task<span class="w"> </span>handover_place<span class="w"> </span>--policy<span class="w"> </span>random<span class="w"> </span>--partner-set<span class="w"> </span>handover_place_partners@v1<span class="w"> </span>--exclude-member<span class="w"> </span>presenter_mismatch_15<span class="w"> </span>--exclude-member<span class="w"> </span>presenter_offgrid_a<span class="w"> </span>--exclude-member<span class="w"> </span>presenter_offgrid_b<span class="w"> </span>--seeds<span class="w"> </span><span class="m">5</span><span class="w"> </span>--episodes<span class="w"> </span><span class="m">50</span><span class="w"> </span>--out<span class="w"> </span>out/repro/handover-b-rnd<span class="w"> </span>--prereg<span class="w"> </span>spikes/preregistration/benchmark/handover_baselines_v1.yaml
+</code></pre></div>
+<p>Expected bundle: <code>spikes/results/benchmark/handover-v1/b-rnd-2026-07-06</code></p>
+<div class="highlight"><pre><span></span><code>uv<span class="w"> </span>run<span class="w"> </span>chamber-eval<span class="w"> </span>verify<span class="w"> </span>spikes/results/benchmark/handover-v1/b-rnd-2026-07-06
+</code></pre></div>
+<h3 id="b-stat-static-hold-position-ego_1">B-STAT — static (hold-position) ego</h3>
+<div class="highlight"><pre><span></span><code>uv<span class="w"> </span>run<span class="w"> </span>chamber-eval<span class="w"> </span>run<span class="w"> </span>--task<span class="w"> </span>handover_place<span class="w"> </span>--policy<span class="w"> </span>static<span class="w"> </span>--partner-set<span class="w"> </span>handover_place_partners@v1<span class="w"> </span>--exclude-member<span class="w"> </span>presenter_mismatch_15<span class="w"> </span>--exclude-member<span class="w"> </span>presenter_offgrid_a<span class="w"> </span>--exclude-member<span class="w"> </span>presenter_offgrid_b<span class="w"> </span>--seeds<span class="w"> </span><span class="m">5</span><span class="w"> </span>--episodes<span class="w"> </span><span class="m">50</span><span class="w"> </span>--out<span class="w"> </span>out/repro/handover-b-stat<span class="w"> </span>--prereg<span class="w"> </span>spikes/preregistration/benchmark/handover_baselines_v1.yaml
+</code></pre></div>
+<p>Expected bundle: <code>spikes/results/benchmark/handover-v1/b-stat-2026-07-06</code></p>
+<div class="highlight"><pre><span></span><code>uv<span class="w"> </span>run<span class="w"> </span>chamber-eval<span class="w"> </span>verify<span class="w"> </span>spikes/results/benchmark/handover-v1/b-stat-2026-07-06
+</code></pre></div>
+<h2 id="note-on-checkpoints-for-the-learned-rows">Note on checkpoints for the learned rows</h2>
+<p>The learned rows (B-BLIND, B-AHT, B-JOINT) load training checkpoints
+via <code>local://artifacts/...</code> URIs. The checkpoint files (~3 MB each)
+are content-addressed and are <strong>not committed to the git repository</strong>;
+they are part of the hosted leaderboard-bundles dataset artifact (see
+the <a href="../../reference/datasheet/">datasheet</a>). Place them under
+<code>artifacts/artifacts/</code> before re-running a learned row; <code>chamber-eval
+verify</code> on the <em>committed</em> bundles works without them. To regenerate
+the checkpoints from scratch, the training configuration and the
+checkpoint-selection rule are preregistered in the campaign YAML and
+documented in
+<code>spikes/results/benchmark/cocarry-v1/CAMPAIGN_REPORT.md</code>
+(15 runs × 300k frames; roughly 9 hours on one consumer GPU).</p>
+<h2 id="what-match-means">What "match" means</h2>
+<p>A successful re-run reproduces the committed bundle's summary block
+(<code>success_iqm</code>, <code>success_mean</code>, and both confidence-interval
+endpoints) exactly on CPU — byte-identical determinism under
+<code>uv.lock</code> + recorded seeds is a project invariant (principle P6), and
+the scheduled <code>repro-rows</code> workflow fails if any value differs.
+Fields that record provenance (git SHA, platform fingerprint,
+timestamps in file metadata) legitimately differ between your machine
+and the original run.</p>
 
 
 
