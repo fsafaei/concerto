@@ -42,6 +42,7 @@ from chamber.partners.api import FrozenPartner, PartnerSpec
 from chamber.partners.cocarry_blind import CoCarryBlindImpedancePartner
 from chamber.partners.cocarry_impedance import CoCarryImpedancePartner
 from chamber.partners.coinsert_impedance import CoInsertBaseInserter, CoInsertReferenceHolder
+from chamber.partners.frozen_cocarry_joint import FrozenCoCarryJointPartner
 from chamber.partners.frozen_harl import FrozenHARLPartner
 from chamber.partners.frozen_mappo import FrozenMAPPOPartner
 from chamber.partners.handover_presenter import HandoverPresenterPartner
@@ -73,6 +74,7 @@ __all__ = [
     "CoInsertBaseInserter",
     "CoInsertReferenceHolder",
     "CrossFormerPartner",
+    "FrozenCoCarryJointPartner",
     "FrozenHARLPartner",
     "FrozenMAPPOPartner",
     "FrozenPartner",
