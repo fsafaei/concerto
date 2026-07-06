@@ -1,0 +1,55 @@
+{
+  "schema_version": 3,
+  "task_id": "cocarry",
+  "task_version": 1,
+  "policy_id": "ref_script_cocarry_impedance",
+  "partner_set_id": "cocarry_partners@v2",
+  "partner_hashes": {
+    "ego:cocarry_impedance": "8831ed572519c9d8",
+    "joint_s4": "5118f7828d8ac7b8"
+  },
+  "git_sha": "6ebb703a6737e960bfedac36a2bfc1728c6b17d2",
+  "dirty": false,
+  "package_version": "0.7.0",
+  "seed_schedule": {
+    "root_seed": 0,
+    "seeds": [
+      7000,
+      7001,
+      7002,
+      7003
+    ],
+    "episodes_per_seed": 5,
+    "substream_labels": [
+      "env.cocarry",
+      "evaluation.bundle_bootstrap"
+    ]
+  },
+  "repro_command": "generate_partner_fingerprints.py --set cocarry_partners@v2",
+  "platform": {
+    "os": "Linux-6.17.0-29-generic-x86_64-with-glibc2.39",
+    "python": "3.12.3",
+    "numpy": "2.1.3",
+    "torch": "2.11.0+cu128",
+    "device": "NVIDIA GeForce RTX 2080 SUPER"
+  },
+  "manifest": {
+    "REPRO.txt": "aaae29f6a648c1224ca3acee7b1ab4975600b4a168f6be5e64556211cb5aa27c",
+    "episodes_seed7000.jsonl": "e4d7202124cff0f835d5537b43e6b0da9a43ace2e0e60bf3778532caa9238106",
+    "episodes_seed7001.jsonl": "6fe9050afaff4b05ce10fe10003c354ebd58b4a3383d4ca668da061514d8a4cb",
+    "episodes_seed7002.jsonl": "48170fbab52013891e842fd8b687577a720f14f8c5dc9f862f006792f0b668c6",
+    "episodes_seed7003.jsonl": "3ce2138eb2e98276f06f036e49d7faf3dea52f42b026ee076e0a425e62f71506",
+    "partners.json": "422e033a7b47c65b2e5a4f87f1f2c6ba39847d3fd025e292d5d9524d5cfa2b39"
+  },
+  "summary": {
+    "n_episodes": 20,
+    "success_mean": 0.8,
+    "success_iqm": 1.0,
+    "success_ci_low": 0.6,
+    "success_ci_high": 1.0,
+    "n_resamples": 2000,
+    "bootstrap_root_seed": 0
+  },
+  "prereg_git_tag": null,
+  "prereg_blob_sha": null
+}

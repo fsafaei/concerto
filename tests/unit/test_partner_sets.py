@@ -260,18 +260,23 @@ class TestSplitRule:
 
 
 class TestSetRegistry:
-    def test_v1_sets_registered(self) -> None:
+    def test_registered_sets(self) -> None:
         assert list_partner_sets() == [
             "cocarry_partners@v1",
+            "cocarry_partners@v2",
             "handover_place_partners@v1",
             "stage1_pickplace_as_partners@v1",
         ]
 
     def test_version_resolution(self) -> None:
+        # Unversioned resolution returns the LATEST version; pinning
+        # still reaches v1 (ADR-027 §Versioning: old bundles reference
+        # the version they ran against).
         latest = get_partner_set("cocarry_partners")
+        assert latest.slug == "cocarry_partners@v2"
         pinned = get_partner_set("cocarry_partners", version=1)
-        assert latest is pinned
-        assert latest.slug == "cocarry_partners@v1"
+        assert pinned.slug == "cocarry_partners@v1"
+        assert latest is not pinned
 
     def test_unknown_id_and_version_loud_fail(self) -> None:
         with pytest.raises(KeyError, match="registered set ids"):
@@ -384,11 +389,24 @@ class TestV1Composition:
             }
 
     def test_partner_ids_unique_within_and_across_sets(self) -> None:
-        ids: list[str] = []
+        ids: list[tuple[str, str]] = []
+        seen_by_set: dict[str, str] = {}
         for slug in list_partner_sets():
             set_id, version = parse_set_slug(slug)
-            ids.extend(m.partner_id for m in get_partner_set(set_id, version=version).members)
-        assert len(set(ids)) == len(ids)
+            for m in get_partner_set(set_id, version=version).members:
+                # Unique within a set version, and across DIFFERENT
+                # set_ids; the same identity recurring across versions
+                # of ONE set is the ADR-027 §Versioning contract
+                # (member identity is version-stable by design).
+                key = f"{set_id}:{m.partner_id}"
+                assert key not in seen_by_set or seen_by_set[key] == m.member_name, (
+                    f"{slug}: partner_id {m.partner_id} collides across members"
+                )
+                seen_by_set[key] = m.member_name
+                ids.append((slug, m.partner_id))
+        for slug in list_partner_sets():
+            within = [pid for s, pid in ids if s == slug]
+            assert len(set(within)) == len(within)
 
     def test_registered_classes_exist(self) -> None:
         from chamber.partners.registry import list_registered
@@ -476,3 +494,77 @@ class TestBoundedLagMember:
             self._partner("-1")
         with pytest.raises(ValueError, match="lag_steps"):
             self._partner("two")
+
+
+class TestLearnedStratumV2:
+    """The v2 learned-member machinery (ADR-027 §Versioning; ADR-011 §Decision as amended)."""
+
+    _SHA = "a" * 64
+    _EMPTY_DIGEST = params_sha256({})
+
+    def _learned(self, **overrides: object) -> PartnerMemberSpec:
+        base: dict[str, object] = {
+            "member_name": "joint_s9",
+            "registry_class": "frozen_cocarry_joint",
+            "role": "partner_arm",
+            "split": "public",
+            "seed": 9,
+            "checkpoint_step": 150_000,
+            "param_box": {},
+            "params": {},
+            "params_sha256": self._EMPTY_DIGEST,
+            "checkpoint_uri": "local://artifacts/pair.pt",
+            "checkpoint_sha256": self._SHA,
+            "provenance": (
+                "trained jointly with the ego actor of pair checkpoint sha256 " + self._SHA
+            ),
+        }
+        base.update(overrides)
+        return PartnerMemberSpec.model_validate(base)
+
+    def test_weights_uri_is_the_real_checkpoint(self) -> None:
+        member = self._learned()
+        assert member.weights_uri == "local://artifacts/pair.pt"
+        spec = member.partner_spec(params={}, seat_extra={"uid": "a", "other_uid": "b"})
+        assert spec.weights_uri == "local://artifacts/pair.pt"
+        assert spec.checkpoint_step == 150_000
+        assert spec.seed == 9
+
+    def test_checkpoint_custody_invariants(self) -> None:
+        with pytest.raises(ValueError, match="checkpoint_sha256"):
+            self._learned(checkpoint_sha256=None)
+        with pytest.raises(ValueError, match="checkpoint_step"):
+            self._learned(checkpoint_step=None)
+        with pytest.raises(ValueError, match="unanchored"):
+            self._learned(checkpoint_uri=None)
+
+    def test_scripted_members_unchanged(self) -> None:
+        v1 = get_partner_set("cocarry_partners", version=1)
+        v2 = get_partner_set("cocarry_partners", version=2)
+        v1_ids = {m.member_name: m.partner_id for m in v1.members}
+        v2_ids = {m.member_name: m.partner_id for m in v2.members}
+        # Identity stability across the version bump (ADR-027 §Versioning).
+        for name, pid in v1_ids.items():
+            assert v2_ids[name] == pid
+        # Scripted members still ride the member:// URI.
+        nominal = next(m for m in v2.members if m.member_name == "imp_nominal")
+        assert nominal.weights_uri.startswith("member://")
+
+    def test_v2_roster_and_split(self) -> None:
+        v2 = get_partner_set("cocarry_partners", version=2)
+        # 11 scripted + the ONE floor-passing learned member (four of
+        # the five preregistered jointly-trained candidates failed the
+        # 0.75 cross-play floor and were dropped per the set rule).
+        assert len(v2.members) == 12
+        assert len(v2.public_members) == 9
+        assert len(v2.private_members) == 3
+        learned = [m for m in v2.members if m.checkpoint_uri is not None]
+        assert [m.member_name for m in learned] == ["joint_s4"]
+        assert "trained jointly with" in learned[0].provenance
+        assert learned[0].split == "public"
+        # Every v1 split label is reproduced over the 12-member roster.
+        v1 = get_partner_set("cocarry_partners", version=1)
+        v1_split = {m.member_name: m.split for m in v1.members}
+        for m in v2.members:
+            if m.member_name in v1_split:
+                assert m.split == v1_split[m.member_name]

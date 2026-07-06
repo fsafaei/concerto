@@ -66,6 +66,17 @@ _CLASS_BLURBS: dict[str, str] = {
         "coupling channel; lateral offset is success-side by construction "
         "and timing skew rides the takt budget."
     ),
+    "frozen_cocarry_joint": (
+        "A frozen jointly-trained MAPPO co-carry seat (ADR-011 §Decision as "
+        "amended): the partner-side actor of a pair checkpoint, loaded with "
+        "SHA-256 sidecar verification and run deterministic under no-grad "
+        "(ADR-018/I3 black-box contract). It reads the symmetric full state "
+        "(own + other proprioception, bar pose, goal) assembled from raw obs "
+        "leaves — the same interface it trained on. Its cooperative style is "
+        "whatever joint training produced with ITS ego; cross-play with any "
+        "other ego is exactly the partner-familiarity question the zoo "
+        "measures, and the fingerprint below characterises it behaviourally."
+    ),
 }
 
 
@@ -84,6 +95,11 @@ def _fmt(value: float) -> str:
 
 
 def _box_rows(member: PartnerMemberSpec) -> list[str]:
+    if not member.param_box:
+        return [
+            "*(no parameter box — a learned member's behaviour is its frozen "
+            "checkpoint; custody rides on the committed payload SHA-256 above)*"
+        ]
     rows = ["| parameter | committed box | value |", "| --- | --- | --- |"]
     for key in sorted(member.param_box):
         edge = member.param_box[key]
@@ -116,7 +132,15 @@ def render_member_card(
         member.registry_class,
         f"A `{member.registry_class}` partner (see the class docstring).",
     )
-    if member.params is not None:
+    if member.checkpoint_uri is not None:
+        provenance_note = (
+            "Learned member: behaviour lives in the frozen checkpoint "
+            f"`{member.checkpoint_uri}` (committed payload SHA-256 "
+            f"`{member.checkpoint_sha256}`; the loading wrapper re-verifies "
+            "the ADR-002 sidecar). "
+            + (f"**Provenance.** {member.provenance}" if member.provenance else "")
+        )
+    elif member.params is not None:
         provenance_note = (
             "Public member: the exact values below were drawn from the "
             "committed box under the maintainer-held derivation seed and are "
@@ -141,7 +165,8 @@ def render_member_card(
         _GENERATED_STAMP,
         "",
         f"**Set.** `{set_spec.slug}` (task `{set_spec.task_id}@v{set_spec.task_version}`) · "
-        f"**Stratum.** scripted · **Split.** {member.split} · **Role.** {member.role}",
+        f"**Stratum.** {'learned' if member.checkpoint_uri is not None else 'scripted'} · "
+        f"**Split.** {member.split} · **Role.** {member.role}",
         "",
         f"**Identity.** `partner_id` `{member.partner_id}` · parameter digest "
         f"`{member.params_sha256}` · `weights_uri` `{member.weights_uri}`",

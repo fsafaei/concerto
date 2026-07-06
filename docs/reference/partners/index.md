@@ -7,5 +7,6 @@ Versioned per-task partner sets (ADR-009 §Decision as amended 2026-07-05; ADR-0
 | set | task | members (public/private) | floor |
 | --- | --- | --- | --- |
 | [`cocarry_partners@v1`](cocarry_partners-v1/index.md) | `cocarry@v1` | 11 (8/3) | 0.75 |
+| [`cocarry_partners@v2`](cocarry_partners-v2/index.md) | `cocarry@v1` | 12 (9/3) | 0.75 |
 | [`handover_place_partners@v1`](handover_place_partners-v1/index.md) | `handover_place@v1` | 6 (5/1) | 0.9 |
 | [`stage1_pickplace_as_partners@v1`](stage1_pickplace_as_partners-v1/index.md) | `stage1_pickplace_as@v1` | 3 (3/0) | 0.9 |
