@@ -8,13 +8,132 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 While the project is on `0.x`, MINOR-version bumps may break the public API
 per SemVer §4.
 
-## [Unreleased]
+## [0.8.0](https://github.com/fsafaei/concerto/compare/v0.7.0...v0.8.0) (2026-07-06)
 
-July 2026 benchmark-campaign catch-up (hand-written; the next
-release-please cut regenerates its own section from Conventional
-Commits and does not depend on this one).
+CHAMBER-Bench v1.0. Releases of the benchmark suite and releases of
+this package are now distinct, linked things: the suite composition is
+pinned at `release/chamber-bench-v1.0.manifest.json` (the committed
+`chamber-eval manifest` output), fixed independent of code drift, and
+v0.8.0 is the package release that implements it.
 
-### CHAMBER-Bench v1.0 (2026-07-05/06)
+### Highlights
+
+- CHAMBER-Bench v1.0: the task registry and tier ladder as code
+  (ADR-027) ([#267](https://github.com/fsafaei/concerto/pull/267)).
+- The coupling-validity admission protocol, executable and executed:
+  the co-carry admission and the stage-1 pick-place control rejection
+  (ADR-026/ADR-027) ([#269](https://github.com/fsafaei/concerto/pull/269)).
+- Result-bundle schema v3 and `chamber-eval run` / `chamber-eval verify`
+  (ADR-028) ([#268](https://github.com/fsafaei/concerto/pull/268)).
+- Partner sets with the realized public/private split
+  ([#270](https://github.com/fsafaei/concerto/pull/270),
+  [#274](https://github.com/fsafaei/concerto/pull/274)).
+- The six-row co-carry baseline table and the first populated
+  leaderboard ([#271](https://github.com/fsafaei/concerto/pull/271),
+  [#272](https://github.com/fsafaei/concerto/pull/272),
+  [#275](https://github.com/fsafaei/concerto/pull/275),
+  [#276](https://github.com/fsafaei/concerto/pull/276)).
+- Hosted datasets with Croissant metadata
+  ([#280](https://github.com/fsafaei/concerto/pull/280),
+  [#281](https://github.com/fsafaei/concerto/pull/281)):
+  [partner sets](https://huggingface.co/datasets/fsafaei/chamber-bench-partner-sets),
+  [leaderboard bundles](https://huggingface.co/datasets/fsafaei/chamber-bench-leaderboard-bundles),
+  [reference trajectories](https://huggingface.co/datasets/fsafaei/chamber-bench-reference-trajectories).
+- ADR-018 formalized; ADR-026 Accepted
+  ([#265](https://github.com/fsafaei/concerto/pull/265)).
+
+### Added
+
+* **benchmarks:** CB-06 wiring — baseline rows, joint-MAPPO pair, checkpoint selection ([#271](https://github.com/fsafaei/concerto/issues/271)) ([c498dd4](https://github.com/fsafaei/concerto/commit/c498dd485f549d738a8c05b1aa8bc097a6652689))
+* **benchmarks,cli:** Stage-1b dispatch on stage1_{as,om} adapters (P1.05 engineering; ADR-007 §Stage 1b Rev 9) ([#175](https://github.com/fsafaei/concerto/issues/175)) ([df02dcd](https://github.com/fsafaei/concerto/commit/df02dcd65b832597e498855a9d87c3b077948ed7))
+* **benchmarks:** TrainedPolicyFactory — Phase-1 EgoActionFactory wiring concerto.training.ego_aht.train (ADR-007 §Stage 1b; plan/07 §T5b.2) ([#162](https://github.com/fsafaei/concerto/issues/162)) ([c436a80](https://github.com/fsafaei/concerto/commit/c436a8073e3f934315513b5c6db6f50fae0d06c5))
+* **cocarry:** Rung-2 frozen learned incumbent (training + freeze) per ADR-026 ([#246](https://github.com/fsafaei/concerto/issues/246)) ([41ddcc7](https://github.com/fsafaei/concerto/commit/41ddcc7d5d4da7faa025db1a86779dc46bdee167))
+* **cocarry:** Rung-3 policy-heterogeneity (PH) measurement — pooled null, one stiff-teammate drop ([#248](https://github.com/fsafaei/concerto/issues/248)) ([7e5b88a](https://github.com/fsafaei/concerto/commit/7e5b88a4f286cfc25dbbaf66b1fc698fc2d3f4fc))
+* **cocarry:** Rung-4 embodiment-heterogeneity (EH) capstone — feasibility finding ([#249](https://github.com/fsafaei/concerto/issues/249)) ([2f6098e](https://github.com/fsafaei/concerto/commit/2f6098e62853ff15e35b2e337400e796f6059995))
+* **cocarry:** Rung-4b compliant coupling — over-coupling resolved; EH blocked by embodiment-biased stress proxy ([#251](https://github.com/fsafaei/concerto/issues/251)) ([b01dab3](https://github.com/fsafaei/concerto/commit/b01dab3b6185734d85e2eb2ab5aaa99214fa74f3))
+* **cocarry:** Rung-4c invariant stress instrument — embodiment genuinely degrades cooperation (qualifying EH drop) ([#252](https://github.com/fsafaei/concerto/issues/252)) ([f12f62d](https://github.com/fsafaei/concerto/commit/f12f62d4139dc90cfffcb1e9129432a8b45aad65))
+* **deps:** consume harl-aht from PyPI; drop train-group git+URL ([#173](https://github.com/fsafaei/concerto/issues/173)) ([678fbe8](https://github.com/fsafaei/concerto/commit/678fbe82627aa4802f39eac7b4aa7ade2dd7d58d))
+* **envs:** add co-carry coupling-valid rig (Rungs 0-1) per ADR-026 ([#245](https://github.com/fsafaei/concerto/issues/245)) ([b8a7734](https://github.com/fsafaei/concerto/commit/b8a77349c1ef5464bee2f10cb0ecb469b789c436))
+* **envs:** add Stage1PickPlaceEnv real ManiSkill v3 env for ADR-007 Stage 1b ([#161](https://github.com/fsafaei/concerto/issues/161)) ([53f9198](https://github.com/fsafaei/concerto/commit/53f9198194c960e49b109ce342614482aa57e6d7))
+* **envs:** co-insert hold-and-insert S0 — env skeleton + pre-registration ([#256](https://github.com/fsafaei/concerto/issues/256)) ([729c41d](https://github.com/fsafaei/concerto/commit/729c41d4baa3a2a874a1b58dd0b7ba1a7d1a744b))
+* **envs:** co-insert S1 — peg-socket contact + MuJoCo oracle (stay verdict) ([#257](https://github.com/fsafaei/concerto/issues/257)) ([d81726b](https://github.com/fsafaei/concerto/commit/d81726bf1018ccc0c3804ca02f7ee29089ed20a8))
+* **envs:** co-insert S2 — honest close at HARD_STOP (sim wall disproven; geometric tilt-wedge) ([#258](https://github.com/fsafaei/concerto/issues/258)) ([a9df96c](https://github.com/fsafaei/concerto/commit/a9df96c437ab1a4702ef3a8fbb9d0195dda10b9f))
+* **envs:** vectorise the Stage-1b training cell (num_envs &gt; 1) + ADR-007 Rev 17 ([#213](https://github.com/fsafaei/concerto/issues/213)) ([e82d0ed](https://github.com/fsafaei/concerto/commit/e82d0ed5b8c62d81370795c1d6745d7be0a2c1fb))
+* **evaluation:** CB-04 — the coupling-validity admission protocol, executable and fired ([#269](https://github.com/fsafaei/concerto/issues/269)) ([036454e](https://github.com/fsafaei/concerto/commit/036454e9c445b530aa2a9b5137cb9ba724669e25))
+* **evaluation:** CB-06 campaign prereg — cocarry baselines v1 (tagged) ([#272](https://github.com/fsafaei/concerto/issues/272)) ([dd9858a](https://github.com/fsafaei/concerto/commit/dd9858a9ab0e8d7363fb60d1c1b6a62acec324b9))
+* **evaluation:** CB-06 per-task leaderboard renderer — verified bundles only ([#273](https://github.com/fsafaei/concerto/issues/273)) ([bca0a8b](https://github.com/fsafaei/concerto/commit/bca0a8b6c3bb0579ce9b4d37b991d482b83faecb))
+* **evaluation:** CB-07b hosting artifacts — dataset packages, croissant metadata, upload script, widened hygiene guard ([#281](https://github.com/fsafaei/concerto/issues/281)) ([5fc28f3](https://github.com/fsafaei/concerto/commit/5fc28f3db5e3c7824e6d2666278a6797a55a6ede))
+* **evaluation:** handover-place scripted-ego leaderboard rows — coupling-valid cells only ([#276](https://github.com/fsafaei/concerto/issues/276)) ([097a6c3](https://github.com/fsafaei/concerto/commit/097a6c323d67ff672ca2577ef08e2c65af1c1847))
+* **evaluation:** OSCBF slack telemetry → ADR-014 Table 2 ConditionRow (closes [#142](https://github.com/fsafaei/concerto/issues/142)) ([#171](https://github.com/fsafaei/concerto/issues/171)) ([39216b8](https://github.com/fsafaei/concerto/commit/39216b82cecacd2a151e39e1a0c90744938f3933))
+* **evaluation:** result-bundle schema v3, prereg versioning, chamber-eval run/verify ([#268](https://github.com/fsafaei/concerto/issues/268)) ([2c10156](https://github.com/fsafaei/concerto/commit/2c10156a1d852f9bd30b76d86b84e21aea111df9))
+* **evaluation:** the populated cocarry@v1 leaderboard — all six preregistered rows, verified ([#275](https://github.com/fsafaei/concerto/issues/275)) ([c8b84fe](https://github.com/fsafaei/concerto/commit/c8b84fe3ee06c77be670c2f11a4b3b631fdfbf00))
+* **handover-place-gate0:** Gate-0 harness + Stage-0 pre-check + pre-registration (PRs A+B) ([#262](https://github.com/fsafaei/concerto/issues/262)) ([1b6f38f](https://github.com/fsafaei/concerto/commit/1b6f38f386e775166cad355cfb206089c97a2750))
+* **handover-place-gate0:** run Gate-0 and commit immutable results archive ([#263](https://github.com/fsafaei/concerto/issues/263)) ([645ab7a](https://github.com/fsafaei/concerto/commit/645ab7ab66159ee661985160526ba62b3ac0d6c9))
+* **observability:** wandb + chamber-analyze + rollout dumps for Phase-1 RL co-analysis (P1.05.11) ([#189](https://github.com/fsafaei/concerto/issues/189)) ([760b5f4](https://github.com/fsafaei/concerto/commit/760b5f43f86cc06acf5e9b5380d54372824b10e7))
+* **partners:** CB-05 — partner zoo v1: sets, split, cards, fingerprints ([#270](https://github.com/fsafaei/concerto/issues/270)) ([05d31ea](https://github.com/fsafaei/concerto/commit/05d31eae0db7883f41b29181762b70ff83d3f4e2))
+* **partners:** EXPLORATORY partner-static override, structurally barred from gate-facing runs ([#234](https://github.com/fsafaei/concerto/issues/234)) ([b585e4b](https://github.com/fsafaei/concerto/commit/b585e4bcb199151e244b34d7b7b31a4055aedea8))
+* **safety:** symmetric lambda clamp + clamp_floor_ratio config (closes [#180](https://github.com/fsafaei/concerto/issues/180); ADR-004 Rev 2026-05-20) ([#180](https://github.com/fsafaei/concerto/issues/180)) ([c6a03cf](https://github.com/fsafaei/concerto/commit/c6a03cf7b18ce74c9e59b64610d8d556943c3376))
+* **tasks:** CHAMBER-Bench v1.0 task registry, manifest, and task cards ([#267](https://github.com/fsafaei/concerto/issues/267)) ([590c426](https://github.com/fsafaei/concerto/commit/590c426c8831cab94e8cf3e99b868f6638f93261))
+* **training,safety:** wire CBF-QP outer filter + λ capture into ego-AHT training rollout (P1.04.5; ADR-007 §Stage 1b) ([#166](https://github.com/fsafaei/concerto/issues/166)) ([e4a37ec](https://github.com/fsafaei/concerto/commit/e4a37ec715f4c2ae22933e04468276b08e690d36))
+* **training,safety:** wire maybe_brake in training rollout for deployment-time parity (P1.04.6; ADR-007 §Stage 1b Rev 8) ([#174](https://github.com/fsafaei/concerto/issues/174)) ([ae533c4](https://github.com/fsafaei/concerto/commit/ae533c4af857686e597102e08d6316be39203590))
+* **training:** bump Stage-1b total_frames 100k→1M + happo.hidden_dim 64→256 (P1.05.9; second §4a closure attempt; ADR-007 Rev 14; ADR-002 Rev 2026-05-23) ([#200](https://github.com/fsafaei/concerto/issues/200)) ([117a012](https://github.com/fsafaei/concerto/commit/117a0121b535dfa71c1c1b781d1c35eb13340c9c))
+* **training:** potential-based settle shaping behind shaping.settle_alpha (ADR-007 Rev 18) ([#219](https://github.com/fsafaei/concerto/issues/219)) ([87f8deb](https://github.com/fsafaei/concerto/commit/87f8deb0e842e8c1c6000b9b037755a152c8b84e))
+
+
+### Fixed
+
+* **ci:** fetch tags in verify-readme-tables — the leaderboard check verifies prereg tags ([#277](https://github.com/fsafaei/concerto/issues/277)) ([20aae11](https://github.com/fsafaei/concerto/commit/20aae118f6e4977ba987eb9d6d0db27d268180f1))
+* **cli:** chamber-spike next-stage skips Stage-1a archives with stderr note (closes ADR-016 §Open questions) ([#155](https://github.com/fsafaei/concerto/issues/155)) ([01ff673](https://github.com/fsafaei/concerto/commit/01ff67309ab5e48d8b16cf7c5895172fe0435ffe))
+* **cocarry:** Rung-2 reward remediation — stress penalty + transport PBRS (0%→67%, STOP at budget) ([#247](https://github.com/fsafaei/concerto/issues/247)) ([0bf0601](https://github.com/fsafaei/concerto/commit/0bf06018103db502813f6289588c5b2995ded6d2))
+* **deps:** bump tornado 6.5.5 → 6.5.7 to clear four OSV advisories ([#242](https://github.com/fsafaei/concerto/issues/242)) ([27a40d6](https://github.com/fsafaei/concerto/commit/27a40d6f9e06f42486cda7383613fe6687aa9e83))
+* enforce Stage-1b episode_length horizon (env truncation + eval-cap) — P-RC root-cause fix ([#206](https://github.com/fsafaei/concerto/issues/206)) ([01a81f0](https://github.com/fsafaei/concerto/commit/01a81f0884e79fe078693c09f3e1a3addc2229aa))
+* **env:** initialise Stage-1b robot qpos to canonical ready pose + open gripper (P1.05.9; ADR-007 Rev 16; ADR-002 determinism re-check) ([#210](https://github.com/fsafaei/concerto/issues/210)) ([5edfbfb](https://github.com/fsafaei/concerto/commit/5edfbfbd9f974c5e52c590433b1a65c782a42503))
+* **envs,benchmarks,tests:** widen Stage1ASStateSynthesizer to inject task + partner state; drop rubber-stamp success rule (P1.05.8; closes Surface 6 / Surface 1; ADR-002 Rev 2026-05-21; ADR-009 Rev 2026-05-21; ADR-007 Rev 12) ([#185](https://github.com/fsafaei/concerto/issues/185)) ([dd02b80](https://github.com/fsafaei/concerto/commit/dd02b800f64302f08814c72549a5df1720088c62))
+* **envs,benchmarks:** Stage1PickPlaceEnv state synthesis + zero-factory ego_uid (closes P1.04 Tier-2 gap) ([#163](https://github.com/fsafaei/concerto/issues/163)) ([e1a84f7](https://github.com/fsafaei/concerto/commit/e1a84f737aa9c003b67b35a6e2b8f0e98b3228e1))
+* **envs,tests:** wire Stage1OMChannelFilter into factory + Tier-1 fake state_dict key alignment (closes [#165](https://github.com/fsafaei/concerto/issues/165)) ([#167](https://github.com/fsafaei/concerto/issues/167)) ([6f98ba6](https://github.com/fsafaei/concerto/commit/6f98ba66d9a3ee65de63be5932c80cfdf53b2d1a))
+* **envs:** device-aware zero-masking in Stage1OMChannelFilter ([#236](https://github.com/fsafaei/concerto/issues/236)) ([706a3f7](https://github.com/fsafaei/concerto/commit/706a3f7a07acb5d0609ebd35c7823d0dac8a7e5b))
+* **envs:** settle-shaping Phi reads privileged env state, not the filtered obs ([#237](https://github.com/fsafaei/concerto/issues/237)) ([e3d516d](https://github.com/fsafaei/concerto/commit/e3d516d625134fab44266920391fe35cb56daed3))
+* **envs:** Stage0StateSynthesizer at make_stage0_env outer wrap — closes [#184](https://github.com/fsafaei/concerto/issues/184) ([#192](https://github.com/fsafaei/concerto/issues/192)) ([99c7cbc](https://github.com/fsafaei/concerto/commit/99c7cbc01ad913e9918b23ab95acc751d86ed3cd))
+* gate-spike blockers B1 ([#215](https://github.com/fsafaei/concerto/issues/215)) + B2 ([#214](https://github.com/fsafaei/concerto/issues/214)) — adapter dispatch order and run_id config fingerprint ([#217](https://github.com/fsafaei/concerto/issues/217)) ([b5d15da](https://github.com/fsafaei/concerto/commit/b5d15da64c2b75671fbc525413acc168f862730c))
+* **safety:** Bounds field split (closes [#146](https://github.com/fsafaei/concerto/issues/146)) + JacobianEmergencyController for 7-DOF arms (ADR-004 risk-mitigation [#1](https://github.com/fsafaei/concerto/issues/1)) ([#157](https://github.com/fsafaei/concerto/issues/157)) ([571ed7f](https://github.com/fsafaei/concerto/commit/571ed7f62854eb9a9f0af55043bbc63b4d667685))
+* **safety:** symmetric predicate A in Stage-1b audit-gate hooks (closes [#178](https://github.com/fsafaei/concerto/issues/178); ADR-007 §Stage 1b Rev 10) ([#179](https://github.com/fsafaei/concerto/issues/179)) ([0cb5c50](https://github.com/fsafaei/concerto/commit/0cb5c50322971d38ea572f9b4f4e48e6ba482f96))
+* **tests:** isolate test_verify_git_tag_detects_mismatch from host tag.gpgsign ([#191](https://github.com/fsafaei/concerto/issues/191)) ([f9f7ec0](https://github.com/fsafaei/concerto/commit/f9f7ec0cd92f4d5af75625ff4f0eadecb4199535))
+* **tests:** override scripted_heuristic action_dim for Stage-0 round-trip — closes [#194](https://github.com/fsafaei/concerto/issues/194) ([#195](https://github.com/fsafaei/concerto/issues/195)) ([383532c](https://github.com/fsafaei/concerto/commit/383532cce2803b820831413f255decb45f2ce44c))
+* **tests:** per-uid action_dim in _zero_dict_action — closes [#196](https://github.com/fsafaei/concerto/issues/196) ([#197](https://github.com/fsafaei/concerto/issues/197)) ([efe2d7b](https://github.com/fsafaei/concerto/commit/efe2d7b31892089e60b299c948a8b0849d37f498))
+* **tests:** tighten coverage detection + zoo-seed skip predicates + Jacobian action dim (closes [#164](https://github.com/fsafaei/concerto/issues/164)) ([#168](https://github.com/fsafaei/concerto/issues/168)) ([437b19d](https://github.com/fsafaei/concerto/commit/437b19d7db336902698e581d604505e985160bc1))
+* **training:** resolve git_sha once per process for run provenance ([#238](https://github.com/fsafaei/concerto/issues/238)) ([b347866](https://github.com/fsafaei/concerto/commit/b3478663d2d2b15673b1e4476d4075aa888206ce))
+* **utils:** add sapien_cuda_renderer_available() — closes [#188](https://github.com/fsafaei/concerto/issues/188) ([#193](https://github.com/fsafaei/concerto/issues/193)) ([79b487d](https://github.com/fsafaei/concerto/commit/79b487d2d2379b4bc469b357b693d0fd2cea0649))
+
+
+### Documentation
+
+* **adr:** add ADR-026 coupling-validity criterion (RFC) + index entry; reinterpret the Stage-1 AS verdict as construct-invalid ([#241](https://github.com/fsafaei/concerto/issues/241)) ([a1c16bb](https://github.com/fsafaei/concerto/commit/a1c16bba1f47389d63adb8724a1afde21599ed8e))
+* **adr:** CHAMBER-Bench v1.0 decision pack — ADR-018/027/028, ADR-026 promotion, ADR-009/011 amendments ([#265](https://github.com/fsafaei/concerto/issues/265)) ([b775368](https://github.com/fsafaei/concerto/commit/b775368a8a093eb95a2dd705872c8df94927241b))
+* **bench:** CB-07 reviewer path — README rewrite, protocol docs, repro/quickstart CI proofs ([#279](https://github.com/fsafaei/concerto/issues/279)) ([f601558](https://github.com/fsafaei/concerto/commit/f601558310dfdc6ce40ff15319e6a27a4eee8f0c))
+* **coinsert:** reconcile seat-depth figure to the 38 mm seated threshold ([#259](https://github.com/fsafaei/concerto/issues/259)) ([2b78f20](https://github.com/fsafaei/concerto/commit/2b78f2035f5d7ba8a7e44934a491bc16efdaaa8b))
+* **evaluation:** campaign hardening — A3 ruling recorded, labels, estimator transparency, records ([#278](https://github.com/fsafaei/concerto/issues/278)) ([564aaf9](https://github.com/fsafaei/concerto/commit/564aaf9fc28b628206ab3a622c5a3de4e3a24ef6))
+* land P1.05.9 horizon-fix record — brief resolution + ADR-007 Rev 15 + ADR-002 amendment ([#208](https://github.com/fsafaei/concerto/issues/208)) ([27702da](https://github.com/fsafaei/concerto/commit/27702daaeacda8f5a956a5fa135c927d5e363d7b))
+* **observability:** cookbook worked examples + config and JSON-output schema reference ([#190](https://github.com/fsafaei/concerto/issues/190)) ([8e9a93d](https://github.com/fsafaei/concerto/commit/8e9a93d7ee182c77bd731feb637c03efa9cdcaff))
+* reconcile public docs with ADR-026 (coupling-validity) ([#243](https://github.com/fsafaei/concerto/issues/243)) ([97b1afc](https://github.com/fsafaei/concerto/commit/97b1afc08f580a1ffeeb38fcdf219cc0a4a0e16c))
+* **repro:** no repository mutations during a live chain (operational note) ([#228](https://github.com/fsafaei/concerto/issues/228)) ([f3cd638](https://github.com/fsafaei/concerto/commit/f3cd6380ba5d146dae665628a1dc110db4b1f144))
+* **spikes:** EXPLORATORY homo-static characterization — the moving partner does NOT explain the reversal (0/90, frozen rule) ([#235](https://github.com/fsafaei/concerto/issues/235)) ([24bfb5e](https://github.com/fsafaei/concerto/commit/24bfb5edecc8f6567e265f575df16441c5708abc))
+* **spikes:** gamma-scan characterization — no gate-viable gamma; the discount lever is exhausted ([#218](https://github.com/fsafaei/concerto/issues/218)) ([82d1bda](https://github.com/fsafaei/concerto/commit/82d1bda43d950b401670e62d216ff0d910030ab8))
+* **spikes:** gate-regime spec (founder-approved) + AS-homo path smoke at the gate regime ([#221](https://github.com/fsafaei/concerto/issues/221)) ([b560466](https://github.com/fsafaei/concerto/commit/b560466c81ab007acd79c237e55da08c58ed0ff9))
+* **spikes:** gate-verdict processing — operationalization audit, consultation brief, OM assessment, follow-up drafts, register/status inputs ([#229](https://github.com/fsafaei/concerto/issues/229)) ([3b40c30](https://github.com/fsafaei/concerto/commit/3b40c301c1fc2d1fbcf87c2f089f2924f3b05220))
+* **spikes:** grasp-remediation campaign log (PA1/PA2 failed, PA3 in progress) ([#209](https://github.com/fsafaei/concerto/issues/209)) ([dca03ad](https://github.com/fsafaei/concerto/commit/dca03adbbfa03b6539de8df85f07a125b71dc300))
+* **spikes:** PBRS-settle characterization — the lever works at alpha=0.5 (first qualifying success in the campaign) ([#220](https://github.com/fsafaei/concerto/issues/220)) ([dde63b5](https://github.com/fsafaei/concerto/commit/dde63b5643789a50aad2bf40c9d4ea5848320255))
+* **spikes:** regime-alignment characterization — consolidation explained, campaign closes with zero levers ([#212](https://github.com/fsafaei/concerto/issues/212)) ([788abcc](https://github.com/fsafaei/concerto/commit/788abcc1dff111490bc419277bfcfb6d2a5d316d))
+* **spikes:** reset-fix cold-eval + 3-seed characterization (grasp emergence replicates in training; cold bar not met) ([#211](https://github.com/fsafaei/concerto/issues/211)) ([e7005ee](https://github.com/fsafaei/concerto/commit/e7005ee10f1708b864016ebf7c1c8a6bacef4ccd))
+* **spikes:** Stage-1b AS gate verdict — exit 5; the gap is sign-reversed (hetero 12/100 vs homo 1/100) ([#226](https://github.com/fsafaei/concerto/issues/226)) ([4150c7f](https://github.com/fsafaei/concerto/commit/4150c7f6d17e85591dd2cd6f9b29ef42392e4369))
+* **spikes:** success-static decomposition probe — C1 verdict + options + gate-spike readiness ([#216](https://github.com/fsafaei/concerto/issues/216)) ([c3efb0f](https://github.com/fsafaei/concerto/commit/c3efb0f3f4e8848819007cd70bcce8ad918cb37e))
+
+### Campaign record
+
+The hand-curated narrative behind the commit-level lists above — the
+July 2026 benchmark campaign and the June 2026 measurement campaigns
+it built on.
+
+#### CHAMBER-Bench v1.0 (2026-07-05/06)
 
 * **tasks:** task registry, manifest, and task cards — the ADR-027 tier ladder as code ([#267](https://github.com/fsafaei/concerto/pull/267), 2026-07-05)
 * **evaluation:** result-bundle schema v3, prereg versioning, `chamber-eval run`/`verify` ([#268](https://github.com/fsafaei/concerto/pull/268), 2026-07-05)
@@ -28,11 +147,7 @@ Commits and does not depend on this one).
 * **evaluation:** handover-place scripted-ego leaderboard rows on the measured coupling-valid cells ([#276](https://github.com/fsafaei/concerto/pull/276), 2026-07-06)
 * **docs:** ADR-027 A3 ruling — the admission instrument is the preregistered scripted/ablated check; the learned B-AHT-vs-B-BLIND contrast is a reported finding (ADR-027 §Revision history, 2026-07-06)
 
-June 2026 catch-up, reconstructed from git history (hand-written; the
-next release-please cut regenerates its own section from Conventional
-Commits and does not depend on this one).
-
-### Stage-1 AS gate verdict and its reinterpretation
+#### Stage-1 AS gate verdict and its reinterpretation
 
 - 2026-06-11 — Stage-1b Action-Space gate fired at scale: exit 5, the
   gap is sign-reversed (hetero 12/100 vs homo 1/100)
@@ -51,7 +166,7 @@ Commits and does not depend on this one).
   CI runs on `adr/**` and `uv.lock`
   ([#244](https://github.com/fsafaei/concerto/pull/244)).
 
-### Co-carry (coupling-valid re-operationalization) rungs
+#### Co-carry (coupling-valid re-operationalization) rungs
 
 - 2026-06-16 — co-carry coupling-valid rig, Rungs 0–1, per ADR-026
   ([#245](https://github.com/fsafaei/concerto/pull/245)).
@@ -76,7 +191,7 @@ Commits and does not depend on this one).
   hard regime; only tilt-tolerance does
   ([#254](https://github.com/fsafaei/concerto/pull/254)).
 
-### Co-insert (hold-and-insert) — honest close
+#### Co-insert (hold-and-insert) — honest close
 
 - 2026-06-24 — S0 env skeleton + pre-registration
   ([#256](https://github.com/fsafaei/concerto/pull/256)); S1
@@ -88,7 +203,7 @@ Commits and does not depend on this one).
   figure reconciled to the 38 mm seated threshold
   ([#259](https://github.com/fsafaei/concerto/pull/259)).
 
-### Handover-and-place Gate-0
+#### Handover-and-place Gate-0
 
 - 2026-06-27 — Gate-0 harness + Stage-0 pre-check + tagged Rev-2
   pre-registration ([#262](https://github.com/fsafaei/concerto/pull/262));
@@ -96,7 +211,7 @@ Commits and does not depend on this one).
   verdict `COUPLING_VALID`, `SOLVABLE`
   ([#263](https://github.com/fsafaei/concerto/pull/263)).
 
-### Other fixes and features (June 2026)
+#### Other fixes and features (June 2026)
 
 - 2026-06-06/09 — Stage-1b horizon enforcement
   ([#206](https://github.com/fsafaei/concerto/pull/206)), canonical
