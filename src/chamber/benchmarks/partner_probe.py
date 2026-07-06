@@ -190,9 +190,13 @@ def _run_cocarry_probe(
                 ego_spec = PartnerSpec(
                     "cocarry_impedance", 0, None, None, dict(controller_specs[ego_uid])
                 )
-                member_spec = member.partner_spec(
-                    params=params, seat_extra=controller_specs[partner_uid]
-                )
+                seat_extra = dict(controller_specs[partner_uid])
+                if member.registry_class == "frozen_cocarry_joint":
+                    # The jointly-trained seat assembles its symmetric
+                    # full state from raw leaves and needs the opposite
+                    # uid (ADR-011 as amended; mirrors cocarry_eval).
+                    seat_extra["other_uid"] = ego_uid
+                member_spec = member.partner_spec(params=params, seat_extra=seat_extra)
                 ego = load_partner(ego_spec)
                 partner = load_partner(member_spec)
                 if not material:

@@ -1,0 +1,1 @@
+generate_partner_fingerprints.py --set cocarry_partners@v2

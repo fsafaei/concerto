@@ -1,0 +1,63 @@
+{
+  "schema_version": 3,
+  "task_id": "cocarry",
+  "task_version": 1,
+  "policy_id": "static",
+  "partner_set_id": "cocarry_partners@v1",
+  "partner_hashes": {
+    "imp_stiff_low": "2551311d47ba8e57",
+    "imp_stiff_high": "4d0ae9868c4c10c8",
+    "imp_damp_low": "5ac85b19c0f522ee",
+    "imp_damp_high": "597b7116f63e09d8",
+    "imp_lag_bounded": "a1d7304eb9f423a6",
+    "imp_blend_b": "6883ea1ebef2f0d3",
+    "imp_blend_c": "1d575685149b7174"
+  },
+  "git_sha": "f012ef7641bc132c3de21ccb7a5da974ebc32cfb",
+  "dirty": false,
+  "package_version": "0.7.0",
+  "seed_schedule": {
+    "root_seed": 0,
+    "seeds": [
+      0,
+      1,
+      2,
+      3,
+      4
+    ],
+    "episodes_per_seed": 350,
+    "substream_labels": [
+      "benchmarks.bundle_runner.ego_random.{seed}.{episode}",
+      "evaluation.bundle_bootstrap"
+    ]
+  },
+  "repro_command": "chamber-eval run --task cocarry --policy static --partner-set cocarry_partners@v1 --exclude-member imp_nominal --seeds 5 --episodes 50 --out spikes/results/benchmark/cocarry-v1/b-stat-2026-07-05 --prereg spikes/preregistration/benchmark/cocarry_baselines_v1.yaml",
+  "platform": {
+    "os": "Linux-6.17.0-29-generic-x86_64-with-glibc2.39",
+    "python": "3.12.3",
+    "numpy": "2.1.3",
+    "torch": "2.11.0+cu128",
+    "device": "NVIDIA GeForce RTX 2080 SUPER"
+  },
+  "manifest": {
+    "REPRO.txt": "bba48f557d2877531750ce32a6baae4f7ecd19104bec35ed0e879bd7cb3bb7cb",
+    "episodes_seed0.jsonl": "869c7bc62defc2f2ff55324d687c516cc5b87ce5336d5f28799e2d27159beda1",
+    "episodes_seed1.jsonl": "e7df6ce5790b9020022a69eb65b11ee9d9742ef14ce3bb2d90221cc5856b515e",
+    "episodes_seed2.jsonl": "c336ffe2fe9830d9f0951ce08cdf8aac5d777c6d812dc2fd3508e931c7901a31",
+    "episodes_seed3.jsonl": "7f7244218c8a43416d3d65969691e401345215933cef0ac7b2bd9c2b5ea24197",
+    "episodes_seed4.jsonl": "226e908a38c2a4891c8b7afc42b613c2c7fc545aac0bc3fcf6ee2662a708f6ee",
+    "partners.json": "0b0423f3ef0cef24c8f4864eb820fafb3d793a07c847606066de8914cac15e82",
+    "prereg.yaml": "2f2fb55e927e630f6c585c0a98dd51e6eae299b0067160c318720c6b65477c5e"
+  },
+  "summary": {
+    "n_episodes": 1750,
+    "success_mean": 0.496,
+    "success_iqm": 0.4920091324200913,
+    "success_ci_low": 0.3984018264840183,
+    "success_ci_high": 0.5913527397260272,
+    "n_resamples": 2000,
+    "bootstrap_root_seed": 0
+  },
+  "prereg_git_tag": "prereg-cocarry-baselines-v1-rev2-2026-07-05",
+  "prereg_blob_sha": "3191459939fb99a024bf7349fe71dfafc1d5caef"
+}

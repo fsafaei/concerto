@@ -242,6 +242,22 @@ class PartnerMemberSpec(BaseModel):
             (:func:`params_sha256`) — committed for every member; the
             verification anchor for private reconstructions (I4-adjacent
             discipline; ADR-018 §Decision custody style).
+        checkpoint_uri: The learned stratum (CB-06 / ADR-027
+            §Versioning): the real ``local://artifacts/...`` payload
+            URI of a frozen trained policy. When set, it IS the
+            member's identity-bearing :attr:`weights_uri` (the
+            ``member://`` parameter-digest URI is a scripted-stratum
+            device), the loading wrapper verifies the SHA-256 sidecar
+            at load, and :attr:`checkpoint_sha256` commits the payload
+            digest here for roster-level custody. ``None`` for the
+            scripted stratum.
+        checkpoint_sha256: Committed SHA-256 of the checkpoint payload
+            (must match the ADR-002 sidecar); required iff
+            ``checkpoint_uri`` is set.
+        provenance: Free-text provenance line rendered on the member's
+            card — mandatory content for jointly-trained members
+            ("trained jointly with <ego hash>"; ADR-011 §Decision as
+            amended).
     """
 
     model_config = ConfigDict(frozen=True, extra="forbid")
@@ -255,6 +271,38 @@ class PartnerMemberSpec(BaseModel):
     param_box: dict[str, ParamRange]
     params: dict[str, str] | None
     params_sha256: str = Field(min_length=64, max_length=64)
+    checkpoint_uri: str | None = None
+    checkpoint_sha256: str | None = None
+    provenance: str = ""
+
+    @model_validator(mode="after")
+    def _check_checkpoint(self) -> PartnerMemberSpec:
+        """Enforce the learned-stratum custody invariants (ADR-027 §Versioning; ADR-018).
+
+        A checkpoint-bearing member must commit the payload digest and
+        its checkpoint step (both identity/custody anchors); a
+        checkpoint digest without a URI is unanchored and refused.
+        """
+        if self.checkpoint_uri is not None:
+            if self.checkpoint_sha256 is None or len(self.checkpoint_sha256) != 64:  # noqa: PLR2004 - SHA-256 hex length
+                msg = (
+                    f"member {self.member_name!r}: checkpoint_uri requires a 64-hex "
+                    "checkpoint_sha256 (the committed payload digest; ADR-018 custody)"
+                )
+                raise ValueError(msg)
+            if self.checkpoint_step is None:
+                msg = (
+                    f"member {self.member_name!r}: checkpoint_uri requires "
+                    "checkpoint_step (the identity field; ADR-002 §Decisions)"
+                )
+                raise ValueError(msg)
+        elif self.checkpoint_sha256 is not None:
+            msg = (
+                f"member {self.member_name!r}: checkpoint_sha256 without "
+                "checkpoint_uri is unanchored custody"
+            )
+            raise ValueError(msg)
+        return self
 
     @model_validator(mode="after")
     def _check_params(self) -> PartnerMemberSpec:
@@ -295,7 +343,14 @@ class PartnerMemberSpec(BaseModel):
 
     @property
     def weights_uri(self) -> str:
-        """The identity-bearing ``member://`` URI (ADR-009 as amended)."""
+        """The identity-bearing URI (ADR-009 as amended; ADR-027 §Versioning).
+
+        Scripted members ride on the ``member://`` parameter-digest URI;
+        learned members ride on their real checkpoint URI (the loading
+        wrapper dereferences it and verifies the sidecar SHA-256).
+        """
+        if self.checkpoint_uri is not None:
+            return self.checkpoint_uri
         return member_weights_uri(self.registry_class, self.params_sha256)
 
     @property
