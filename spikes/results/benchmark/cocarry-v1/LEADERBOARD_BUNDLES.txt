@@ -1,0 +1,13 @@
+# cocarry@v1 leaderboard bundles (ADR-027 §Reporting rules; the rev2
+# campaign prereg cell list — nothing else may appear here).
+# Power-pilot bundles (run_purpose: power) are EXCLUDED by rule.
+spikes/results/benchmark/cocarry-v1/ref-script-2026-07-05
+spikes/results/benchmark/cocarry-v1/b-rnd-2026-07-05
+spikes/results/benchmark/cocarry-v1/b-stat-2026-07-05
+spikes/results/benchmark/cocarry-v1/b-blind-2026-07-06
+spikes/results/benchmark/cocarry-v1/b-aht-2026-07-06
+spikes/results/benchmark/cocarry-v1/b-joint-seed0-2026-07-06
+spikes/results/benchmark/cocarry-v1/b-joint-seed1-2026-07-06
+spikes/results/benchmark/cocarry-v1/b-joint-seed2-2026-07-06
+spikes/results/benchmark/cocarry-v1/b-joint-seed3-2026-07-06
+spikes/results/benchmark/cocarry-v1/b-joint-seed4-2026-07-06
