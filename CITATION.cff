@@ -13,13 +13,16 @@ authors:
   - family-names: Safaei
     given-names: Farhad
     email: cooperative.physical.ai@gmail.com
-    orcid: ""
+    orcid: "https://orcid.org/0000-0002-2606-3152"
 version: 0.8.0
 date-released: "2026-07-06"
 license: Apache-2.0
 repository-code: "https://github.com/fsafaei/concerto"
 doi: "10.5281/zenodo.20128469"
 identifiers:
+  - type: doi
+    value: "10.5281/zenodo.21228328"
+    description: "Version DOI for v0.8.0"
   - type: url
     value: "https://huggingface.co/datasets/fsafaei/chamber-bench-partner-sets"
     description: "CHAMBER-Bench v1.0 partner sets (hosted dataset)"
