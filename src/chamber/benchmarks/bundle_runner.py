@@ -296,6 +296,20 @@ def run_task_episodes_for_set(
     from chamber.benchmarks.partner_probe import member_material
 
     spec = chamber.tasks.get(task_id, version=task_version)
+    if spec.task_id == "handover_place":
+        # The handover-place scripted-ego leaderboard grid (ADR-011 as
+        # amended): pure-Python kinematic driver at the committed
+        # coupling-valid anchor cell.
+        from chamber.benchmarks.handover_eval import run_handover_episodes_for_set
+
+        return run_handover_episodes_for_set(
+            policy_id=policy_id,
+            set_spec=set_spec,
+            members=members,
+            seeds=seeds,
+            episodes_per_seed=episodes_per_seed,
+            root_seed=root_seed,
+        )
     if spec.task_id == "cocarry":
         # CB-06 (ADR-011 §Decision as amended): the co-carry leaderboard
         # grid runs through its dedicated SAPIEN-gated driver. Lazy import

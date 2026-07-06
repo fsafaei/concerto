@@ -1,0 +1,5 @@
+# handover_place@v1 leaderboard bundles (coupling-valid cells only;
+# prereg-handover-baselines-v1-2026-07-06).
+spikes/results/benchmark/handover-v1/ref-script-2026-07-06
+spikes/results/benchmark/handover-v1/b-rnd-2026-07-06
+spikes/results/benchmark/handover-v1/b-stat-2026-07-06
