@@ -1,0 +1,68 @@
+{
+  "schema_version": 3,
+  "task_id": "cocarry",
+  "task_version": 1,
+  "policy_id": "happo_blind_manifest:spikes/results/benchmark/cocarry-v1/selection/b-blind_selected_manifest.json",
+  "partner_set_id": "cocarry_partners@v1",
+  "partner_hashes": {
+    "ego:happo_blind:local://artifacts/81c30ea701c5bd43_step50000.pt": "7f245812ee26bf7c",
+    "imp_stiff_low": "2551311d47ba8e57",
+    "imp_stiff_high": "4d0ae9868c4c10c8",
+    "imp_damp_low": "5ac85b19c0f522ee",
+    "imp_damp_high": "597b7116f63e09d8",
+    "imp_lag_bounded": "a1d7304eb9f423a6",
+    "imp_blend_b": "6883ea1ebef2f0d3",
+    "imp_blend_c": "1d575685149b7174",
+    "ego:happo_blind:local://artifacts/0c5cdff0e4c780ec_step200000.pt": "a6bdeea0f1bf563c",
+    "ego:happo_blind:local://artifacts/2a8899089138a837_step100000.pt": "7b454596c1aca2b2",
+    "ego:happo_blind:local://artifacts/5c9de6acf88fb30f_step50000.pt": "d9108b03dfa555a2",
+    "ego:happo_blind:local://artifacts/39a6cad965e206d8_step150000.pt": "ed80ae838a945a18"
+  },
+  "git_sha": "a2f0c4f6f8e2319a8857fa589663397c21f81bfc",
+  "dirty": false,
+  "package_version": "0.7.0",
+  "seed_schedule": {
+    "root_seed": 0,
+    "seeds": [
+      0,
+      1,
+      2,
+      3,
+      4
+    ],
+    "episodes_per_seed": 350,
+    "substream_labels": [
+      "benchmarks.bundle_runner.ego_random.{seed}.{episode}",
+      "evaluation.bundle_bootstrap"
+    ]
+  },
+  "repro_command": "chamber-eval run --task cocarry --policy happo_blind_manifest:spikes/results/benchmark/cocarry-v1/selection/b-blind_selected_manifest.json --partner-set cocarry_partners@v1 --exclude-member imp_nominal --seeds 5 --episodes 50 --out spikes/results/benchmark/cocarry-v1/b-blind-2026-07-06 --prereg spikes/preregistration/benchmark/cocarry_baselines_v1.yaml",
+  "platform": {
+    "os": "Linux-6.17.0-29-generic-x86_64-with-glibc2.39",
+    "python": "3.12.3",
+    "numpy": "2.1.3",
+    "torch": "2.11.0+cu128",
+    "device": "NVIDIA GeForce RTX 2080 SUPER"
+  },
+  "manifest": {
+    "REPRO.txt": "7c90bf00de60d365cbde1307d6f0948f9e22446fdc7c60257a18c5b41ea448c0",
+    "episodes_seed0.jsonl": "b9c32f446a5580018493f2762a32edcf5a38b64a4fc0e81886c4b494cf34f5f2",
+    "episodes_seed1.jsonl": "5a498947e4b0cf8b8436c9f6ecee004de561e9f53d8a1a5027a99dacfecf01cb",
+    "episodes_seed2.jsonl": "edc8bc681b60c83efcf419134bfb7ca82c61d5464a50a6cf272adb3059fc224b",
+    "episodes_seed3.jsonl": "b57b799a3515360e9b3cb7c31dd4361dc03205787cc876e6327b62cc103ae942",
+    "episodes_seed4.jsonl": "8afe21f29bf7a387382ee730ddd662bcacdcb42c499350c9bcc4e7828da11129",
+    "partners.json": "96ca399f4e4fe050d6bdfb559e58157b7c7228b714929a517e6826548276ad7a",
+    "prereg.yaml": "2f2fb55e927e630f6c585c0a98dd51e6eae299b0067160c318720c6b65477c5e"
+  },
+  "summary": {
+    "n_episodes": 1750,
+    "success_mean": 0.9674285714285714,
+    "success_iqm": 1.0,
+    "success_ci_low": 1.0,
+    "success_ci_high": 1.0,
+    "n_resamples": 2000,
+    "bootstrap_root_seed": 0
+  },
+  "prereg_git_tag": "prereg-cocarry-baselines-v1-rev2-2026-07-05",
+  "prereg_blob_sha": "3191459939fb99a024bf7349fe71dfafc1d5caef"
+}
