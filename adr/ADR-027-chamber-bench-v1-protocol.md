@@ -78,11 +78,19 @@ under preregistered thresholds:
   partner-ablated variant achieves ≈ 0 success, *and* coupling
   constraints measurably bind on successful matched episodes — this is
   ADR-026's coupling positive-control, verbatim.
-- **A3 — partner-relevance.** A partner-blind ego (B-BLIND, ADR-011 as
-  amended) underperforms a coupling-aware ego by a preregistered
-  margin. **Failure of A3 demotes the task to Tier 1** — a task whose
-  outcome is insensitive to the partner is a control, whatever its
-  physics.
+- **A3 — partner-relevance** *(amended 2026-07-06; see §Revision
+  history)*. The admission instrument is the **preregistered
+  scripted/ablated partner-relevance check**: a scripted ego stripped
+  of exactly its coupling channel underperforms the coupling-aware
+  scripted reference by a preregistered margin. **Failure of A3
+  demotes the task to Tier 1** — a task whose outcome is insensitive
+  to the partner is a control, whatever its physics. The learned
+  B-AHT-vs-B-BLIND contrast (ADR-011 rows) is a **reported per-task
+  finding, not the admission gate**: under rigid physical coupling,
+  masking partner observations does not blind a learned ego — partner
+  state re-enters through the ego's own proprioception — so the
+  learned contrast measures the value of explicit partner
+  observation, not partner-relevance.
 
 Nulls measured **on admitted tasks** are reported as informative nulls,
 never re-described as task failures (ADR-026 §Decision 2's rule,
@@ -210,3 +218,32 @@ one admitted task's table from the manifest + bundles alone.
   `invalid` on another without confusing the public table (expected:
   yes, the matrix is the interface; revisit after the first two-axis
   task).
+
+## Revision history
+
+- **2026-07-06 — A3 ruling (founder).** The A3 admission instrument is
+  the preregistered scripted/ablated partner-relevance check, as
+  executed in the co-carry admission (#269: `cocarry_blind_impedance`,
+  0/60 vs the scripted reference, gap CI lower 1.0 ≥ δ_min 0.20, tag
+  `prereg-admission-cocarry-2026-07-05`). The learned
+  B-AHT-vs-B-BLIND contrast (ADR-011 rows) is a reported per-task
+  finding, not the admission gate. Rationale: under rigid physical
+  coupling, masking partner observations does not blind the ego —
+  partner state re-enters through the ego's own proprioception (see
+  `chamber/envs/cocarry_blind_mask.py`'s documented asymmetry) — so
+  the learned contrast measures the value of explicit partner
+  observation, not partner-relevance. Co-carry's measured learned
+  contrast is a null (B-BLIND 1.000 ≈ B-AHT 1.000, campaign
+  2026-07-06) and is recorded as an informative null per ADR-026
+  §Decision 2; on success-saturated tasks, discrimination lives in the
+  preregistered secondary channels — the stress channel (B-JOINT
+  co-trained pairs at ~41 N internal force vs ~102–108 N for every
+  cross-play dyad) and the per-partner breakdown (`imp_lag_bounded`
+  floor 0.88). Decision content of the A3 clause is amended
+  accordingly; the co-carry ADMITTED status stands on its committed
+  report.
+- **2026-07-06 — Tier-3 registry additions (retroactive record for
+  #267).** The task registry added `amr_handover_dynamic@v0` (Tier 3
+  CANDIDATE, timing-coupled) and the co-insert runnable
+  frontier/challenge labeling. No Decision change — Tier 3 is defined
+  as documented candidates and closures.

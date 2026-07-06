@@ -71,6 +71,34 @@ ROW_LABELS: dict[str, str] = {
 #: Row order in every rendered table (oracle first, then floor→anchor).
 ROW_ORDER: tuple[str, ...] = ("REF-SCRIPT", "B-RND", "B-STAT", "B-BLIND", "B-AHT", "B-JOINT")
 
+#: Per-task solvability-anchor footnotes, sourced from the committed
+#: admission evidence (ADR-027 §Admission protocol; amended 2026-07-06).
+_SOLVABILITY_ANCHORS: dict[str, str] = {
+    "cocarry-v1": (
+        "*Solvability anchor: matched scripted reference 1.000 (admission "
+        "A1, `spikes/results/admission/cocarry-2026-07-05/`).*"
+    ),
+    "handover-v1": (
+        "*Solvability anchor: matched presenter 1.000 (Gate-0 Limb 1, "
+        "`spikes/results/handover-place-gate0-2026-06-26/`). Leaderboard "
+        "cells are the measured coupling-valid (mismatch) region by design "
+        "— the low oracle number is the mismatch penalty, not "
+        "unsolvability.*"
+    ),
+}
+
+#: Estimator-transparency footnote (ADR-027 §Reporting rules; amended
+#: 2026-07-06): IQM stays the preregistered headline; the mean column
+#: is context, never a re-ranking.
+_ESTIMATOR_FOOTNOTE: str = (
+    "*Success IQM is the preregistered `iqm_success_rate`: the "
+    "interquartile mean over per-episode success indicators; it is "
+    "intentionally conservative away from saturation (e.g., handover "
+    "REF-SCRIPT mean 0.338 vs IQM 0.176) and trims minority cells at "
+    "saturation (e.g., B-AHT mean 0.961 vs IQM 1.000 — see the "
+    "per-partner range).*"
+)
+
 #: Deterministic bootstrap parameters for the recomputed row statistics
 #: (matches the bundle-summary convention, ADR-028 §Decision 1).
 _N_RESAMPLES: int = 2000
@@ -87,7 +115,7 @@ def row_id_for_policy(policy_id: str) -> str:
         return "B-RND"
     if policy_id == "static":
         return "B-STAT"
-    if policy_id == "ref_script_cocarry_impedance":
+    if policy_id in ("ref_script_cocarry_impedance", "ref_script_handover_ego"):
         return "REF-SCRIPT"
     kind = policy_id.partition(":")[0]
     return {
@@ -110,6 +138,8 @@ class LeaderboardRow:
         label: Mandated label (*oracle reference* / *non-AHT upper
             anchor*) or ``""``.
         n_episodes: Pooled episode count across the row's bundles.
+        success_mean: Plain mean of per-episode success (estimator
+            transparency beside the preregistered IQM headline).
         success_iqm: IQM of per-episode success over the pooled grid.
         success_ci_low: 2.5th percentile of the cluster bootstrap.
         success_ci_high: 97.5th percentile of the cluster bootstrap.
@@ -126,6 +156,7 @@ class LeaderboardRow:
     row_id: str
     label: str
     n_episodes: int
+    success_mean: float
     success_iqm: float
     success_ci_low: float
     success_ci_high: float
@@ -236,6 +267,7 @@ def compute_row(
         row_id=row_id,
         label=ROW_LABELS.get(row_id, ""),
         n_episodes=len(episodes),
+        success_mean=ci.mean,
         success_iqm=ci.iqm,
         success_ci_low=ci.ci_low,
         success_ci_high=ci.ci_high,
@@ -270,9 +302,9 @@ def render_task_leaderboard(task_dir: Path, *, repo_path: Path) -> str:
     """
     rows = build_rows(task_dir, repo_path=repo_path)
     lines = [
-        "| Row | Label | Success IQM [95% CI] | Stress p90 (N) "
+        "| Row | Label | Success IQM [95% CI] | Success mean | Stress p90 (N) "
         "| Per-partner range | Seeds | Bundles |",
-        "|---|---|---|---|---|---|---|",
+        "|---|---|---|---|---|---|---|---|",
     ]
     for row in rows:
         stress = "—" if np.isnan(row.stress_p90) else f"{row.stress_p90:.1f}"
@@ -285,9 +317,17 @@ def render_task_leaderboard(task_dir: Path, *, repo_path: Path) -> str:
         lines.append(
             f"| {row.row_id} | {label} | "
             f"{row.success_iqm:.3f} [{row.success_ci_low:.3f}, {row.success_ci_high:.3f}] | "
+            f"{row.success_mean:.3f} | "
             f"{stress} | {rng_txt} | {', '.join(str(s) for s in row.seeds)} | {bundles} |"
         )
-    return "\n".join(lines) + "\n"
+    footnotes = [
+        "",
+        _ESTIMATOR_FOOTNOTE,
+    ]
+    anchor = _SOLVABILITY_ANCHORS.get(task_dir.name)
+    if anchor:
+        footnotes.insert(1, anchor)
+    return "\n".join(lines + footnotes) + "\n"
 
 
 def render_readme_leaderboard(*, repo_path: Path) -> str:
