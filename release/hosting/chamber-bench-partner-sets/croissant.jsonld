@@ -1,0 +1,157 @@
+{
+  "@context": {
+    "@language": "en",
+    "@vocab": "https://schema.org/",
+    "citeAs": "cr:citeAs",
+    "column": "cr:column",
+    "conformsTo": "dct:conformsTo",
+    "cr": "http://mlcommons.org/croissant/",
+    "rai": "http://mlcommons.org/croissant/RAI/",
+    "data": {
+      "@id": "cr:data",
+      "@type": "@json"
+    },
+    "dataType": {
+      "@id": "cr:dataType",
+      "@type": "@vocab"
+    },
+    "dct": "http://purl.org/dc/terms/",
+    "examples": {
+      "@id": "cr:examples",
+      "@type": "@json"
+    },
+    "equivalentProperty": "cr:equivalentProperty",
+    "extract": "cr:extract",
+    "field": "cr:field",
+    "fileProperty": "cr:fileProperty",
+    "fileObject": "cr:fileObject",
+    "fileSet": "cr:fileSet",
+    "format": "cr:format",
+    "includes": "cr:includes",
+    "isLiveDataset": "cr:isLiveDataset",
+    "jsonPath": "cr:jsonPath",
+    "key": "cr:key",
+    "md5": "cr:md5",
+    "parentField": "cr:parentField",
+    "path": "cr:path",
+    "recordSet": "cr:recordSet",
+    "references": "cr:references",
+    "regex": "cr:regex",
+    "repeated": "cr:repeated",
+    "replace": "cr:replace",
+    "samplingRate": "cr:samplingRate",
+    "sc": "https://schema.org/",
+    "separator": "cr:separator",
+    "source": "cr:source",
+    "subField": "cr:subField",
+    "transform": "cr:transform"
+  },
+  "@type": "sc:Dataset",
+  "name": "chamber-bench-partner-sets",
+  "description": "The versioned CHAMBER-Bench v1.0 partner zoo: machine-readable rosters for every committed partner-set version (public members with committed parameter literals; private members with identity hashes only), rendered partner cards, per-set behavioural fingerprints, and the public learned members' checkpoint files. Partners are the frozen black-box teammates a benchmarked method is evaluated against.",
+  "conformsTo": "http://mlcommons.org/croissant/1.0",
+  "license": "https://www.apache.org/licenses/LICENSE-2.0",
+  "url": "https://huggingface.co/datasets/fsafaei/chamber-bench-partner-sets",
+  "version": "1.0.0",
+  "citeAs": "Safaei, F. (2026). CONCERTO and CHAMBER: Contact-rich Coordination with Opaque, Heterogeneous Teammates. Zenodo. https://doi.org/10.5281/zenodo.20128469",
+  "creator": {
+    "@type": "sc:Person",
+    "name": "Farhad Safaei",
+    "email": "cooperative.physical.ai@gmail.com"
+  },
+  "datePublished": "2026-07-06",
+  "rai:dataCollection": "Every record was generated in simulation (ManiSkill v3 / SAPIEN, plus one CPU diagnostic task) by the evaluation tooling committed in the fsafaei/concerto repository, under preregistered specifications locked with signed git tags before the runs. Each result bundle records the producing command, git commit, dependency-lock hash, platform fingerprint, and seed schedule, and passes the chamber-eval verify integrity and recomputation checks.",
+  "rai:dataCollectionType": "Machine Generated",
+  "rai:personalSensitiveInformation": "None. The data contains no people, no personal data, no customer or workplace data; every byte is simulator or tooling output.",
+  "rai:dataLimitations": "Simulation only (no real-robot data); exactly two agents per task; only the embodiments named in the task cards; measured heterogeneity effects on co-carry are null so far, so the data supports ad-hoc-teamwork competence claims, not heterogeneity-robustness claims; no vision-based partners in v1.0.",
+  "rai:dataBiases": "The zoo covers scripted impedance controllers, scripted presenters, and frozen jointly-trained policies on the listed tasks only; it does not represent human teammates or vision-based policies. Private members' parameters are deliberately withheld (published as SHA-256 identity hashes) so an unseen evaluation split stays meaningful.",
+  "rai:dataUseCases": "Instantiating the exact public partners behind a leaderboard row; evaluating new methods against the public split; auditing partner identity via hashes and fingerprints.",
+  "distribution": [
+    {
+      "@type": "cr:FileObject",
+      "@id": "repo",
+      "name": "repo",
+      "description": "The Hugging Face dataset repository hosting this artifact.",
+      "contentUrl": "https://huggingface.co/datasets/fsafaei/chamber-bench-partner-sets",
+      "encodingFormat": "git+https",
+      "sha256": "main"
+    },
+    {
+      "@type": "cr:FileObject",
+      "@id": "manifest.json",
+      "name": "manifest.json",
+      "description": "File list with byte sizes and SHA-256 digests for every payload file.",
+      "containedIn": {
+        "@id": "repo"
+      },
+      "contentUrl": "manifest.json",
+      "encodingFormat": "application/json"
+    },
+    {
+      "@type": "cr:FileObject",
+      "@id": "SHA256SUMS.txt",
+      "name": "SHA256SUMS.txt",
+      "description": "sha256sum -c checkable digest list covering every file including manifest.json.",
+      "containedIn": {
+        "@id": "repo"
+      },
+      "contentUrl": "SHA256SUMS.txt",
+      "encodingFormat": "text/plain"
+    },
+    {
+      "@type": "cr:FileObject",
+      "@id": "README.md",
+      "name": "README.md",
+      "description": "The human-readable dataset card (plain language, licence, provenance, intended use, limitations).",
+      "containedIn": {
+        "@id": "repo"
+      },
+      "contentUrl": "README.md",
+      "encodingFormat": "text/markdown"
+    },
+    {
+      "@type": "cr:FileSet",
+      "@id": "rosters",
+      "name": "rosters",
+      "description": "One JSON roster per partner-set version (set metadata, member construction boxes, split labels, identity hashes; public parameter literals).",
+      "containedIn": {
+        "@id": "repo"
+      },
+      "encodingFormat": "application/json",
+      "includes": "sets/*.json"
+    },
+    {
+      "@type": "cr:FileSet",
+      "@id": "cards",
+      "name": "cards",
+      "description": "Rendered per-member and per-set partner cards.",
+      "containedIn": {
+        "@id": "repo"
+      },
+      "encodingFormat": "text/markdown",
+      "includes": "cards/**/*.md"
+    },
+    {
+      "@type": "cr:FileSet",
+      "@id": "fingerprints",
+      "name": "fingerprints",
+      "description": "Per-set behavioural fingerprint summaries rendered from the committed probe archives.",
+      "containedIn": {
+        "@id": "repo"
+      },
+      "encodingFormat": "application/json",
+      "includes": "fingerprints/*.json"
+    },
+    {
+      "@type": "cr:FileSet",
+      "@id": "checkpoints",
+      "name": "checkpoints",
+      "description": "Public learned members' PyTorch checkpoints with JSON sidecars.",
+      "containedIn": {
+        "@id": "repo"
+      },
+      "encodingFormat": "application/octet-stream",
+      "includes": "checkpoints/*"
+    }
+  ]
+}

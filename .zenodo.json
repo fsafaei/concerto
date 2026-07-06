@@ -1,0 +1,33 @@
+{
+  "title": "CONCERTO and CHAMBER: Contact-rich Coordination with Opaque, Heterogeneous Teammates",
+  "description": "CONCERTO is a safety stack and training loop for physically-coupled ad-hoc cooperation with black-box partners; CHAMBER is the accompanying benchmark (CHAMBER-Bench v1.0: admitted tasks, versioned partner zoo, verifiable result bundles, per-task leaderboard). This deposit archives the software release; the data artifacts (partner sets, leaderboard bundles, reference/probe trajectories) are hosted with Croissant metadata and mirrored to Zenodo per release.",
+  "upload_type": "software",
+  "license": "Apache-2.0",
+  "creators": [
+    {
+      "name": "Safaei, Farhad"
+    }
+  ],
+  "keywords": [
+    "multi-robot",
+    "ad-hoc teamwork",
+    "manipulation",
+    "control barrier functions",
+    "conformal prediction",
+    "heterogeneous multi-agent reinforcement learning",
+    "robotics benchmark",
+    "reproducibility"
+  ],
+  "related_identifiers": [
+    {
+      "identifier": "https://github.com/fsafaei/concerto",
+      "relation": "isSupplementTo",
+      "scheme": "url"
+    },
+    {
+      "identifier": "https://fsafaei.github.io/concerto/",
+      "relation": "isDocumentedBy",
+      "scheme": "url"
+    }
+  ]
+}

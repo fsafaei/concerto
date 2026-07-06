@@ -437,6 +437,9 @@ dev = [
     { name = "pytest-xdist" },
     { name = "ruff" },
 ]
+hosting = [
+    { name = "huggingface-hub" },
+]
 oracle = [
     { name = "mujoco" },
 ]
@@ -500,6 +503,7 @@ dev = [
     { name = "pytest-xdist", specifier = ">=3.6" },
     { name = "ruff", specifier = ">=0.6" },
 ]
+hosting = [{ name = "huggingface-hub", specifier = ">=0.34" }]
 oracle = [{ name = "mujoco", specifier = ">=3.1" }]
 
 [[package]]
