@@ -14,11 +14,21 @@ authors:
     given-names: Farhad
     email: cooperative.physical.ai@gmail.com
     orcid: ""
-version: 0.7.0
-date-released: "2026-05-17"
+version: 0.8.0
+date-released: "2026-07-06"
 license: Apache-2.0
 repository-code: "https://github.com/fsafaei/concerto"
 doi: "10.5281/zenodo.20128469"
+identifiers:
+  - type: url
+    value: "https://huggingface.co/datasets/fsafaei/chamber-bench-partner-sets"
+    description: "CHAMBER-Bench v1.0 partner sets (hosted dataset)"
+  - type: url
+    value: "https://huggingface.co/datasets/fsafaei/chamber-bench-leaderboard-bundles"
+    description: "CHAMBER-Bench v1.0 leaderboard bundles (hosted dataset)"
+  - type: url
+    value: "https://huggingface.co/datasets/fsafaei/chamber-bench-reference-trajectories"
+    description: "CHAMBER-Bench v1.0 reference trajectories (hosted dataset)"
 keywords:
   - multi-robot
   - ad-hoc-teamwork

@@ -186,12 +186,9 @@ Hugging Face datasets (Croissant metadata included; see the
 
 | Dataset | Location |
 |---|---|
-| `chamber-bench-partner-sets` | `<pending first upload>` |
-| `chamber-bench-leaderboard-bundles` | `<pending first upload>` |
-| `chamber-bench-reference-trajectories` | `<pending first upload>` |
-
-The placeholders are replaced with the live URLs at the first upload
-(CB-08).
+| `chamber-bench-partner-sets` | <https://huggingface.co/datasets/fsafaei/chamber-bench-partner-sets> |
+| `chamber-bench-leaderboard-bundles` | <https://huggingface.co/datasets/fsafaei/chamber-bench-leaderboard-bundles> |
+| `chamber-bench-reference-trajectories` | <https://huggingface.co/datasets/fsafaei/chamber-bench-reference-trajectories> |
 
 ## Note on checkpoints for the learned rows
 

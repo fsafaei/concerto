@@ -21,7 +21,12 @@ Usage::
 
     export HF_TOKEN=<maintainer token with write scope>   # never commit this
     uv run --group hosting python scripts/release/upload_hosting.py \\
-        [--namespace fsafaei] [--source dist/hosting] [--yes]
+        [--namespace fsafaei] [--source dist/hosting] [--yes] [--cards-only]
+
+``--cards-only`` is the lightweight fix path for card-level mistakes
+(e.g. re-pushing ``viewer: false``): it patches at most the dataset
+card plus the two integrity files that hash it, and refuses on any
+payload drift.
 """
 
 from __future__ import annotations
@@ -39,6 +44,17 @@ sys.path.insert(0, str(REPO_ROOT / "src"))
 
 from chamber.evaluation.hosting import (  # noqa: E402
     HOSTING_ARTIFACTS,
+    PACKAGE_CARD_NAME,
+    PACKAGE_MANIFEST_NAME,
+    PACKAGE_SUMS_NAME,
+)
+
+#: The files ``--cards-only`` may touch: the dataset card and the two
+#: package-root integrity files that embed the card's SHA-256. Pushing
+#: the card alone would leave the hosted ``SHA256SUMS.txt`` asserting a
+#: stale card hash, breaking the documented ``sha256sum -c`` check.
+CARDS_ONLY_FILES: tuple[str, str, str] = (
+    PACKAGE_CARD_NAME,
     PACKAGE_MANIFEST_NAME,
     PACKAGE_SUMS_NAME,
 )
@@ -83,21 +99,26 @@ def _print_plan(packages: list[Path], namespace: str) -> None:
     )
 
 
-def _remote_manifest_bytes(repo_id: str, token: str) -> bytes | None:
-    """The hosted ``manifest.json`` bytes, or ``None`` if repo/file is absent."""
+def _remote_file_bytes(repo_id: str, filename: str, token: str) -> bytes | None:
+    """The hosted file's bytes, or ``None`` if the repo or file is absent."""
     from huggingface_hub import hf_hub_download  # noqa: PLC0415  (hosting-only dep)
     from huggingface_hub.errors import EntryNotFoundError, RepositoryNotFoundError  # noqa: PLC0415
 
     try:
-        remote_manifest = hf_hub_download(
+        remote_path = hf_hub_download(
             repo_id=repo_id,
-            filename=PACKAGE_MANIFEST_NAME,
+            filename=filename,
             repo_type="dataset",
             token=token,
         )
     except (RepositoryNotFoundError, EntryNotFoundError):
         return None
-    return Path(remote_manifest).read_bytes()
+    return Path(remote_path).read_bytes()
+
+
+def _remote_manifest_bytes(repo_id: str, token: str) -> bytes | None:
+    """The hosted ``manifest.json`` bytes, or ``None`` if repo/file is absent."""
+    return _remote_file_bytes(repo_id, PACKAGE_MANIFEST_NAME, token)
 
 
 def _upload_package(package: Path, repo_id: str, token: str) -> None:
@@ -150,6 +171,76 @@ def _upload_package(package: Path, repo_id: str, token: str) -> None:
     print(f"upload-hosting: done  https://huggingface.co/datasets/{repo_id}")
 
 
+def _upload_cards_only(package: Path, repo_id: str, token: str) -> int:
+    """Refresh the dataset card (plus the integrity files that hash it).
+
+    Lightweight fix path for card-level mistakes (e.g. a missing
+    ``viewer: false``): pushes at most ``CARDS_ONLY_FILES`` per dataset
+    and refuses to run when any *payload* file differs from the hosted
+    ``manifest.json`` — payload drift needs a full upload, not a card
+    patch. Reconciles hand edits made on the web UI: files already
+    byte-identical to the hosted copy are skipped, so a re-run after a
+    manual fix pushes nothing.
+
+    Returns the process exit code.
+    """
+    from huggingface_hub import CommitOperationAdd, HfApi  # noqa: PLC0415  (hosting-only dep)
+
+    remote_bytes = _remote_manifest_bytes(repo_id, token)
+    if remote_bytes is None:
+        print(
+            f"upload-hosting: FAIL — {repo_id} has no hosted manifest; "
+            "--cards-only only patches an existing upload."
+        )
+        return 3
+    remote = {entry["path"]: entry["sha256"] for entry in json.loads(remote_bytes)["files"]}
+
+    local_manifest = json.loads((package / PACKAGE_MANIFEST_NAME).read_text(encoding="utf-8"))
+    local = {entry["path"]: entry["sha256"] for entry in local_manifest["files"]}
+    drifted = sorted(
+        path
+        for path in local.keys() | remote.keys()
+        if path not in CARDS_ONLY_FILES and local.get(path) != remote.get(path)
+    )
+    if drifted:
+        shown = 5
+        print(
+            f"upload-hosting: FAIL — {repo_id} payload differs from the local "
+            "build; --cards-only cannot reconcile that. Run a full upload. "
+            f"Drifted: {', '.join(drifted[:shown])}"
+            + (f" (+{len(drifted) - shown} more)" if len(drifted) > shown else "")
+        )
+        return 3
+
+    operations: list[Any] = []
+    for rel in CARDS_ONLY_FILES:
+        local_bytes = (package / rel).read_bytes()
+        if rel == PACKAGE_MANIFEST_NAME:
+            unchanged = local_bytes == remote_bytes
+        else:
+            unchanged = local_bytes == _remote_file_bytes(repo_id, rel, token)
+        if not unchanged:
+            operations.append(
+                CommitOperationAdd(path_in_repo=rel, path_or_fileobj=str(package / rel))
+            )
+    if not operations:
+        print(f"upload-hosting: {package.name} card already reconciled — skipping")
+        return 0
+
+    print(
+        f"upload-hosting: {package.name} — refreshing "
+        f"{', '.join(op.path_in_repo for op in operations)}"
+    )
+    HfApi(token=token).create_commit(
+        repo_id=repo_id,
+        repo_type="dataset",
+        operations=operations,
+        commit_message=f"CHAMBER-Bench v1.0 {package.name} dataset-card refresh",
+    )
+    print(f"upload-hosting: done  https://huggingface.co/datasets/{repo_id}")
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     """Entry point; returns the process exit code."""
     parser = argparse.ArgumentParser(
@@ -172,6 +263,15 @@ def main(argv: list[str] | None = None) -> int:
         action="store_true",
         help="actually upload; without this the script only prints the plan",
     )
+    parser.add_argument(
+        "--cards-only",
+        action="store_true",
+        help=(
+            "push only the dataset card (plus manifest.json and "
+            "SHA256SUMS.txt, which hash it) to each existing dataset; "
+            "refuses on any payload drift"
+        ),
+    )
     args = parser.parse_args(argv)
 
     if not os.environ.get("HF_TOKEN"):
@@ -188,7 +288,15 @@ def main(argv: list[str] | None = None) -> int:
         print("Run scripts/release/prepare_hosting.py first.")
         return 2
 
-    _print_plan(packages, args.namespace)
+    if args.cards_only:
+        print("upload-hosting: cards-only plan")
+        for package in packages:
+            sizes = ", ".join(
+                f"{rel} ({(package / rel).stat().st_size:,} B)" for rel in CARDS_ONLY_FILES
+            )
+            print(f"  datasets/{args.namespace}/{package.name}  <-  {sizes}")
+    else:
+        _print_plan(packages, args.namespace)
 
     if not args.yes:
         print("upload-hosting: dry run only — re-run with --yes to upload.")
@@ -203,9 +311,14 @@ def main(argv: list[str] | None = None) -> int:
         )
         return 2
 
+    exit_code = 0
     for package in packages:
-        _upload_package(package, f"{args.namespace}/{package.name}", token)
-    return 0
+        repo_id = f"{args.namespace}/{package.name}"
+        if args.cards_only:
+            exit_code = max(exit_code, _upload_cards_only(package, repo_id, token))
+        else:
+            _upload_package(package, repo_id, token)
+    return exit_code
 
 
 if __name__ == "__main__":
