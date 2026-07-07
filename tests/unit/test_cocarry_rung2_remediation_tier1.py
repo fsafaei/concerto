@@ -71,7 +71,7 @@ class TestStressPenaltyShape:
     def test_monotonic_nondecreasing_in_stress(self) -> None:
         xs = np.linspace(0.0, 1000.0, 50)
         ys = cocarry_excess_stress_penalty(xs)
-        assert np.all(np.diff(np.asarray(ys)) >= -1e-12)
+        assert np.all(np.diff(np.asarray(ys, dtype=np.float64)) >= -1e-12)
 
     def test_saturates_near_coeff_on_the_fight(self) -> None:
         # The incumbent fight (p90 ~854 N, excess ~744 N) saturates tanh ~ coeff.

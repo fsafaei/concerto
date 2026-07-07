@@ -71,6 +71,12 @@ ALLOWED: frozenset[str] = frozenset(
         "Public Domain",
         "Unlicense",
         "ZPL-2.1",
+        # 0BSD + Zlib (ADR-012 §Revision history 2026-07-07): numpy >= 2.4
+        # declares "BSD-3-Clause AND 0BSD AND MIT AND Zlib AND CC0-1.0" for
+        # its vendored components; both are OSI-approved permissive.
+        "0BSD",
+        "Zlib",
+        "zlib/libpng License",
         # Other OSI-approved permissive
         "Artistic-2.0",
         "EUPLv1.2",

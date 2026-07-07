@@ -116,7 +116,7 @@ class TestEndToEndRegimeSplit:
         for seed in seeds:
             obs, _ = env.reset(seed=seed)
             presenter.reset(seed=seed)
-            obs, _, _, _, _ = env.step(presenter.act(obs))
+            obs, _, _, _, _ = env.step(np.asarray(presenter.act(obs), dtype=np.float64))
             _, _, _, _, info = env.step(ego.act(obs))
             successes += int(info["success"])
         return successes / len(seeds)
