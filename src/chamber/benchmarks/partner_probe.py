@@ -377,7 +377,7 @@ def _run_handover_probe(
             obs, _ = env.reset(seed=iss)
             presenter.reset(seed=iss)
             ego.reset(seed=iss)
-            presentation = presenter.act(obs)
+            presentation = np.asarray(presenter.act(obs), dtype=np.float64)
             obs, _, _, _, _ = env.step(presentation)
             _, _, _, _, info = env.step(ego.act(obs))
             records.append(

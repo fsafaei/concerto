@@ -76,7 +76,7 @@ class ScriptedHandoverEgo:
         """No-op reset (the corrector is stateless; ADR-026). ``seed`` is ignored."""
         del seed
 
-    def act(self, obs: Mapping[str, Any]) -> NDArray[np.floating]:
+    def act(self, obs: Mapping[str, Any]) -> NDArray[np.float64]:
         """Compute the corrective placement for one presented part (ADR-026; ADR-009).
 
         Translates the lateral offset (clipped to reach) and reorients the grasp-pose
