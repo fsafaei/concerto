@@ -385,7 +385,7 @@ def run_handover_ablated_cell(
             obs, _ = env.reset(seed=iss)
             presenter_seat.reset(seed=iss)
             ego.reset(seed=iss)
-            obs, _, _, _, _ = env.step(presenter_seat.act(obs))
+            obs, _, _, _, _ = env.step(np.asarray(presenter_seat.act(obs), dtype=np.float64))
             _, _, _, _, info = env.step(ego.act(obs))
             records.append(
                 EpisodeResult(
