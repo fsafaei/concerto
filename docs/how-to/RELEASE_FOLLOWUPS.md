@@ -7,5 +7,5 @@ do not block its tag.
 
 - CLOSED — version DOI `10.5281/zenodo.21228328` archived 2026-07-06;
   ORCID added to `.zenodo.json` creators and `CITATION.cff`. The
-  concept DOI `10.5281/zenodo.20128469` remains the canonical
+  concept DOI `10.5281/zenodo.20128468` remains the canonical
   citation target.

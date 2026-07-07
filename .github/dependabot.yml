@@ -11,7 +11,12 @@ updates:
       - "dependencies"
       - "ci"
 
-  - package-ecosystem: "pip"
+  # "uv", not "pip": pip-ecosystem PRs edit pyproject.toml without
+  # regenerating uv.lock, so any `uv run` on the branch re-locks and
+  # dirties the tree — which the reproducibility gates (smoke-eval,
+  # readme-quickstart) correctly refuse (`chamber-eval run` exit 7).
+  # The uv ecosystem updates pyproject.toml and uv.lock together.
+  - package-ecosystem: "uv"
     directory: "/"
     schedule:
       interval: "weekly"
