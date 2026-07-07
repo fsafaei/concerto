@@ -91,7 +91,7 @@ observability = [
 # under pandas 3.0 (deprecate_kwarg signature change).
 eval = [
   "rliable>=1.0,<2.0",
-  "pandas>=1.4,<3.0",
+  "pandas>=1.4,<4.0",
 ]
 
 [project.scripts]
