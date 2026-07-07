@@ -46,12 +46,12 @@ jobs:
           - row: handover-b-stat
             bundle: spikes/results/benchmark/handover-v1/b-stat-2026-07-06
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
         with:
           # The re-run passes --prereg, and the preregistration gate
           # `git rev-parse`s the campaign tag.
           fetch-tags: true
-      - uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b  # v5.4.1
+      - uses: astral-sh/setup-uv@d31148d669074a8d0a63714ba94f3201e7020bc3  # v5.4.1
         with:
           python-version: "3.11"
       - run: uv sync --group dev
