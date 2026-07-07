@@ -20,6 +20,8 @@ from __future__ import annotations
 import math
 from typing import TYPE_CHECKING, Any
 
+import numpy as np
+
 from chamber.agents.handover_ego_scripted import ScriptedHandoverEgo
 from chamber.envs.handover_place import (
     HANDOVER_DELTA_MIN_PP,
@@ -103,7 +105,7 @@ def run_cell_episodes(
             iss = int(s) * 1000 + e
             obs, _ = env.reset(seed=iss)
             presenter.reset(seed=iss)
-            obs, _, _, _, _ = env.step(presenter.act(obs))
+            obs, _, _, _, _ = env.step(np.asarray(presenter.act(obs), dtype=np.float64))
             _, _, _, _, info = env.step(ego.act(obs))
             results.append(
                 EpisodeResult(

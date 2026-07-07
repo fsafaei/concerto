@@ -76,10 +76,10 @@ jobs:
     env:
       PUBLISH_TAG: ${{ github.event.inputs.tag || needs.release-please.outputs.tag_name }}
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
         with:
           ref: ${{ github.event.inputs.ref || github.event.inputs.tag || needs.release-please.outputs.tag_name }}
-      - uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b  # v8.1.0
+      - uses: astral-sh/setup-uv@f98e06938123ccabd21905ea5d0069192241f9f1  # v8.3.1
         with:
           python-version: "3.11"
       - run: uv sync --group dev
@@ -88,7 +88,7 @@ jobs:
       # the GitHub release for an existing tag.
       - run: uv run cyclonedx-py environment -o sbom.spdx.json
         if: github.event_name == 'push'
-      - uses: softprops/action-gh-release@b4309332981a82ec1c5618f44dd2e27cc8bfbfda  # v3.0.0
+      - uses: softprops/action-gh-release@718ea10b132b3b2eba29c1007bb80653f286566b  # v3.0.1
         if: github.event_name == 'push'
         with:
           tag_name: ${{ env.PUBLISH_TAG }}
@@ -106,7 +106,7 @@ jobs:
       # historically — would break end-user installs).
       - run: uv run python scripts/check_dist_metadata.py --expect-tag "$PUBLISH_TAG" --check-resolvable
         if: github.event_name == 'push' || inputs.publish_pypi
-      - uses: actions/attest-build-provenance@a2bbfa25375fe432b6a289bc6b6cd05ecd0c4c32  # v4.1.0
+      - uses: actions/attest-build-provenance@0f67c3f4856b2e3261c31976d6725780e5e4c373  # v4.1.1
         with:
           subject-path: 'dist/*'
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
@@ -139,7 +139,7 @@ jobs:
         with:
           name: dist
           path: dist
-      - uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b  # v8.1.0
+      - uses: astral-sh/setup-uv@f98e06938123ccabd21905ea5d0069192241f9f1  # v8.3.1
       - run: uv publish --publish-url https://test.pypi.org/legacy/ --check-url https://test.pypi.org/simple/ --trusted-publishing always
 
   # Production-PyPI publish. Gated on the TestPyPI smoke check (unless
@@ -168,7 +168,7 @@ jobs:
         with:
           name: dist
           path: dist
-      - uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b  # v8.1.0
+      - uses: astral-sh/setup-uv@f98e06938123ccabd21905ea5d0069192241f9f1  # v8.3.1
       # --check-url lets a re-dispatch after a transient failure skip
       # files the index already holds instead of erroring on the
       # duplicate upload.

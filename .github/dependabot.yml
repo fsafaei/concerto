@@ -11,7 +11,12 @@ updates:
       - "dependencies"
       - "ci"
 
-  - package-ecosystem: "pip"
+  # "uv", not "pip": pip-ecosystem PRs edit pyproject.toml without
+  # regenerating uv.lock, so any `uv run` on the branch re-locks and
+  # dirties the tree — which the reproducibility gates (smoke-eval,
+  # readme-quickstart) correctly refuse (`chamber-eval run` exit 7).
+  # The uv ecosystem updates pyproject.toml and uv.lock together.
+  - package-ecosystem: "uv"
     directory: "/"
     schedule:
       interval: "weekly"
@@ -40,6 +45,14 @@ updates:
       # Either way the upgrade decision is a CONCERTO-side audit, not
       # a dependabot PR.
       - dependency-name: "torch"
+      # ADR-008/ADR-014 eval extra: ``pandas>=1.4,<3.0`` is load-bearing —
+      # rliable bounds ``arch<8.0``, and arch <8.0 raises ``TypeError`` on
+      # import under pandas 3.x (``deprecate_kwarg`` signature change;
+      # reproduced 2026-07-07 with pandas 3.0.3 + arch 7.2.0). Majors stay
+      # blocked until rliable admits arch >= 8; minors/patches inside 2.x
+      # remain fair game. In-repo record of the ignore registered on PR #290.
+      - dependency-name: "pandas"
+        update-types: ["version-update:semver-major"]
 
   - package-ecosystem: "docker"
     directory: "/"
