@@ -257,7 +257,7 @@ class ScriptedPickPlaceEgo:
         )
         jjt = jac @ jac.T + _DAMPING_SQ * np.eye(6)
         dq = jac.T @ np.linalg.solve(jjt, err)
-        return np.clip(dq, -_ACTION_DELTA_SCALE, _ACTION_DELTA_SCALE)
+        return np.clip(dq, -_ACTION_DELTA_SCALE, _ACTION_DELTA_SCALE).astype(np.float64, copy=False)
 
 
 __all__ = [

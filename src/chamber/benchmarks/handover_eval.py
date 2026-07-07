@@ -192,7 +192,7 @@ def run_handover_episodes_for_set(
                 obs, _ = env.reset(seed=iss)
                 presenter.reset(seed=iss)
                 ego.reset(seed=iss)
-                obs, _, _, _, _ = env.step(presenter.act(obs))
+                obs, _, _, _, _ = env.step(np.asarray(presenter.act(obs), dtype=np.float64))
                 _, _, _, _, info = env.step(ego.act(obs))
                 records.append(
                     EpisodeResult(
