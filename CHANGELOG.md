@@ -8,6 +8,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 While the project is on `0.x`, MINOR-version bumps may break the public API
 per SemVer §4.
 
+## [0.8.1](https://github.com/fsafaei/concerto/compare/v0.8.0...v0.8.1) (2026-07-07)
+
+
+### Documentation
+
+* **release:** cite the true concept DOI — 20128469 is the first version deposit ([#286](https://github.com/fsafaei/concerto/issues/286)) ([be62c4b](https://github.com/fsafaei/concerto/commit/be62c4b9ef218f22ac23cb3335b70c53484dfdeb))
+* **release:** wire ORCID and v0.8.0 version DOI into citation metadata ([#284](https://github.com/fsafaei/concerto/issues/284)) ([3a4f872](https://github.com/fsafaei/concerto/commit/3a4f87282d4960fd550473834a0bc1c7b0257c61))
+
 ## [0.8.0](https://github.com/fsafaei/concerto/compare/v0.7.0...v0.8.0) (2026-07-06)
 
 CHAMBER-Bench v1.0. Releases of the benchmark suite and releases of
