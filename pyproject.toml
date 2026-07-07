@@ -24,7 +24,7 @@ classifiers = [
 
 # Runtime deps. Each entry is justified by an ADR or a tooling decision.
 dependencies = [
-  "numpy>=1.26,<2.2",
+  "numpy>=1.26,<2.5",
   "torch>=2.9,<3.0",                 # ADR-002 PyTorch; >=2.8 closes GHSA-53q9-r3pm-6pq6, GHSA-887c-mr87-cxwp, GHSA-3749-ghw9-m3mg; >=2.9 closes PYSEC-2025-203/204/206 (availability-only AV:N C:N I:N A:H/L). Pinned to the cu128 wheel index on Linux via [tool.uv.sources] below — torch 2.12+ defaults to cu130 which is incompatible with NVIDIA driver 535.x (CUDA 12.x runtime). Cuda-major coupling discipline pinned in ADR-002 §Revision history (2026-05-20).
   "gymnasium>=1.3.0,<2.0",             # standard env API
   "mani-skill==3.0.1",               # ADR-001; git commit a4a4f92 pinned in uv.lock

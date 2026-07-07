@@ -462,7 +462,7 @@ requires-dist = [
     { name = "mkdocs", marker = "extra == 'docs'", specifier = ">=1.6.1" },
     { name = "mkdocs-material", marker = "extra == 'docs'", specifier = ">=9.5" },
     { name = "mkdocstrings", extras = ["python"], marker = "extra == 'docs'", specifier = ">=0.25" },
-    { name = "numpy", specifier = ">=1.26,<2.2" },
+    { name = "numpy", specifier = ">=1.26,<2.5" },
     { name = "omegaconf", specifier = ">=2.3,<3.0" },
     { name = "pandas", marker = "extra == 'eval'", specifier = ">=1.4,<3.0" },
     { name = "pip-licenses", marker = "extra == 'dev'", specifier = ">=4.0" },
