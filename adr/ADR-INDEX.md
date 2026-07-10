@@ -105,7 +105,7 @@ in place. See [ADR-012 §Open questions](ADR-012-license.md#open-questions-defer
 
 <sup>e</sup> No Decision yet — ADR is genuinely pending. ADR-013
 waits on hardware-partner outreach; ADR-015 waits on Phase-0
-customer-discovery synthesis. These remain RFC until their Decision
+industrial requirements synthesis. These remain RFC until their Decision
 sections can be filled.
 
 <sup>f</sup> Reporting contract is qualified by ADR-008 HRS bundle
@@ -172,7 +172,7 @@ No schema constant changes with the decision itself.
 
 An ADR cannot be promoted to Accepted unless its **Evidence basis**
 cites at least one Tier-1 or Tier-2 reading note (or the
-customer-discovery synthesis for ADRs 008, 013, 015 where reading is
+industrial requirements synthesis for ADRs 008, 013, 015 where reading is
 not the primary input). Promotion from Accepted to Validated requires
 the corresponding spike or test evidence cited in the ADR §Validation
 criteria. While the project is solo, the lock decision rests with the
