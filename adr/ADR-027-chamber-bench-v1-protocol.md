@@ -28,7 +28,7 @@ proposal.
 
 | # | Option | Source / advocate | Pros | Cons |
 |---|--------|-------------------|------|------|
-| A | Scalar composite leaderboard (one CHAMBER-Bench score) | [common benchmark practice] | Legible; rankable; marketable | Weight-gaming across tasks; today it would aggregate nulls and controls into a number implying validated cooperation evidence that does not exist |
+| A | Scalar composite leaderboard (one CHAMBER-Bench score) | [common benchmark practice] | Legible; rankable; headline-friendly | Weight-gaming across tasks; today it would aggregate nulls and controls into a number implying validated cooperation evidence that does not exist |
 | B | Keep the six-axis gate framing as the public benchmark story | [ADR-007 as locked] | Continuity with the published README/plan | Rejected per ADR-026: two axes are construct-invalid as operationalized, none is Validated; the framing would misrepresent the evidence |
 | C | Tiered task ladder + executable admission protocol + per-cell validity matrix + per-task reporting, all preregistered | [notes/tier1/construct_validity_in_cooperative_evaluation.md — Melting Pot's per-scenario reporting; Gorsane et al. protocol discipline; Raji et al. construct-validity critique] | Publishes exactly what the evidence licenses; admission is falsifiable both ways; nulls stay informative | More complex to communicate; no single headline number |
 
