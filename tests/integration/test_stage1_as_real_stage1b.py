@@ -79,9 +79,19 @@ def _tiny_prereg_for_smoke(monkeypatch: pytest.MonkeyPatch) -> None:
     2. ``load_config`` is patched to wrap the real loader and rewrite
        ``total_frames``, ``rollout_length``, ``batch_size`` to tiny
        values so each cell's training run completes in ~30 s instead
-       of the production ~25 min. The other cfg fields (env.task,
-       env.condition_id, partner, safety) are honoured verbatim — the
-       smoke is about the dispatch contract, not the gradient signal.
+       of the production ~25 min — and ``env.num_envs`` to 1 (#299):
+       the launch yaml pins the founder-approved vectorised regime
+       ``num_envs: 1024`` (#222), which requires GPU PhysX enabled
+       before any other PhysX use in the process (ADR-007 §Stage 1b
+       Rev 17; the #215 loud-fail) — impossible inside a pytest
+       session whose collection-time GPU gate already built a
+       CPU-PhysX probe env. The GPU-parallel branch is covered where
+       it can actually run, in the subprocess-isolated regression net
+       (``test_stage1_vectorised_real.py``); this smoke's scope is
+       the in-process dispatch contract at ``num_envs=1``. The other
+       cfg fields (env.task, env.condition_id, partner, safety) are
+       honoured verbatim — the smoke is about the dispatch contract,
+       not the gradient signal.
     """
     spec = load_prereg(_REPO_ROOT / "spikes" / "preregistration" / "AS.yaml")
     tiny = spec.model_copy(update={"seeds": [0], "episodes_per_seed": 1})
@@ -99,6 +109,10 @@ def _tiny_prereg_for_smoke(monkeypatch: pytest.MonkeyPatch) -> None:
             update={
                 "total_frames": 1000,
                 "happo": cfg.happo.model_copy(update={"rollout_length": 256, "batch_size": 64}),
+                # num_envs=1 keeps the smoke in-process runnable (#299):
+                # the production 1024 demands GPU PhysX, unobtainable in a
+                # CPU-PhysX-poisoned pytest process (ADR-007 §Stage 1b Rev 17).
+                "env": cfg.env.model_copy(update={"num_envs": 1}),
             }
         )
 
