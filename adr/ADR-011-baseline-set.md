@@ -70,7 +70,7 @@ By Phase 1 end: (1) all five shipped baselines (B1, B2, B3, B6, B7) reproduce ta
 ## Revision history
 
 - 2026-07-06 hygiene rewording: the §Risks B1 entry now says
-  "frontier-LLM latency" instead of naming the specific commercial
+  "frontier-LLM latency" instead of naming the specific proprietary
   model, so the widened repository hygiene pattern
   (`scripts/check_no_ai_mentions.sh`) stays clean tree-wide; the
   concrete per-model latency measurement lives in the cited reading
