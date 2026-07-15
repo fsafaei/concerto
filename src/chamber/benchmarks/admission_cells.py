@@ -12,9 +12,11 @@ handover-place kinematic resolver — and returns the raw
 ``chamber-eval verify``-passing v3 bundles (ADR-028 §Decision 1).
 
 Wrap extractors are the committed-evidence half (I8): they re-extract
-statistics from SHA-verified immutable archive files (the
-handover-place Gate-0 archive) — wrapping, never re-running, never
-hand-copying numbers.
+statistics from SHA-verified immutable archive files — the
+handover-place Gate-0 archive, or committed ADR-028 result bundles
+(per-cell success summaries, paired reference-minus-blind gaps, and the
+ADR-027 §Admission A4 per-partner ego-robustness profile) — wrapping,
+never re-running, never hand-copying numbers.
 
 Registry style mirrors ADR-009 §Decision: module-level tables, loud
 ``KeyError`` listing the known keys. SAPIEN / ManiSkill imports stay
@@ -35,7 +37,11 @@ from chamber.evaluation.admission import (
     AdmissionError,
     CellRun,
     WrappedEvidenceSpec,
+    _paired_gap_statistics,
+    _summary_statistics,
+    stress_statistics,
 )
+from chamber.evaluation.bundles import DEFAULT_N_RESAMPLES, compute_summary
 from chamber.evaluation.results import EpisodeResult
 from chamber.partners.ablation import PARTNER_ABLATED_ZERO_CLASS
 from chamber.partners.api import PartnerSpec
@@ -503,6 +509,165 @@ def extract_handover_gate0_limb2(*, repo_path: Path, spec: WrappedEvidenceSpec) 
     }
 
 
+# ---------------------------------------------------------------------------
+# Wrap extractors — committed ADR-028 result bundles (I8).
+# ---------------------------------------------------------------------------
+
+
+def _load_bundle_episodes(
+    repo_path: Path, spec: WrappedEvidenceSpec, bundle_dir: str
+) -> list[EpisodeResult]:
+    """Episode records from the SHA-pinned ``episodes_seed*.jsonl`` of one committed bundle (I8).
+
+    Only files pinned in the prereg ``files`` map are ever read — an
+    unpinned episode file cannot contribute evidence (ADR-027
+    §Admission protocol).
+    """
+    prefix = f"{bundle_dir.rstrip('/')}/"
+    rels = sorted(
+        rel
+        for rel in spec.files
+        if rel.startswith(prefix)
+        and rel.rsplit("/", 1)[-1].startswith("episodes_seed")
+        and rel.endswith(".jsonl")
+    )
+    if not rels:
+        msg = (
+            f"wrap extractor requires the episodes_seed*.jsonl files under "
+            f"{bundle_dir} to be SHA-pinned in the prereg files map"
+        )
+        raise AdmissionError(msg)
+    episodes: list[EpisodeResult] = []
+    for rel in rels:
+        with (repo_path / rel).open(encoding="utf-8") as fh:
+            episodes.extend(
+                EpisodeResult.model_validate(json.loads(line)) for line in fh if line.strip()
+            )
+    if not episodes:
+        msg = f"no episode records inside the pinned episode files under {bundle_dir}"
+        raise AdmissionError(msg)
+    return episodes
+
+
+def _bundle_bootstrap_params(spec: WrappedEvidenceSpec) -> tuple[int, int]:
+    """The committed bootstrap parameters of a bundle wrap (ADR-002 P6 byte-recomputability)."""
+    return (
+        int(spec.params.get("n_resamples", DEFAULT_N_RESAMPLES)),
+        int(spec.params.get("bootstrap_root_seed", 0)),
+    )
+
+
+def extract_bundle_success_summary(
+    *, repo_path: Path, spec: WrappedEvidenceSpec
+) -> dict[str, float]:
+    """A1/A2 ← a committed result bundle: recompute the seed-cluster success summary (I8).
+
+    ADR-027 §Admission protocol; ADR-028 §Decision 3. Re-extracts —
+    never copies — the success IQM/CI from the SHA-verified
+    ``episodes_seed*.jsonl`` of the committed bundle named by
+    ``params["bundle_dir"]`` (default: the wrapped archive itself)
+    through the same :func:`chamber.evaluation.bundles.compute_summary`
+    seed-cluster bootstrap every measured check uses. Stress percentiles
+    ride along wherever the bundle records ``force_peak``
+    (``params["stress_successes_only"]``, default ``True`` — the A1
+    convention; commit ``False`` for the A2 all-episodes context
+    distribution), so the spec-level ``stress_limit`` bar holds on the
+    wrapped path too.
+    """
+    bundle_dir = str(spec.params.get("bundle_dir", spec.archive))
+    episodes = _load_bundle_episodes(repo_path, spec, bundle_dir)
+    n_resamples, bootstrap_root_seed = _bundle_bootstrap_params(spec)
+    summary = compute_summary(
+        episodes, n_resamples=n_resamples, bootstrap_root_seed=bootstrap_root_seed
+    )
+    successes_only = bool(spec.params.get("stress_successes_only", True))
+    return {
+        **_summary_statistics(summary),
+        **stress_statistics(episodes, successes_only=successes_only),
+    }
+
+
+def extract_bundle_paired_delta(*, repo_path: Path, spec: WrappedEvidenceSpec) -> dict[str, float]:
+    """A3 ← two committed cell bundles: recompute the paired reference-minus-blind gap (I8).
+
+    ADR-027 §Admission protocol. Pairs the SHA-verified episodes of the
+    committed ``params["reference_dir"]`` and ``params["blind_dir"]``
+    bundles on identical ``(seed, episode_idx, initial_state_seed)``
+    schedules and recomputes the gap CI through the exact measured-path
+    paired-cluster-bootstrap rule (substream-pinned, ADR-002 P6 — the
+    committed CI is byte-reproduced, never hand-copied).
+    """
+    reference_dir = spec.params.get("reference_dir")
+    blind_dir = spec.params.get("blind_dir")
+    if not reference_dir or not blind_dir:
+        msg = (
+            "bundle_paired_delta requires params['reference_dir'] and "
+            "params['blind_dir'] naming the two committed cell bundles"
+        )
+        raise AdmissionError(msg)
+    reference = _load_bundle_episodes(repo_path, spec, str(reference_dir))
+    blind = _load_bundle_episodes(repo_path, spec, str(blind_dir))
+    n_resamples, bootstrap_root_seed = _bundle_bootstrap_params(spec)
+    return _paired_gap_statistics(
+        reference, blind, n_resamples=n_resamples, root_seed=bootstrap_root_seed
+    )
+
+
+def extract_bundle_ego_robustness_profile(
+    *, repo_path: Path, spec: WrappedEvidenceSpec
+) -> dict[str, dict[str, float]]:
+    """A4 ← a committed partner-set bundle: the per-partner ego-robustness profile (I8).
+
+    ADR-027 §Admission A4 (the mandatory reported artifact); ADR-026
+    §Decision 2. Groups the SHA-verified bundle episodes by
+    ``metadata["member"]`` (the leaderboard per-partner convention) and
+    recomputes, per admitted member, the same seed-cluster
+    ``compute_summary`` bootstrap + successful-episode stress
+    percentiles the measured A4 path reports — so the wrapped and
+    measured profiles are shape- and rule-identical.
+    ``params["members"]``, when committed, pins the expected admitted
+    member set; a mismatch fails loudly rather than silently profiling
+    a different roster.
+    """
+    # Lazy: leaderboard pulls numpy-heavy deps at module import
+    # (mirrors chamber.evaluation.admission._episodes_by_member).
+    from chamber.evaluation.leaderboard import _member_of
+
+    bundle_dir = str(spec.params.get("bundle_dir", spec.archive))
+    episodes = _load_bundle_episodes(repo_path, spec, bundle_dir)
+    by_member: dict[str, list[EpisodeResult]] = {}
+    for ep in episodes:
+        by_member.setdefault(_member_of(ep), []).append(ep)
+    if "<unknown>" in by_member:
+        msg = (
+            "wrapped A4 bundle episodes must stamp metadata['member'] (or "
+            "'partner') with the admitted-set member name — the leaderboard "
+            "per-partner convention (ADR-027 §Reporting rules)"
+        )
+        raise AdmissionError(msg)
+    expected = spec.params.get("members")
+    if expected is not None:
+        expected_set = {str(member) for member in expected}
+        if expected_set != set(by_member):
+            msg = (
+                f"wrapped A4 bundle sweeps members {sorted(by_member)} but the "
+                f"prereg pins {sorted(expected_set)} (ADR-027 §Admission A4: the "
+                "profile must cover exactly the admitted partner set)"
+            )
+            raise AdmissionError(msg)
+    n_resamples, bootstrap_root_seed = _bundle_bootstrap_params(spec)
+    profile: dict[str, dict[str, float]] = {}
+    for member in sorted(by_member):
+        summary = compute_summary(
+            by_member[member], n_resamples=n_resamples, bootstrap_root_seed=bootstrap_root_seed
+        )
+        profile[member] = {
+            **_summary_statistics(summary),
+            **stress_statistics(by_member[member]),
+        }
+    return profile
+
+
 #: Cell-runner registry (ADR-009 §Decision registry style).
 CELL_RUNNERS: dict[str, Callable[..., CellRun]] = {
     "cocarry_scripted": run_cocarry_cell,
@@ -511,9 +676,15 @@ CELL_RUNNERS: dict[str, Callable[..., CellRun]] = {
 }
 
 #: Wrap-extractor registry (ADR-009 §Decision registry style; I8).
-WRAP_EXTRACTORS: dict[str, Callable[..., dict[str, float]]] = {
+#: Scalar-statistics extractors (A1/A2/A3) return ``dict[str, float]``;
+#: profile extractors (A4, ADR-027 §Admission A4) return the nested
+#: per-member ``dict[str, dict[str, float]]``.
+WRAP_EXTRACTORS: dict[str, Callable[..., dict[str, float] | dict[str, dict[str, float]]]] = {
     "handover_gate0_limb1": extract_handover_gate0_limb1,
     "handover_gate0_limb2": extract_handover_gate0_limb2,
+    "bundle_success_summary": extract_bundle_success_summary,
+    "bundle_paired_delta": extract_bundle_paired_delta,
+    "bundle_ego_robustness_profile": extract_bundle_ego_robustness_profile,
 }
 
 
@@ -527,7 +698,9 @@ def resolve_cell_runner(name: str) -> Callable[..., CellRun]:
         raise KeyError(msg) from None
 
 
-def resolve_wrap_extractor(name: str) -> Callable[..., dict[str, float]]:
+def resolve_wrap_extractor(
+    name: str,
+) -> Callable[..., dict[str, float] | dict[str, dict[str, float]]]:
     """Resolve a wrap extractor, loud-failing with the known keys (ADR-009 §Decision)."""
     try:
         return WRAP_EXTRACTORS[name]

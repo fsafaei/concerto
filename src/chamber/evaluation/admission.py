@@ -23,7 +23,11 @@ report** showing, under preregistered thresholds:
   instrument of a contrast must clear a preregistered ego-robustness
   floor — per-partner ``success_ci_low >= c_min_ego``, at the task's
   own success+stress bar — across the **admitted partner set**, not
-  only its training/matched partner. A brittle instrument makes the
+  only its training/matched partner. Like A1/A3, A4 may be measured
+  fresh or may wrap a committed per-partner bundle (I8): the profile is
+  re-extracted from SHA-verified episode files and the same
+  ``a4_outcome`` rule applies, with a wrapped straddle final (FAIL) —
+  committed evidence cannot consume the seed extension. A brittle instrument makes the
   contrast **inadmissible / un-instrumentable as built** (not a null,
   not a heterogeneity finding — ADR-026 §Decision 2: a construct
   problem is never re-described as a partner/axis result); the
@@ -206,8 +210,11 @@ class AdmissionSpec(BaseModel):
             substreams (ADR-002 P6).
         a1: The A1 reference cell (measured, or wrapped committed
             evidence).
-        a2: The A2 partner-ablated cell (always measured — it is the
-            genuinely new, cheap cell even for wrapped tasks).
+        a2: The A2 partner-ablated cell (measured — the genuinely new,
+            cheap cell for wrap-first tasks — or wrapped committed
+            evidence when a committed ablated-cell bundle already
+            exists, e.g. a retrospective re-issue over an earlier
+            admission archive's cells).
         a3: The A3 partner-blind cell (measured; compared against the
             A1 reference cell on matched initial states), or wrapped
             committed gap evidence.
@@ -217,12 +224,15 @@ class AdmissionSpec(BaseModel):
             task's own success+stress bar. ``None`` (the default) for
             plain task admissions: A4 is skipped and the A1/A2/A3
             semantics are unchanged.
-        a4: The A4 instrument cell (always measured): ``policy_id``
-            names the instrument under test and ``partner_name`` the
-            admitted partner set it sweeps (an ADR-009 set slug, e.g.
-            ``cocarry_partners@v1``); the runner stamps each episode's
-            ``metadata["member"]`` with the set-member name (the
-            leaderboard per-partner convention). Committed iff
+        a4: The A4 instrument cell: measured (``policy_id`` names the
+            instrument under test and ``partner_name`` the admitted
+            partner set it sweeps — an ADR-009 set slug, e.g.
+            ``cocarry_partners@v1``; the runner stamps each episode's
+            ``metadata["member"]`` with the set-member name, the
+            leaderboard per-partner convention), or wrapped committed
+            per-partner evidence (I8: the profile is re-extracted from
+            the SHA-verified bundle episodes by a profile extractor;
+            a wrapped straddle is final — FAIL). Committed iff
             ``c_min_ego`` is.
         git_tag: Pre-registration tag the spec is locked to
             (ADR-007 §Discipline).
@@ -242,10 +252,10 @@ class AdmissionSpec(BaseModel):
     n_resamples: PositiveInt = 2000
     root_seed: int = 0
     a1: AdmissionCellSpec | WrappedEvidenceSpec
-    a2: AdmissionCellSpec
+    a2: AdmissionCellSpec | WrappedEvidenceSpec
     a3: AdmissionCellSpec | WrappedEvidenceSpec
     c_min_ego: float | None = None
-    a4: AdmissionCellSpec | None = None
+    a4: AdmissionCellSpec | WrappedEvidenceSpec | None = None
     git_tag: str
 
     @model_validator(mode="after")
@@ -604,10 +614,20 @@ def _default_cell_runner_resolver(name: str) -> Callable[..., CellRun]:
     return resolver(name)
 
 
-def _default_wrap_extractor_resolver(name: str) -> Callable[..., dict[str, float]]:
-    """Resolve a wrap extractor lazily from :mod:`chamber.benchmarks.admission_cells` (P2)."""
+def _default_wrap_extractor_resolver(
+    name: str,
+) -> Callable[..., dict[str, float] | dict[str, dict[str, float]]]:
+    """Resolve a wrap extractor lazily from :mod:`chamber.benchmarks.admission_cells` (P2).
+
+    Scalar-statistics extractors (A1/A2/A3) return ``dict[str, float]``;
+    the A4 profile extractor returns the nested per-member
+    ``dict[str, dict[str, float]]`` (ADR-027 §Admission A4) — the
+    shape is validated by the consuming check, loudly.
+    """
     module = import_module("chamber.benchmarks.admission_cells")
-    resolver: Callable[[str], Callable[..., dict[str, float]]] = module.resolve_wrap_extractor
+    resolver: Callable[[str], Callable[..., dict[str, float] | dict[str, dict[str, float]]]] = (
+        module.resolve_wrap_extractor
+    )
     return resolver(name)
 
 
@@ -707,11 +727,8 @@ def _run_cell(
     return name, episodes
 
 
-def _wrap_check(
-    ctx: _RunContext,
-    wrapped: WrappedEvidenceSpec,
-) -> tuple[dict[str, float], dict[str, str]]:
-    """Verify + extract wrapped committed evidence (I8: wrap, never re-run)."""
+def _verify_wrapped_files(ctx: _RunContext, wrapped: WrappedEvidenceSpec) -> dict[str, str]:
+    """SHA-256-verify every pinned wrapped-evidence file (I8: verify, never trust)."""
     evidence: dict[str, str] = {}
     for rel, expected in sorted(wrapped.files.items()):
         target = ctx.repo_path / rel
@@ -726,9 +743,49 @@ def _wrap_check(
             )
             raise AdmissionError(msg)
         evidence[rel] = actual
+    return evidence
+
+
+def _wrap_check(
+    ctx: _RunContext,
+    wrapped: WrappedEvidenceSpec,
+) -> tuple[dict[str, float], dict[str, str]]:
+    """Verify + extract wrapped committed scalar evidence (I8: wrap, never re-run)."""
+    evidence = _verify_wrapped_files(ctx, wrapped)
     extractor = _default_wrap_extractor_resolver(wrapped.extractor)
-    stats = extractor(repo_path=ctx.repo_path, spec=wrapped)
+    raw = extractor(repo_path=ctx.repo_path, spec=wrapped)
+    stats: dict[str, float] = {}
+    for key, value in raw.items():
+        if isinstance(value, dict):
+            msg = (
+                f"wrap extractor {wrapped.extractor!r} returned a nested per-member "
+                "profile; a scalar-statistics check (A1/A2/A3) requires a "
+                "dict[str, float] extractor (ADR-027 §Admission protocol)"
+            )
+            raise AdmissionError(msg)
+        stats[key] = float(value)
     return stats, evidence
+
+
+def _wrap_profile_check(
+    ctx: _RunContext,
+    wrapped: WrappedEvidenceSpec,
+) -> tuple[dict[str, dict[str, float]], dict[str, str]]:
+    """Verify + extract a wrapped committed per-member profile (ADR-027 §Admission A4; I8)."""
+    evidence = _verify_wrapped_files(ctx, wrapped)
+    extractor = _default_wrap_extractor_resolver(wrapped.extractor)
+    raw = extractor(repo_path=ctx.repo_path, spec=wrapped)
+    profile: dict[str, dict[str, float]] = {}
+    for member, stats in raw.items():
+        if not isinstance(stats, dict):
+            msg = (
+                f"wrap extractor {wrapped.extractor!r} returned scalar statistics; "
+                "the wrapped A4 check requires a per-member profile extractor "
+                "(dict[str, dict[str, float]], ADR-027 §Admission A4)"
+            )
+            raise AdmissionError(msg)
+        profile[member] = {key: float(value) for key, value in stats.items()}
+    return profile, evidence
 
 
 def _bundle_evidence(ctx: _RunContext, bundle_names: list[str]) -> dict[str, str]:
@@ -899,6 +956,19 @@ def _check_a1(ctx: _RunContext) -> tuple[CheckReport, list[EpisodeResult]]:
         outcome = a1_outcome(stats["success_ci_low"], stats["success_ci_high"], spec.tau_solv)
         if outcome == "INDETERMINATE":
             outcome = "FAIL"  # wrapped evidence cannot be extended; a straddle does not admit
+        if spec.stress_limit is not None and outcome == "PASS":
+            # The committed stress bar holds on the wrapped path too; a
+            # PASS cannot be granted from evidence that carries no
+            # successful-episode stress statistics (the measured-path
+            # loud-guard analogue).
+            if "stress_max" not in stats:
+                msg = (
+                    f"A1 stress_limit is committed ({spec.stress_limit}) but the "
+                    "wrapped evidence carries no successful-episode stress statistics"
+                )
+                raise AdmissionError(msg)
+            if stats["stress_max"] > spec.stress_limit:
+                outcome = "FAIL"
         return (
             CheckReport(
                 check="A1",
@@ -956,9 +1026,24 @@ def _check_a1(ctx: _RunContext) -> tuple[CheckReport, list[EpisodeResult]]:
 
 
 def _check_a2(ctx: _RunContext) -> CheckReport:
-    """A2 two-robot infeasibility (ADR-027 §Admission protocol; ADR-026 §Decision 2)."""
+    """A2 two-robot infeasibility, measured or wrapped (ADR-027; ADR-026 §Decision 2)."""
     spec = ctx.spec
     criterion = f"success_ci_high <= tau_infeasible ({spec.tau_infeasible})"
+    if isinstance(spec.a2, WrappedEvidenceSpec):
+        stats, evidence = _wrap_check(ctx, spec.a2)
+        outcome = a2_outcome(stats["success_ci_low"], stats["success_ci_high"], spec.tau_infeasible)
+        if outcome == "INDETERMINATE":
+            outcome = "FAIL"  # wrapped evidence cannot be extended; a straddle does not admit
+        return CheckReport(
+            check="A2",
+            outcome=outcome,
+            criterion=criterion,
+            statistics=stats,
+            bundles=[],
+            evidence=evidence,
+            notes=f"wrapped committed evidence: {spec.a2.archive} (I8)",
+        )
+
     name, episodes = _run_cell(ctx, spec.a2, seeds=spec.seeds)
     bundles = [name]
     stats = _recompute_summary_stats(ctx, episodes)
@@ -1053,12 +1138,11 @@ def _check_a3(ctx: _RunContext, *, a1_episodes: list[EpisodeResult]) -> CheckRep
 
 
 def _check_a4(ctx: _RunContext) -> tuple[CheckReport, dict[str, dict[str, float]]]:
-    """A4 instrument (ego) robustness across the admitted set (ADR-027 §Admission A4)."""
+    """A4 instrument (ego) robustness, measured or wrapped (ADR-027 §Admission A4)."""
     spec = ctx.spec
     if spec.a4 is None or spec.c_min_ego is None:  # pragma: no cover - spec validator guard
         msg = "A4 requires both c_min_ego and the a4 instrument cell"
         raise AdmissionError(msg)
-    a4_cell = spec.a4
     c_min_ego = spec.c_min_ego
     criterion = (
         f"per admitted partner: success_ci_low >= c_min_ego ({c_min_ego}) with "
@@ -1066,6 +1150,42 @@ def _check_a4(ctx: _RunContext) -> tuple[CheckReport, dict[str, dict[str, float]
         f"partner with success_ci_high < c_min_ego is brittle -> UNINSTRUMENTABLE "
         f"(ADR-026 §Decision 2: a construct problem, not a partner/axis result)"
     )
+    if isinstance(spec.a4, WrappedEvidenceSpec):
+        profile, evidence = _wrap_profile_check(ctx, spec.a4)
+        outcome = a4_outcome(_profile_cis(profile), c_min_ego)
+        if outcome == "INDETERMINATE":
+            outcome = "FAIL"  # wrapped evidence cannot be extended; a straddle does not admit
+        if spec.stress_limit is not None and outcome == "PASS":
+            # A PASS cannot be granted from evidence with no
+            # successful-episode stress statistics (a passing member has
+            # successes by construction, so absence means the wrapped
+            # bundle carries no stress channel at all).
+            missing = sorted(m for m, s in profile.items() if "stress_max" not in s)
+            if missing:
+                msg = (
+                    f"A4 stress_limit is committed ({spec.stress_limit}) but the "
+                    "wrapped profile carries no successful-episode stress "
+                    "statistics for: " + ", ".join(missing)
+                )
+                raise AdmissionError(msg)
+            if any(s["stress_max"] > spec.stress_limit for s in profile.values()):
+                # The same success+stress bar the task uses, held per partner.
+                outcome = "FAIL"
+        stats, notes = _a4_profile_summary(profile, c_min_ego)
+        return (
+            CheckReport(
+                check="A4",
+                outcome=outcome,
+                criterion=criterion,
+                statistics=stats,
+                bundles=[],
+                evidence=evidence,
+                notes=f"wrapped committed evidence: {spec.a4.archive} (I8); {notes}",
+            ),
+            profile,
+        )
+
+    a4_cell = spec.a4
     name, episodes = _run_cell(ctx, a4_cell, seeds=spec.seeds, per_member_schedule=True)
     bundles = [name]
     profile = _ego_robustness_profile(ctx, episodes)
@@ -1107,16 +1227,7 @@ def _check_a4(ctx: _RunContext) -> tuple[CheckReport, dict[str, dict[str, float]
     ):
         # The same success+stress bar the task uses, held per partner.
         outcome = "FAIL"
-    weakest = min(profile, key=lambda member: (profile[member]["success_ci_low"], member))
-    brittle = sorted(m for m, s in profile.items() if s["success_ci_high"] < c_min_ego)
-    stats = {
-        "n_partners": float(len(profile)),
-        "min_success_ci_low": profile[weakest]["success_ci_low"],
-        "min_success_ci_high": min(s["success_ci_high"] for s in profile.values()),
-    }
-    notes = f"weakest admitted partner: {weakest}"
-    if brittle:
-        notes += f"; brittle partners (success_ci_high < c_min_ego): {', '.join(brittle)}"
+    stats, notes = _a4_profile_summary(profile, c_min_ego)
     return (
         CheckReport(
             check="A4",
@@ -1130,6 +1241,23 @@ def _check_a4(ctx: _RunContext) -> tuple[CheckReport, dict[str, dict[str, float]
         ),
         profile,
     )
+
+
+def _a4_profile_summary(
+    profile: dict[str, dict[str, float]], c_min_ego: float
+) -> tuple[dict[str, float], str]:
+    """The A4 check statistics + notes, identical on the measured and wrapped paths (ADR-027 A4)."""
+    weakest = min(profile, key=lambda member: (profile[member]["success_ci_low"], member))
+    brittle = sorted(m for m, s in profile.items() if s["success_ci_high"] < c_min_ego)
+    stats = {
+        "n_partners": float(len(profile)),
+        "min_success_ci_low": profile[weakest]["success_ci_low"],
+        "min_success_ci_high": min(s["success_ci_high"] for s in profile.values()),
+    }
+    notes = f"weakest admitted partner: {weakest}"
+    if brittle:
+        notes += f"; brittle partners (success_ci_high < c_min_ego): {', '.join(brittle)}"
+    return stats, notes
 
 
 def _episodes_by_member(episodes: list[EpisodeResult]) -> dict[str, list[EpisodeResult]]:
