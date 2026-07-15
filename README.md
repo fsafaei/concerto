@@ -1,13 +1,4 @@
 <p align="center">
-  <a href="https://github.com/fsafaei/concerto">
-    <picture>
-      <source media="(prefers-color-scheme: dark)" srcset="docs/assets/dark_mode.png">
-      <img alt="CONCERTO" src="docs/assets/light_mode.png" width="420"/>
-    </picture>
-  </a>
-</p>
-
-<p align="center">
   <em>Contact-rich coordination with opaque, heterogeneous teammates.</em><br/>
   <strong>CONCERTO</strong> is the method.
   <strong>CHAMBER</strong> is the benchmark.
