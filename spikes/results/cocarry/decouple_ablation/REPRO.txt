@@ -1,0 +1,3 @@
+uv run --no-sync python scripts/repro/_cocarry_decouple_ablation.py
+# prereg tag: prereg-cocarry-decouple-ablation-2026-07-11
+# prereg blob SHA: 118a8d3a6366824fe260f8ad8a6012dcc9514804

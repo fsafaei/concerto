@@ -1,0 +1,126 @@
+{
+  "schema": "cocarry_decouple_ablation_prereg/v1",
+  "stage": "Phase-2 co-carry decouple ablation (R-2026-06-C condition 5: the second independent line on base_robustness_control)",
+  "git_tag": "prereg-cocarry-decouple-ablation-2026-07-11",
+  "purpose": "Eval-only, no-training ablation answering ONE question: is the co-carry base ego's near-perfect success COOPERATION-CONTINGENT (it needs the coupled partner actually coordinating) or COUPLING-TRIVIAL (it would succeed anyway at K=8000 with the coupling removed or the partner not acting)? The co-carry campaign's CONFOUNDED_BY_INCUMBENT_BRITTLENESS verdict rests on the base_robustness_control (base pair 1.000 with all six partners => n_genuine_drop_arm_b = 0), which the review board accepted with the condition that it is singly-sourced and was bug-corrupted on its first run. R1's decisive next observation is a decoupled-partner / removed-coupling ablation. A collapse under decoupling HARDENS the CONFOUNDED verdict (the control demonstrated cooperation); survival under decoupling UNDERMINES it (the control never demonstrated cooperation). Falsifiable both ways; pre-committed before any episode runs. This is the sibling of the base-probe's UPWARD stiffness sweep (K 8000 -> 512k), in the opposite direction: DOWN to zero, plus a partner-removed arm - the missing half of the dose-response.",
+  "governance": {
+    "no_training": true,
+    "no_residual": true,
+    "no_heterogeneity": true,
+    "eval_only": true,
+    "matched_pair_only": "Cooperative-impedance ego + matched impedance partner (the 'base' config of the Rung-5 base_robustness_control); the ONLY thing varied is the coupling (stiffness down to zero) and, in one arm, the partner's ACTION stream (zeroed). No new partners, axes, tasks, or knobs.",
+    "success_predicate_unchanged": "The frozen joint predicate (placed AND level AND unstressed AND static AND settled) is NEVER weakened or changed; f_max, goal radius, tilt limit, and episode length are frozen at the base_robustness_control / base-probe values.",
+    "do_not_merge": "Founder review; branch protection.",
+    "immutability": "Prior artifacts under spikes/results/** are immutable (I8) - this run writes ONLY the new directory spikes/results/cocarry/decouple_ablation/. No bump of chamber.comm.SCHEMA_VERSION (I9); this is a new JSON artifact type. Touches no Phase-1 / M10 code (I1).",
+    "reuses": "Existing harness (chamber.benchmarks.cocarry_ph.build_cooperative_ego / build_partner_seat / cluster_bootstrap_delta), the compliant freed-axis spring coupling (chamber.envs.cocarry.cocarry_coupling via make_cocarry_training_env drive_stiffness), the embodiment-invariant coupling-stress instrument (stress_measure='coupling'), the registered partner-ablation instrument (chamber.partners.ablation.PartnerAblatedZero, the same class the admission A2 cell used), and the pure post-hoc predicate chamber.envs.cocarry.evaluate_cocarry_success. Nothing is rebuilt."
+  },
+  "provenance": {
+    "author": "fsafaei",
+    "date": "2026-07-11",
+    "amended": "2026-07-14, PRE-TAG (founder-directed): (1) verdict rule replaced - the pooled mean of C1/C2 is dropped (mean-pooling can average away a high-C2 triviality signal); primary contrast is C0 vs C2, COUPLING_TRIVIAL fires on EITHER decoupled cell, C1/C3 are the corroborating dose-response; (2) c0_reproduce_min 1.0 -> 0.90 (the exact C0 rate is always reported; the kill fires only below 0.90); (3) n 12 -> 20, seed block extended to [71000..71019]. No tag existed before this amendment; no episode has run.",
+    "base_branch": "main",
+    "adr": [
+      "ADR-026 §Decision 1-2 (coupling-validity criterion + the joint success predicate, never weakened)",
+      "ADR-026 §Open-questions ('coupling stiffness is a task parameter, not a fixed constant')"
+    ],
+    "convening": "R-2026-06-C condition 5 (base_robustness_control is singly-sourced and was bug-corrupted on its first run; a thesis-bearing conclusion cannot rest on it alone). R1's decisive next observation: a decoupled-partner / removed-coupling ablation showing base success is cooperation-contingent, not coupling-trivial, at K=8000.",
+    "fmax_grounding": "spikes/results/cocarry/rung4c/cocarry_rung4c_eh_measurement.json (fmax_coupling_n = 365.6080997467041 = 1.25 x matched-Panda-pair coupling success-stress p99).",
+    "sibling_probe": "spikes/results/cocarry/base_probe/cocarry_base_probe_prereg.json (tag prereg-cocarry-base-probe-2026-06-22): the UPWARD stiffness sweep; its K=8000 cell measured success 1.000 on seeds 70000-70011 (FEASIBLE_TRIVIAL).",
+    "single_arm_anchor": "spikes/results/admission/cocarry-2026-07-05/admission_report.json check A2 (a2_single_arm; tag prereg-admission-cocarry-2026-07-05): partner fully removed/retracted (condition cocarry_single_arm_positive_control, partner_ablated_zero seat), success_mean 0.000 over 60 episodes (seeds 90000-90004 x 12). REFERENCED as the known single-arm ~0% anchor; NOT re-derived here. C2 differs from A2 by construction: in C2 the partner arm is PRESENT and coupled at K=8000 but emits zero actions - it isolates the partner's ACTION from the COUPLING."
+  },
+  "fixed_base_config": {
+    "condition_id": "cocarry_matched_panda_pair",
+    "ego": "cocarry_impedance (cooperative-reference ego seat; chamber.benchmarks.cocarry_ph.build_cooperative_ego)",
+    "partner": "cocarry_impedance (matched partner seat; build_partner_seat, panda_partner) - except arm C2, where the partner seat is the registered zero-action instrument (partner_ablated_zero, action_dim 8): LIMP-BUT-COUPLED, distinct from the A2 'retracted' anchor",
+    "episode_length": 320,
+    "stress_measure": "coupling",
+    "fmax_coupling_n": 365.6080997467041,
+    "goal_thresh_m_frozen": 0.1,
+    "tilt_max_deg_frozen": 15.0,
+    "baseline_drive_stiffness": 8000.0,
+    "note": "On main, make_cocarry_training_env's env-internal success flag gates at the wrist ceiling and is IGNORED. Success is computed POST-HOC for every episode via the pure chamber.envs.cocarry.evaluate_cocarry_success(...) on the recorded raw metrics (centroid, max_tilt, max_stress=coupling force, both_static) at the f_max above. The hand-built controllers ignore reward, so rollout physics are byte-identical regardless of the (unused) reward params. drive_stiffness=K (a float) selects the Rung-4b compliant freed-axis spring via chamber.envs.cocarry.cocarry_coupling: damping derives at the rig's fixed 0.1 ratio (K=0 => damping 0), force limit unbounded. K=0 means the spring transmits no force - the coupling is OFF; the bar is held by nothing but whatever the arms' grip frames happen to do."
+  },
+  "seeds": [71000, 71001, 71002, 71003, 71004, 71005, 71006, 71007, 71008, 71009, 71010, 71011, 71012, 71013, 71014, 71015, 71016, 71017, 71018, 71019],
+  "n_seeds": 20,
+  "seed_disjointness": "Disjoint from EVERY prior co-carry seed set: Rung-2 S 10000- / V 20000-, Rung-3 measurement 30000-30011 / calibration 40000-, Rung-4 EH 50000- / 60000-, Rung-5 measurement 54000-, base_probe 70000-70011, Rung-4b 70010-70017, Rung-4d 80100-80105, Rung-4e search 81000-81003 / confirm 81100-81111, admission 90000-90006. The driver verifies disjointness in code against this table and prints the check before any rollout.",
+  "conditions": {
+    "C0_coupled_anchor": {
+      "drive_stiffness_npm": 8000.0,
+      "partner": "matched impedance, present and acting",
+      "expected": "~1.000 - must reproduce the base_robustness_control matched cell (and the base-probe K=8000 cell). Runs FIRST.",
+      "stop_rule": "If C0 success_rate < c0_reproduce_min (see tripwires), STOP (substrate drift) - do NOT proceed to C1-C3; report only."
+    },
+    "C1_decoupled_spring_off": {
+      "drive_stiffness_npm": 0.0,
+      "partner": "matched impedance, present and acting",
+      "tests": "Whether the coordination channel (the spring) is load-bearing. C1 IS the K=0 endpoint of the C3 down-sweep: each (K, seed) cell runs exactly once and the K=0 cell is reported both as C1 and as the C3 endpoint (no duplicated episodes). Founder revision 2026-07-14: C1 is NOT part of the primary contingent contrast (that is C0 vs C2); it feeds the COUPLING_TRIVIAL arm (C1 >= 0.90 = the base wins with no coupling at all, a trivial-solve) and, with C3, the corroborating coupling dose-response (expected to drop too). A C1-only failure is WEAKER evidence of cooperation-contingency: at K=0 the shared bar is unsupported (nothing transmits force from either gripper), so collapse is mechanically expected regardless of coordination."
+    },
+    "C2_partner_removed": {
+      "drive_stiffness_npm": 8000.0,
+      "partner": "partner_ablated_zero (registered instrument; action_dim 8; zero pd_joint_delta_pos action stream = the arm holds its ready pose and never cooperates): LIMP-BUT-COUPLED - the coupling stays PRESENT at K=8000, only the cooperation is removed. Distinct from the A2 'retracted' anchor, where the partner is physically removed.",
+      "tests": "THE PRIMARY INSTRUMENT for R1's 'coupling-trivial at K=8000': cooperation is removed at the FIXED task stiffness, so the bar remains mechanically supported and only the partner's coordinated action is ablated. Anchored against the admission A2 single-arm ~0% (partner retracted) - referenced, not re-derived."
+    },
+    "C3_down_sweep": {
+      "drive_stiffness_grid_npm": [8000.0, 4000.0, 2000.0, 1000.0, 500.0, 100.0, 0.0],
+      "partner": "matched impedance, present and acting",
+      "tests": "Dose-response: locates the K at which base success falls off - the mirror image of the base-probe's upward sweep. The K=8000 cell is C0; the K=0 cell is C1. Reported as the K dose-response CURVE (context / corroboration, not gated).",
+      "method": "Real rollouts of the pair at each K (20 seeds), recording per-step instantaneous trajectories (tilt_deg, coupling stress, centroid) plus per-episode metrics, exactly as the base probe did."
+    }
+  },
+  "estimator": {
+    "per_episode_success": "chamber.envs.cocarry.evaluate_cocarry_success on the re-read committed per-episode JSONL (never in-memory values) at the frozen f_max / goal radius / tilt limit.",
+    "per_cell_ci": "C0 / C1 / C2 are each reported as success_rate with a seed-bootstrap two-sided 95% percentile CI (resample the 20 seed clusters with replacement; n_boot 10000; RNG via concerto.training.seeding.derive_substream('cocarry.decouple_ablation.rate_bootstrap', root_seed=0) - P6). C3 is reported as the K dose-response curve (per-K success_rate + CI; context, not gated).",
+    "primary_contrast": "C0 vs C2 (founder revision 2026-07-14, replacing the earlier pooled {C1, C2} draft - mean-pooling can average away a high-C2 triviality signal): gap = C0 success_rate - C2 success_rate. CI via the existing seed-cluster bootstrap chamber.benchmarks.cocarry_ph.cluster_bootstrap_delta (reference = C0 per-seed successes, single teammate = C2; n_boot 10000, alpha 0.05, root_seed 0, substream 'cocarry.rung3.bootstrap'): the decision rule reads the one-sided 95% LOWER bound (pooled_ci_lower_one_sided, which equals the single-cell bound here).",
+    "corroboration": "C1 (the K=0 endpoint) and the full C3 down-sweep success rates + CIs are reported as the coupling dose-response (expected to drop too); C1 additionally feeds the COUPLING_TRIVIAL arm. Corroboration is REPORTED, never substituted into the primary contrast, and never gates."
+  },
+  "decision_rule": {
+    "band_edges_note": "Reuses the program's pre-registered band edges 0.10 / 0.90 (the base-probe success bands). Stated once, two-sided, before any episode runs; founder-directed amendment 2026-07-14 (primary contrast revised from the pooled {C1, C2} draft to C0 vs C2; C1/C3 = corroborating dose-response; COUPLING_TRIVIAL fires on EITHER decoupled cell). LOCKED at tag-cut; never tuned to the data.",
+    "rationale": "C2 (cooperation removed at the FIXED task stiffness K=8000, limp-but-coupled) is the PRIMARY instrument for R1's 'coupling-trivial at K=8000' question: it ablates exactly the partner's coordinated action while leaving the bar mechanically supported. C1/C3 (coupling removed / swept down) are the corroborating dose-response. A C1-only failure is WEAKER evidence: at K=0 the shared bar is unsupported, so collapse is mechanically expected regardless of coordination. Mean-pooling C1 with C2 was dropped because it can average away a high-C2 triviality signal.",
+    "COUPLING_TRIVIAL": "iff C2 success_rate >= 0.90 OR C1 success_rate >= 0.90 - the base wins with no functioning partner, or with no coupling at all; either is a trivial-solve. Takes PRECEDENCE over the contingent arm: any decoupled trivial-solve invalidates the control regardless of the other cell. => base_robustness_control is INVALID as a cooperation demonstration and the co-carry CONFOUNDED headline must be re-interpreted.",
+    "COOPERATION_CONTINGENT": "iff C0 success_rate >= 0.90 AND C2 success_rate <= 0.10 AND the (C0 - C2) gap's one-sided 95% lower confidence bound >= 0.50 (and no trivial-solve fired). C1 and the C3 down-sweep are reported alongside as the corroborating coupling dose-response (expected to drop too). => The base ego needs the coupled partner actually coordinating: the base_robustness_control is a VALID cooperation demonstration and the co-carry CONFOUNDED_BY_INCUMBENT_BRITTLENESS verdict HOLDS (hardened by a second independent line).",
+    "INDETERMINATE": "otherwise - report the SPLIT (e.g. C2 low, C1 mid; or C2 low but not <= 0.10; or an under-powered gap bound), never collapse it; propose the next cheap discriminator, do NOT self-authorize it.",
+    "bounds": {
+      "c0_min": 0.9,
+      "c2_max": 0.1,
+      "gap_ci_lower_min": 0.5,
+      "trivial_min": 0.9
+    }
+  },
+  "artifact_vs_real_classification": {
+    "note": "Same thresholds as the base probe (its committed artifact-vs-real rule), applied per cell for reporting. A DOWN-sweep is expected to be numerically benign (the blow-up wall was HIGH K); any non-finite value nonetheless triggers the tripwire STOP below rather than a silent classification.",
+    "fmax_coupling_n": 365.6080997467041,
+    "stress_artifact_multiple": 3.0,
+    "stress_artifact_n": 1096.8242992401123,
+    "tilt_artifact_deg": 60.0,
+    "success_bands_for_stable_settings": {
+      "FEASIBLE_TRIVIAL": "success_rate >= 0.95",
+      "MARGINAL": "0.90 < success_rate < 0.95",
+      "HARD_BUT_FEASIBLE": "0.10 <= success_rate <= 0.90 AND physics stable",
+      "STABLE_INFEASIBLE": "success_rate < 0.10 AND physics stable"
+    }
+  },
+  "tripwires": {
+    "prereg_first": "The driver refuses to run unless the working tree is clean (exit 7, DIRTY_TREE_EXIT_CODE; chamber-eval-style --allow-dirty exists for re-runs over already-written results but has NO effect on the prereg check) AND the on-disk prereg blob SHA matches the blob stored at the SSH-signed annotated tag prereg-cocarry-decouple-ablation-2026-07-11 (exit 4, PREREG_MISMATCH_EXIT_CODE - the chamber-eval gate, no bypass). No episode runs before the tag exists.",
+    "c0_reproduce_min": 0.9,
+    "c0_reproduce_note": "The exact C0 success rate is ALWAYS reported. The substrate-drift kill fires only if C0 < 0.90 (founder amendment 2026-07-14; was exact-reproduction 1.0): C0 < 0.90 cannot anchor either verdict arm and contradicts every prior identical-config observation (admission A1 60/60, base-probe K=8000 12/12, base_robustness_control 6x n, all 1.000) => STOP (exit 3), report only, do not proceed to C1-C3.",
+    "non_finite": "Any non-finite (NaN/Inf) tilt / coupling stress / centroid in any episode => STOP (exit 3) and report; never silently extend or classify past it.",
+    "compute_cap": {
+      "max_episodes": 160,
+      "max_wall_clock_s": 14400,
+      "note": "7 down-sweep cells x 20 seeds (C0 at K=8000 and C1 at K=0 are the sweep endpoints) + C2 x 20 = 160 episodes. Cap breach => STOP (exit 3) and report."
+    },
+    "no_scope_additions": "Run ONLY the conditions above. If the design appears to need a change (predicate, f_max, grid, seeds, partner construction), STOP and surface it - never self-authorize."
+  },
+  "repro": {
+    "driver": "scripts/repro/_cocarry_decouple_ablation.py",
+    "shell": "scripts/repro/cocarry_decouple_ablation.sh",
+    "command": "uv run --no-sync python scripts/repro/_cocarry_decouple_ablation.py",
+    "outputs": [
+      "spikes/results/cocarry/decouple_ablation/cocarry_decouple_ablation_measurement.json",
+      "spikes/results/cocarry/decouple_ablation/cocarry_decouple_ablation_episodes.jsonl",
+      "spikes/results/cocarry/decouple_ablation/cocarry_decouple_ablation_trajectories.json",
+      "spikes/results/cocarry/decouple_ablation/SHA256SUMS",
+      "spikes/results/cocarry/decouple_ablation/REPRO.txt"
+    ]
+  }
+}
