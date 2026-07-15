@@ -91,6 +91,27 @@ under preregistered thresholds:
   state re-enters through the ego's own proprioception — so the
   learned contrast measures the value of explicit partner
   observation, not partner-relevance.
+- **A4 — instrument (ego) robustness** *(added 2026-07-15; see
+  §Revision history)*. When a policy is used as the fixed **measuring
+  instrument** for a heterogeneity, co-design, or ad-hoc-teamwork
+  contrast — i.e. the incumbent/reference the partner variants are
+  measured against — that instrument must itself clear a
+  **preregistered ego-robustness floor**: stable success (≥ a
+  preregistered `C_min_ego`, at or above the same success+stress bar
+  the task uses) across the **admitted partner set**, not only its
+  training/matched partner. A4 is the ego-side analogue of the
+  partner-side capability floor (`C_min`): the protocol gates the
+  partner set, and A4 gates the ego the partners are measured against.
+  An instrument that succeeds only with its matched partner is
+  **brittle**, and cross-partner contrasts run through it are
+  confounded by instrument brittleness rather than the manipulated
+  axis. **Failure of A4 makes the contrast inadmissible** — the
+  task×axis is *un-instrumentable as built* until a partner-robust
+  instrument exists (this is not a null and not a heterogeneity
+  finding; per ADR-026 §Decision 2's rule, a brittle instrument is a
+  construct problem, never re-described as a partner/axis result). The
+  instrument's per-partner robustness profile is a **mandatory
+  reported artifact** alongside any admitted contrast.
 
 Nulls measured **on admitted tasks** are reported as informative nulls,
 never re-described as task failures (ADR-026 §Decision 2's rule,
@@ -218,9 +239,38 @@ one admitted task's table from the manifest + bundles alone.
   `invalid` on another without confusing the public table (expected:
   yes, the matrix is the interface; revisit after the first two-axis
   task).
+- Where A4's `C_min_ego` and the per-partner robustness profile are
+  recorded in the committed admission report:
+  `chamber.evaluation.admission` is the enforcement surface (a new
+  `AdmissionSpec` threshold field, an `A4` check, and the profile in
+  the report), but extending the report schema is a separate code
+  slice gated on this ADR and may warrant an
+  `ADMISSION_REPORT_SCHEMA_VERSION` consideration — not implemented
+  here.
 
 ## Revision history
 
+- **2026-07-15 — A4 added: instrument (ego) robustness (founder;
+  review round R-2026-06-C, condition 5).** The admission protocol
+  gated the partner set but never the ego/incumbent serving as the
+  measuring instrument. The Rung-5 co-design (CD) measurement admitted
+  a brittle instrument by construction: the trained residual incumbent
+  succeeded 1.0 only with its own training partner and dropped with
+  the others (admittance 0.536, selfish_goal 0.500, selfish_effort
+  0.000), while the structured base ego cooperated with all six
+  partners — verdict CONFOUNDED_BY_INCUMBENT_BRITTLENESS, so the CD
+  contrast was un-instrumentable as built. A4 closes that gap: any
+  policy serving as the fixed measuring instrument for a cross-partner
+  contrast must clear a preregistered ego-robustness floor across the
+  admitted partner set, with the per-partner robustness profile a
+  mandatory reported artifact. Corroborating evidence that the *base*
+  instrument is sound where the *residual* instrument was not: the
+  second independent line that hardened the base cooperation control —
+  the decouple ablation (`spikes/results/cocarry/decouple_ablation/`,
+  verdict COOPERATION_CONTINGENT: coupled 1.000 vs limp-but-coupled
+  0.000, gap CI lower bound 1.000). Provenance: the R-2026-06-C
+  disposition record (project records). This is a Decision-content
+  amendment; ADR-027 remains Accepted.
 - **2026-07-06 — A3 ruling (founder).** The A3 admission instrument is
   the preregistered scripted/ablated partner-relevance check, as
   executed in the co-carry admission (#269: `cocarry_blind_impedance`,
