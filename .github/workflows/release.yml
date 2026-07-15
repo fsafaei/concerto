@@ -79,7 +79,7 @@ jobs:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
         with:
           ref: ${{ github.event.inputs.ref || github.event.inputs.tag || needs.release-please.outputs.tag_name }}
-      - uses: astral-sh/setup-uv@f98e06938123ccabd21905ea5d0069192241f9f1  # v8.3.1
+      - uses: astral-sh/setup-uv@11f9893b081a58869d3b5fccaea48c9e9e46f990  # v8.3.2
         with:
           python-version: "3.11"
       - run: uv sync --group dev
@@ -88,7 +88,7 @@ jobs:
       # the GitHub release for an existing tag.
       - run: uv run cyclonedx-py environment -o sbom.spdx.json
         if: github.event_name == 'push'
-      - uses: softprops/action-gh-release@718ea10b132b3b2eba29c1007bb80653f286566b  # v3.0.1
+      - uses: softprops/action-gh-release@3d0d9888cb7fd7b750713d6e236d1fcb99157228  # v3.0.2
         if: github.event_name == 'push'
         with:
           tag_name: ${{ env.PUBLISH_TAG }}
@@ -139,7 +139,7 @@ jobs:
         with:
           name: dist
           path: dist
-      - uses: astral-sh/setup-uv@f98e06938123ccabd21905ea5d0069192241f9f1  # v8.3.1
+      - uses: astral-sh/setup-uv@11f9893b081a58869d3b5fccaea48c9e9e46f990  # v8.3.2
       - run: uv publish --publish-url https://test.pypi.org/legacy/ --check-url https://test.pypi.org/simple/ --trusted-publishing always
 
   # Production-PyPI publish. Gated on the TestPyPI smoke check (unless
@@ -168,7 +168,7 @@ jobs:
         with:
           name: dist
           path: dist
-      - uses: astral-sh/setup-uv@f98e06938123ccabd21905ea5d0069192241f9f1  # v8.3.1
+      - uses: astral-sh/setup-uv@11f9893b081a58869d3b5fccaea48c9e9e46f990  # v8.3.2
       # --check-url lets a re-dispatch after a transient failure skip
       # files the index already holds instead of erroring on the
       # duplicate upload.
