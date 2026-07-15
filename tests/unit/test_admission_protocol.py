@@ -832,22 +832,25 @@ class TestWrappedA4:
         repo: Path,
         *,
         member_success: dict[str, Callable[[int, int], bool]] | None = None,
-        member_force: dict[str, float] | None = None,
+        member_force: dict[str, float | None] | None = None,
         members_pin: list[str] | None = None,
         a1_extractor: str = "bundle_success_summary",
         a4_extractor: str = "bundle_ego_robustness_profile",
+        a1_force: float | None = 40.0,
+        a2_success: Callable[[int, int], bool] | None = None,
         tamper_a4: bool = False,
     ) -> dict[str, object]:
         """A fully wrapped admission payload — the retrospective re-issue shape (I8)."""
         seeds = [0, 1]
         n_eps = 4
         success = member_success or {m: (lambda _s, _e: True) for m in self._MEMBERS}
-        force = member_force or {}
+        force: dict[str, float | None] = member_force or {}
+        a2_fn = a2_success or (lambda _s, _e: False)
         a1_files = _write_bundle_episodes(
             repo,
             "spikes/wrapped/a1_reference",
             {
-                s: [_episode(s, e, success=True, force_peak=40.0) for e in range(n_eps)]
+                s: [_episode(s, e, success=True, force_peak=a1_force) for e in range(n_eps)]
                 for s in seeds
             },
         )
@@ -855,7 +858,7 @@ class TestWrappedA4:
             repo,
             "spikes/wrapped/a2_single_arm",
             {
-                s: [_episode(s, e, success=False, force_peak=40.0) for e in range(n_eps)]
+                s: [_episode(s, e, success=a2_fn(s, e), force_peak=40.0) for e in range(n_eps)]
                 for s in seeds
             },
         )
@@ -1003,6 +1006,70 @@ class TestWrappedA4:
         profile = report.ego_robustness_profile
         assert profile is not None
         assert profile["imp_b"]["stress_max"] == 150.0
+
+    def test_wrapped_a1_stress_over_limit_fails_not_solvable(self, tmp_path: Path) -> None:
+        """The committed stress bar holds on the wrapped A1 path too."""
+        report, _ = self._run_wrapped(tmp_path, a1_force=150.0)
+        assert report.verdict == "NOT_SOLVABLE"
+        a1 = next(c for c in report.checks if c.check == "A1")
+        assert a1.outcome == "FAIL"
+        assert a1.statistics["stress_max"] == 150.0
+
+    def test_wrapped_a1_pass_without_stress_channel_is_loud(self, tmp_path: Path) -> None:
+        """A wrapped A1 PASS cannot be granted without successful-episode stress evidence."""
+        with pytest.raises(AdmissionError, match="stress statistics"):
+            self._run_wrapped(tmp_path, a1_force=None)
+
+    def test_wrapped_a2_straddle_is_final_fail(self, tmp_path: Path) -> None:
+        """A wrapped A2 straddle is FAIL (no extension) -> the CONTROL demotion."""
+        report, _ = self._run_wrapped(tmp_path, a2_success=lambda s, _e: s == 0)
+        assert report.verdict == "CONTROL"
+        a2 = next(c for c in report.checks if c.check == "A2")
+        assert a2.outcome == "FAIL"
+        assert a2.extended is False
+        assert report.seed_extension_used is False
+
+    def test_wrapped_a4_pass_without_stress_channel_is_loud(self, tmp_path: Path) -> None:
+        """A wrapped A4 PASS cannot be granted from a profile with no stress channel."""
+        with pytest.raises(AdmissionError, match="A4 stress_limit is committed"):
+            self._run_wrapped(tmp_path, member_force=dict.fromkeys(self._MEMBERS))
+
+    def test_extractor_refuses_unpinned_episode_files(self, tmp_path: Path) -> None:
+        """Only SHA-pinned files can contribute evidence (I8)."""
+        from chamber.benchmarks.admission_cells import extract_bundle_success_summary
+
+        repo = _init_repo(tmp_path)
+        files = _write_bundle_episodes(
+            repo,
+            "spikes/wrapped/a1_reference",
+            {0: [_episode(0, 0, success=True, force_peak=40.0)]},
+        )
+        spec = WrappedEvidenceSpec(
+            archive="spikes/wrapped",
+            files=files,
+            extractor="bundle_success_summary",
+            params={"bundle_dir": "spikes/wrapped/other_cell"},
+        )
+        with pytest.raises(AdmissionError, match="SHA-pinned"):
+            extract_bundle_success_summary(repo_path=repo, spec=spec)
+
+    def test_paired_delta_requires_both_bundle_dirs(self, tmp_path: Path) -> None:
+        from chamber.benchmarks.admission_cells import extract_bundle_paired_delta
+
+        repo = _init_repo(tmp_path)
+        files = _write_bundle_episodes(
+            repo,
+            "spikes/wrapped/a1_reference",
+            {0: [_episode(0, 0, success=True, force_peak=40.0)]},
+        )
+        spec = WrappedEvidenceSpec(
+            archive="spikes/wrapped",
+            files=files,
+            extractor="bundle_paired_delta",
+            params={"reference_dir": "spikes/wrapped/a1_reference"},
+        )
+        with pytest.raises(AdmissionError, match="blind_dir"):
+            extract_bundle_paired_delta(repo_path=repo, spec=spec)
 
     def test_tampered_wrapped_a4_is_refused(self, tmp_path: Path) -> None:
         with pytest.raises(AdmissionError, match="SHA-256 mismatch"):
