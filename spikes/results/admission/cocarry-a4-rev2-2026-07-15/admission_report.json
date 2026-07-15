@@ -1,0 +1,208 @@
+{
+  "schema_version": 1,
+  "task_id": "cocarry",
+  "task_version": 1,
+  "prereg_git_tag": "prereg-admission-cocarry-a4-rev2-2026-07-15",
+  "prereg_blob_sha": "302b769902c14b6f77c54ece4d0c9eefcdb2e061",
+  "git_sha": "04c407efa37206f27dcc346ff4fe9d58f45681a5",
+  "dirty": false,
+  "date_stamp": "2026-07-15",
+  "checks": [
+    {
+      "check": "A1",
+      "outcome": "PASS",
+      "criterion": "success_ci_low >= tau_solv (0.95) with successful-episode stress peak <= stress_limit (130.56970529556276)",
+      "statistics": {
+        "n_episodes": 60.0,
+        "success_mean": 1.0,
+        "success_iqm": 1.0,
+        "success_ci_low": 1.0,
+        "success_ci_high": 1.0,
+        "stress_n": 60.0,
+        "stress_p50": 88.59993743896484,
+        "stress_p90": 104.0792839050293,
+        "stress_p99": 106.42241874694824,
+        "stress_max": 107.91167449951172
+      },
+      "bundles": [],
+      "evidence": {
+        "spikes/results/admission/cocarry-2026-07-05/a1_reference/bundle.json": "6987b9178bcb6a26eead4e05e4cfc73d7602bc6cd7eceb5bff836f3dd87b054e",
+        "spikes/results/admission/cocarry-2026-07-05/a1_reference/episodes_seed90000.jsonl": "e33a9860f29118fadeef5896ca3641748a3e4376bd6fec3c6a31c997b48ccb33",
+        "spikes/results/admission/cocarry-2026-07-05/a1_reference/episodes_seed90001.jsonl": "0d02c9756d8826f40fe3e8e4ab0378a224aaa0191624ee188dc4b103d0443c02",
+        "spikes/results/admission/cocarry-2026-07-05/a1_reference/episodes_seed90002.jsonl": "7494dc3fdfef904a74bcbb235c3ca83c0f47e46ec0efa1bf7f35cad1fd190058",
+        "spikes/results/admission/cocarry-2026-07-05/a1_reference/episodes_seed90003.jsonl": "2251c810d191c2383d592cd6484f49d0d89dc1330e61353187222ba5519dc129",
+        "spikes/results/admission/cocarry-2026-07-05/a1_reference/episodes_seed90004.jsonl": "738d6dfef57a2bb8fef2513cd14f472a9aa2f377e2374f42871eb6a5b4e18c89"
+      },
+      "extended": false,
+      "notes": "wrapped committed evidence: spikes/results/admission/cocarry-2026-07-05 (I8)"
+    },
+    {
+      "check": "A2",
+      "outcome": "PASS",
+      "criterion": "success_ci_high <= tau_infeasible (0.05)",
+      "statistics": {
+        "n_episodes": 60.0,
+        "success_mean": 0.0,
+        "success_iqm": 0.0,
+        "success_ci_low": 0.0,
+        "success_ci_high": 0.0,
+        "stress_n": 60.0,
+        "stress_p50": 8.16704511642456,
+        "stress_p90": 9.45764741897583,
+        "stress_p99": 15.180480775833114,
+        "stress_max": 17.996543884277344
+      },
+      "bundles": [],
+      "evidence": {
+        "spikes/results/admission/cocarry-2026-07-05/a2_single_arm/bundle.json": "26d24676cc969842b6c62fac41b48154c7a7e7d1aec597a7f918259e56c219b0",
+        "spikes/results/admission/cocarry-2026-07-05/a2_single_arm/episodes_seed90000.jsonl": "9b9a71d8e68d644658773458fecbceb66d986308f3c33d7655abaaf0124e96a3",
+        "spikes/results/admission/cocarry-2026-07-05/a2_single_arm/episodes_seed90001.jsonl": "0889f5b06cfce6799547ab6b25ccbe451b7eeba7fb9c8b62bdb969a9fcebde1c",
+        "spikes/results/admission/cocarry-2026-07-05/a2_single_arm/episodes_seed90002.jsonl": "3be0ae23e61009c0bf143440c5f18221e36faa893ba5df298a2e41a60b047fe4",
+        "spikes/results/admission/cocarry-2026-07-05/a2_single_arm/episodes_seed90003.jsonl": "ddd4a24fc56b4c8764ad4197aff63345ab96eaf77315f4aabf1fe7e926f2ceab",
+        "spikes/results/admission/cocarry-2026-07-05/a2_single_arm/episodes_seed90004.jsonl": "afd8726b70e2ae32f67c31bf53c52ecac17bebfc21cc0058df134a61693e60f1"
+      },
+      "extended": false,
+      "notes": "wrapped committed evidence: spikes/results/admission/cocarry-2026-07-05 (I8)"
+    },
+    {
+      "check": "A3",
+      "outcome": "PASS",
+      "criterion": "paired reference-minus-blind gap: delta_ci_low >= delta_min (0.2) passes; delta_ci_high < delta_min demotes to Tier-1 CONTROL",
+      "statistics": {
+        "n_pairs": 60.0,
+        "delta_iqm": 1.0,
+        "delta_mean": 1.0,
+        "delta_ci_low": 1.0,
+        "delta_ci_high": 1.0
+      },
+      "bundles": [],
+      "evidence": {
+        "spikes/results/admission/cocarry-2026-07-05/a1_reference/bundle.json": "6987b9178bcb6a26eead4e05e4cfc73d7602bc6cd7eceb5bff836f3dd87b054e",
+        "spikes/results/admission/cocarry-2026-07-05/a1_reference/episodes_seed90000.jsonl": "e33a9860f29118fadeef5896ca3641748a3e4376bd6fec3c6a31c997b48ccb33",
+        "spikes/results/admission/cocarry-2026-07-05/a1_reference/episodes_seed90001.jsonl": "0d02c9756d8826f40fe3e8e4ab0378a224aaa0191624ee188dc4b103d0443c02",
+        "spikes/results/admission/cocarry-2026-07-05/a1_reference/episodes_seed90002.jsonl": "7494dc3fdfef904a74bcbb235c3ca83c0f47e46ec0efa1bf7f35cad1fd190058",
+        "spikes/results/admission/cocarry-2026-07-05/a1_reference/episodes_seed90003.jsonl": "2251c810d191c2383d592cd6484f49d0d89dc1330e61353187222ba5519dc129",
+        "spikes/results/admission/cocarry-2026-07-05/a1_reference/episodes_seed90004.jsonl": "738d6dfef57a2bb8fef2513cd14f472a9aa2f377e2374f42871eb6a5b4e18c89",
+        "spikes/results/admission/cocarry-2026-07-05/a3_blind/bundle.json": "dd08179e68c7de70c751231cfc7823e2e4091a5e801f24cae6562dc1a0548ca0",
+        "spikes/results/admission/cocarry-2026-07-05/a3_blind/episodes_seed90000.jsonl": "03b4fe2b38e8a13cd3706c1074809ecbfe576f8682a9599aa9b888684667e707",
+        "spikes/results/admission/cocarry-2026-07-05/a3_blind/episodes_seed90001.jsonl": "0f81bd2f4de81d563f2337797c482d71538bc16cbe23377edb8061ec94381c21",
+        "spikes/results/admission/cocarry-2026-07-05/a3_blind/episodes_seed90002.jsonl": "9d2731b3eab7edd9edecd60f14f8a3de4c329ca6e9c62fd6cb51fa92b6cef1fc",
+        "spikes/results/admission/cocarry-2026-07-05/a3_blind/episodes_seed90003.jsonl": "86aade6fc89b0cda26e24c85e85bf852af068a77a1eefe0b6aade3f23ec5cd81",
+        "spikes/results/admission/cocarry-2026-07-05/a3_blind/episodes_seed90004.jsonl": "bd5ff930b4690648348ca188c8d6c99cd9d3bfd32d9b88bc8a169a44cd03b1cd"
+      },
+      "extended": false,
+      "notes": "wrapped committed evidence: spikes/results/admission/cocarry-2026-07-05 (I8)"
+    },
+    {
+      "check": "A4",
+      "outcome": "PASS",
+      "criterion": "per admitted partner: success_ci_low >= c_min_ego (0.75) with successful-episode stress peak <= stress_limit (130.56970529556276); any partner with success_ci_high < c_min_ego is brittle -> UNINSTRUMENTABLE (ADR-026 §Decision 2: a construct problem, not a partner/axis result)",
+      "statistics": {
+        "n_partners": 7.0,
+        "min_success_ci_low": 0.8331349206349207,
+        "min_success_ci_high": 1.0
+      },
+      "bundles": [],
+      "evidence": {
+        "spikes/results/benchmark/cocarry-v1/b-aht-2026-07-06/bundle.json": "bb71f18fd01145e6a13191d99e895e4b3087fbd45d0a1eda12d6399f0d4a03f8",
+        "spikes/results/benchmark/cocarry-v1/b-aht-2026-07-06/episodes_seed0.jsonl": "4dcf9131e5a2d4e088efa41643aa5e1bc180dd453574b763d1983c5b151f1650",
+        "spikes/results/benchmark/cocarry-v1/b-aht-2026-07-06/episodes_seed1.jsonl": "1ef9f04aacc9ed76bee21d58a3219e56b12b1688a3a24299db8fb5f41eafe3da",
+        "spikes/results/benchmark/cocarry-v1/b-aht-2026-07-06/episodes_seed2.jsonl": "1d8b4eec7639f3ca8c0e512e7324c2ca05ee06f5bbe30c33284e1b9ea2163513",
+        "spikes/results/benchmark/cocarry-v1/b-aht-2026-07-06/episodes_seed3.jsonl": "a9186584034ec2f92c85b8ebb53b83859b46a60a8f9a501db42b5daff37f4de5",
+        "spikes/results/benchmark/cocarry-v1/b-aht-2026-07-06/episodes_seed4.jsonl": "feb08c807a39278db50e86bef06cfe9566775f4af2c1a00f89d853eafa89b8cf"
+      },
+      "extended": false,
+      "notes": "wrapped committed evidence: spikes/results/benchmark/cocarry-v1/b-aht-2026-07-06 (I8); weakest admitted partner: imp_blend_c"
+    }
+  ],
+  "verdict": "ADMITTED",
+  "seed_extension_used": false,
+  "binding_evidence": {},
+  "ego_robustness_profile": {
+    "imp_blend_b": {
+      "n_episodes": 250.0,
+      "success_mean": 0.992,
+      "success_iqm": 1.0,
+      "success_ci_low": 1.0,
+      "success_ci_high": 1.0,
+      "stress_n": 248.0,
+      "stress_p50": 96.21892929077148,
+      "stress_p90": 115.1115234375,
+      "stress_p99": 123.8866544342041,
+      "stress_max": 129.5172119140625
+    },
+    "imp_blend_c": {
+      "n_episodes": 250.0,
+      "success_mean": 0.888,
+      "success_iqm": 1.0,
+      "success_ci_low": 0.8331349206349207,
+      "success_ci_high": 1.0,
+      "stress_n": 222.0,
+      "stress_p50": 83.50908660888672,
+      "stress_p90": 107.68436126708984,
+      "stress_p99": 117.36273468017578,
+      "stress_max": 121.48442077636719
+    },
+    "imp_damp_high": {
+      "n_episodes": 250.0,
+      "success_mean": 0.984,
+      "success_iqm": 1.0,
+      "success_ci_low": 1.0,
+      "success_ci_high": 1.0,
+      "stress_n": 246.0,
+      "stress_p50": 81.49363708496094,
+      "stress_p90": 109.66497421264648,
+      "stress_p99": 123.11990470886235,
+      "stress_max": 127.17449951171875
+    },
+    "imp_damp_low": {
+      "n_episodes": 250.0,
+      "success_mean": 1.0,
+      "success_iqm": 1.0,
+      "success_ci_low": 1.0,
+      "success_ci_high": 1.0,
+      "stress_n": 250.0,
+      "stress_p50": 83.93665313720703,
+      "stress_p90": 115.88955841064453,
+      "stress_p99": 125.40906311035155,
+      "stress_max": 126.0120849609375
+    },
+    "imp_lag_bounded": {
+      "n_episodes": 250.0,
+      "success_mean": 0.884,
+      "success_iqm": 1.0,
+      "success_ci_low": 0.9365079365079365,
+      "success_ci_high": 1.0,
+      "stress_n": 221.0,
+      "stress_p50": 80.27716064453125,
+      "stress_p90": 101.64134216308594,
+      "stress_p99": 109.37053222656252,
+      "stress_max": 124.38072967529297
+    },
+    "imp_stiff_high": {
+      "n_episodes": 250.0,
+      "success_mean": 0.976,
+      "success_iqm": 1.0,
+      "success_ci_low": 1.0,
+      "success_ci_high": 1.0,
+      "stress_n": 244.0,
+      "stress_p50": 80.80032348632812,
+      "stress_p90": 96.78060150146484,
+      "stress_p99": 112.31492156982422,
+      "stress_max": 123.2230224609375
+    },
+    "imp_stiff_low": {
+      "n_episodes": 250.0,
+      "success_mean": 1.0,
+      "success_iqm": 1.0,
+      "success_ci_low": 1.0,
+      "success_ci_high": 1.0,
+      "stress_n": 250.0,
+      "stress_p50": 77.84184646606445,
+      "stress_p90": 96.31318817138671,
+      "stress_p99": 108.82677391052245,
+      "stress_max": 113.15235900878906
+    }
+  },
+  "notes": ""
+}

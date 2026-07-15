@@ -1157,6 +1157,34 @@ class TestCommittedCocarryA4Evidence:
         assert a4_outcome(cis, c_min_ego) == "PASS"
         assert min(ci_low for ci_low, _ in cis.values()) == pytest.approx(0.8331, abs=1e-3)
 
+    def test_committed_a4_archive_loads_with_the_profile(self) -> None:
+        """The committed cocarry-a4-rev2-2026-07-15 archive: the A4 gate fired on real data."""
+        report = load_admission_report(
+            _REPO_ROOT
+            / "spikes"
+            / "results"
+            / "admission"
+            / "cocarry-a4-rev2-2026-07-15"
+            / "admission_report.json"
+        )
+        assert report.schema_version == 1
+        assert report.dirty is False
+        assert report.prereg_git_tag == "prereg-admission-cocarry-a4-rev2-2026-07-15"
+        assert [c.check for c in report.checks] == ["A1", "A2", "A3", "A4"]
+        assert [c.outcome for c in report.checks] == ["PASS", "PASS", "PASS", "PASS"]
+        assert report.verdict == "ADMITTED"
+        assert report.seed_extension_used is False
+        assert all(c.bundles == [] for c in report.checks)  # fully wrapped (I8)
+        profile = report.ego_robustness_profile
+        assert profile is not None
+        assert set(profile) == self._MEMBERS
+        a4 = next(c for c in report.checks if c.check == "A4")
+        assert a4.statistics["n_partners"] == 7.0
+        # The weakest admitted partner clears the committed C_min floor.
+        assert a4.statistics["min_success_ci_low"] == pytest.approx(0.8331, abs=1e-3)
+        assert a4.statistics["min_success_ci_low"] >= 0.75
+        assert "imp_blend_c" in a4.notes  # the weakest admitted partner is named
+
     def test_committed_a3_wrap_reproduces_the_committed_gap(self) -> None:
         """The paired-delta extractor byte-reproduces the 2026-07-05 committed A3 CI."""
         from chamber.benchmarks.admission_cells import extract_bundle_paired_delta
