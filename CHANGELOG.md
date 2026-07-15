@@ -8,6 +8,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 While the project is on `0.x`, MINOR-version bumps may break the public API
 per SemVer §4.
 
+## [0.8.2](https://github.com/fsafaei/concerto/compare/v0.8.1...v0.8.2) (2026-07-15)
+
+
+### Bug Fixes
+
+* **tests:** shrink the Stage-1b AS dispatch smoke to num_envs=1 so it composes in-process (closes [#299](https://github.com/fsafaei/concerto/issues/299)) ([#300](https://github.com/fsafaei/concerto/issues/300)) ([2207920](https://github.com/fsafaei/concerto/commit/220792060c45c62023d985bf03a650be2acc56ca))
+
+
+### Documentation
+
+* **adr:** tidy ADR wording and trim a supplementary evidence appendix ([c9df00e](https://github.com/fsafaei/concerto/commit/c9df00e0b8ba1cb26dfe6880a631c94d2dff8c93))
+
 ## [0.8.1](https://github.com/fsafaei/concerto/compare/v0.8.0...v0.8.1) (2026-07-07)
 
 
