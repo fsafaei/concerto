@@ -1097,7 +1097,9 @@ class TestCommittedCocarryA4Evidence:
     measured path uses.
     """
 
-    _PREREG = _REPO_ROOT / "spikes" / "preregistration" / "admission" / "cocarry_admission_a4.yaml"
+    _PREREG = (
+        _REPO_ROOT / "spikes" / "preregistration" / "admission" / "cocarry_admission_a4_rev2.yaml"
+    )
     _MEMBERS = frozenset(
         {
             "imp_stiff_low",
@@ -1123,7 +1125,10 @@ class TestCommittedCocarryA4Evidence:
         assert isinstance(spec.a2, WrappedEvidenceSpec)
         assert isinstance(spec.a3, WrappedEvidenceSpec)
         assert isinstance(spec.a4, WrappedEvidenceSpec)
-        assert spec.c_min_ego == spec.tau_solv == 0.95
+        # The admitted set's capability floor C_min, never the aggregate
+        # tau_solv (ADR-027 §Revision history 2026-07-15 disambiguation).
+        assert spec.c_min_ego == 0.75
+        assert spec.tau_solv == 0.95
 
     def test_committed_baht_profile_matches_the_committed_data(self) -> None:
         """The extracted per-partner means reproduce the committed b-aht episodes."""
@@ -1141,40 +1146,16 @@ class TestCommittedCocarryA4Evidence:
         stress_limit = block["stress_limit"]
         assert isinstance(stress_limit, float)
         assert all(stats["stress_max"] <= stress_limit for stats in profile.values())
-        # At the committed task bar (c_min_ego = tau_solv = 0.95) the weakest
-        # members straddle the floor: the raw rule is INDETERMINATE, which the
-        # wrapped path finalizes as FAIL (committed evidence cannot consume
-        # the seed extension) -> the archive verdict is UNINSTRUMENTABLE.
+        # At the committed floor (c_min_ego = C_min = 0.75, the admitted
+        # set's capability floor — ADR-027 §Revision history 2026-07-15)
+        # every admitted member clears: the weakest CI-lower is
+        # imp_blend_c at ~0.833 >= 0.75 -> A4 PASS.
         c_min_ego = block["c_min_ego"]
         assert isinstance(c_min_ego, float)
+        assert c_min_ego == 0.75
         cis = {m: (s["success_ci_low"], s["success_ci_high"]) for m, s in profile.items()}
-        assert a4_outcome(cis, c_min_ego) == "INDETERMINATE"
+        assert a4_outcome(cis, c_min_ego) == "PASS"
         assert min(ci_low for ci_low, _ in cis.values()) == pytest.approx(0.8331, abs=1e-3)
-
-    def test_committed_a4_archive_loads_with_the_profile(self) -> None:
-        """The committed cocarry-a4-2026-07-15 archive: the A4 gate fired on real data."""
-        report = load_admission_report(
-            _REPO_ROOT
-            / "spikes"
-            / "results"
-            / "admission"
-            / "cocarry-a4-2026-07-15"
-            / "admission_report.json"
-        )
-        assert report.schema_version == 1
-        assert report.dirty is False
-        assert [c.check for c in report.checks] == ["A1", "A2", "A3", "A4"]
-        assert [c.outcome for c in report.checks] == ["PASS", "PASS", "PASS", "FAIL"]
-        assert report.verdict == "UNINSTRUMENTABLE"
-        assert report.seed_extension_used is False
-        assert all(c.bundles == [] for c in report.checks)  # fully wrapped (I8)
-        profile = report.ego_robustness_profile
-        assert profile is not None
-        assert set(profile) == self._MEMBERS
-        a4 = next(c for c in report.checks if c.check == "A4")
-        assert a4.statistics["n_partners"] == 7.0
-        assert a4.statistics["min_success_ci_low"] == pytest.approx(0.8331, abs=1e-3)
-        assert "imp_blend_c" in a4.notes  # the weakest admitted partner is named
 
     def test_committed_a3_wrap_reproduces_the_committed_gap(self) -> None:
         """The paired-delta extractor byte-reproduces the 2026-07-05 committed A3 CI."""

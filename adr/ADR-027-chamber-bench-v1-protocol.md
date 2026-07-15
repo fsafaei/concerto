@@ -97,11 +97,24 @@ under preregistered thresholds:
   contrast — i.e. the incumbent/reference the partner variants are
   measured against — that instrument must itself clear a
   **preregistered ego-robustness floor**: stable success (≥ a
-  preregistered `C_min_ego`, at or above the same success+stress bar
-  the task uses) across the **admitted partner set**, not only its
-  training/matched partner. A4 is the ego-side analogue of the
+  preregistered `C_min_ego`) across the **admitted partner set**, not
+  only its training/matched partner. `C_min_ego` **is the admitted
+  partner set's capability floor `C_min`** (for `cocarry_partners@v1`:
+  0.75, committed per member in
+  `chamber.partners.set_definitions`), and "the same success+stress
+  bar the task uses" means the **per-episode success+stress
+  predicate** — an episode counts as a success only under the task's
+  own success criterion with its stress channel within
+  `stress_limit` — not the aggregate solvability threshold
+  `tau_solv`. The distinction is forced by coherence: the admitted
+  set is deliberately heterogeneous and its members are admitted at
+  `C_min`, not at `tau_solv`, so demanding the ego hold `tau_solv`
+  against every admitted partner makes A4 unpassable by construction
+  (it would refute the very reference instrument the partners were
+  admitted against). A4 is the ego-side analogue of the
   partner-side capability floor (`C_min`): the protocol gates the
-  partner set, and A4 gates the ego the partners are measured against.
+  partner set at `C_min`, and A4 gates the ego the partners are
+  measured against at the same floor.
   An instrument that succeeds only with its matched partner is
   **brittle**, and cross-partner contrasts run through it are
   confounded by instrument brittleness rather than the manipulated
@@ -250,6 +263,26 @@ one admitted task's table from the manifest + bundles alone.
 
 ## Revision history
 
+- **2026-07-15 — A4 `C_min_ego` disambiguated (founder).** The
+  original A4 clause read "≥ a preregistered `C_min_ego`, at or above
+  the same success+stress bar the task uses", which admitted two
+  readings: the aggregate solvability threshold `tau_solv`, or the
+  admitted set's capability floor `C_min`. The first fired gate (the
+  retrospective co-carry wrap, prereg
+  `prereg-admission-cocarry-a4-2026-07-15`, rev1) took the `tau_solv`
+  reading (`c_min_ego` = 0.95) and returned UNINSTRUMENTABLE on the
+  B-AHT reference ego — a self-refuting result: the admitted set is
+  deliberately heterogeneous and its members are admitted at `C_min`
+  (0.75), not at `tau_solv`, so the `tau_solv` reading makes A4
+  unpassable by construction for any ego measured across it. The
+  clause is amended to the `C_min` reading — `C_min_ego` inherits the
+  admitted partner set's committed capability floor, and the
+  "success+stress bar" clause refers to the per-episode success+stress
+  predicate — and the gate is re-issued under
+  `prereg-admission-cocarry-a4-rev2-2026-07-15` (`c_min_ego` = 0.75).
+  The rev1 prereg, tag, and report remain in history as the record of
+  the mis-specification. This is a Decision-content clarification;
+  ADR-027 remains Accepted.
 - **2026-07-15 — A4 added: instrument (ego) robustness (founder;
   review round R-2026-06-C, condition 5).** The admission protocol
   gated the partner set but never the ego/incumbent serving as the

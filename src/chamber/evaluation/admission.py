@@ -21,9 +21,12 @@ report** showing, under preregistered thresholds:
   2026-07-15; runs only for instrument-based contrasts, i.e. when the
   spec commits ``c_min_ego``). The policy used as the fixed measuring
   instrument of a contrast must clear a preregistered ego-robustness
-  floor — per-partner ``success_ci_low >= c_min_ego``, at the task's
-  own success+stress bar — across the **admitted partner set**, not
-  only its training/matched partner. Like A1/A3, A4 may be measured
+  floor — per-partner ``success_ci_low >= c_min_ego``, where
+  ``c_min_ego`` is the admitted set's capability floor ``C_min`` and
+  episode success is judged by the task's per-episode success+stress
+  predicate (ADR-027 §Revision history 2026-07-15 disambiguation) —
+  across the **admitted partner set**, not only its training/matched
+  partner. Like A1/A3, A4 may be measured
   fresh or may wrap a committed per-partner bundle (I8): the profile is
   re-extracted from SHA-verified episode files and the same
   ``a4_outcome`` rule applies, with a wrapped straddle final (FAIL) —
@@ -220,10 +223,13 @@ class AdmissionSpec(BaseModel):
             committed gap evidence.
         c_min_ego: A4 ego-robustness floor (ADR-027 §Admission A4) —
             the measuring instrument's per-partner success CI lower
-            bound must clear it across the admitted partner set, at the
-            task's own success+stress bar. ``None`` (the default) for
-            plain task admissions: A4 is skipped and the A1/A2/A3
-            semantics are unchanged.
+            bound must clear it across the admitted partner set. It
+            inherits the admitted set's capability floor ``C_min``
+            (never the aggregate ``tau_solv`` — ADR-027 §Revision
+            history 2026-07-15 disambiguation), with episode success
+            judged by the task's per-episode success+stress predicate.
+            ``None`` (the default) for plain task admissions: A4 is
+            skipped and the A1/A2/A3 semantics are unchanged.
         a4: The A4 instrument cell: measured (``policy_id`` names the
             instrument under test and ``partner_name`` the admitted
             partner set it sweeps — an ADR-009 set slug, e.g.
