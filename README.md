@@ -16,8 +16,8 @@
     <img alt="License" src="https://img.shields.io/badge/license-Apache%202.0-green"/></a>
   <a href="https://scorecard.dev/viewer/?uri=github.com/fsafaei/concerto">
     <img alt="OpenSSF Scorecard" src="https://api.scorecard.dev/projects/github.com/fsafaei/concerto/badge"/></a>
-  <a href="https://test.pypi.org/project/concerto-multirobot/">
-    <img alt="TestPyPI" src="https://img.shields.io/pypi/v/concerto-multirobot?pypiBaseUrl=https%3A%2F%2Ftest.pypi.org&amp;label=TestPyPI"/></a>
+  <a href="https://pypi.org/project/concerto-multirobot/">
+    <img alt="PyPI" src="https://img.shields.io/pypi/v/concerto-multirobot"/></a>
 </p>
 
 ## What this is
@@ -72,6 +72,12 @@ pip install uv && uv sync --group dev
 Python 3.11 or 3.12. The training stack (the HARL fork, published as
 the `harl-aht` distribution) resolves automatically as a runtime
 dependency; no extra install step is needed.
+
+The package is also published to
+[PyPI](https://pypi.org/project/concerto-multirobot/) as
+`concerto-multirobot` for library use. The quickstart and all
+benchmark reproduction need the repository checkout, since the
+committed result bundles and preregistration tags live here.
 
 ## Five-minute quickstart
 
@@ -199,7 +205,11 @@ Admission ([ADR-027](adr/ADR-027-chamber-bench-v1-protocol.md)) is
 what a task must earn before its scores count, by three preregistered
 checks: a reference pair solves it (A1), the best single robot cannot
 (A2), and a scripted ego stripped of exactly its coupling channel
-collapses (A3). Co-carry and handover-and-place passed all three;
+collapses (A3). A fourth clause (A4) gates the *measuring instrument*
+rather than the task: any policy used as the fixed reference for a
+cross-partner contrast must itself succeed across the admitted
+partner set, or the contrast is inadmissible.
+Co-carry and handover-and-place passed all three;
 pick-and-place passed A1 but failed A2 and A3 and is retained as a
 Tier-1 control — the protocol demonstrably rejects tasks. The
 heterogeneity-robustness score (HRS, ADR-008), the project's original
