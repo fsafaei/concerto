@@ -59,8 +59,9 @@ Two wrappers, applied in fixed order by
    combinations of the absolute pose fields already concatenated and
    would inflate the actor's input dimensionality without adding
    rank. The synthesised ``force_torque`` channel is also excluded;
-   it is the OM-hetero discriminant and the OM remediation (slice
-   P1.05.6 / issue #177) owns it.
+   it is the OM-hetero discriminant, and the OM vision-head slice
+   that would have consumed it (formerly P1.05.6 / issue #177) was
+   retired under ADR-026 §Decision 3/5.
 
    Per-condition ``state`` dim is env-emit-dependent (panda_partner
    under AS-homo vs fetch under AS-hetero) and pinned per-condition

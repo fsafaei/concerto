@@ -8,18 +8,22 @@ the prereg (1 seed x 1 episode x 2 conditions) and the cfg
 (``total_frames=1000``, smaller rollout_length/batch_size) so the
 smoke completes in ~2 min on the RTX 2080.
 
-**Deferred to P1.05.6 (issue #177).** The OM dispatch path routes through
+**Retired under ADR-026 §Decision 3/5.** OM is non-coupling-valid on the
+ego-solvable Stage-1 pick-place task, so AS/OM promotion to Validated is
+closed and the vision-head ``EgoPPOTrainer`` extension (formerly P1.05.6 /
+issue #177) was never built and will not be. The technical shape of the
+retired path is unchanged: the OM dispatch routes through
 ``EgoPPOTrainer.from_config``, which reads ``obs["agent"][ego_uid]["state"]``
 (a flat 1-D Box). The OM wrapper chain
 ``Stage1OMChannelFilter(Stage1ASStateSynthesizer(inner))`` makes the AS
 state synthesizer a pass-through when ``config.is_om_condition=True``
 (``chamber.envs.stage1_obs_filter.Stage1ASStateSynthesizer.__init__``),
 so OM envs have no ``state`` key — the trainer raises ``KeyError: 'state'``
-at construction. The fix is a vision-head extension to ``EgoPPOTrainer``
-(P1.05.6 / #177), not a state-synthesis workaround: silent state exposure
-under OM-homo would corrupt the science measurement the ≥20 pp gate
-relies on. Both Tier-2 cases skip with ``pytest.mark.skip`` (not xfail)
-to match the prerequisite-not-built semantics.
+at construction. A state-synthesis workaround stays wrong for the same
+reason as before: silent state exposure under OM-homo would have corrupted
+the OM-homo science measurement. Both Tier-2 cases stay
+``pytest.mark.skip`` (not xfail); they remain only as retired-path
+dispatch coverage, not pending work.
 """
 
 from __future__ import annotations
@@ -44,13 +48,16 @@ pytestmark = [
     ),
     pytest.mark.skip(
         reason=(
-            "OM Stage-1b dispatch requires vision-head EgoPPOTrainer; "
-            "deferred to P1.05.6 (issue #177). The current EgoPPOTrainer reads "
+            "OM Stage-1b dispatch path retired under ADR-026 §Decision 3/5: "
+            "OM is non-coupling-valid on the ego-solvable Stage-1 pick-place "
+            "task and AS/OM promotion to Validated is closed, so the "
+            "vision-head EgoPPOTrainer extension (formerly P1.05.6 / issue "
+            "#177) was never built and will not be. The EgoPPOTrainer reads "
             "obs['agent'][uid]['state'] (a flat Box) and the OM wrapper chain "
             "intentionally does not synthesize that key, so the trainer raises "
-            "KeyError at construction. A CNN encoder + per-uid obs-mode dispatch "
-            "is the right fix; state-synthesis would silently corrupt the OM-homo "
-            "science measurement."
+            "KeyError at construction; state-synthesis would have silently "
+            "corrupted the OM-homo science measurement. This smoke remains "
+            "only as retired-path dispatch coverage, not pending work."
         ),
     ),
 ]

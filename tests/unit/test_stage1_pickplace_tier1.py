@@ -552,8 +552,8 @@ class TestStage1ASStateSynthesizer:
         wrap = Stage1ASStateSynthesizer(inner)  # type: ignore[arg-type]
         obs = wrap.observation(_FakeStateDictEnv._sample_obs())
         # OM conditions are handled by Stage1OMChannelFilter, not this wrapper.
-        # The OM remediation lives in P1.05.6 / issue #177 (the vision-head
-        # EgoPPOTrainer extension); this short-circuit must stay verbatim.
+        # The OM vision-head slice (formerly P1.05.6 / issue #177) was retired
+        # under ADR-026 §Decision 3/5; this short-circuit must stay verbatim.
         assert "state" not in obs["agent"]["panda_wristcam"]
 
     def test_loud_fail_when_extra_dict_is_missing_at_construction(self) -> None:
