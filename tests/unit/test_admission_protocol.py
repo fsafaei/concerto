@@ -6,8 +6,9 @@ and the full :func:`chamber.evaluation.admission.run_admission` flow
 against fake cell runners inside a throwaway git repo — every measured
 cell must come out as a ``chamber-eval verify``-passing v3 bundle
 (ADR-028 §Decision 3), the verdict table must match ADR-027 (CONTROL
-demotion, NOT_SOLVABLE short-circuit, INDETERMINATE + the single
-pre-committed seed extension), and wrapped evidence must be
+demotion, NOT_SOLVABLE short-circuit, the A4 UNINSTRUMENTABLE
+brittle-instrument verdict per ADR-027 §Admission A4, INDETERMINATE +
+the single pre-committed seed extension), and wrapped evidence must be
 SHA-verified, never trusted (I8).
 """
 
@@ -15,20 +16,24 @@ from __future__ import annotations
 
 import json
 import subprocess
+from pathlib import Path
 from typing import TYPE_CHECKING
 
 import pytest
 import yaml
+from pydantic import ValidationError
 
 from chamber.evaluation.admission import (
     AdmissionCellSpec,
     AdmissionError,
+    AdmissionReport,
     AdmissionSpec,
     CellRun,
     WrappedEvidenceSpec,
     a1_outcome,
     a2_outcome,
     a3_outcome,
+    a4_outcome,
     admission_spec_from_prereg,
     load_admission_report,
     overall_verdict,
@@ -42,7 +47,8 @@ from chamber.partners.api import PartnerSpec
 
 if TYPE_CHECKING:
     from collections.abc import Callable
-    from pathlib import Path
+
+_REPO_ROOT = Path(__file__).resolve().parents[2]
 
 # ---------------------------------------------------------------------------
 # Threshold rules (pure).
@@ -73,6 +79,27 @@ class TestThresholdRules:
     def test_a3(self, low: float, high: float, expected: str) -> None:
         assert a3_outcome(low, high, 0.20) == expected
 
+    @pytest.mark.parametrize(
+        ("profile", "expected"),
+        [
+            # Every admitted partner clears the floor -> PASS.
+            ({"m1": (0.9, 1.0), "m2": (0.8, 0.95)}, "PASS"),
+            # The R-2026-06-C shape: matched-only success; any partner
+            # whose upper bound sits below the floor is brittle -> FAIL.
+            ({"matched": (1.0, 1.0), "selfish_effort": (0.0, 0.0)}, "FAIL"),
+            # A FAIL partner dominates another partner's straddle.
+            ({"m1": (0.6, 0.9), "m2": (0.0, 0.1)}, "FAIL"),
+            # Weakest partner straddles the floor -> INDETERMINATE.
+            ({"m1": (0.9, 1.0), "m2": (0.6, 0.9)}, "INDETERMINATE"),
+        ],
+    )
+    def test_a4(self, profile: dict[str, tuple[float, float]], expected: str) -> None:
+        assert a4_outcome(profile, 0.75) == expected
+
+    def test_a4_empty_profile_is_loud(self) -> None:
+        with pytest.raises(AdmissionError, match="non-empty"):
+            a4_outcome({}, 0.75)
+
     def test_verdict_table(self) -> None:
         assert overall_verdict("PASS", "PASS", "PASS") == "ADMITTED"
         assert overall_verdict("FAIL", None, None) == "NOT_SOLVABLE"
@@ -80,6 +107,17 @@ class TestThresholdRules:
         assert overall_verdict("PASS", "PASS", "FAIL") == "CONTROL"
         assert overall_verdict("PASS", "INDETERMINATE", "PASS") == "INDETERMINATE"
         assert overall_verdict("INDETERMINATE", "PASS", "PASS") == "INDETERMINATE"
+
+    def test_verdict_table_with_a4(self) -> None:
+        """The A4 fold (ADR-027 §Admission A4): FAIL -> UNINSTRUMENTABLE; None = legacy."""
+        assert overall_verdict("PASS", "PASS", "PASS", "PASS") == "ADMITTED"
+        assert overall_verdict("PASS", "PASS", "PASS", "FAIL") == "UNINSTRUMENTABLE"
+        assert overall_verdict("PASS", "PASS", "PASS", "INDETERMINATE") == "INDETERMINATE"
+        # The task-level CONTROL demotion outranks the instrument verdict.
+        assert overall_verdict("PASS", "FAIL", "PASS", "FAIL") == "CONTROL"
+        assert overall_verdict("FAIL", None, None, None) == "NOT_SOLVABLE"
+        # a4 is None (not an instrument contrast): the 3-check table is unchanged.
+        assert overall_verdict("PASS", "PASS", "PASS", None) == "ADMITTED"
 
     def test_stress_statistics_successes_only(self) -> None:
         eps = [
@@ -104,14 +142,18 @@ def _episode(
     *,
     success: bool,
     force_peak: float | None = None,
+    member: str | None = None,
 ) -> EpisodeResult:
+    metadata: dict[str, str] = {"condition": "fake"}
+    if member is not None:
+        metadata["member"] = member
     return EpisodeResult(
         seed=seed,
         episode_idx=idx,
         initial_state_seed=idx,
         success=success,
         force_peak=force_peak,
-        metadata={"condition": "fake"},
+        metadata=metadata,
     )
 
 
@@ -136,6 +178,23 @@ _CELL = {
     "policy_id": "ref_script",
     "partner_name": "scripted_heuristic",
     "params": {},
+}
+
+#: A4 instrument cell (ADR-027 §Admission A4): policy_id names the
+#: instrument under test, partner_name the admitted set it sweeps.
+_A4_CELL = {
+    "cell_id": "a4_instrument",
+    "runner": "fake",
+    "policy_id": "residual_incumbent",
+    "partner_name": "cocarry_partners@v1",
+    "params": {},
+}
+
+#: A1/A2/A3 success functions for an otherwise-admittable task.
+_TASK_PASSES = {
+    "a1_reference": lambda _s, _e: True,
+    "a2_ablated": lambda _s, _e: False,
+    "a3_blind": lambda _s, _e: False,
 }
 
 
@@ -195,8 +254,16 @@ def _make_fake_resolver(
     success_by_cell: dict[str, Callable[[int, int], bool]],
     *,
     force_peak: float | None = 40.0,
+    members_by_cell: dict[str, dict[str, Callable[[int, int], bool]]] | None = None,
+    member_force_peak: dict[str, float | None] | None = None,
 ) -> Callable[[str], Callable[..., CellRun]]:
-    """Fake cell-runner resolver: success per (seed, episode) by cell id."""
+    """Fake cell-runner resolver: success per (seed, episode) by cell id.
+
+    A cell listed in ``members_by_cell`` instead sweeps a fake admitted
+    partner set — per member a success function, episodes stamped with
+    ``metadata["member"]`` (the A4 instrument-cell convention);
+    ``member_force_peak`` overrides ``force_peak`` per member.
+    """
 
     def _resolver(name: str) -> Callable[..., CellRun]:
         assert name == "fake"
@@ -210,16 +277,35 @@ def _make_fake_resolver(
             render_backend: str | None = None,
         ) -> CellRun:
             del root_seed, render_backend
-            fn = success_by_cell[cell.cell_id.split("-")[0]]
+            base_cell = cell.cell_id.split("-")[0]
             material, hashes = _fake_partner_material()
-            return CellRun(
-                episodes_by_seed={
+            members = (members_by_cell or {}).get(base_cell)
+            if members is not None:
+                episodes_by_seed = {
+                    s: [
+                        _episode(
+                            s,
+                            m_idx * episodes_per_seed + e,
+                            success=member_fn(s, e),
+                            force_peak=(member_force_peak or {}).get(member, force_peak),
+                            member=member,
+                        )
+                        for m_idx, (member, member_fn) in enumerate(sorted(members.items()))
+                        for e in range(episodes_per_seed)
+                    ]
+                    for s in seeds
+                }
+            else:
+                fn = success_by_cell[base_cell]
+                episodes_by_seed = {
                     s: [
                         _episode(s, e, success=fn(s, e), force_peak=force_peak)
                         for e in range(episodes_per_seed)
                     ]
                     for s in seeds
-                },
+                }
+            return CellRun(
+                episodes_by_seed=episodes_by_seed,
                 partner_material=material,
                 partner_hashes=hashes,
                 substream_labels=["fake.substream"],
@@ -400,6 +486,244 @@ class TestRunAdmission:
             _run(repo, prereg, resolver)
 
 
+class TestA4InstrumentGate:
+    """The A4 ego-robustness gate end-to-end (ADR-027 §Admission A4; ADR-026 §Decision 2)."""
+
+    def test_brittle_instrument_is_uninstrumentable(self, tmp_path: Path) -> None:
+        """The R-2026-06-C finding, executable: matched-only success is a FAIL.
+
+        The instrument succeeds 1.0 with its matched partner but ~0.5 /
+        0.5 / 0.0 with the rest of the admitted set (the Rung-5
+        ``CONFOUNDED_BY_INCUMBENT_BRITTLENESS`` shape) — A4 FAIL, the
+        verdict is UNINSTRUMENTABLE (not CONTROL, not a null), and the
+        per-partner profile is written to the report.
+        """
+        repo = _init_repo(tmp_path)
+        prereg = _write_tagged_prereg(repo, _prereg_payload(c_min_ego=0.75, a4=dict(_A4_CELL)))
+        resolver = _make_fake_resolver(
+            dict(_TASK_PASSES),
+            members_by_cell={
+                "a4_instrument": {
+                    "imp_matched": lambda _s, _e: True,
+                    "admittance": lambda _s, e: e % 2 == 0,
+                    "selfish_goal": lambda _s, e: e % 2 == 0,
+                    "selfish_effort": lambda _s, _e: False,
+                }
+            },
+        )
+        report, out_dir = _run(repo, prereg, resolver)
+        assert report.verdict == "UNINSTRUMENTABLE"  # type: ignore[attr-defined]
+        assert [c.check for c in report.checks] == ["A1", "A2", "A3", "A4"]  # type: ignore[attr-defined]
+        a4 = next(c for c in report.checks if c.check == "A4")  # type: ignore[attr-defined]
+        assert a4.outcome == "FAIL"
+        assert a4.statistics["n_partners"] == 4.0
+        assert "selfish_effort" in a4.notes
+        rows = verify_bundle_dir(out_dir / "a4_instrument", repo_path=repo)
+        assert all(r.ok for r in rows), [r for r in rows if not r.ok]
+        payload = json.loads((out_dir / "admission_report.json").read_text(encoding="utf-8"))
+        profile = payload["ego_robustness_profile"]
+        assert set(profile) == {"imp_matched", "admittance", "selfish_goal", "selfish_effort"}
+        assert profile["imp_matched"]["success_mean"] == 1.0
+        assert profile["selfish_effort"]["success_mean"] == 0.0
+        loaded = load_admission_report(out_dir / "admission_report.json")
+        assert loaded.schema_version == 1
+        assert loaded.ego_robustness_profile == profile
+        md = (out_dir / "ADMISSION_REPORT.md").read_text(encoding="utf-8")
+        assert "A4 instrument robustness" in md
+        assert "selfish_effort" in md
+        assert "`c_min_ego` = 0.75" in md
+
+    def test_robust_instrument_is_admitted(self, tmp_path: Path) -> None:
+        """Every admitted partner clears c_min_ego -> A4 PASS -> ADMITTED, profile reported."""
+        repo = _init_repo(tmp_path)
+        prereg = _write_tagged_prereg(repo, _prereg_payload(c_min_ego=0.75, a4=dict(_A4_CELL)))
+        resolver = _make_fake_resolver(
+            dict(_TASK_PASSES),
+            members_by_cell={
+                "a4_instrument": {
+                    "imp_matched": lambda _s, _e: True,
+                    "admittance": lambda _s, _e: True,
+                    "selfish_goal": lambda _s, _e: True,
+                }
+            },
+        )
+        report, out_dir = _run(repo, prereg, resolver)
+        assert report.verdict == "ADMITTED"  # type: ignore[attr-defined]
+        a4 = next(c for c in report.checks if c.check == "A4")  # type: ignore[attr-defined]
+        assert a4.outcome == "PASS"
+        assert a4.statistics["min_success_ci_low"] == 1.0
+        loaded = load_admission_report(out_dir / "admission_report.json")
+        assert loaded.ego_robustness_profile is not None
+        assert set(loaded.ego_robustness_profile) == {"imp_matched", "admittance", "selfish_goal"}
+
+    def test_a4_straddle_consumes_single_extension(self, tmp_path: Path) -> None:
+        """A straddling weakest partner runs the pre-committed extension once, then is final."""
+        repo = _init_repo(tmp_path)
+        prereg = _write_tagged_prereg(repo, _prereg_payload(c_min_ego=0.75, a4=dict(_A4_CELL)))
+        # One member succeeds on seed >= 1 only: the 2-cluster bootstrap
+        # straddles the floor; extension seed 2 also succeeds.
+        resolver = _make_fake_resolver(
+            dict(_TASK_PASSES),
+            members_by_cell={
+                "a4_instrument": {
+                    "imp_matched": lambda _s, _e: True,
+                    "flaky": lambda s, _e: s >= 1,
+                }
+            },
+        )
+        report, out_dir = _run(repo, prereg, resolver)
+        a4 = next(c for c in report.checks if c.check == "A4")  # type: ignore[attr-defined]
+        assert a4.extended is True
+        assert a4.outcome in ("PASS", "FAIL")
+        assert report.seed_extension_used is True  # type: ignore[attr-defined]
+        assert (out_dir / "a4_instrument-ext").is_dir()
+
+    def test_a4_per_partner_stress_violation_fails(self, tmp_path: Path) -> None:
+        """A success-rate pass over the stress ceiling with one partner is still a FAIL.
+
+        The A4 bar is the task's own success+stress bar, held per
+        partner (ADR-027 §Admission A4).
+        """
+        repo = _init_repo(tmp_path)
+        prereg = _write_tagged_prereg(repo, _prereg_payload(c_min_ego=0.75, a4=dict(_A4_CELL)))
+        resolver = _make_fake_resolver(
+            dict(_TASK_PASSES),
+            members_by_cell={
+                "a4_instrument": {
+                    "imp_matched": lambda _s, _e: True,
+                    "imp_stiff": lambda _s, _e: True,
+                }
+            },
+            member_force_peak={"imp_stiff": 150.0},  # > stress_limit 100.0
+        )
+        report, _ = _run(repo, prereg, resolver)
+        assert report.verdict == "UNINSTRUMENTABLE"  # type: ignore[attr-defined]
+        a4 = next(c for c in report.checks if c.check == "A4")  # type: ignore[attr-defined]
+        assert a4.outcome == "FAIL"
+
+    def test_a4_missing_stress_channel_with_committed_limit_is_loud(self, tmp_path: Path) -> None:
+        repo = _init_repo(tmp_path)
+        prereg = _write_tagged_prereg(repo, _prereg_payload(c_min_ego=0.75, a4=dict(_A4_CELL)))
+        resolver = _make_fake_resolver(
+            dict(_TASK_PASSES),
+            members_by_cell={"a4_instrument": {"imp_matched": lambda _s, _e: True}},
+            member_force_peak={"imp_matched": None},
+        )
+        with pytest.raises(AdmissionError, match="A4 stress_limit"):
+            _run(repo, prereg, resolver)
+
+    def test_a4_unstamped_members_are_loud(self, tmp_path: Path) -> None:
+        """An instrument cell that fails to stamp metadata['member'] cannot pass silently."""
+        repo = _init_repo(tmp_path)
+        prereg = _write_tagged_prereg(repo, _prereg_payload(c_min_ego=0.75, a4=dict(_A4_CELL)))
+        resolver = _make_fake_resolver({**_TASK_PASSES, "a4_instrument": lambda _s, _e: True})
+        with pytest.raises(AdmissionError, match="member"):
+            _run(repo, prereg, resolver)
+
+    def test_a4_ragged_per_seed_counts_are_loud(self, tmp_path: Path) -> None:
+        """An instrument runner that under-delivers on one seed fails the schedule check."""
+        repo = _init_repo(tmp_path)
+        prereg = _write_tagged_prereg(repo, _prereg_payload(c_min_ego=0.75, a4=dict(_A4_CELL)))
+        inner = _make_fake_resolver(
+            dict(_TASK_PASSES),
+            members_by_cell={"a4_instrument": {"imp_matched": lambda _s, _e: True}},
+        )
+
+        def _resolver(name: str) -> Callable[..., CellRun]:
+            runner = inner(name)
+
+            def _ragged(
+                *,
+                cell: AdmissionCellSpec,
+                seeds: list[int],
+                episodes_per_seed: int,
+                root_seed: int,
+                render_backend: str | None = None,
+            ) -> CellRun:
+                run = runner(
+                    cell=cell,
+                    seeds=seeds,
+                    episodes_per_seed=episodes_per_seed,
+                    root_seed=root_seed,
+                    render_backend=render_backend,
+                )
+                if not cell.cell_id.startswith("a4_instrument"):
+                    return run
+                first = min(run.episodes_by_seed)
+                trimmed = {
+                    s: (records[:-1] if s == first else records)
+                    for s, records in run.episodes_by_seed.items()
+                }
+                return CellRun(
+                    episodes_by_seed=trimmed,
+                    partner_material=run.partner_material,
+                    partner_hashes=run.partner_hashes,
+                    substream_labels=run.substream_labels,
+                )
+
+            return _ragged
+
+        with pytest.raises(AdmissionError, match="episodes_per_seed"):
+            _run(repo, prereg, _resolver)
+
+    def test_a4_extension_member_drift_is_loud(self, tmp_path: Path) -> None:
+        """The pre-committed extension must sweep the same admitted member set."""
+        repo = _init_repo(tmp_path)
+        prereg = _write_tagged_prereg(repo, _prereg_payload(c_min_ego=0.75, a4=dict(_A4_CELL)))
+        base = _make_fake_resolver(
+            dict(_TASK_PASSES),
+            members_by_cell={
+                "a4_instrument": {
+                    "imp_matched": lambda _s, _e: True,
+                    "flaky": lambda s, _e: s >= 1,  # straddles -> triggers the extension
+                }
+            },
+        )
+        drifted = _make_fake_resolver(
+            dict(_TASK_PASSES),
+            members_by_cell={"a4_instrument": {"imp_matched": lambda _s, _e: True}},
+        )
+
+        def _resolver(name: str) -> Callable[..., CellRun]:
+            base_runner = base(name)
+            drift_runner = drifted(name)
+
+            def _runner(
+                *,
+                cell: AdmissionCellSpec,
+                seeds: list[int],
+                episodes_per_seed: int,
+                root_seed: int,
+                render_backend: str | None = None,
+            ) -> CellRun:
+                # The extension run is identified by its committed seeds
+                # (the runner sees the same cell spec for both runs).
+                runner = drift_runner if seeds == [2] else base_runner
+                return runner(
+                    cell=cell,
+                    seeds=seeds,
+                    episodes_per_seed=episodes_per_seed,
+                    root_seed=root_seed,
+                    render_backend=render_backend,
+                )
+
+            return _runner
+
+        with pytest.raises(AdmissionError, match="member set"):
+            _run(repo, prereg, _resolver)
+
+    def test_legacy_admission_without_a4_is_unchanged(self, tmp_path: Path) -> None:
+        """No c_min_ego committed -> A4 skipped, three checks, no profile field content."""
+        repo = _init_repo(tmp_path)
+        prereg = _write_tagged_prereg(repo, _prereg_payload())
+        report, out_dir = _run(repo, prereg, _make_fake_resolver(dict(_TASK_PASSES)))
+        assert report.verdict == "ADMITTED"  # type: ignore[attr-defined]
+        assert [c.check for c in report.checks] == ["A1", "A2", "A3"]  # type: ignore[attr-defined]
+        payload = json.loads((out_dir / "admission_report.json").read_text(encoding="utf-8"))
+        assert payload["ego_robustness_profile"] is None
+        assert not (out_dir / "a4_instrument").exists()
+
+
 class TestWrappedEvidence:
     """Wrap = SHA-verify + re-extract, never trust (I8)."""
 
@@ -515,3 +839,56 @@ class TestSpecLoading:
         bogus.write_text(json.dumps({"schema_version": 99}), encoding="utf-8")
         with pytest.raises(ValueError, match="schema_version"):
             load_admission_report(bogus)
+
+    def test_a4_fields_travel_together(self) -> None:
+        """c_min_ego and the a4 cell are committed together or not at all (ADR-027 A4)."""
+        payload = _prereg_payload()
+        admission = payload["parameters"]["admission"]  # type: ignore[index]
+        base = {**admission, "task_id": "t", "git_tag": "tag"}  # type: ignore[dict-item]
+        with pytest.raises(ValidationError, match="c_min_ego"):
+            AdmissionSpec.model_validate({**base, "c_min_ego": 0.75})
+        with pytest.raises(ValidationError, match="c_min_ego"):
+            AdmissionSpec.model_validate({**base, "a4": dict(_A4_CELL)})
+        spec = AdmissionSpec.model_validate({**base, "c_min_ego": 0.75, "a4": dict(_A4_CELL)})
+        assert spec.c_min_ego == 0.75
+        assert isinstance(spec.a4, AdmissionCellSpec)
+
+
+class TestReportSchemaCompatibility:
+    """A4 additions are optional: schema_version stays 1 (ADR-027 §Open questions; I9)."""
+
+    def test_profile_round_trips_at_schema_1(self, tmp_path: Path) -> None:
+        report = AdmissionReport(
+            task_id="t",
+            task_version=1,
+            prereg_git_tag="tag",
+            prereg_blob_sha="blob",
+            git_sha="sha",
+            dirty=False,
+            date_stamp="2026-07-15",
+            checks=[],
+            verdict="UNINSTRUMENTABLE",
+            seed_extension_used=False,
+            binding_evidence={},
+            ego_robustness_profile={
+                "imp_matched": {"success_ci_low": 1.0, "success_ci_high": 1.0},
+                "selfish_effort": {"success_ci_low": 0.0, "success_ci_high": 0.0},
+            },
+        )
+        path = tmp_path / "admission_report.json"
+        path.write_text(report.model_dump_json(indent=2), encoding="utf-8")
+        loaded = load_admission_report(path)
+        assert loaded == report
+        assert loaded.schema_version == 1
+
+    @pytest.mark.parametrize(
+        "archive",
+        ["cocarry-2026-07-05", "handover_place-2026-07-05", "stage1_pickplace_as-2026-07-05"],
+    )
+    def test_committed_admission_reports_still_load(self, archive: str) -> None:
+        """The three pre-A4 committed archives load unchanged through the exact-match gate."""
+        path = _REPO_ROOT / "spikes" / "results" / "admission" / archive / "admission_report.json"
+        report = load_admission_report(path)
+        assert report.schema_version == 1
+        assert report.ego_robustness_profile is None
+        assert [c.check for c in report.checks][:1] == ["A1"]

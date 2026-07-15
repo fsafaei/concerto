@@ -4,7 +4,9 @@
 One command, one committed artefact: gate on the pre-registration tag
 (exit ``PREREG_MISMATCH_EXIT_CODE`` before any cell runs — ADR-007
 §Discipline), refuse a dirty working tree unless ``--allow-dirty``
-(exit ``DIRTY_TREE_EXIT_CODE``), execute the A1/A2/A3 checks via
+(exit ``DIRTY_TREE_EXIT_CODE``), execute the A1/A2/A3 checks — plus A4
+ego-robustness when the prereg commits ``c_min_ego`` (ADR-027
+§Admission A4) — via
 :func:`chamber.evaluation.admission.run_admission` (every measured cell
 an ADR-028 v3 bundle), and write the immutable admission archive the
 registry flips cite (invariant I8).
@@ -40,7 +42,8 @@ def _build_parser() -> argparse.ArgumentParser:
         prog="chamber-eval admission",
         description=(
             "Run the ADR-027 Tier-2 admission protocol (A1 solvability / A2 "
-            "two-robot infeasibility / A3 partner-relevance) under a tag-locked "
+            "two-robot infeasibility / A3 partner-relevance / A4 instrument "
+            "ego-robustness for instrument-based contrasts) under a tag-locked "
             "pre-registration and write the immutable admission archive."
         ),
     )
