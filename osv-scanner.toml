@@ -171,6 +171,24 @@ in the advisory text) ships.
 """
 
 [[IgnoredVulns]]
+id = "PYSEC-2026-3447"
+ignoreUntil = 2026-12-31
+reason = """
+setuptools <83.0.0 MANIFEST.in exclude-directive bypass via Unicode
+NFD/NFC file-name mismatch on macOS APFS/HFS+ at sdist build time
+(CVE-2026-59890 / GHSA-h35f-9h28-mq5c; CVSS 6.1). The patched 83.0.0
+is BLOCKED: torch 2.11.0+cu128 (the ADR-002 cu128 wheel pin) declares
+``setuptools<82``, and forcing 83 moves torch to 2.10.0+cu128 — a
+load-bearing downgrade a security bump must not ride. Exposure
+analysis: setuptools is transitive-only (osqp / sapien / tensorboard /
+torch); concerto's own wheel builds with hatchling, CI builds run on
+Linux (the vector is macOS filesystem Unicode normalisation), and no
+code path packages attacker-controlled trees via MANIFEST.in. Cleared
+by the next torch bump that lifts the ``setuptools<82`` cap.
+Re-evaluate by 2026-12-31.
+"""
+
+[[IgnoredVulns]]
 id = "PYSEC-2024-277"
 ignoreUntil = 2026-12-31
 reason = """

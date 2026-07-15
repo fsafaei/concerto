@@ -9,12 +9,12 @@ different evidentiary weight and different update cadences. Tier (a)
 theoretical claims. Tier (b) lives in
 [`standards.md`](standards.md): binding standards (ISO, IEC, IEEE,
 3GPP) that bound what "safe" and "deterministic" mean in deployment.
-Tier (c) lives in
-[`adr/international_axis_evidence.md`](https://github.com/fsafaei/concerto/blob/main/adr/international_axis_evidence.md):
-deployment signal (humanoid factory pilots, logistics fleets, surgical
-robotics) used as a prior on which heterogeneity axes are commercially
-load-bearing, but never as a substitute for the empirical gap-plus-coupling-validity
-criterion (ADR-026 amends ADR-007; see [`ADR-007 §Validation criteria`](https://github.com/fsafaei/concerto/blob/main/adr/ADR-007-heterogeneity-axis-selection.md)).
+Tier (c) — industry / deployment signal (humanoid factory pilots, logistics
+fleets, surgical robotics) used as a prior on which heterogeneity axes are
+operationally load-bearing — is maintained in the project's private planning kit
+and is not reproduced in this public repository; it is never a substitute for the
+empirical gap-plus-coupling-validity criterion (ADR-026 amends ADR-007; see
+[`ADR-007 §Validation criteria`](https://github.com/fsafaei/concerto/blob/main/adr/ADR-007-heterogeneity-axis-selection.md)).
 This page covers tier (a) only.
 
 > Every entry below carries a BibTeX cite-key in square brackets

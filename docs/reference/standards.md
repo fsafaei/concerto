@@ -6,8 +6,8 @@ three-tier evidence convention described on the
 [literature page](literature.md): peer-reviewed publications are tier
 (a) and live in [`literature.md`](literature.md); industry signal
 (humanoid factory pilots, logistics fleets, surgical robotics) is tier
-(c) and lives in
-[`adr/international_axis_evidence.md`](https://github.com/fsafaei/concerto/blob/main/adr/international_axis_evidence.md).
+(c) and is maintained in the project's private planning kit (not reproduced
+in this public repository).
 
 > Every standard below is identified by its exact edition / part
 > number / release in [`docs/reference/refs.bib`](refs.bib). Public
