@@ -17,6 +17,18 @@ report** showing, under preregistered thresholds:
   ``delta_ci_low >= delta_min``; if instead the gap's upper CI falls
   below ``delta_min`` the task is ego-solvable and is **demoted to a
   Tier-1 CONTROL** (ADR-027 §Admission protocol).
+- **A4 — instrument (ego) robustness** (ADR-027 §Admission A4, added
+  2026-07-15; runs only for instrument-based contrasts, i.e. when the
+  spec commits ``c_min_ego``). The policy used as the fixed measuring
+  instrument of a contrast must clear a preregistered ego-robustness
+  floor — per-partner ``success_ci_low >= c_min_ego``, at the task's
+  own success+stress bar — across the **admitted partner set**, not
+  only its training/matched partner. A brittle instrument makes the
+  contrast **inadmissible / un-instrumentable as built** (not a null,
+  not a heterogeneity finding — ADR-026 §Decision 2: a construct
+  problem is never re-described as a partner/axis result); the
+  instrument's per-partner robustness profile is a mandatory reported
+  artifact.
 
 This module makes that protocol something a reviewer executes rather
 than prose: :func:`run_admission` drives every measured check cell
@@ -24,11 +36,11 @@ through the ADR-028 result-bundle machinery (each cell is itself a
 ``chamber-eval verify``-passing bundle), applies the pre-committed
 threshold rules, and writes an immutable admission archive —
 ``admission_report.json`` + ``ADMISSION_REPORT.md`` + the cell bundles
-(invariant I8). Verdict vocabulary: ``ADMITTED`` (all three pass),
+(invariant I8). Verdict vocabulary: ``ADMITTED`` (all checks pass),
 ``CONTROL`` (A2/A3 failure — the ego-solvable direction),
-``NOT_SOLVABLE`` (A1 failure), ``INDETERMINATE`` (a CI straddles its
-threshold; resolved by the single pre-committed seed extension, then
-final).
+``NOT_SOLVABLE`` (A1 failure), ``UNINSTRUMENTABLE`` (A4 failure — a
+brittle instrument), ``INDETERMINATE`` (a CI straddles its threshold;
+resolved by the single pre-committed seed extension, then final).
 
 Where a task carries a committed, tag-locked measurement already (the
 handover-place Gate-0 archive), a check may **wrap** that immutable
@@ -46,7 +58,7 @@ from dataclasses import dataclass, field
 from importlib import import_module
 from typing import TYPE_CHECKING, Any, Literal
 
-from pydantic import BaseModel, ConfigDict, Field, PositiveInt
+from pydantic import BaseModel, ConfigDict, Field, PositiveInt, model_validator
 
 import chamber
 from chamber.evaluation.bootstrap import PairedEpisode, pacluster_bootstrap
@@ -71,7 +83,7 @@ from chamber.evaluation.results import (
 from concerto.training.seeding import derive_substream
 
 if TYPE_CHECKING:  # pragma: no cover
-    from collections.abc import Callable
+    from collections.abc import Callable, Mapping
     from pathlib import Path
 
 #: Admission-report schema version (ADR-027 §Admission protocol).
@@ -89,15 +101,20 @@ ADMISSION_REPORT_MD: str = "ADMISSION_REPORT.md"
 #: (ADR-002 P6; ADR-028 §Decision 3 discipline).
 A3_BOOTSTRAP_SUBSTREAM: str = "evaluation.admission.a3_paired_bootstrap"
 
-#: The three admission checks, in evaluation order (ADR-027 §Admission protocol).
-AdmissionCheckId = Literal["A1", "A2", "A3"]
+#: The admission checks, in evaluation order (ADR-027 §Admission
+#: protocol; A4 per ADR-027 §Admission A4 runs only for
+#: instrument-based contrasts).
+AdmissionCheckId = Literal["A1", "A2", "A3", "A4"]
 
 #: Per-check outcome vocabulary (ADR-027 §Admission protocol).
 CheckOutcome = Literal["PASS", "FAIL", "INDETERMINATE"]
 
 #: Overall verdict vocabulary (ADR-027 §Admission protocol; the CONTROL
-#: demotion rule and the NOT_SOLVABLE short-circuit).
-AdmissionVerdict = Literal["ADMITTED", "CONTROL", "NOT_SOLVABLE", "INDETERMINATE"]
+#: demotion rule, the NOT_SOLVABLE short-circuit, and the A4
+#: UNINSTRUMENTABLE brittle-instrument verdict — ADR-027 §Admission A4).
+AdmissionVerdict = Literal[
+    "ADMITTED", "CONTROL", "NOT_SOLVABLE", "UNINSTRUMENTABLE", "INDETERMINATE"
+]
 
 
 class AdmissionError(RuntimeError):
@@ -194,6 +211,19 @@ class AdmissionSpec(BaseModel):
         a3: The A3 partner-blind cell (measured; compared against the
             A1 reference cell on matched initial states), or wrapped
             committed gap evidence.
+        c_min_ego: A4 ego-robustness floor (ADR-027 §Admission A4) —
+            the measuring instrument's per-partner success CI lower
+            bound must clear it across the admitted partner set, at the
+            task's own success+stress bar. ``None`` (the default) for
+            plain task admissions: A4 is skipped and the A1/A2/A3
+            semantics are unchanged.
+        a4: The A4 instrument cell (always measured): ``policy_id``
+            names the instrument under test and ``partner_name`` the
+            admitted partner set it sweeps (an ADR-009 set slug, e.g.
+            ``cocarry_partners@v1``); the runner stamps each episode's
+            ``metadata["member"]`` with the set-member name (the
+            leaderboard per-partner convention). Committed iff
+            ``c_min_ego`` is.
         git_tag: Pre-registration tag the spec is locked to
             (ADR-007 §Discipline).
     """
@@ -214,7 +244,21 @@ class AdmissionSpec(BaseModel):
     a1: AdmissionCellSpec | WrappedEvidenceSpec
     a2: AdmissionCellSpec
     a3: AdmissionCellSpec | WrappedEvidenceSpec
+    c_min_ego: float | None = None
+    a4: AdmissionCellSpec | None = None
     git_tag: str
+
+    @model_validator(mode="after")
+    def _a4_fields_travel_together(self) -> AdmissionSpec:
+        """A4 needs both the floor and the cell (ADR-027 §Admission A4); loud otherwise."""
+        if (self.c_min_ego is None) != (self.a4 is None):
+            msg = (
+                "c_min_ego and a4 commit the A4 ego-robustness gate together "
+                "(ADR-027 §Admission A4): set both for an instrument-based "
+                "contrast, neither for a plain task admission"
+            )
+            raise ValueError(msg)
+        return self
 
 
 def admission_spec_from_prereg(doc: PreregDocument) -> AdmissionSpec:
@@ -245,7 +289,7 @@ class CheckReport(BaseModel):
     """One admission check's result (ADR-027 §Admission protocol).
 
     Attributes:
-        check: ``A1`` / ``A2`` / ``A3``.
+        check: ``A1`` / ``A2`` / ``A3`` / ``A4``.
         outcome: Final outcome after any pre-committed extension.
         criterion: The pre-committed rule, verbatim, as applied.
         statistics: The numbers the outcome was computed from (IQM,
@@ -288,7 +332,8 @@ class AdmissionReport(BaseModel):
         date_stamp: Caller-supplied date label of the archive
             (``<task_id>-<date>``); passed in, never sampled, so the
             report stays deterministic (ADR-002 P6).
-        checks: Per-check reports in A1/A2/A3 order; a NOT_SOLVABLE
+        checks: Per-check reports in A1/A2/A3/A4 order (A4 present only
+            for instrument-based contrasts); a NOT_SOLVABLE
             short-circuit records A1 only.
         verdict: Overall verdict (ADR-027 §Admission protocol).
         seed_extension_used: Whether any check consumed the single
@@ -296,6 +341,12 @@ class AdmissionReport(BaseModel):
         binding_evidence: The A2 coupling-binding evidence — the stress
             distribution on matched successful episodes (ADR-026
             §Decision 2 positive-control).
+        ego_robustness_profile: The A4 mandatory reported artifact
+            (ADR-027 §Admission A4): admitted-set member name → the
+            instrument's success point + CI + stress percentiles with
+            that partner. ``None`` for plain A1/A2/A3 admissions —
+            additive and optional, so schema-1 reports written before
+            A4 existed still validate unchanged.
         notes: Free-text caveats.
     """
 
@@ -313,6 +364,7 @@ class AdmissionReport(BaseModel):
     verdict: AdmissionVerdict
     seed_extension_used: bool
     binding_evidence: dict[str, float]
+    ego_robustness_profile: dict[str, dict[str, float]] | None = None
     notes: str = ""
 
 
@@ -388,24 +440,68 @@ def a3_outcome(delta_ci_low: float, delta_ci_high: float, delta_min: float) -> C
     return "INDETERMINATE"
 
 
+def a4_outcome(
+    success_ci_by_partner: Mapping[str, tuple[float, float]],
+    c_min_ego: float,
+) -> CheckOutcome:
+    """A4 instrument (ego) robustness rule (ADR-027 §Admission A4; ADR-026 §Decision 2).
+
+    The instrument is measured against every member of the admitted
+    partner set; per partner the value is its success
+    ``(ci_low, ci_high)``. PASS iff even the weakest partner clears the
+    preregistered ego-robustness floor (every ``ci_low >= c_min_ego``);
+    FAIL iff any partner's ``ci_high`` falls below the floor — the
+    instrument is brittle and the contrast is un-instrumentable as
+    built (a construct problem, never a partner/axis result);
+    INDETERMINATE when the weakest partner straddles (resolvable by the
+    single pre-committed seed extension, then final). The mapping form
+    keeps the per-partner aggregation inside the pre-committed rule so
+    callers cannot mispair one partner's lower bound with another's
+    upper bound.
+
+    Raises:
+        AdmissionError: On an empty profile — robustness across an
+            empty admitted set is unmeasurable, never vacuously true.
+    """
+    if not success_ci_by_partner:
+        msg = "A4 requires a non-empty admitted-partner profile (ADR-027 §Admission A4)"
+        raise AdmissionError(msg)
+    if all(ci_low >= c_min_ego for ci_low, _ in success_ci_by_partner.values()):
+        return "PASS"
+    if any(ci_high < c_min_ego for _, ci_high in success_ci_by_partner.values()):
+        return "FAIL"
+    return "INDETERMINATE"
+
+
 def overall_verdict(
-    a1: CheckOutcome, a2: CheckOutcome | None, a3: CheckOutcome | None
+    a1: CheckOutcome,
+    a2: CheckOutcome | None,
+    a3: CheckOutcome | None,
+    a4: CheckOutcome | None = None,
 ) -> AdmissionVerdict:
     """Combine check outcomes into the admission verdict (ADR-027 §Admission protocol).
 
-    ``A1 FAIL`` → ``NOT_SOLVABLE`` (short-circuit; A2/A3 may be
+    ``A1 FAIL`` → ``NOT_SOLVABLE`` (short-circuit; A2/A3/A4 may be
     ``None`` = not run). Any remaining ``INDETERMINATE`` (after the
     pre-committed extension) → ``INDETERMINATE``. ``A2`` or ``A3``
     FAIL → ``CONTROL`` (the ego-solvable direction: the task is
     single-robot-solvable or partner-irrelevant — a Tier-1 control
-    either way, ADR-027 §Tier ladder). All PASS → ``ADMITTED``.
+    either way, ADR-027 §Tier ladder); the task-level demotion outranks
+    the instrument-level verdict because a demoted task has no Tier-2
+    contrast left to instrument. ``A4`` FAIL → ``UNINSTRUMENTABLE``
+    (ADR-027 §Admission A4: the contrast is inadmissible as built — not
+    a null, not a heterogeneity finding). All run checks PASS →
+    ``ADMITTED``; ``a4 is None`` (not an instrument contrast) leaves
+    the three-check verdict table unchanged.
     """
     if a1 == "FAIL":
         return "NOT_SOLVABLE"
-    if a1 == "INDETERMINATE" or "INDETERMINATE" in (a2, a3):
+    if a1 == "INDETERMINATE" or "INDETERMINATE" in (a2, a3, a4):
         return "INDETERMINATE"
     if a2 == "FAIL" or a3 == "FAIL":
         return "CONTROL"
+    if a4 == "FAIL":
+        return "UNINSTRUMENTABLE"
     return "ADMITTED"
 
 
@@ -517,7 +613,7 @@ def _default_wrap_extractor_resolver(name: str) -> Callable[..., dict[str, float
 
 @dataclass
 class _RunContext:
-    """Internal bookkeeping shared across the three checks."""
+    """Internal bookkeeping shared across the checks."""
 
     spec: AdmissionSpec
     out_dir: Path
@@ -537,8 +633,16 @@ def _run_cell(
     *,
     seeds: list[int],
     suffix: str = "",
+    per_member_schedule: bool = False,
 ) -> tuple[str, list[EpisodeResult]]:
-    """Run one measured cell and write its v3 bundle (ADR-028 §Decision 1)."""
+    """Run one measured cell and write its v3 bundle (ADR-028 §Decision 1).
+
+    ``per_member_schedule`` (the A4 instrument cell, ADR-027 §Admission
+    A4): the cell sweeps the admitted partner set, so its bundle
+    records ``episodes_per_seed * n_members`` per seed — the
+    ``bundle_runner`` partner-set convention (ADR-028 §Decision 3) —
+    and a non-uniform or non-multiple per-seed count fails loudly.
+    """
     runner = ctx.resolver(cell.runner)
     run: CellRun = runner(
         cell=cell,
@@ -549,6 +653,17 @@ def _run_cell(
     )
     name = f"{cell.cell_id}{suffix}"
     episodes = _flatten(run.episodes_by_seed)
+    schedule_episodes_per_seed = int(ctx.spec.episodes_per_seed)
+    if per_member_schedule:
+        counts = {len(records) for records in run.episodes_by_seed.values()}
+        if len(counts) != 1 or next(iter(counts)) % schedule_episodes_per_seed != 0:
+            msg = (
+                f"A4 instrument cell {name!r} must run the committed "
+                f"episodes_per_seed ({schedule_episodes_per_seed}) for every "
+                f"admitted member on every seed; got per-seed counts {sorted(counts)}"
+            )
+            raise AdmissionError(msg)
+        schedule_episodes_per_seed = counts.pop()
     bundle = ResultBundle(
         task_id=ctx.spec.task_id,
         task_version=ctx.spec.task_version,
@@ -561,7 +676,7 @@ def _run_cell(
         seed_schedule=SeedSchedule(
             root_seed=ctx.spec.root_seed,
             seeds=list(seeds),
-            episodes_per_seed=int(ctx.spec.episodes_per_seed),
+            episodes_per_seed=schedule_episodes_per_seed,
             substream_labels=list(run.substream_labels),
         ),
         repro_command=ctx.repro_command,
@@ -644,15 +759,17 @@ def run_admission(
     render_backend: str | None = None,
     cell_runner_resolver: Callable[[str], Callable[..., CellRun]] | None = None,
 ) -> AdmissionReport:
-    """Execute the three admission checks and write the archive (ADR-027 §Admission protocol).
+    """Execute the admission checks and write the archive (ADR-027 §Admission protocol).
 
     Order of operations: the pre-registration gate runs first (tag +
     blob verification, ADR-007 §Discipline — nothing is measured on a
     failed gate); the working tree must be clean unless ``allow_dirty``
-    (a dirty report is never flip evidence); then A1 → A2 → A3, with
-    the NOT_SOLVABLE short-circuit on A1 failure ("stop before any
-    threshold discussion") and the single pre-committed seed extension
-    on a straddled CI. Every measured cell is written as an ADR-028 v3
+    (a dirty report is never flip evidence); then A1 → A2 → A3 — plus
+    A4 iff the spec commits ``c_min_ego`` (an instrument-based
+    contrast, ADR-027 §Admission A4) — with the NOT_SOLVABLE
+    short-circuit on A1 failure ("stop before any threshold
+    discussion") and the single pre-committed seed extension on a
+    straddled CI. Every measured cell is written as an ADR-028 v3
     bundle under ``out_dir`` so ``chamber-eval verify`` admits each
     check independently; the archive is completed by
     ``admission_report.json``, ``ADMISSION_REPORT.md``, and
@@ -749,7 +866,15 @@ def run_admission(
     a3_report = _check_a3(ctx, a1_episodes=a1_episodes)
     checks.append(a3_report)
 
-    verdict = overall_verdict(a1_report.outcome, a2_report.outcome, a3_report.outcome)
+    # ----- A4 — instrument (ego) robustness (instrument contrasts only) ------
+    a4_check: CheckOutcome | None = None
+    ego_profile: dict[str, dict[str, float]] | None = None
+    if spec.c_min_ego is not None:
+        a4_report, ego_profile = _check_a4(ctx)
+        checks.append(a4_report)
+        a4_check = a4_report.outcome
+
+    verdict = overall_verdict(a1_report.outcome, a2_report.outcome, a3_report.outcome, a4_check)
     return _finalize(
         ctx,
         doc_blob=blob,
@@ -757,6 +882,7 @@ def run_admission(
         checks=checks,
         verdict=verdict,
         binding_evidence=binding_evidence,
+        ego_robustness_profile=ego_profile,
         notes="",
     )
 
@@ -926,6 +1052,125 @@ def _check_a3(ctx: _RunContext, *, a1_episodes: list[EpisodeResult]) -> CheckRep
     )
 
 
+def _check_a4(ctx: _RunContext) -> tuple[CheckReport, dict[str, dict[str, float]]]:
+    """A4 instrument (ego) robustness across the admitted set (ADR-027 §Admission A4)."""
+    spec = ctx.spec
+    if spec.a4 is None or spec.c_min_ego is None:  # pragma: no cover - spec validator guard
+        msg = "A4 requires both c_min_ego and the a4 instrument cell"
+        raise AdmissionError(msg)
+    a4_cell = spec.a4
+    c_min_ego = spec.c_min_ego
+    criterion = (
+        f"per admitted partner: success_ci_low >= c_min_ego ({c_min_ego}) with "
+        f"successful-episode stress peak <= stress_limit ({spec.stress_limit}); any "
+        f"partner with success_ci_high < c_min_ego is brittle -> UNINSTRUMENTABLE "
+        f"(ADR-026 §Decision 2: a construct problem, not a partner/axis result)"
+    )
+    name, episodes = _run_cell(ctx, a4_cell, seeds=spec.seeds, per_member_schedule=True)
+    bundles = [name]
+    profile = _ego_robustness_profile(ctx, episodes)
+    outcome = a4_outcome(_profile_cis(profile), c_min_ego)
+    extended = False
+    if outcome == "INDETERMINATE" and spec.extension_seeds:
+        ext_name, ext_eps = _run_cell(
+            ctx, a4_cell, seeds=spec.extension_seeds, suffix="-ext", per_member_schedule=True
+        )
+        ext_members = set(_episodes_by_member(ext_eps))
+        if ext_members != set(profile):
+            msg = (
+                "A4 extension swept a different admitted member set "
+                f"({sorted(ext_members)} vs base {sorted(profile)}); the "
+                "pre-committed extension must re-run the same partners"
+            )
+            raise AdmissionError(msg)
+        bundles.append(ext_name)
+        episodes = episodes + ext_eps
+        profile = _ego_robustness_profile(ctx, episodes)
+        outcome = (
+            "PASS"
+            if all(stats["success_ci_low"] >= c_min_ego for stats in profile.values())
+            else "FAIL"
+        )  # final — no second extension
+        extended = True
+        ctx.extension_used = True
+    has_stress_channel = any(ep.force_peak is not None for ep in episodes)
+    if spec.stress_limit is not None and not has_stress_channel:
+        msg = (
+            f"A4 stress_limit is committed ({spec.stress_limit}) but the instrument "
+            "cell recorded no force_peak stress channel"
+        )
+        raise AdmissionError(msg)
+    if (
+        spec.stress_limit is not None
+        and outcome == "PASS"
+        and any(stats.get("stress_max", 0.0) > spec.stress_limit for stats in profile.values())
+    ):
+        # The same success+stress bar the task uses, held per partner.
+        outcome = "FAIL"
+    weakest = min(profile, key=lambda member: (profile[member]["success_ci_low"], member))
+    brittle = sorted(m for m, s in profile.items() if s["success_ci_high"] < c_min_ego)
+    stats = {
+        "n_partners": float(len(profile)),
+        "min_success_ci_low": profile[weakest]["success_ci_low"],
+        "min_success_ci_high": min(s["success_ci_high"] for s in profile.values()),
+    }
+    notes = f"weakest admitted partner: {weakest}"
+    if brittle:
+        notes += f"; brittle partners (success_ci_high < c_min_ego): {', '.join(brittle)}"
+    return (
+        CheckReport(
+            check="A4",
+            outcome=outcome,
+            criterion=criterion,
+            statistics=stats,
+            bundles=bundles,
+            evidence=_bundle_evidence(ctx, bundles),
+            extended=extended,
+            notes=notes,
+        ),
+        profile,
+    )
+
+
+def _episodes_by_member(episodes: list[EpisodeResult]) -> dict[str, list[EpisodeResult]]:
+    """Group instrument-cell episodes by admitted-set member (ADR-027 §Admission A4)."""
+    # Lazy: leaderboard pulls numpy at module import (keep this module feather-light).
+    from chamber.evaluation.leaderboard import _member_of  # noqa: PLC0415
+
+    by_member: dict[str, list[EpisodeResult]] = {}
+    for ep in episodes:
+        by_member.setdefault(_member_of(ep), []).append(ep)
+    if "<unknown>" in by_member:
+        msg = (
+            "A4 instrument-cell episodes must stamp metadata['member'] (or "
+            "'partner') with the admitted-set member name — the leaderboard "
+            "per-partner convention (ADR-027 §Reporting rules)"
+        )
+        raise AdmissionError(msg)
+    return by_member
+
+
+def _ego_robustness_profile(
+    ctx: _RunContext, episodes: list[EpisodeResult]
+) -> dict[str, dict[str, float]]:
+    """The A4 per-partner robustness profile (ADR-027 §Admission A4 mandatory artifact)."""
+    by_member = _episodes_by_member(episodes)
+    return {
+        member: {
+            **_recompute_summary_stats(ctx, by_member[member]),
+            **stress_statistics(by_member[member]),
+        }
+        for member in sorted(by_member)
+    }
+
+
+def _profile_cis(profile: dict[str, dict[str, float]]) -> dict[str, tuple[float, float]]:
+    return {
+        member: (stats["success_ci_low"], stats["success_ci_high"])
+        for member, stats in profile.items()
+    }
+
+
 def _finalize(
     ctx: _RunContext,
     *,
@@ -935,6 +1180,7 @@ def _finalize(
     verdict: AdmissionVerdict,
     binding_evidence: dict[str, float],
     notes: str,
+    ego_robustness_profile: dict[str, dict[str, float]] | None = None,
 ) -> AdmissionReport:
     """Write ``admission_report.json`` + ``ADMISSION_REPORT.md`` + sums (I8)."""
     report = AdmissionReport(
@@ -949,6 +1195,7 @@ def _finalize(
         verdict=verdict,
         seed_extension_used=ctx.extension_used,
         binding_evidence=binding_evidence,
+        ego_robustness_profile=ego_robustness_profile,
         notes=notes,
     )
     (ctx.out_dir / ADMISSION_REPORT_JSON).write_text(
@@ -1002,6 +1249,13 @@ def render_admission_report_md(report: AdmissionReport, spec: AdmissionSpec) -> 
         f"- `stress_limit` = {spec.stress_limit} (A1 stress ceiling on successes)",
         f"- `tau_infeasible` = {spec.tau_infeasible} (A2 success ceiling, CI upper bound)",
         f"- `delta_min` = {spec.delta_min} (A3 reference-minus-blind margin, CI lower bound)",
+    ]
+    if spec.c_min_ego is not None:
+        lines.append(
+            f"- `c_min_ego` = {spec.c_min_ego} "
+            "(A4 ego-robustness floor, per-partner CI lower bound)"
+        )
+    lines += [
         f"- seeds = {spec.seeds}, episodes/seed = {spec.episodes_per_seed}, "
         f"extension = {spec.extension_seeds}",
         "",
@@ -1029,6 +1283,24 @@ def render_admission_report_md(report: AdmissionReport, spec: AdmissionSpec) -> 
             for key in sorted(report.binding_evidence)
         )
         lines.append("")
+    if report.ego_robustness_profile:
+        lines.append("## A4 instrument robustness — per admitted partner (ADR-027 §Admission A4)")
+        lines.append("")
+        columns = [
+            "n_episodes",
+            "success_iqm",
+            "success_ci_low",
+            "success_ci_high",
+            "stress_p90",
+            "stress_max",
+        ]
+        lines.append("| partner | " + " | ".join(f"`{col}`" for col in columns) + " |")
+        lines.append("|---" * (len(columns) + 1) + "|")
+        for member in sorted(report.ego_robustness_profile):
+            stats = report.ego_robustness_profile[member]
+            cells = [f"{stats[col]:.6g}" if col in stats else "—" for col in columns]
+            lines.append(f"| {member} | " + " | ".join(cells) + " |")
+        lines.append("")
     if report.notes:
         lines.append(f"_{report.notes}_")
         lines.append("")
@@ -1053,6 +1325,7 @@ __all__ = [
     "a1_outcome",
     "a2_outcome",
     "a3_outcome",
+    "a4_outcome",
     "admission_spec_from_prereg",
     "load_admission_report",
     "overall_verdict",
