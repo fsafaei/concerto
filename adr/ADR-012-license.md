@@ -13,9 +13,9 @@ v0.2 §10 default is Apache 2.0 + CLA. ADR confirms or revises.
 
 | # | Option | Source / advocate | Pros | Cons |
 |---|--------|-------------------|------|------|
-| A | Apache 2.0 + CLA | [plan default] | Keeps dual-license / commercial path open | CLA friction for external contributors |
-| B | Apache 2.0 only | [OSS purist] | No CLA friction | Limits commercial path |
-| C | MIT | [ML-community common] | Permissive; community-friendly | Limits commercial path further |
+| A | Apache 2.0 + CLA | [plan default] | Preserves relicensing flexibility for contributors | CLA friction for external contributors |
+| B | Apache 2.0 only | [OSS purist] | No CLA friction | Less relicensing flexibility |
+| C | MIT | [ML-community common] | Permissive; community-friendly | Least relicensing flexibility |
 
 ## Decision
 Apache 2.0 + CLA per plan default.

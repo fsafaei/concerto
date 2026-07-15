@@ -3,7 +3,7 @@
 
 Phase-2, **non-gating** research spike on the open ADR-026 coupling-validity line
 (invariant I1), of the same class as the co-carry and co-insert spikes. It is NOT
-a Phase-1 gate, NOT a trained moat residual, and NOT a commercial commitment.
+a Phase-1 gate; it is a non-gating Phase-2 research spike.
 
 What the task models (ADR-026 §Decision). A black-box *presenter* partner hands a
 part into a shared workspace; a legacy six-axis *ego* arm receives it and must
