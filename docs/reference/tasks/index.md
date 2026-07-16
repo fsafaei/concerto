@@ -21,5 +21,5 @@ $ chamber-eval manifest
 | [`cocarry@v1` — Co-carry — rigid dual-arm bar transport](cocarry.md) | 2 (admitted cooperation tasks) | ADMITTED |
 | [`handover_place@v1` — Handover-and-place under takt pressure](handover_place.md) | 2 (admitted cooperation tasks) | ADMITTED |
 | [`amr_handover_dynamic@v0` — AMR dynamic handover (spec-only candidate)](amr_handover_dynamic.md) | 3 (documented candidates and closures) | CANDIDATE |
-| [`co_hold_secure@v0` — Co-hold-and-secure (spec-only candidate)](co_hold_secure.md) | 3 (documented candidates and closures) | CANDIDATE |
+| [`co_hold_secure@v1` — Co-hold-and-secure (Gate-0 candidate)](co_hold_secure.md) | 3 (documented candidates and closures) | CANDIDATE |
 | [`coinsert@v1` — Co-insert — hold-and-insert (closed; open challenge)](coinsert.md) | 3 (documented candidates and closures) | CLOSED |
