@@ -123,7 +123,7 @@ The suite is pinned by the `chamber.tasks` registry
 ([ADR-027](adr/ADR-027-chamber-bench-v1-protocol.md) §Decision):
 every task carries exactly one tier and an admission status backed by
 committed evidence. `ADMITTED` is earned, never asserted —
-`chamber-eval admission` executes the A1/A2/A3 protocol under a
+`chamber-eval admission` executes the A1–A4 protocol under a
 tag-locked preregistration and writes the immutable report the status
 cites (see `spikes/results/admission/`). The table is generated; CI
 fails if it drifts.
