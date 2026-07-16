@@ -60,6 +60,12 @@ spikes/results/*
 # registry's admission_status flips cite (chamber-eval admission;
 # invariant I8) and MUST be committed.
 !spikes/results/admission/
+# Carve-out: the handover learned-ladder Slice-0 oracle-headroom probe
+# archive under spikes/results/handover-ladder-probe-*/ (non-gating;
+# pre-statement + results, committed in that order) is the auditable
+# record the v1.1 scope decision cites (invariant I8) and MUST be
+# committed.
+!spikes/results/handover-ladder-probe-*/
 # Carve-out: the ADR-009 (as amended 2026-07-05) partner-set fingerprint
 # archives under spikes/results/partner-fingerprints/ are the committed
 # behavioural evidence the docs/reference/partners/ cards render from
