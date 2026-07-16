@@ -1,0 +1,5 @@
+uv run --no-sync python scripts/repro/_handover_ladder_slice0_probe.py
+# probe tag (pre-statement commit): probe-handover-ladder-slice0-2026-07-16
+# committed REF bundle: spikes/results/benchmark/handover-v1/ref-script-2026-07-06 (git 5f40362232049142fa8fd8a0f5f3f44687f275da)
+# reproduce at the results commit of this archive; the run is
+# deterministic (P6/ADR-002) and rewrites probe_results.json byte-identically.
