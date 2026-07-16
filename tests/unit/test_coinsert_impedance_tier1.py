@@ -221,3 +221,76 @@ def test_base_unjam_engages_on_stall() -> None:
     # Cross the stall window so the retract-repress unjam branch fires (no crash).
     for _ in range(10):
         assert np.all(np.isfinite(np.asarray(b.act(obs))))
+
+
+# --- The ADR-029 co-hold-secure parametrisation overrides -------------------
+# New spec.extra knobs added at PR-A with S2-identical defaults; these tests
+# pin BOTH directions: the defaults reproduce the frozen S2 behaviour, and the
+# overrides change exactly the intended behaviour (ADR-029 §Rationale).
+
+
+def _base_with(extra_overrides: dict[str, str]) -> CoInsertBaseInserter:
+    extra = dict(_BASE_EXTRA)
+    extra.update(extra_overrides)
+    p = load_partner(PartnerSpec("coinsert_base_inserter", 0, None, None, extra))
+    assert isinstance(p, CoInsertBaseInserter)
+    return p
+
+
+def test_gripper_action_defaults_closed_and_overrides_open() -> None:
+    closed = _base()
+    closed.reset(seed=0)
+    assert np.asarray(closed.act(_obs("panda_wristcam")))[7] == pytest.approx(-1.0)
+    opened = _base_with({"gripper_action": "1.0"})
+    opened.reset(seed=0)
+    assert np.asarray(opened.act(_obs("panda_wristcam")))[7] == pytest.approx(1.0)
+    # The degraded gripper-only action honours the override too.
+    assert np.asarray(opened.act({"agent": {}, "extra": {}}))[7] == pytest.approx(1.0)
+
+
+def test_stall_steps_override_disables_the_unjam() -> None:
+    b = _base_with({"stall_steps": "100000"})
+    b.reset(seed=0)
+    obs = _obs_depth(peg_z=0.16, sock_z=0.20)
+    for _ in range(20):
+        b.act(obs)
+    # With the detector effectively off, no retract pulse ever fires.
+    assert b._retract_count == 0
+
+
+def test_seat_eps_override_keeps_pressing_inside_the_detent_window() -> None:
+    # depth 0.0385 is "seated" for the S2 default (eps 2 mm) but still
+    # pressing for a click-margin override (the co-hold-secure detent press).
+    obs = _obs_depth(peg_z=0.1215, sock_z=0.20)  # depth = 0.0385
+    default = _base()
+    default.reset(seed=0)
+    assert np.allclose(np.asarray(default.act(obs))[:7], 0.0, atol=1e-6)  # holds
+    tight = _base_with({"seat_eps": "0.0003"})
+    tight.reset(seed=0)
+    assert not np.allclose(np.asarray(tight.act(obs))[:7], 0.0, atol=1e-6)  # presses
+
+
+def test_press_ratchet_holds_the_target_after_a_bounce() -> None:
+    deep = _obs_depth(peg_z=0.13, sock_z=0.20)  # depth 0.030 (press phase)
+    shallow = _obs_depth(peg_z=0.158, sock_z=0.20)  # depth 0.002 (bounced back)
+    ratchet = _base_with({"press_ratchet": "1"})
+    ratchet.reset(seed=0)
+    ratchet.act(deep)
+    assert ratchet._ratchet_depth > 0.029
+    ratchet.act(shallow)  # a bounce must NOT reset the press target
+    assert ratchet._ratchet_depth > 0.029
+    plain = _base()
+    plain.reset(seed=0)
+    plain.act(deep)
+    assert plain._ratchet_depth == float("-inf")  # default off: no ratchet state
+
+
+def test_press_ratchet_cleared_on_reset() -> None:
+    b = _base_with({"press_ratchet": "1"})
+    b.reset(seed=0)
+    b.act(_obs_depth(peg_z=0.13, sock_z=0.20))
+    with pytest.raises(AssertionError):
+        b.assert_episode_state_clear()
+    b.reset(seed=0)
+    assert b._ratchet_depth == float("-inf")
+    b.assert_episode_state_clear()
