@@ -351,46 +351,60 @@ def coinsert_v1() -> TaskSpec:
 
 
 @register_task
-def co_hold_secure_v0() -> TaskSpec:
-    """Tier-3 candidate placeholder: co-hold-and-secure (ADR-027 §Tier ladder)."""
+def co_hold_secure_v1() -> TaskSpec:
+    """Tier-3 candidate, Gate-0 in progress: co-hold-and-secure (ADR-029 §Decision)."""
     return TaskSpec(
         task_id="co_hold_secure",
-        version=0,
+        version=1,
         tier=3,
-        title="Co-hold-and-secure (spec-only candidate)",
-        env_factory=None,
-        sim_backend="unspecified (spec-only)",
+        title="Co-hold-and-secure (Gate-0 candidate)",
+        env_factory="chamber.envs.co_hold_secure.make_co_hold_secure_env",
+        sim_backend="maniskill3",
         n_agents=2,
         action_space_summary=(
-            "To be specified: one robot holds a part under continuous contact "
-            "while the other performs a securing operation"
+            "Two Panda arms, pd_joint_delta_pos at 20 Hz: the holder presents "
+            "a part (fixed-link grip); the securing operator pushes a welded "
+            "plug to seat against a 40 N detent over the final 2 mm"
         ),
-        observation_summary="To be specified at Gate-0 pre-registration",
+        observation_summary=(
+            "state_dict: per-arm proprioception + plug pose + part pose "
+            "(the co-insert controller obs contract) + goal"
+        ),
         stress_channel=(
-            "Holding-contact force under continuous contact (to be pinned at "
-            "Gate-0 pre-registration)"
+            "Holder workpiece-wrench under process load — the friction-"
+            "inclusive wrist incoming joint force (ADR-029 §Consequences)"
         ),
         axes=_axes(),
         admission_status="CANDIDATE",
         evidence=[
-            "spikes/preregistration/handover_place/gate0.yaml",
+            "adr/ADR-029-co-hold-secure-gate0-program.md",
+            "spikes/results/coinsert/COINSERT_CLOSURE_2026-06-24.md",
             "adr/ADR-027-chamber-bench-v1-protocol.md",
         ],
         notes=(
-            "The pre-committed escalation target if handover-and-place washes "
-            "out (the handover-place Gate-0 prereg's escalation clause names "
-            "cross-modal co-hold-and-secure), and the v1.1 flagship candidate. "
-            "Fixation-tooling structure: one robot holds a part under "
-            "continuous contact, the other performs a securing operation, at a "
-            "moderate, sourced operate tolerance — a fastening or connector "
-            "seat, never a zero-clearance peg (the co-insert correction). "
-            "Industrial anchors (public sources): fixtureless welding and "
-            "robotic machining/finishing, where one robot holds while another "
-            "operates and high process force makes the coupling strongest. "
-            "Committed falsifier (the A2 gate applied to fixation tooling): if "
-            "a passive fixture — single robot plus static tooling — matches the "
-            "two-robot team under the same tolerances, the task is "
-            "fixture-design-plus-single-arm and is not admitted."
+            "Gate-0 in progress (ADR-029; the second-discriminating-task "
+            "pivot after the handover learned-ladder NO-GO, PR #309). The "
+            "geometry is the wedge-inverted design rule: engagement depth "
+            "10 mm, per-side clearance band {1.5, 2.5, 3.5} mm, >=2 mm 45-deg "
+            "lead-in chamfer, so the wedge-limit tilt (8.5/14.0/19.3 deg) "
+            "clears 2x the measured achievable-control ceiling (2.8 deg) on "
+            "every cell — a fastening / connector seat, never a zero-clearance "
+            "peg (the co-insert correction, now enforced in code). The "
+            "securing axis is deliberately non-vertical (60 deg from vertical) "
+            "so no passive support can react the process load. Success adds "
+            "the pose_held conjunct (the part stays within 5 mm / 5 deg under "
+            "load). A2 posture (ADR-029): route (i) application-grounded "
+            "(fixtureless high-mix cells; the C-fixture control is reported "
+            "honestly beside the team cells); route (ii), an in-episode "
+            "multi-pose securing sequence, is a designed-but-dormant hook. "
+            "The specific public industrial-tolerance citation attaches at "
+            "the Gate-0 pre-registration, not before. Committed falsifier "
+            "(the A2 gate applied to fixation tooling): if a passive fixture "
+            "— single robot plus static tooling — matches the two-robot team "
+            "under the same tolerances, the task is "
+            "fixture-design-plus-single-arm and is not admitted. Tier moves "
+            "only via the ADR-027 admission protocol under a founder-signed "
+            "Gate-0 prereg tag; no leaderboard cells exist for this task."
         ),
     )
 

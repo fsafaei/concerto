@@ -320,6 +320,13 @@ class _CoInsertControllerBase(PartnerBase):
         # cooperation that lets the peg seat past the tilt-wedge (a stiff /
         # non-accommodating hold cannot, which is what the coupling check probes).
         self._ori_hold_gain: float = float(extra.get("ori_hold_gain", str(_ORI_HOLD_GAIN)))
+        # Gripper channel (default: closed, the S2 co-insert convention). The
+        # co-hold-secure rig overrides to OPEN (+1): its plug is short enough
+        # that closing fingers clamp mid-body and can hold the welded plug
+        # cocked after a contact transient (ADR-029 §Risks — measured at the
+        # PR-A bring-up); the held body is welded either way, so the fingers
+        # are inert and the safe setting is task-geometry-dependent.
+        self._gripper_action: float = float(extra.get("gripper_action", str(_GRIPPER_ACTION)))
         urdf_path = extra.get("urdf_path")
         self._provider = PandaJacobianProvider(urdf_path)
         # Within-episode state (the ONLY state; zeroed in reset — ADR-009).
@@ -428,7 +435,7 @@ class _CoInsertControllerBase(PartnerBase):
         dq = jac6.T @ np.linalg.solve(jjt, v6)
         action = np.zeros(_PANDA_ARM_DOF + 1, dtype=np.float32)
         action[:_PANDA_ARM_DOF] = np.clip(dq / _ACTION_DELTA_SCALE, -1.0, 1.0).astype(np.float32)
-        action[_PANDA_ARM_DOF] = _GRIPPER_ACTION
+        action[_PANDA_ARM_DOF] = np.float32(self._gripper_action)
         return action
 
 
@@ -478,6 +485,30 @@ class CoInsertBaseInserter(_CoInsertControllerBase):
         self._spiral_amp: float = float(extra.get("spiral_amp", str(_BASE_SPIRAL_AMPLITUDE_M)))
         self._descend_step: float = float(extra.get("descend_step", str(_BASE_DESCEND_STEP_M)))
         self._depth_target: float = float(extra.get("depth_target", "0.040"))
+        # Unjam-maneuver overrides (defaults = the frozen S2 constants, so the
+        # co-insert behaviour is byte-identical). The co-hold-secure detent
+        # press (ADR-029 §Decision) sets ``stall_steps`` very high: pressing
+        # against a detent ramp LOOKS like a friction stall to this detector,
+        # and a retract there dumps the integral windup the press needs — a
+        # detent wants sustained force, not the back-off that unjams a deep
+        # friction bore.
+        self._stall_steps: int = int(extra.get("stall_steps", str(_BASE_STALL_STEPS)))
+        self._retract_dist: float = float(extra.get("retract_dist", str(_BASE_RETRACT_M)))
+        # Seat threshold below which the press keeps driving (default = the S2
+        # 2 mm depth tolerance). The co-hold-secure detent window sits inside
+        # the last 2 mm of a 10 mm bore (ADR-029 §Decision), so its driver
+        # tightens this to the click margin — otherwise the press would
+        # declare "seated" at the detent entry and hold there forever.
+        self._seat_eps: float = float(extra.get("seat_eps", "0.002"))
+        # Ratcheting press target (default off = the S2 depth-following press).
+        # A detent resistance spring-ejects a depth-following position press
+        # (each bounce resets the target to the realized depth, so no
+        # sustained force ever builds — the PR-A bring-up pogo). With the
+        # ratchet on, the press target is monotone within the episode: after
+        # a bounce the target stays deep, the saturated error sustains the
+        # press force, and the plug walks through the ramp quasi-statically.
+        self._press_ratchet: bool = extra.get("press_ratchet", "0").lower() in ("1", "true")
+        self._ratchet_depth: float = float("-inf")
         # Within-episode stall / unjam state for the lead-in search (zeroed in reset).
         self._stall_count: int = 0
         self._retract_count: int = 0
@@ -495,13 +526,18 @@ class CoInsertBaseInserter(_CoInsertControllerBase):
         self._stall_count = 0
         self._retract_count = 0
         self._last_depth = -1.0
+        self._ratchet_depth = float("-inf")
 
     def assert_episode_state_clear(self) -> None:
         """Assert the within-episode state — including the stall clock — was cleared (ADR-009)."""
         super().assert_episode_state_clear()
-        if self._stall_count != 0 or self._retract_count != 0:
+        if (
+            self._stall_count != 0
+            or self._retract_count != 0
+            or self._ratchet_depth != float("-inf")
+        ):
             msg = (
-                f"{type(self).__name__}: stall clock not cleared after reset. "
+                f"{type(self).__name__}: stall clock / press ratchet not cleared after reset. "
                 "ADR-009 §Decision: partners are stateless across episodes."
             )
             raise AssertionError(msg)
@@ -523,14 +559,14 @@ class CoInsertBaseInserter(_CoInsertControllerBase):
             "insertion_envelope_m": self._spiral_amp + float(COINSERT_CHAMFER_M),
         }
 
-    def act(  # noqa: PLR0915 - the approach/press/seated phase machine + unjam is one cohesive step
+    def act(  # noqa: PLR0915, PLR0912 - the approach/press/seated phase machine + unjam is one cohesive step
         self, obs: Mapping[str, object], *, deterministic: bool = True
     ) -> NDArray[np.floating]:
         """Return the ego ``pd_joint_delta_pos`` insertion action (ADR-026 §Decision 1)."""
         del deterministic
         self._step += 1
         gripper_only = np.zeros(_PANDA_ARM_DOF + 1, dtype=np.float32)
-        gripper_only[_PANDA_ARM_DOF] = _GRIPPER_ACTION
+        gripper_only[_PANDA_ARM_DOF] = np.float32(self._gripper_action)
         qpos = self._read_qpos(obs)
         peg = self._read_pose(obs, "peg_pose")
         sock = self._read_pose(obs, "receptacle_pose")
@@ -549,7 +585,7 @@ class CoInsertBaseInserter(_CoInsertControllerBase):
         lateral_mag = float(np.linalg.norm(lateral_vec))
 
         e1, e2 = _lateral_basis(axis)
-        if depth >= (self._depth_target - 0.002):
+        if depth >= (self._depth_target - self._seat_eps):
             # Seated: hold (command ~zero velocity) so both arms go static and the
             # receptacle settles — the success ``static`` ∧ ``settled`` conjuncts
             # need the press to stop once depth is reached.
@@ -584,16 +620,24 @@ class CoInsertBaseInserter(_CoInsertControllerBase):
             # amplitude + the chamfer capture).
             if self._retract_count > 0:
                 self._retract_count -= 1
-                target_depth = max(depth - _BASE_RETRACT_M, -0.005)
+                target_depth = max(depth - self._retract_dist, -0.005)
             else:
                 if depth <= self._last_depth + 1e-4:
                     self._stall_count += 1
                 else:
                     self._stall_count = 0
-                if self._stall_count >= _BASE_STALL_STEPS:
+                if self._stall_count >= self._stall_steps:
                     self._retract_count = _BASE_RETRACT_STEPS
                     self._stall_count = 0
-                target_depth = min(depth + self._descend_step, self._depth_target + 0.005)
+                if self._press_ratchet:
+                    # Monotone press target within the episode (detent press).
+                    self._ratchet_depth = max(self._ratchet_depth, depth)
+                    target_depth = min(
+                        self._ratchet_depth + self._descend_step, self._depth_target + 0.005
+                    )
+                    self._ratchet_depth = target_depth
+                else:
+                    target_depth = min(depth + self._descend_step, self._depth_target + 0.005)
             self._last_depth = depth
             target = mouth - target_depth * axis
             if self._retract_count > 0:
@@ -682,7 +726,7 @@ class CoInsertReferenceHolder(_CoInsertControllerBase):
         del deterministic
         self._step += 1
         gripper_only = np.zeros(_PANDA_ARM_DOF + 1, dtype=np.float32)
-        gripper_only[_PANDA_ARM_DOF] = _GRIPPER_ACTION
+        gripper_only[_PANDA_ARM_DOF] = np.float32(self._gripper_action)
         qpos = self._read_qpos(obs)
         sock = self._read_pose(obs, "receptacle_pose")
         if qpos is None or sock is None:

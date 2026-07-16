@@ -27,5 +27,6 @@ directory of this repository.
 | ADR-026 | Coupling-validity criterion (+ Stage-1 AS reinterpretation) | Accepted |
 | ADR-027 | CHAMBER-Bench v1.0 protocol (tiers / admission / validity matrix) | Accepted |
 | ADR-028 | Result-bundle schema v3 + preregistration versioning | Accepted (implementation pending) |
+| ADR-029 | co_hold_secure Gate-0 program (second-discriminating-task pivot) | RFC |
 
 For full text see the `adr/` directory.

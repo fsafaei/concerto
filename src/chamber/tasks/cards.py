@@ -199,29 +199,38 @@ CARD_PROSE: dict[str, TaskCardProse] = {
     "co_hold_secure": TaskCardProse(
         description=(
             "A fixation-tooling task: one robot holds a part under continuous "
-            "contact while the other performs a securing operation at a "
-            "moderate, sourced operate tolerance — a fastening or connector "
-            "seat, never a zero-clearance peg (the co-insert correction). It "
-            "is the pre-committed escalation target if handover-and-place "
-            "washes out, and the v1.1 flagship candidate. This is a spec-only "
-            "placeholder: no env factory is wired yet."
+            "contact while the other pushes a plug home against a seat-click "
+            "detent — a fastening or connector seat, never a zero-clearance "
+            "peg (the co-insert correction, enforced by the wedge-inverted "
+            "design rule in code). Gate-0 is in progress under ADR-029: the "
+            "env is runnable, the stress channel is pinned as the holder "
+            "workpiece-wrench under process load, and success requires the "
+            "part to stay in pose under the securing load. The tier moves "
+            "only via the admission protocol once a founder-signed Gate-0 "
+            "pre-registration exists."
         ),
         industrial_analogue=(
             "Fixtureless welding and robotic machining or finishing: one "
             "robot holds the workpiece in place of a dedicated fixture while "
             "another welds, drills, or fastens — the settings where high "
-            "process force makes the inter-robot coupling strongest."
+            "process force makes the inter-robot coupling strongest. The "
+            "specific public tolerance citation attaches at the Gate-0 "
+            "pre-registration."
         ),
         run_snippet=(
             "import chamber.tasks\n\n"
-            "# Spec-only placeholder — no env factory is wired yet:\n"
-            'chamber.tasks.make("co_hold_secure")  # raises NotImplementedError\n'
+            'env = chamber.tasks.make("co_hold_secure", render_backend="none")\n'
+            "obs, _ = env.reset(seed=0)\n"
         ),
         falsifier=(
             "If a passive fixture — a single robot plus static tooling — "
             "matches the two-robot team under the same tolerances, the task "
             "is fixture-design-plus-single-arm and is not admitted (the A2 "
-            "two-robot-infeasibility gate applied to fixation tooling)."
+            "two-robot-infeasibility gate applied to fixation tooling). The "
+            "v1 posture is application-grounded (route i): the fixtureless "
+            "setting is the industrial anchor and the C-fixture control is "
+            "reported honestly; the in-episode multi-pose securing sequence "
+            "(route ii) is a designed-but-dormant escape hatch."
         ),
     ),
     "amr_handover_dynamic": TaskCardProse(
