@@ -806,6 +806,405 @@ class TestWrappedEvidence:
             _run(repo, prereg, resolver)
 
 
+def _write_bundle_episodes(
+    repo: Path, rel_dir: str, episodes_by_seed: dict[int, list[EpisodeResult]]
+) -> dict[str, str]:
+    """Write committed-bundle-style episode files; return their rel-path -> SHA-256 pins."""
+    out = repo / rel_dir
+    out.mkdir(parents=True, exist_ok=True)
+    files: dict[str, str] = {}
+    for seed, records in sorted(episodes_by_seed.items()):
+        path = out / f"episodes_seed{seed}.jsonl"
+        path.write_text(
+            "".join(record.model_dump_json() + "\n" for record in records), encoding="utf-8"
+        )
+        files[f"{rel_dir}/episodes_seed{seed}.jsonl"] = sha256_file(path)
+    return files
+
+
+class TestWrappedA4:
+    """Wrapped A4: SHA-verify + re-extract the profile, same rule, straddle final (ADR-027 A4)."""
+
+    _MEMBERS = ("imp_a", "imp_b")
+
+    def _fully_wrapped_payload(
+        self,
+        repo: Path,
+        *,
+        member_success: dict[str, Callable[[int, int], bool]] | None = None,
+        member_force: dict[str, float | None] | None = None,
+        members_pin: list[str] | None = None,
+        a1_extractor: str = "bundle_success_summary",
+        a4_extractor: str = "bundle_ego_robustness_profile",
+        a1_force: float | None = 40.0,
+        a2_success: Callable[[int, int], bool] | None = None,
+        tamper_a4: bool = False,
+    ) -> dict[str, object]:
+        """A fully wrapped admission payload — the retrospective re-issue shape (I8)."""
+        seeds = [0, 1]
+        n_eps = 4
+        success = member_success or {m: (lambda _s, _e: True) for m in self._MEMBERS}
+        force: dict[str, float | None] = member_force or {}
+        a2_fn = a2_success or (lambda _s, _e: False)
+        a1_files = _write_bundle_episodes(
+            repo,
+            "spikes/wrapped/a1_reference",
+            {
+                s: [_episode(s, e, success=True, force_peak=a1_force) for e in range(n_eps)]
+                for s in seeds
+            },
+        )
+        a2_files = _write_bundle_episodes(
+            repo,
+            "spikes/wrapped/a2_single_arm",
+            {
+                s: [_episode(s, e, success=a2_fn(s, e), force_peak=40.0) for e in range(n_eps)]
+                for s in seeds
+            },
+        )
+        a3_files = _write_bundle_episodes(
+            repo,
+            "spikes/wrapped/a3_blind",
+            {
+                s: [_episode(s, e, success=False, force_peak=40.0) for e in range(n_eps)]
+                for s in seeds
+            },
+        )
+        a4_files = _write_bundle_episodes(
+            repo,
+            "spikes/wrapped/a4_instrument",
+            {
+                s: [
+                    _episode(
+                        s,
+                        m_idx * n_eps + e,
+                        success=success[m](s, e),
+                        force_peak=force.get(m, 40.0),
+                        member=m,
+                    )
+                    for m_idx, m in enumerate(self._MEMBERS)
+                    for e in range(n_eps)
+                ]
+                for s in seeds
+            },
+        )
+        if tamper_a4:
+            path = repo / "spikes/wrapped/a4_instrument/episodes_seed0.jsonl"
+            path.write_text(path.read_text(encoding="utf-8") + "\n", encoding="utf-8")
+        if a1_extractor == "bundle_ego_robustness_profile":
+            # The shape-guard case: point A1 at member-stamped episodes so
+            # the extractor returns a nested profile to a scalar check.
+            wrapped_a1 = {
+                "archive": "spikes/wrapped",
+                "files": a4_files,
+                "extractor": a1_extractor,
+                "params": {"bundle_dir": "spikes/wrapped/a4_instrument", "n_resamples": 200},
+            }
+        else:
+            wrapped_a1 = {
+                "archive": "spikes/wrapped",
+                "files": a1_files,
+                "extractor": a1_extractor,
+                "params": {"bundle_dir": "spikes/wrapped/a1_reference", "n_resamples": 200},
+            }
+        wrapped_a2 = {
+            "archive": "spikes/wrapped",
+            "files": a2_files,
+            "extractor": "bundle_success_summary",
+            "params": {
+                "bundle_dir": "spikes/wrapped/a2_single_arm",
+                "n_resamples": 200,
+                "stress_successes_only": False,
+            },
+        }
+        wrapped_a3 = {
+            "archive": "spikes/wrapped",
+            "files": {**a1_files, **a3_files},
+            "extractor": "bundle_paired_delta",
+            "params": {
+                "reference_dir": "spikes/wrapped/a1_reference",
+                "blind_dir": "spikes/wrapped/a3_blind",
+                "n_resamples": 200,
+            },
+        }
+        wrapped_a4 = {
+            "archive": "spikes/wrapped/a4_instrument",
+            "files": a4_files,
+            "extractor": a4_extractor,
+            "params": {"members": members_pin or list(self._MEMBERS), "n_resamples": 200},
+        }
+        return _prereg_payload(
+            a1=wrapped_a1, a2=wrapped_a2, a3=wrapped_a3, c_min_ego=0.75, a4=wrapped_a4
+        )
+
+    def _run_wrapped(
+        self, tmp_path: Path, **payload_kwargs: object
+    ) -> tuple[AdmissionReport, Path]:
+        repo = _init_repo(tmp_path)
+        payload = self._fully_wrapped_payload(repo, **payload_kwargs)  # type: ignore[arg-type]
+        _git(repo, "add", "-A")
+        prereg = _write_tagged_prereg(repo, payload)
+        resolver = _make_fake_resolver({})  # nothing is measured on a fully wrapped run
+        report, out_dir = _run(repo, prereg, resolver)
+        assert isinstance(report, AdmissionReport)
+        return report, out_dir
+
+    def test_fully_wrapped_admission_admits_and_writes_profile(self, tmp_path: Path) -> None:
+        report, out_dir = self._run_wrapped(tmp_path)
+        assert report.verdict == "ADMITTED"
+        a4 = next(c for c in report.checks if c.check == "A4")
+        assert a4.outcome == "PASS"
+        assert a4.bundles == []
+        assert a4.extended is False
+        assert a4.statistics["n_partners"] == 2.0
+        assert "wrapped committed evidence" in a4.notes
+        profile = report.ego_robustness_profile
+        assert profile is not None
+        assert set(profile) == set(self._MEMBERS)
+        assert profile["imp_a"]["success_ci_low"] == 1.0
+        assert profile["imp_a"]["stress_max"] == 40.0
+        # A fully wrapped archive carries no cell bundles — report files only.
+        assert sorted(p.name for p in out_dir.iterdir()) == [
+            "ADMISSION_REPORT.md",
+            "SHA256SUMS.txt",
+            "admission_report.json",
+        ]
+        assert load_admission_report(out_dir / "admission_report.json") == report
+
+    def test_wrapped_a4_straddle_is_final_fail(self, tmp_path: Path) -> None:
+        """A straddling member fails the wrapped gate — no extension on committed evidence."""
+        report, _ = self._run_wrapped(
+            tmp_path,
+            member_success={"imp_a": lambda _s, _e: True, "imp_b": lambda s, _e: s == 0},
+        )
+        assert report.verdict == "UNINSTRUMENTABLE"
+        a4 = next(c for c in report.checks if c.check == "A4")
+        assert a4.outcome == "FAIL"
+        assert a4.extended is False
+        assert report.seed_extension_used is False
+        profile = report.ego_robustness_profile
+        assert profile is not None
+        assert profile["imp_b"]["success_ci_low"] < 0.75 < profile["imp_b"]["success_ci_high"]
+
+    def test_wrapped_a4_brittle_member_is_named(self, tmp_path: Path) -> None:
+        report, _ = self._run_wrapped(
+            tmp_path,
+            member_success={"imp_a": lambda _s, _e: True, "imp_b": lambda _s, _e: False},
+        )
+        assert report.verdict == "UNINSTRUMENTABLE"
+        a4 = next(c for c in report.checks if c.check == "A4")
+        assert a4.outcome == "FAIL"
+        assert "brittle partners" in a4.notes
+        assert "imp_b" in a4.notes
+
+    def test_wrapped_a4_per_partner_stress_over_limit_fails(self, tmp_path: Path) -> None:
+        """The task's stress bar is held per partner on the wrapped path too."""
+        report, _ = self._run_wrapped(tmp_path, member_force={"imp_b": 150.0})
+        assert report.verdict == "UNINSTRUMENTABLE"
+        a4 = next(c for c in report.checks if c.check == "A4")
+        assert a4.outcome == "FAIL"
+        profile = report.ego_robustness_profile
+        assert profile is not None
+        assert profile["imp_b"]["stress_max"] == 150.0
+
+    def test_wrapped_a1_stress_over_limit_fails_not_solvable(self, tmp_path: Path) -> None:
+        """The committed stress bar holds on the wrapped A1 path too."""
+        report, _ = self._run_wrapped(tmp_path, a1_force=150.0)
+        assert report.verdict == "NOT_SOLVABLE"
+        a1 = next(c for c in report.checks if c.check == "A1")
+        assert a1.outcome == "FAIL"
+        assert a1.statistics["stress_max"] == 150.0
+
+    def test_wrapped_a1_pass_without_stress_channel_is_loud(self, tmp_path: Path) -> None:
+        """A wrapped A1 PASS cannot be granted without successful-episode stress evidence."""
+        with pytest.raises(AdmissionError, match="stress statistics"):
+            self._run_wrapped(tmp_path, a1_force=None)
+
+    def test_wrapped_a2_straddle_is_final_fail(self, tmp_path: Path) -> None:
+        """A wrapped A2 straddle is FAIL (no extension) -> the CONTROL demotion."""
+        report, _ = self._run_wrapped(tmp_path, a2_success=lambda s, _e: s == 0)
+        assert report.verdict == "CONTROL"
+        a2 = next(c for c in report.checks if c.check == "A2")
+        assert a2.outcome == "FAIL"
+        assert a2.extended is False
+        assert report.seed_extension_used is False
+
+    def test_wrapped_a4_pass_without_stress_channel_is_loud(self, tmp_path: Path) -> None:
+        """A wrapped A4 PASS cannot be granted from a profile with no stress channel."""
+        with pytest.raises(AdmissionError, match="A4 stress_limit is committed"):
+            self._run_wrapped(tmp_path, member_force=dict.fromkeys(self._MEMBERS))
+
+    def test_extractor_refuses_unpinned_episode_files(self, tmp_path: Path) -> None:
+        """Only SHA-pinned files can contribute evidence (I8)."""
+        from chamber.benchmarks.admission_cells import extract_bundle_success_summary
+
+        repo = _init_repo(tmp_path)
+        files = _write_bundle_episodes(
+            repo,
+            "spikes/wrapped/a1_reference",
+            {0: [_episode(0, 0, success=True, force_peak=40.0)]},
+        )
+        spec = WrappedEvidenceSpec(
+            archive="spikes/wrapped",
+            files=files,
+            extractor="bundle_success_summary",
+            params={"bundle_dir": "spikes/wrapped/other_cell"},
+        )
+        with pytest.raises(AdmissionError, match="SHA-pinned"):
+            extract_bundle_success_summary(repo_path=repo, spec=spec)
+
+    def test_paired_delta_requires_both_bundle_dirs(self, tmp_path: Path) -> None:
+        from chamber.benchmarks.admission_cells import extract_bundle_paired_delta
+
+        repo = _init_repo(tmp_path)
+        files = _write_bundle_episodes(
+            repo,
+            "spikes/wrapped/a1_reference",
+            {0: [_episode(0, 0, success=True, force_peak=40.0)]},
+        )
+        spec = WrappedEvidenceSpec(
+            archive="spikes/wrapped",
+            files=files,
+            extractor="bundle_paired_delta",
+            params={"reference_dir": "spikes/wrapped/a1_reference"},
+        )
+        with pytest.raises(AdmissionError, match="blind_dir"):
+            extract_bundle_paired_delta(repo_path=repo, spec=spec)
+
+    def test_tampered_wrapped_a4_is_refused(self, tmp_path: Path) -> None:
+        with pytest.raises(AdmissionError, match="SHA-256 mismatch"):
+            self._run_wrapped(tmp_path, tamper_a4=True)
+
+    def test_wrapped_a4_member_pin_mismatch_is_loud(self, tmp_path: Path) -> None:
+        with pytest.raises(AdmissionError, match="pins"):
+            self._run_wrapped(tmp_path, members_pin=["imp_a", "imp_b", "imp_c"])
+
+    def test_profile_extractor_on_scalar_check_is_loud(self, tmp_path: Path) -> None:
+        with pytest.raises(AdmissionError, match="nested per-member profile"):
+            self._run_wrapped(tmp_path, a1_extractor="bundle_ego_robustness_profile")
+
+    def test_scalar_extractor_on_a4_is_loud(self, tmp_path: Path) -> None:
+        with pytest.raises(AdmissionError, match="per-member profile extractor"):
+            self._run_wrapped(tmp_path, a4_extractor="bundle_success_summary")
+
+
+class TestCommittedCocarryA4Evidence:
+    """The retrospective co-carry A4 wrap over the committed b-aht bundle (ADR-027 A4; I8).
+
+    CI-runnable real-data tests: the evidence files are committed to the
+    repo, the prereg pins their SHA-256, and the extractor re-derives
+    the per-partner profile through the same seed-cluster bootstrap the
+    measured path uses.
+    """
+
+    _PREREG = (
+        _REPO_ROOT / "spikes" / "preregistration" / "admission" / "cocarry_admission_a4_rev2.yaml"
+    )
+    _MEMBERS = frozenset(
+        {
+            "imp_stiff_low",
+            "imp_stiff_high",
+            "imp_damp_low",
+            "imp_damp_high",
+            "imp_lag_bounded",
+            "imp_blend_b",
+            "imp_blend_c",
+        }
+    )
+
+    def _admission_block(self) -> dict[str, object]:
+        payload = yaml.safe_load(self._PREREG.read_text(encoding="utf-8"))
+        block = payload["parameters"]["admission"]
+        assert isinstance(block, dict)
+        return block
+
+    def test_prereg_loads_as_fully_wrapped_spec(self) -> None:
+        doc = load_prereg_document(self._PREREG)
+        spec = admission_spec_from_prereg(doc)
+        assert isinstance(spec.a1, WrappedEvidenceSpec)
+        assert isinstance(spec.a2, WrappedEvidenceSpec)
+        assert isinstance(spec.a3, WrappedEvidenceSpec)
+        assert isinstance(spec.a4, WrappedEvidenceSpec)
+        # The admitted set's capability floor C_min, never the aggregate
+        # tau_solv (ADR-027 §Revision history 2026-07-15 disambiguation).
+        assert spec.c_min_ego == 0.75
+        assert spec.tau_solv == 0.95
+
+    def test_committed_baht_profile_matches_the_committed_data(self) -> None:
+        """The extracted per-partner means reproduce the committed b-aht episodes."""
+        from chamber.benchmarks.admission_cells import extract_bundle_ego_robustness_profile
+
+        block = self._admission_block()
+        spec = WrappedEvidenceSpec.model_validate(block["a4"])
+        for rel, expected in spec.files.items():
+            assert sha256_file(_REPO_ROOT / rel) == expected, f"committed pin drifted: {rel}"
+        profile = extract_bundle_ego_robustness_profile(repo_path=_REPO_ROOT, spec=spec)
+        assert set(profile) == self._MEMBERS
+        assert all(stats["n_episodes"] == 250.0 for stats in profile.values())
+        assert profile["imp_lag_bounded"]["success_mean"] == pytest.approx(0.884)
+        assert profile["imp_damp_low"]["success_mean"] == 1.0
+        stress_limit = block["stress_limit"]
+        assert isinstance(stress_limit, float)
+        assert all(stats["stress_max"] <= stress_limit for stats in profile.values())
+        # At the committed floor (c_min_ego = C_min = 0.75, the admitted
+        # set's capability floor — ADR-027 §Revision history 2026-07-15)
+        # every admitted member clears: the weakest CI-lower is
+        # imp_blend_c at ~0.833 >= 0.75 -> A4 PASS.
+        c_min_ego = block["c_min_ego"]
+        assert isinstance(c_min_ego, float)
+        assert c_min_ego == 0.75
+        cis = {m: (s["success_ci_low"], s["success_ci_high"]) for m, s in profile.items()}
+        assert a4_outcome(cis, c_min_ego) == "PASS"
+        assert min(ci_low for ci_low, _ in cis.values()) == pytest.approx(0.8331, abs=1e-3)
+
+    def test_committed_a4_archive_loads_with_the_profile(self) -> None:
+        """The committed cocarry-a4-rev2-2026-07-15 archive: the A4 gate fired on real data."""
+        report = load_admission_report(
+            _REPO_ROOT
+            / "spikes"
+            / "results"
+            / "admission"
+            / "cocarry-a4-rev2-2026-07-15"
+            / "admission_report.json"
+        )
+        assert report.schema_version == 1
+        assert report.dirty is False
+        assert report.prereg_git_tag == "prereg-admission-cocarry-a4-rev2-2026-07-15"
+        assert [c.check for c in report.checks] == ["A1", "A2", "A3", "A4"]
+        assert [c.outcome for c in report.checks] == ["PASS", "PASS", "PASS", "PASS"]
+        assert report.verdict == "ADMITTED"
+        assert report.seed_extension_used is False
+        assert all(c.bundles == [] for c in report.checks)  # fully wrapped (I8)
+        profile = report.ego_robustness_profile
+        assert profile is not None
+        assert set(profile) == self._MEMBERS
+        a4 = next(c for c in report.checks if c.check == "A4")
+        assert a4.statistics["n_partners"] == 7.0
+        # The weakest admitted partner clears the committed C_min floor.
+        assert a4.statistics["min_success_ci_low"] == pytest.approx(0.8331, abs=1e-3)
+        assert a4.statistics["min_success_ci_low"] >= 0.75
+        assert "imp_blend_c" in a4.notes  # the weakest admitted partner is named
+
+    def test_committed_a3_wrap_reproduces_the_committed_gap(self) -> None:
+        """The paired-delta extractor byte-reproduces the 2026-07-05 committed A3 CI."""
+        from chamber.benchmarks.admission_cells import extract_bundle_paired_delta
+
+        block = self._admission_block()
+        spec = WrappedEvidenceSpec.model_validate(block["a3"])
+        stats = extract_bundle_paired_delta(repo_path=_REPO_ROOT, spec=spec)
+        committed = load_admission_report(
+            _REPO_ROOT
+            / "spikes"
+            / "results"
+            / "admission"
+            / "cocarry-2026-07-05"
+            / "admission_report.json"
+        )
+        committed_a3 = next(c for c in committed.checks if c.check == "A3")
+        for key in ("n_pairs", "delta_iqm", "delta_mean", "delta_ci_low", "delta_ci_high"):
+            assert stats[key] == committed_a3.statistics[key], key
+
+
 class TestSpecLoading:
     """Spec-from-prereg loading (ADR-028 §Decision 2 document form)."""
 

@@ -1,0 +1,197 @@
+# Pre-registration — cocarry@v1 re-issued Tier-2 admission with the A4
+# ego-robustness gate (ADR-027 §Admission protocol; §Admission A4).
+#
+# Retrospective, wrap-only admission: ADR-027 §Validation criteria
+# authorises the co-carry admission to be committed retroactively from its
+# committed archives, and invariant I8 makes the archives the evidence —
+# every check below WRAPS SHA-256-pinned committed files and re-extracts
+# its statistics at report-build time; nothing is re-run, nothing is
+# hand-copied. A1/A2/A3 wrap the cell bundles of the committed
+# spikes/results/admission/cocarry-2026-07-05 archive (verdict ADMITTED
+# under prereg-admission-cocarry-2026-07-05); A4 wraps the committed
+# cocarry_partners@v1 leaderboard bundle of the b-aht instrument
+# (spikes/results/benchmark/cocarry-v1/b-aht-2026-07-06, produced under
+# prereg-cocarry-baselines-v1-rev2-2026-07-05) — the policy the ADR-027
+# cross-partner contrasts use as their fixed measuring instrument.
+#
+# Thresholds are the committed cocarry admission family, verbatim
+# (tau_solv 0.95, stress_limit 130.5697 N = the frozen rung-2 f_max,
+# tau_infeasible 0.05, delta_min 0.20). The A4 floor c_min_ego inherits
+# the admitted partner set's committed capability floor C_min = 0.75
+# (cocarry_partners@v1, per-member floor in
+# chamber.partners.set_definitions) per ADR-027 §Admission A4 as
+# disambiguated in §Revision history 2026-07-15: C_min_ego is the
+# ego-side analogue of C_min, and "the same success+stress bar" is the
+# per-episode success+stress predicate, not the aggregate tau_solv —
+# the tau_solv reading makes A4 unpassable by construction across a
+# deliberately heterogeneous admitted set. Rev1 of this prereg
+# (prereg-admission-cocarry-a4-2026-07-15) committed c_min_ego = 0.95
+# under that mis-specified reading; it is corrected here, and the rev1
+# tag and report remain in history as the record. The evidence being
+# wrapped pre-exists this document (a retrospective admission, as with
+# the handover-place wrap); the discipline this tag locks is that the
+# floor and the decision rules are committed before the report artifact
+# is produced and are never tuned against it afterward (ADR-007
+# §Discipline).
+schema_version: 1
+task_id: cocarry
+git_tag: prereg-admission-cocarry-a4-rev2-2026-07-15
+revision: rev2
+parameters:
+  admission:
+    task_version: 1
+    tau_solv: 0.95
+    # The committed rung stress threshold: the canonical wrist-force
+    # instrument's frozen ceiling f_max (ADR-027 §Versioning), verbatim from
+    # spikes/results/cocarry/rung2/cocarry_rung2_freeze_manifest.json.
+    stress_limit: 130.56970529556276
+    tau_infeasible: 0.05
+    delta_min: 0.20
+    # The A4 ego-robustness floor (ADR-027 §Admission A4, §Revision
+    # history 2026-07-15): the admitted set's committed capability floor
+    # C_min of cocarry_partners@v1. Held per admitted partner on the
+    # success CI lower bound, with the per-partner successful-episode
+    # stress ceiling stress_limit. (rev1's 0.95 was a corrected
+    # mis-specification — the aggregate tau_solv reading.)
+    c_min_ego: 0.75
+    # Seed schedule verbatim from prereg-admission-cocarry-2026-07-05; no
+    # cell below is measured, so no seed is consumed — the wrapped bundles
+    # carry their own committed schedules (a1/a2/a3: seeds 90000-90004 x 12;
+    # a4: seeds 0-4 x 50 episodes per admitted member). The extension is
+    # unreachable by construction: a wrapped straddle is FAIL, final.
+    seeds: [90000, 90001, 90002, 90003, 90004]
+    episodes_per_seed: 12
+    extension_seeds: [90005, 90006]
+    n_resamples: 2000
+    root_seed: 0
+    a1:
+      archive: spikes/results/admission/cocarry-2026-07-05
+      files:
+        spikes/results/admission/cocarry-2026-07-05/a1_reference/bundle.json: 6987b9178bcb6a26eead4e05e4cfc73d7602bc6cd7eceb5bff836f3dd87b054e
+        spikes/results/admission/cocarry-2026-07-05/a1_reference/episodes_seed90000.jsonl: e33a9860f29118fadeef5896ca3641748a3e4376bd6fec3c6a31c997b48ccb33
+        spikes/results/admission/cocarry-2026-07-05/a1_reference/episodes_seed90001.jsonl: 0d02c9756d8826f40fe3e8e4ab0378a224aaa0191624ee188dc4b103d0443c02
+        spikes/results/admission/cocarry-2026-07-05/a1_reference/episodes_seed90002.jsonl: 7494dc3fdfef904a74bcbb235c3ca83c0f47e46ec0efa1bf7f35cad1fd190058
+        spikes/results/admission/cocarry-2026-07-05/a1_reference/episodes_seed90003.jsonl: 2251c810d191c2383d592cd6484f49d0d89dc1330e61353187222ba5519dc129
+        spikes/results/admission/cocarry-2026-07-05/a1_reference/episodes_seed90004.jsonl: 738d6dfef57a2bb8fef2513cd14f472a9aa2f377e2374f42871eb6a5b4e18c89
+      extractor: bundle_success_summary
+      params:
+        bundle_dir: spikes/results/admission/cocarry-2026-07-05/a1_reference
+        n_resamples: 2000
+        bootstrap_root_seed: 0
+    a2:
+      archive: spikes/results/admission/cocarry-2026-07-05
+      files:
+        spikes/results/admission/cocarry-2026-07-05/a2_single_arm/bundle.json: 26d24676cc969842b6c62fac41b48154c7a7e7d1aec597a7f918259e56c219b0
+        spikes/results/admission/cocarry-2026-07-05/a2_single_arm/episodes_seed90000.jsonl: 9b9a71d8e68d644658773458fecbceb66d986308f3c33d7655abaaf0124e96a3
+        spikes/results/admission/cocarry-2026-07-05/a2_single_arm/episodes_seed90001.jsonl: 0889f5b06cfce6799547ab6b25ccbe451b7eeba7fb9c8b62bdb969a9fcebde1c
+        spikes/results/admission/cocarry-2026-07-05/a2_single_arm/episodes_seed90002.jsonl: 3be0ae23e61009c0bf143440c5f18221e36faa893ba5df298a2e41a60b047fe4
+        spikes/results/admission/cocarry-2026-07-05/a2_single_arm/episodes_seed90003.jsonl: ddd4a24fc56b4c8764ad4197aff63345ab96eaf77315f4aabf1fe7e926f2ceab
+        spikes/results/admission/cocarry-2026-07-05/a2_single_arm/episodes_seed90004.jsonl: afd8726b70e2ae32f67c31bf53c52ecac17bebfc21cc0058df134a61693e60f1
+      extractor: bundle_success_summary
+      params:
+        bundle_dir: spikes/results/admission/cocarry-2026-07-05/a2_single_arm
+        n_resamples: 2000
+        bootstrap_root_seed: 0
+        # The A2 stress distribution is all-episodes context (the measured
+        # A2 convention) — the check gates on success CIs only.
+        stress_successes_only: false
+    a3:
+      archive: spikes/results/admission/cocarry-2026-07-05
+      files:
+        spikes/results/admission/cocarry-2026-07-05/a1_reference/bundle.json: 6987b9178bcb6a26eead4e05e4cfc73d7602bc6cd7eceb5bff836f3dd87b054e
+        spikes/results/admission/cocarry-2026-07-05/a1_reference/episodes_seed90000.jsonl: e33a9860f29118fadeef5896ca3641748a3e4376bd6fec3c6a31c997b48ccb33
+        spikes/results/admission/cocarry-2026-07-05/a1_reference/episodes_seed90001.jsonl: 0d02c9756d8826f40fe3e8e4ab0378a224aaa0191624ee188dc4b103d0443c02
+        spikes/results/admission/cocarry-2026-07-05/a1_reference/episodes_seed90002.jsonl: 7494dc3fdfef904a74bcbb235c3ca83c0f47e46ec0efa1bf7f35cad1fd190058
+        spikes/results/admission/cocarry-2026-07-05/a1_reference/episodes_seed90003.jsonl: 2251c810d191c2383d592cd6484f49d0d89dc1330e61353187222ba5519dc129
+        spikes/results/admission/cocarry-2026-07-05/a1_reference/episodes_seed90004.jsonl: 738d6dfef57a2bb8fef2513cd14f472a9aa2f377e2374f42871eb6a5b4e18c89
+        spikes/results/admission/cocarry-2026-07-05/a3_blind/bundle.json: dd08179e68c7de70c751231cfc7823e2e4091a5e801f24cae6562dc1a0548ca0
+        spikes/results/admission/cocarry-2026-07-05/a3_blind/episodes_seed90000.jsonl: 03b4fe2b38e8a13cd3706c1074809ecbfe576f8682a9599aa9b888684667e707
+        spikes/results/admission/cocarry-2026-07-05/a3_blind/episodes_seed90001.jsonl: 0f81bd2f4de81d563f2337797c482d71538bc16cbe23377edb8061ec94381c21
+        spikes/results/admission/cocarry-2026-07-05/a3_blind/episodes_seed90002.jsonl: 9d2731b3eab7edd9edecd60f14f8a3de4c329ca6e9c62fd6cb51fa92b6cef1fc
+        spikes/results/admission/cocarry-2026-07-05/a3_blind/episodes_seed90003.jsonl: 86aade6fc89b0cda26e24c85e85bf852af068a77a1eefe0b6aade3f23ec5cd81
+        spikes/results/admission/cocarry-2026-07-05/a3_blind/episodes_seed90004.jsonl: bd5ff930b4690648348ca188c8d6c99cd9d3bfd32d9b88bc8a169a44cd03b1cd
+      extractor: bundle_paired_delta
+      params:
+        reference_dir: spikes/results/admission/cocarry-2026-07-05/a1_reference
+        blind_dir: spikes/results/admission/cocarry-2026-07-05/a3_blind
+        n_resamples: 2000
+        bootstrap_root_seed: 0
+    a4:
+      archive: spikes/results/benchmark/cocarry-v1/b-aht-2026-07-06
+      files:
+        spikes/results/benchmark/cocarry-v1/b-aht-2026-07-06/bundle.json: bb71f18fd01145e6a13191d99e895e4b3087fbd45d0a1eda12d6399f0d4a03f8
+        spikes/results/benchmark/cocarry-v1/b-aht-2026-07-06/episodes_seed0.jsonl: 4dcf9131e5a2d4e088efa41643aa5e1bc180dd453574b763d1983c5b151f1650
+        spikes/results/benchmark/cocarry-v1/b-aht-2026-07-06/episodes_seed1.jsonl: 1ef9f04aacc9ed76bee21d58a3219e56b12b1688a3a24299db8fb5f41eafe3da
+        spikes/results/benchmark/cocarry-v1/b-aht-2026-07-06/episodes_seed2.jsonl: 1d8b4eec7639f3ca8c0e512e7324c2ca05ee06f5bbe30c33284e1b9ea2163513
+        spikes/results/benchmark/cocarry-v1/b-aht-2026-07-06/episodes_seed3.jsonl: a9186584034ec2f92c85b8ebb53b83859b46a60a8f9a501db42b5daff37f4de5
+        spikes/results/benchmark/cocarry-v1/b-aht-2026-07-06/episodes_seed4.jsonl: feb08c807a39278db50e86bef06cfe9566775f4af2c1a00f89d853eafa89b8cf
+      extractor: bundle_ego_robustness_profile
+      params:
+        bundle_dir: spikes/results/benchmark/cocarry-v1/b-aht-2026-07-06
+        n_resamples: 2000
+        bootstrap_root_seed: 0
+        # The admitted member set the b-aht bundle sweeps: the public
+        # cocarry_partners@v1 roster minus imp_nominal (excluded per the
+        # committed repro command — it is the training/matched partner
+        # class anchor). A member-set mismatch fails loudly.
+        members:
+          - imp_stiff_low
+          - imp_stiff_high
+          - imp_damp_low
+          - imp_damp_high
+          - imp_lag_bounded
+          - imp_blend_b
+          - imp_blend_c
+  instrument_identity: >
+    The A4 instrument is the b-aht ego of the committed cocarry_partners@v1
+    leaderboard campaign: policy_id
+    happo_manifest:spikes/results/benchmark/cocarry-v1/selection/b-aht_selected_manifest.json
+    as recorded in the SHA-pinned bundle.json of the wrapped archive (5
+    training seeds; per-seed selected checkpoints per the committed
+    selection manifests). The bundle sweeps 50 episodes per admitted
+    member per cluster seed (250 episodes per member, 1750 total).
+  retrospective_note: >
+    This re-issue does not supersede the committed cocarry-2026-07-05
+    archive (I8: it is never edited); it adds the ADR-027 §Admission A4
+    instrument gate the original admission predates, wrapping the original
+    archive's own cell bundles for A1/A2/A3 so the task-level checks are
+    byte-reproduced from the same evidence rather than re-measured. The
+    Rung-5 co-design residual incumbent (per-partner profile 0.000 /
+    0.500 / 0.536 across its non-matched partners, ADR-027 §Revision
+    history 2026-07-15) is the brittle contrast case this gate exists to
+    reject; this document commits the same gate fired at the same bar on
+    the base b-aht instrument's committed evidence, whatever the verdict.
+decision_rules: >
+  All four checks are wrapped committed evidence; a wrapped straddle is
+  FAIL (committed evidence cannot consume the seed extension), so the
+  extension seeds are unreachable and every outcome is final on the first
+  application of its rule. A1 PASS iff the wrapped a1_reference bundle's
+  recomputed seed-cluster success CI-lower >= tau_solv (0.95) AND its
+  successful-episode stress peak <= stress_limit (130.5697 N). A2 PASS
+  iff the wrapped a2_single_arm bundle's recomputed success CI-upper <=
+  tau_infeasible (0.05). A3 PASS iff the recomputed paired-cluster
+  reference-minus-blind gap CI-lower >= delta_min (0.20), paired on the
+  two bundles' identical committed initial-state schedules and the pinned
+  A3 bootstrap substream. A4 (ADR-027 §Admission A4) PASS iff EVERY
+  admitted member's recomputed seed-cluster success CI-lower >= c_min_ego
+  (0.75, the admitted set's capability floor C_min) AND every member's
+  successful-episode stress peak <= stress_limit; FAIL iff any member's CI-upper < c_min_ego (brittle) or
+  any CI straddles the floor (wrapped-straddle rule). Verdict per ADR-027:
+  A1 FAIL => NOT_SOLVABLE (stop); A2 or A3 FAIL => CONTROL; A4 FAIL =>
+  UNINSTRUMENTABLE (a construct/instrument finding, never a partner or
+  axis result — ADR-026 §Decision 2); all PASS => ADMITTED. The
+  per-partner ego-robustness profile is written to the report as the
+  mandatory A4 artifact in every non-short-circuit case, whatever the
+  verdict.
+notes: >
+  Grounds: ADR-027 §Admission A4 (gate added per review round R-2026-06-C
+  condition 5); ADR-026 §Decision 2 (construct problems are never
+  re-described as partner/axis results); ADR-016/I8 (wrap, never edit or
+  re-run the immutable archives); ADR-002 P6 (pinned bootstrap
+  substreams; byte-recomputable CIs); ADR-028 §Decisions 1-3 (bundle
+  form). c_min_ego = C_min = 0.75 per the ADR-027 §Revision history
+  2026-07-15 disambiguation (rev1's 0.95 was a corrected
+  mis-specification), founder-directed 2026-07-15 before report
+  production. Runner: chamber-eval admission --prereg
+  spikes/preregistration/admission/cocarry_admission_a4_rev2.yaml --out
+  spikes/results/admission/cocarry-a4-rev2-2026-07-15 --date 2026-07-15.
