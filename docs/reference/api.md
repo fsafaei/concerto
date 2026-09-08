@@ -8,6 +8,14 @@ Generated from docstrings via mkdocstrings.
 
 ::: concerto.api
 
+### `concerto.contracts`
+
+::: concerto.contracts
+
+::: concerto.contracts.spec
+
+::: concerto.contracts.pickcube
+
 ### `concerto.safety`
 
 ::: concerto.safety
