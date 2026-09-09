@@ -25389,7 +25389,7 @@ run_id material when not <code>None</code>.</p>
     <span class="o">*</span><span class="p">,</span>
     <span class="n">step</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
     <span class="n">condition</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-    <span class="o">**</span><span class="n">results</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="o">**</span><span class="n">results</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span>
 </code></pre></div>
 
@@ -25435,7 +25435,7 @@ or a short slug like <code>"as-hetero"</code>.</p>
         </li>
         <li class="doc-section-item field-body">
             <b><code>**results</code></b>
-              (<code><span title="float">float</span> | <span title="int">int</span></code>, default:
+              (<code><span title="float">float</span></code>, default:
                   <code>{}</code>
 )
           –
@@ -25489,7 +25489,7 @@ alongside <code>float</code> rates.</p>
     <span class="o">*</span><span class="p">,</span>
     <span class="n">step</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
     <span class="n">condition</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-    <span class="o">**</span><span class="n">results</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="o">**</span><span class="n">results</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Emit one ``event=&quot;eval&quot;`` line for an eval-cell completion (P1.05.11; ADR-017 §Schema).</span>
 
@@ -26110,7 +26110,7 @@ non-provenance audit metadata.</p>
             <span class="n">resume</span><span class="o">=</span><span class="s2">&quot;never&quot;</span><span class="p">,</span>
             <span class="n">reinit</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>  <span class="c1"># allow multiple per-cell runs in one process</span>
         <span class="p">)</span>
-    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>  <span class="c1"># top-level catch by design — degrade gracefully</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>  <span class="c1"># noqa: BLE001 - top-level catch by design — degrade gracefully</span>
         <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
             <span class="sa">f</span><span class="s2">&quot;wandb.init(...) raised (</span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">exc</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">exc</span><span class="si">!s:</span><span class="s2">.200</span><span class="si">}</span><span class="s2">); &quot;</span>
             <span class="s2">&quot;W&amp;B sink degrades to no-op (run continues with JSONL only). &quot;</span>
@@ -60020,7 +60020,7 @@ the checkpoint is loaded (mirrors
                 <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_actor_key</span><span class="si">!r}</span><span class="s2">. Got top-level keys: </span><span class="si">{</span><span class="nb">sorted</span><span class="p">(</span><span class="n">loaded</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span><span class="si">}</span><span class="s2">. &quot;</span>
                 <span class="s2">&quot;Expected the joint_mappo_trainer pair layout (ADR-011 as amended).&quot;</span>
             <span class="p">)</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>  <span class="c1"># noqa: TRY004 - ValueError: validates deserialised checkpoint content, not an API type contract</span>
         <span class="n">obs_dim</span><span class="p">,</span> <span class="n">hidden_dim</span><span class="p">,</span> <span class="n">_action_dim</span> <span class="o">=</span> <span class="n">_infer_shape</span><span class="p">(</span><span class="n">inner</span><span class="p">)</span>
         <span class="n">args</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">_HARL_INFERENCE_ARGS</span><span class="p">)</span>
         <span class="n">args</span><span class="p">[</span><span class="s2">&quot;hidden_sizes&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">hidden_dim</span><span class="p">,</span> <span class="n">hidden_dim</span><span class="p">]</span>
@@ -61543,7 +61543,7 @@ env var before any I/O happens.</p>
                 <span class="s2">&quot;FrozenMAPPOPartner: actor state-dict layer values must be &quot;</span>
                 <span class="s2">&quot;torch.Tensor; got non-tensor entries.&quot;</span>
             <span class="p">)</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>  <span class="c1"># noqa: TRY004 - ValueError: validates deserialised checkpoint content, not an API type contract</span>
         <span class="n">hidden_dim</span><span class="p">,</span> <span class="n">obs_dim</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">fc1_weight</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="nb">int</span><span class="p">(</span><span class="n">fc1_weight</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
         <span class="n">action_dim</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">head_weight</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
         <span class="k">if</span> <span class="n">fc2_weight</span><span class="o">.</span><span class="n">shape</span> <span class="o">!=</span> <span class="p">(</span><span class="n">hidden_dim</span><span class="p">,</span> <span class="n">hidden_dim</span><span class="p">):</span>
@@ -72431,7 +72431,7 @@ model its version claims (the ADR-016 loud-fail mode).</p>
     <span class="n">version</span> <span class="o">=</span> <span class="n">payload</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;schema_version&quot;</span><span class="p">)</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">payload</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="k">else</span> <span class="kc">None</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">version</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
         <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2">: no integer schema_version field; not a CHAMBER result archive&quot;</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>  <span class="c1"># noqa: TRY004 - ValueError: validates the on-disk archive&#39;s schema_version, not an API type contract</span>
     <span class="k">if</span> <span class="n">version</span> <span class="o">&gt;=</span> <span class="n">_RESULT_BUNDLE_MIN_SCHEMA_VERSION</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">ResultBundle</span><span class="o">.</span><span class="n">model_validate</span><span class="p">(</span><span class="n">payload</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">SpikeRun</span><span class="o">.</span><span class="n">model_validate</span><span class="p">(</span><span class="n">payload</span><span class="p">)</span>
@@ -72990,7 +72990,9 @@ as in :func:<code>cluster_bootstrap</code>.</p>
 <span class="normal">1438</span>
 <span class="normal">1439</span>
 <span class="normal">1440</span>
-<span class="normal">1441</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">render_admission_report_md</span><span class="p">(</span><span class="n">report</span><span class="p">:</span> <span class="n">AdmissionReport</span><span class="p">,</span> <span class="n">spec</span><span class="p">:</span> <span class="n">AdmissionSpec</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="normal">1441</span>
+<span class="normal">1442</span>
+<span class="normal">1443</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">render_admission_report_md</span><span class="p">(</span><span class="n">report</span><span class="p">:</span> <span class="n">AdmissionReport</span><span class="p">,</span> <span class="n">spec</span><span class="p">:</span> <span class="n">AdmissionSpec</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Render the human-readable admission report (ADR-027 §Admission protocol).&quot;&quot;&quot;</span>
     <span class="n">lines</span> <span class="o">=</span> <span class="p">[</span>
         <span class="sa">f</span><span class="s2">&quot;# Admission report — </span><span class="si">{</span><span class="n">report</span><span class="o">.</span><span class="n">task_id</span><span class="si">}</span><span class="s2">@v</span><span class="si">{</span><span class="n">report</span><span class="o">.</span><span class="n">task_version</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
@@ -73016,8 +73018,10 @@ as in :func:<code>cluster_bootstrap</code>.</p>
             <span class="s2">&quot;(A4 ego-robustness floor, per-partner CI lower bound)&quot;</span>
         <span class="p">)</span>
     <span class="n">lines</span> <span class="o">+=</span> <span class="p">[</span>
-        <span class="sa">f</span><span class="s2">&quot;- seeds = </span><span class="si">{</span><span class="n">spec</span><span class="o">.</span><span class="n">seeds</span><span class="si">}</span><span class="s2">, episodes/seed = </span><span class="si">{</span><span class="n">spec</span><span class="o">.</span><span class="n">episodes_per_seed</span><span class="si">}</span><span class="s2">, &quot;</span>
-        <span class="sa">f</span><span class="s2">&quot;extension = </span><span class="si">{</span><span class="n">spec</span><span class="o">.</span><span class="n">extension_seeds</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+        <span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;- seeds = </span><span class="si">{</span><span class="n">spec</span><span class="o">.</span><span class="n">seeds</span><span class="si">}</span><span class="s2">, episodes/seed = </span><span class="si">{</span><span class="n">spec</span><span class="o">.</span><span class="n">episodes_per_seed</span><span class="si">}</span><span class="s2">, &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;extension = </span><span class="si">{</span><span class="n">spec</span><span class="o">.</span><span class="n">extension_seeds</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="p">),</span>
         <span class="s2">&quot;&quot;</span><span class="p">,</span>
         <span class="s2">&quot;## Checks&quot;</span><span class="p">,</span>
         <span class="s2">&quot;&quot;</span><span class="p">,</span>
@@ -73147,11 +73151,7 @@ that did not produce a HRS vector per reviewer P1-8.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/chamber/evaluation/render.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">195</span>
-<span class="normal">196</span>
-<span class="normal">197</span>
-<span class="normal">198</span>
-<span class="normal">199</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">199</span>
 <span class="normal">200</span>
 <span class="normal">201</span>
 <span class="normal">202</span>
@@ -73203,7 +73203,11 @@ that did not produce a HRS vector per reviewer P1-8.</p>
 <span class="normal">248</span>
 <span class="normal">249</span>
 <span class="normal">250</span>
-<span class="normal">251</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">render_leaderboard</span><span class="p">(</span><span class="n">entries</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">LeaderboardEntry</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="normal">251</span>
+<span class="normal">252</span>
+<span class="normal">253</span>
+<span class="normal">254</span>
+<span class="normal">255</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">render_leaderboard</span><span class="p">(</span><span class="n">entries</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">LeaderboardEntry</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Render the CHAMBER leaderboard (ADR-008 §Decision; reviewer P1-8).</span>
 
 <span class="sd">    Entries are sorted by ``hrs_scalar`` descending. Each method has</span>
