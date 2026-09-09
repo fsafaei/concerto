@@ -14,6 +14,12 @@ on:
       - "adr/**"
       - "mkdocs.yml"
       - "scripts/**"
+      # The container images are built by the docker-build job below, and
+      # every required status check must report on a Dockerfile-only PR or
+      # branch protection blocks it forever (the dependabot ubuntu digest
+      # bumps could not merge before this was added).
+      - "Dockerfile.cpu"
+      - "Dockerfile.gpu"
   pull_request:
     branches: [main]
     paths:
@@ -32,6 +38,10 @@ on:
       # Scripts backing CI gates (smoke-eval, README-table/cards drift,
       # changelog completeness): a script-only change must re-run its gate.
       - "scripts/**"
+      # See the push filter above: Dockerfile-only PRs need the full set of
+      # required contexts to report, not just docker-build.
+      - "Dockerfile.cpu"
+      - "Dockerfile.gpu"
 
 permissions:
   contents: read
@@ -186,6 +196,44 @@ jobs:
         with:
           name: sbom
           path: sbom.spdx.json
+
+  # Builds the ``base`` stage of both container images so a Dockerfile
+  # change — in practice the weekly dependabot base-image digest bump —
+  # is validated rather than merged blind. ``base`` is the stage a digest
+  # bump actually touches: it proves the pinned digest still resolves and
+  # pulls, that the apt packages still exist on the new base, and that the
+  # ``ADD --checksum`` for the uv installer still matches.
+  #
+  # The ``dev`` / ``prod`` / ``gpu-host`` stages are deliberately not built
+  # here: each runs ``uv sync``, which pulls the multi-GB cu128 torch wheel
+  # (ADR-002) and would blow past a hosted runner's disk and time budget.
+  # Those dependency graphs are already covered by the test matrix above,
+  # which locks against the same uv.lock.
+  #
+  # No ``type=gha`` build cache: the GitHub Actions cache backend wants an
+  # ``actions: write`` scope on top of the workflow's ``contents: read``,
+  # which is not worth widening for a two-layer build that takes about a
+  # minute from cold.
+  docker-build:
+    name: docker-build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+      - uses: docker/setup-buildx-action@37fe631027851001ddb9b187196cc803df7f5f0e  # v4.3.0
+      - name: Build Dockerfile.cpu (base stage)
+        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a  # v7.3.0
+        with:
+          context: .
+          file: Dockerfile.cpu
+          target: base
+          push: false
+      - name: Build Dockerfile.gpu (base stage)
+        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a  # v7.3.0
+        with:
+          context: .
+          file: Dockerfile.gpu
+          target: base
+          push: false
 
   test-smoke:
     name: test-smoke (${{ matrix.python-version }})
