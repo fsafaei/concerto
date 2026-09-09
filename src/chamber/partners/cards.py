@@ -97,8 +97,10 @@ def _fmt(value: float) -> str:
 def _box_rows(member: PartnerMemberSpec) -> list[str]:
     if not member.param_box:
         return [
-            "*(no parameter box — a learned member's behaviour is its frozen "
-            "checkpoint; custody rides on the committed payload SHA-256 above)*"
+            (
+                "*(no parameter box — a learned member's behaviour is its frozen "
+                "checkpoint; custody rides on the committed payload SHA-256 above)*"
+            )
         ]
     rows = ["| parameter | committed box | value |", "| --- | --- | --- |"]
     for key in sorted(member.param_box):
@@ -164,12 +166,16 @@ def render_member_card(
         "",
         _GENERATED_STAMP,
         "",
-        f"**Set.** `{set_spec.slug}` (task `{set_spec.task_id}@v{set_spec.task_version}`) · "
-        f"**Stratum.** {'learned' if member.checkpoint_uri is not None else 'scripted'} · "
-        f"**Split.** {member.split} · **Role.** {member.role}",
+        (
+            f"**Set.** `{set_spec.slug}` (task `{set_spec.task_id}@v{set_spec.task_version}`) · "
+            f"**Stratum.** {'learned' if member.checkpoint_uri is not None else 'scripted'} · "
+            f"**Split.** {member.split} · **Role.** {member.role}"
+        ),
         "",
-        f"**Identity.** `partner_id` `{member.partner_id}` · parameter digest "
-        f"`{member.params_sha256}` · `weights_uri` `{member.weights_uri}`",
+        (
+            f"**Identity.** `partner_id` `{member.partner_id}` · parameter digest "
+            f"`{member.params_sha256}` · `weights_uri` `{member.weights_uri}`"
+        ),
         "",
         "## What this partner does",
         "",
@@ -185,12 +191,14 @@ def render_member_card(
         "",
         "## Behavioural fingerprint",
         "",
-        f"Committed probe suite: seeds {list(set_spec.probe_seeds)} x "
-        f"{set_spec.probe_episodes_per_seed} episodes against the task's reference ego "
-        f"(archive: `{archive_rel_dir(set_spec)}/{member.member_name}/`, an ADR-028 "
-        "v3 bundle). Summary statistics of the member's action distribution and the "
-        "dyad's stress channel — enough to tell members apart without policy access "
-        "(ADR-018/I3).",
+        (
+            f"Committed probe suite: seeds {list(set_spec.probe_seeds)} x "
+            f"{set_spec.probe_episodes_per_seed} episodes against the task's reference ego "
+            f"(archive: `{archive_rel_dir(set_spec)}/{member.member_name}/`, an ADR-028 "
+            "v3 bundle). Summary statistics of the member's action distribution and the "
+            "dyad's stress channel — enough to tell members apart without policy access "
+            "(ADR-018/I3)."
+        ),
         "",
         *_fingerprint_rows(member_payload["fingerprint"]),
         "",
@@ -220,25 +228,31 @@ def render_set_index(set_spec: PartnerSetSpec, payload: Mapping[str, Any]) -> st
         "",
         _GENERATED_STAMP,
         "",
-        f"Task: `{set_spec.task_id}@v{set_spec.task_version}` · members: "
-        f"{len(set_spec.members)} ({len(set_spec.public_members)} public / "
-        f"{len(set_spec.private_members)} private) · committed floor: "
-        f"{_fmt(set_spec.floor)} on the `{set_spec.floor_probe}` probe.",
+        (
+            f"Task: `{set_spec.task_id}@v{set_spec.task_version}` · members: "
+            f"{len(set_spec.members)} ({len(set_spec.public_members)} public / "
+            f"{len(set_spec.private_members)} private) · committed floor: "
+            f"{_fmt(set_spec.floor)} on the `{set_spec.floor_probe}` probe."
+        ),
         "",
         set_spec.notes,
         "",
-        "The public/private split is the deterministic ADR-009 rule — members "
-        "ordered by `partner_id` hash, the first ⌈0.7·N⌉ public — recomputable "
-        "from this roster; no hand-picking. Private members' behavioural "
-        "parameters are withheld (published hashes, withheld parameters): they "
-        "derive from the maintainer-held seed and verify against the committed "
-        "digests. Set changes bump the version (ADR-027 §Versioning); frozen "
-        "learned members join as a version bump.",
+        (
+            "The public/private split is the deterministic ADR-009 rule — members "
+            "ordered by `partner_id` hash, the first ⌈0.7·N⌉ public — recomputable "
+            "from this roster; no hand-picking. Private members' behavioural "
+            "parameters are withheld (published hashes, withheld parameters): they "
+            "derive from the maintainer-held seed and verify against the committed "
+            "digests. Set changes bump the version (ADR-027 §Versioning); frozen "
+            "learned members join as a version bump."
+        ),
         "",
         *rows,
         "",
-        f"Fingerprint archive: `{archive_rel_dir(set_spec)}/` "
-        "(per-member ADR-028 v3 bundles + `fingerprints.json` + `SHA256SUMS.txt`).",
+        (
+            f"Fingerprint archive: `{archive_rel_dir(set_spec)}/` "
+            "(per-member ADR-028 v3 bundles + `fingerprints.json` + `SHA256SUMS.txt`)."
+        ),
         "",
     ]
     return "\n".join(lines)
@@ -262,11 +276,13 @@ def render_partners_index(sets: list[PartnerSetSpec]) -> str:
         "",
         _GENERATED_STAMP,
         "",
-        "Versioned per-task partner sets (ADR-009 §Decision as amended "
-        "2026-07-05; ADR-027 §Versioning). Every member subclasses "
-        "`PartnerBase` behind the `_FORBIDDEN_ATTRS` black-box shield "
-        "(ADR-018/I3); cards publish identity hashes, construction boxes, and "
-        "behavioural fingerprints — never private parameter values.",
+        (
+            "Versioned per-task partner sets (ADR-009 §Decision as amended "
+            "2026-07-05; ADR-027 §Versioning). Every member subclasses "
+            "`PartnerBase` behind the `_FORBIDDEN_ATTRS` black-box shield "
+            "(ADR-018/I3); cards publish identity hashes, construction boxes, and "
+            "behavioural fingerprints — never private parameter values."
+        ),
         "",
         *rows,
         "",

@@ -1390,8 +1390,10 @@ def render_admission_report_md(report: AdmissionReport, spec: AdmissionSpec) -> 
             "(A4 ego-robustness floor, per-partner CI lower bound)"
         )
     lines += [
-        f"- seeds = {spec.seeds}, episodes/seed = {spec.episodes_per_seed}, "
-        f"extension = {spec.extension_seeds}",
+        (
+            f"- seeds = {spec.seeds}, episodes/seed = {spec.episodes_per_seed}, "
+            f"extension = {spec.extension_seeds}"
+        ),
         "",
         "## Checks",
         "",

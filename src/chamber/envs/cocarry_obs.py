@@ -191,7 +191,7 @@ def _partner_state_concat(qpos: Any, qvel: Any, *, arm_dof: int) -> NDArray[np.f
     )
 
 
-def _ego_state_concat(
+def _ego_state_concat(  # noqa: PLR0917 - positional order is the ADR-026 concat contract (see docstring)
     ego_qpos: Any,  # noqa: ANN401
     ego_qvel: Any,  # noqa: ANN401
     partner_qpos: Any,  # noqa: ANN401

@@ -67,7 +67,7 @@ def _stage_flag_rate(info: Any, key: str) -> float | None:  # noqa: ANN401 - env
         if hasattr(val, "detach"):
             return float(val.detach().cpu().float().mean().item())
         return float(np.asarray(val, dtype=float).mean())
-    except Exception:
+    except Exception:  # noqa: BLE001 - duck-typed metric coercion; any failure degrades to None
         return None
 
 
@@ -80,7 +80,7 @@ def _last_action_scalar(action: Any) -> float | None:  # noqa: ANN401 - trainer 
     """
     try:
         return float(np.asarray(action, dtype=float).reshape(-1)[-1])
-    except Exception:
+    except Exception:  # noqa: BLE001 - duck-typed metric coercion; any failure degrades to None
         return None
 
 

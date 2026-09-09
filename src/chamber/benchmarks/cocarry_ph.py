@@ -491,7 +491,7 @@ def cluster_robust_glmm(
             "n_rows": len(df),
             "n_clusters": int(df["seed"].nunique()),
         }
-    except Exception as exc:
+    except Exception as exc:  # noqa: BLE001 - diagnostic summary degrades to an error dict; must never crash the run
         return {"status": "error", "reason": str(exc), "n_rows": len(df)}
 
 

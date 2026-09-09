@@ -382,9 +382,11 @@ def _render_markdown(report: ThreeTableReport, content_hash: str) -> str:
         "",
         "## Table 2 — Per-condition violation rates",
         "",
-        "| Predictor | Conformal mode | Vendor compliance "
-        "| N episodes | Violations | Fallback fires "
-        "| Max slack | Slack L2 |",
+        (
+            "| Predictor | Conformal mode | Vendor compliance "
+            "| N episodes | Violations | Fallback fires "
+            "| Max slack | Slack L2 |"
+        ),
         "| --- | --- | --- | --- | --- | --- | --- | --- |",
     ]
     lines.extend(

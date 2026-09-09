@@ -539,7 +539,7 @@ def log_eval(
     *,
     step: int,
     condition: str,
-    **results: float | int,
+    **results: float,
 ) -> None:
     """Emit one ``event="eval"`` line for an eval-cell completion (P1.05.11; ADR-017 §Schema).
 
@@ -630,7 +630,7 @@ class _WandbRunSink:
         """
         try:
             self._run.finish()
-        except Exception as exc:  # top-level catch by design — degrade gracefully
+        except Exception as exc:  # noqa: BLE001 - top-level catch by design — degrade gracefully
             logging.getLogger(__name__).warning(
                 "wandb.run.finish() raised; the JSONL artefact is unaffected. "
                 "exc_type=%s message=%s",
@@ -757,7 +757,7 @@ def make_wandb_run_sink(
             resume="never",
             reinit=True,  # allow multiple per-cell runs in one process
         )
-    except Exception as exc:  # top-level catch by design — degrade gracefully
+    except Exception as exc:  # noqa: BLE001 - top-level catch by design — degrade gracefully
         warnings.warn(
             f"wandb.init(...) raised ({type(exc).__name__}: {exc!s:.200}); "
             "W&B sink degrades to no-op (run continues with JSONL only). "

@@ -247,7 +247,7 @@ class FrozenCoCarryJointPartner(PartnerBase):
                 f"{self._actor_key!r}. Got top-level keys: {sorted(loaded.keys())}. "
                 "Expected the joint_mappo_trainer pair layout (ADR-011 as amended)."
             )
-            raise ValueError(msg)
+            raise ValueError(msg)  # noqa: TRY004 - ValueError: validates deserialised checkpoint content, not an API type contract
         obs_dim, hidden_dim, _action_dim = _infer_shape(inner)
         args = dict(_HARL_INFERENCE_ARGS)
         args["hidden_sizes"] = [hidden_dim, hidden_dim]

@@ -65,8 +65,10 @@ class TestParseType:
             ("WIP: random words", None),
             # Empirical: PR #123's headline shape (the one release-please dropped).
             (
-                "feat(benchmarks): EgoActionFactory Protocol + Tier-1 contract"
-                " tests for the Stage-1 seam (plan/07 §T5b.2) (#123)",
+                (
+                    "feat(benchmarks): EgoActionFactory Protocol + Tier-1 contract"
+                    " tests for the Stage-1 seam (plan/07 §T5b.2) (#123)"
+                ),
                 "feat",
             ),
         ],
