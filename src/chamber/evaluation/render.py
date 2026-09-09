@@ -95,8 +95,10 @@ def _three_table_markdown(report: Mapping[str, Any]) -> str:
         "",
         "## Table 2 — Per-condition safety (constraint violations vs. fallback fires)",
         "",
-        "| Predictor | Conformal mode | Vendor compliance | N episodes "
-        "| Constraint violations | Fallback fires |",
+        (
+            "| Predictor | Conformal mode | Vendor compliance | N episodes "
+            "| Constraint violations | Fallback fires |"
+        ),
         "| --- | --- | --- | --- | --- | --- |",
     ]
     lines.extend(
@@ -155,8 +157,10 @@ def _three_table_latex(report: Mapping[str, Any]) -> str:
         r"\caption{Table 2 — Per-condition safety (constraint violations vs. fallback fires).}",
         r"\begin{tabular}{lllrrr}",
         r"\toprule",
-        r"Predictor & Conformal mode & Vendor compliance & N episodes "
-        r"& Constraint violations & Fallback fires \\",
+        (
+            r"Predictor & Conformal mode & Vendor compliance & N episodes "
+            r"& Constraint violations & Fallback fires \\"
+        ),
         r"\midrule",
     ]
     lines.extend(

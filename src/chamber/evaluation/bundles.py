@@ -156,7 +156,7 @@ def platform_fingerprint() -> PlatformFingerprint:
 
         if torch.cuda.is_available():  # pragma: no cover - GPU-host only
             device = torch.cuda.get_device_name(0)
-    except Exception:
+    except Exception:  # noqa: BLE001 - fingerprint/archive probe reports failure in-band; must never propagate
         device = "cpu"
     return PlatformFingerprint(
         os=_platform.platform(),
@@ -471,7 +471,7 @@ def verify_bundle_dir(
         return [CheckResult("bundle", ok=False, detail=f"{_BUNDLE_JSON} missing")]
     try:
         loaded = load_run_archive(bundle_path)
-    except Exception as exc:
+    except Exception as exc:  # noqa: BLE001 - fingerprint/archive probe reports failure in-band; must never propagate
         return [CheckResult("bundle:schema", ok=False, detail=f"load failed: {exc}")]
     if not isinstance(loaded, ResultBundle):
         return [

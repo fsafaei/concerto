@@ -109,7 +109,7 @@ def test_make_solver_rejects_unknown_name() -> None:
 
 @pytest.mark.parametrize("solver_factory", [ClarabelSolver, OSQPSolver])
 def test_solvers_raise_on_infeasible_qp(
-    solver_factory: type[ClarabelSolver] | type[OSQPSolver],
+    solver_factory: type[ClarabelSolver | OSQPSolver],
 ) -> None:
     """Infeasible polyhedron ``x[0] <= -1 AND x[0] >= 1`` ⇒ ConcertoSafetyInfeasible."""
     n = 2

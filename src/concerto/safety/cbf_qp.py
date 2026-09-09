@@ -691,7 +691,7 @@ class ExpCBFQP:
                 "obs['agent_states'] must be dict[uid, AgentSnapshot]; "
                 f"got {type(snaps_obj).__name__}"
             )
-            raise ValueError(msg)
+            raise ValueError(msg)  # noqa: TRY004 - ValueError: validates the env adapter's obs payload, not an API type contract
         # The obs['agent_states'] payload is the env adapter's
         # integration boundary (ADR-004 §Decision); the env produces
         # AgentSnapshot per uid, but obs is typed as

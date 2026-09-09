@@ -302,8 +302,10 @@ def render_task_leaderboard(task_dir: Path, *, repo_path: Path) -> str:
     """
     rows = build_rows(task_dir, repo_path=repo_path)
     lines = [
-        "| Row | Label | Success IQM [95% CI] | Success mean | Stress p90 (N) "
-        "| Per-partner range | Seeds | Bundles |",
+        (
+            "| Row | Label | Success IQM [95% CI] | Success mean | Stress p90 (N) "
+            "| Per-partner range | Seeds | Bundles |"
+        ),
         "|---|---|---|---|---|---|---|---|",
     ]
     for row in rows:

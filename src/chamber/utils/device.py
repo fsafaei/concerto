@@ -52,7 +52,7 @@ def sapien_gpu_available() -> bool:
         )
         env.close()
         return True
-    except Exception:
+    except Exception:  # noqa: BLE001 - capability probe: any failure (driver, import, C-extension) means unavailable
         return False
 
 
@@ -79,7 +79,7 @@ def sapien_cuda_renderer_available() -> bool:
 
         sapien.Device("cuda")
         return True
-    except Exception:
+    except Exception:  # noqa: BLE001 - capability probe: any failure (driver, import, C-extension) means unavailable
         return False
 
 
@@ -127,7 +127,7 @@ def torch_cuda_available() -> bool:
         import torch
 
         return bool(torch.cuda.is_available())
-    except Exception:
+    except Exception:  # noqa: BLE001 - capability probe: any failure (driver, import, C-extension) means unavailable
         return False
 
 

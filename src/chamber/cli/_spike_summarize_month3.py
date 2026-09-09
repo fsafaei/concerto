@@ -450,12 +450,18 @@ def _render_adr_action_table(
         "",
         "| ADR | Action | Rationale |",
         "| --- | --- | --- |",
-        f"| ADR-007 | {_adr_007_action(by_axis, surviving, recommendation)} | "
-        "Implementation staging gates; §Validation criteria threshold (≥20 pp). |",
-        f"| ADR-008 | {_adr_008_action(surviving, recommendation)} | "
-        "§Decision default headline bundle CM x PF x CR; Option A / Option B fallbacks. |",
-        f"| ADR-011 | {_adr_011_action(recommendation)} | "
-        "Baseline-set lock contingent on per-axis evidence for the surviving axes. |",
+        (
+            f"| ADR-007 | {_adr_007_action(by_axis, surviving, recommendation)} | "
+            "Implementation staging gates; §Validation criteria threshold (≥20 pp). |"
+        ),
+        (
+            f"| ADR-008 | {_adr_008_action(surviving, recommendation)} | "
+            "§Decision default headline bundle CM x PF x CR; Option A / Option B fallbacks. |"
+        ),
+        (
+            f"| ADR-011 | {_adr_011_action(recommendation)} | "
+            "Baseline-set lock contingent on per-axis evidence for the surviving axes. |"
+        ),
         "",
     ]
 

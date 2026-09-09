@@ -80,7 +80,7 @@ def test_aoi_matches_reference_implementation(ops: list[object]) -> None:
                 ref[uid] += op.dt
         else:  # pragma: no cover — exhaustive
             msg = f"unhandled op: {op!r}"
-            raise AssertionError(msg)
+            raise AssertionError(msg)  # noqa: TRY004 - AssertionError is correct for an unreachable exhaustive branch
 
         for uid, expected in ref.items():
             actual = clock.aoi(uid)

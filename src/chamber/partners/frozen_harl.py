@@ -378,7 +378,7 @@ def _read_tensor_shape(sd: Mapping[str, object], key: str, *, dim: int) -> int:
             f"FrozenHARLPartner: actor state-dict value at {key!r} must be a "
             f"torch.Tensor; got {type(value).__name__}."
         )
-        raise ValueError(msg)
+        raise ValueError(msg)  # noqa: TRY004 - ValueError: validates deserialised checkpoint content, not an API type contract
     return int(value.shape[dim])
 
 

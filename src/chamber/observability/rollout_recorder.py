@@ -385,7 +385,7 @@ class RolloutRecorder:
                         plugin="FFMPEG",
                         fps=self.fps,
                     )
-                except Exception as exc:  # mp4 encode failures must not crash the run
+                except Exception as exc:  # noqa: BLE001 - mp4 encode failures must not crash the run
                     _LOGGER.warning(
                         "RolloutRecorder: MP4 encode raised (%s: %s); video emission skipped. "
                         "Per-step JSONL is unaffected.",

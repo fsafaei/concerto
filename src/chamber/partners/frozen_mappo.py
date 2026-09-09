@@ -303,7 +303,7 @@ class FrozenMAPPOPartner(PartnerBase):
                 "FrozenMAPPOPartner: actor state-dict layer values must be "
                 "torch.Tensor; got non-tensor entries."
             )
-            raise ValueError(msg)
+            raise ValueError(msg)  # noqa: TRY004 - ValueError: validates deserialised checkpoint content, not an API type contract
         hidden_dim, obs_dim = int(fc1_weight.shape[0]), int(fc1_weight.shape[1])
         action_dim = int(head_weight.shape[0])
         if fc2_weight.shape != (hidden_dim, hidden_dim):

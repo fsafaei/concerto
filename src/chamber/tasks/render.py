@@ -109,8 +109,11 @@ def render_task_card(spec: TaskSpec) -> str:
         "",
         prose.description,
         "",
-        f"**Tier {spec.tier} — {_TIER_NAMES[spec.tier]}** · **Status: {spec.admission_status}** · "
-        f"Suite: {SUITE_NAME} v{SUITE_VERSION} ({adr_027})",
+        (
+            f"**Tier {spec.tier} — {_TIER_NAMES[spec.tier]}** · "
+            f"**Status: {spec.admission_status}** · "
+            f"Suite: {SUITE_NAME} v{SUITE_VERSION} ({adr_027})"
+        ),
         "",
         "## Spaces",
         "",
@@ -164,8 +167,10 @@ def render_cards_index() -> str:
         "",
         "One card per task version in the pinned suite composition. The",
         "registry (`chamber.tasks`) is the single source of truth; these",
-        "pages and the README task table render from it "
-        f"({_evidence_link('adr/ADR-027-chamber-bench-v1-protocol.md')}).",
+        (
+            "pages and the README task table render from it "
+            f"({_evidence_link('adr/ADR-027-chamber-bench-v1-protocol.md')})."
+        ),
         "",
         "Emit the machine-readable manifest with:",
         "",

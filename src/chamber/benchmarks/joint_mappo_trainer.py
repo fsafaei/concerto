@@ -174,7 +174,7 @@ def load_joint_config(config_path: Path, overrides: list[str] | None = None) -> 
     raw = yaml.safe_load(config_path.read_text(encoding="utf-8"))
     if not isinstance(raw, dict):
         msg = f"{config_path}: expected a YAML mapping at top level"
-        raise ValueError(msg)
+        raise ValueError(msg)  # noqa: TRY004 - ValueError per the documented Raises: validates YAML file content, not an API type contract
     for item in overrides or []:
         key, sep, value = item.partition("=")
         if not sep or not key:
@@ -186,7 +186,7 @@ def load_joint_config(config_path: Path, overrides: list[str] | None = None) -> 
             node = node.setdefault(part, {})
             if not isinstance(node, dict):
                 msg = f"override {item!r}: {part!r} is not a mapping in the config"
-                raise ValueError(msg)
+                raise ValueError(msg)  # noqa: TRY004 - ValueError per the documented Raises: validates YAML file content, not an API type contract
         node[parts[-1]] = yaml.safe_load(value)
     return JointMAPPOConfig.model_validate(raw)
 

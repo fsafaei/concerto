@@ -264,7 +264,7 @@ def _flat_state_concat(qpos: Any, qvel: Any) -> np.ndarray:  # type: ignore[type
     )
 
 
-def _flat_widened_state_concat(
+def _flat_widened_state_concat(  # noqa: PLR0917 - positional order is the ADR-007 Stage 1b concat contract (see docstring)
     ego_qpos: Any,  # noqa: ANN401 - torch.Tensor or np.ndarray
     ego_qvel: Any,  # noqa: ANN401
     partner_qpos: Any,  # noqa: ANN401

@@ -473,7 +473,7 @@ def load_run_archive(path: str | os.PathLike[str]) -> SpikeRun | ResultBundle:
     version = payload.get("schema_version") if isinstance(payload, dict) else None
     if not isinstance(version, int):
         msg = f"{path}: no integer schema_version field; not a CHAMBER result archive"
-        raise ValueError(msg)
+        raise ValueError(msg)  # noqa: TRY004 - ValueError: validates the on-disk archive's schema_version, not an API type contract
     if version >= _RESULT_BUNDLE_MIN_SCHEMA_VERSION:
         return ResultBundle.model_validate(payload)
     return SpikeRun.model_validate(payload)

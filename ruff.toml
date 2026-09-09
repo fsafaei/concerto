@@ -18,7 +18,9 @@ extend-select = [
 ignore = [
   "D203", "D213",              # one-blank-line vs two-blank-line conflict (we use D211/D212)
   "PLR0913",                   # function arg count — RL constructors are wide
-  "ANN101", "ANN102",          # annotating self/cls is not standard practice
+  # ANN101 / ANN102 (annotating self/cls) were REMOVED from ruff upstream;
+  # listing them made ruff 0.16.x emit "rules have been removed and ignoring
+  # them has no effect" on every run, so the entries are dropped.
 ]
 
 [lint.per-file-ignores]
