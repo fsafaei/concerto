@@ -54,9 +54,76 @@ jobs:
       - uses: googleapis/release-please-action@45996ed1f6d02564a971a2fa1b5860e934307cf7  # v5.0.0
         id: release
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          # A push made with GITHUB_TOKEN does not start new workflow runs, so
+          # the release PR's checks land in ``action_required`` and every
+          # required context stays unreported — the PR reads as permanently
+          # blocked until someone approves the runs by hand. RELEASE_PLEASE_TOKEN
+          # (a fine-grained PAT with contents:write + pull-requests:write) makes
+          # those pushes behave like a human's. The fallback keeps this workflow
+          # working, with manual approval, when the secret is absent.
+          token: ${{ secrets.RELEASE_PLEASE_TOKEN || secrets.GITHUB_TOKEN }}
           release-type: python
           package-name: concerto-multirobot
+
+  # release-please bumps ``version`` in pyproject.toml but never regenerates
+  # uv.lock, whose ``[[package]] concerto-multirobot`` entry keeps the previous
+  # version. Any ``uv run`` on the release branch then re-locks and dirties the
+  # working tree, and the reproducibility gates refuse to emit a bundle:
+  #
+  #   error: working tree ... is dirty (or git state is unprovable); a result
+  #   bundle must be traceable to a commit.        -> exit 7
+  #
+  # smoke-eval and readme-quickstart both fail on it, and because neither is a
+  # required context the release PR shows UNSTABLE rather than blocked — easy to
+  # merge straight past. This ran on v0.9.0 and was fixed by hand; the job keeps
+  # it fixed. release-please force-pushes its branch on every run, so this must
+  # re-run after it each time, which ``needs`` guarantees.
+  sync-release-lockfile:
+    name: sync-release-lockfile
+    runs-on: ubuntu-latest
+    needs: release-please
+    if: github.event_name == 'push'
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          ref: release-please--branches--main
+          token: ${{ secrets.RELEASE_PLEASE_TOKEN || secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+        continue-on-error: true
+        id: checkout_release_branch
+      - name: Skip when there is no open release branch
+        if: steps.checkout_release_branch.outcome != 'success'
+        run: echo "No release-please branch this run; nothing to sync."
+      - uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d  # v10.0.1
+        if: steps.checkout_release_branch.outcome == 'success'
+        with:
+          python-version: "3.11"
+      - name: Re-lock and push when the project version moved
+        if: steps.checkout_release_branch.outcome == 'success'
+        run: |
+          set -euo pipefail
+          uv lock
+          if git diff --quiet -- uv.lock; then
+            echo "uv.lock already agrees with pyproject.toml; nothing to do."
+            exit 0
+          fi
+          # The only expected change is the project's own version entry: one
+          # insertion, one deletion. Anything wider means ``uv lock`` also moved
+          # a dependency, which must not ride into a release on an automated
+          # push — fail loudly and let a human look instead.
+          changed=$(git diff --numstat -- uv.lock | awk '{print $1 + $2}')
+          if [ "${changed:-0}" -gt 2 ]; then
+            echo "::error::uv lock changed ${changed} lines, expected 2 (the project version only); refusing to push."
+            git diff -- uv.lock | head -60
+            exit 1
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add uv.lock
+          git commit -m "chore(release): sync uv.lock to the release version bump"
+          git push origin HEAD:release-please--branches--main
 
   # Build once and share dist/ with both publish jobs, so TestPyPI and
   # production PyPI receive byte-identical artefacts. Nothing uploads

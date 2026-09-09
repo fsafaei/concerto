@@ -6,7 +6,11 @@ on:
     paths:
       - "src/**"
       - "tests/**"
-      - ".github/workflows/ci.yml"
+      # Every workflow file, not just this one: a change to release.yml (or
+      # security.yml, docs-deploy.yml, ...) otherwise never triggers CI, so
+      # the 16 required contexts never report and the PR is unmergeable —
+      # the same trap Dockerfile-only PRs hit before #338.
+      - ".github/workflows/**"
       - "pyproject.toml"
       - "uv.lock"
       - "README.md"
@@ -25,7 +29,11 @@ on:
     paths:
       - "src/**"
       - "tests/**"
-      - ".github/workflows/ci.yml"
+      # Every workflow file, not just this one: a change to release.yml (or
+      # security.yml, docs-deploy.yml, ...) otherwise never triggers CI, so
+      # the 16 required contexts never report and the PR is unmergeable —
+      # the same trap Dockerfile-only PRs hit before #338.
+      - ".github/workflows/**"
       - "pyproject.toml"
       - "uv.lock"
       - "README.md"
