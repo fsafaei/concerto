@@ -17,6 +17,7 @@ from concerto.contracts.spec import (
     get,
     list_contracts,
     register,
+    versions,
 )
 
 __all__ = [
@@ -27,4 +28,5 @@ __all__ = [
     "get",
     "list_contracts",
     "register",
+    "versions",
 ]
