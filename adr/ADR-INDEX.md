@@ -41,6 +41,7 @@ evidence per their own §Validation criteria.
 | 026 | Coupling-validity criterion (+ Stage-1 AS reinterpretation)        | §3.2 + §3.4        | Phase 1→2  | Accepted (2026-07-05)<sup>h</sup> |
 | 027 | CHAMBER-Bench v1.0 protocol (tiers / admission / validity matrix)  | §3.3 + §3.7 + §3.10 | Phase 2   | Accepted (2026-07-05)        |
 | 028 | Result-bundle schema v3 + preregistration versioning               | §3.7               | Phase 2    | Accepted (2026-07-05)<sup>i</sup> |
+| 029 | co_hold_secure Gate-0 program (second-discriminating-task pivot)   | §3.3 + §3.4        | Phase 2    | RFC (2026-07-16)             |
 
 Numbers **019–025 remain reserved** (open-core / realism / certification
 governance ADRs and the proposed RSA-ADR cluster per the

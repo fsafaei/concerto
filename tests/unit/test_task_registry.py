@@ -26,7 +26,7 @@ _REPO_ROOT = Path(__file__).parents[2]
 #: The exact v1.0 ladder pinned by CB-scope ADR-027 §Tier ladder.
 _EXPECTED_SLUGS = [
     "amr_handover_dynamic@v0",
-    "co_hold_secure@v0",
+    "co_hold_secure@v1",
     "cocarry@v1",
     "coinsert@v1",
     "handover_place@v1",
@@ -187,7 +187,8 @@ class TestLadder:
         assert set(obs["agent"]) == {"ego", "partner"}
 
     def test_placeholders_raise_not_implemented(self) -> None:
-        for task_id in ("co_hold_secure", "amr_handover_dynamic"):
+        # co_hold_secure left this list at ADR-029 (env factory wired, @v1).
+        for task_id in ("amr_handover_dynamic",):
             with pytest.raises(NotImplementedError, match="spec-only"):
                 chamber.tasks.make(task_id)
 

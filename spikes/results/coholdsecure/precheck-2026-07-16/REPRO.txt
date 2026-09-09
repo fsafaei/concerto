@@ -1,0 +1,13 @@
+./scripts/repro/coholdsecure_precheck.sh
+# or: uv run python scripts/repro/_coholdsecure_precheck.py
+# render tables + verdict from the committed JSON (no episodes):
+#   uv run python scripts/repro/_coholdsecure_precheck.py --render
+#
+# Pre-statement commit precedes the results commit on this branch
+# (rule before result; ADR-029 §Decision — non-registered, non-gating,
+# no prereg tag; the founder-signed Gate-0 prereg is PR-B).
+#
+# Requires a SAPIEN GPU/Vulkan host (CI cannot see this); verified on
+# the development box 2026-07-16/17. Deterministic (P6 / ADR-002):
+# fixed seeds {0,1,2}, no wall-clock RNG; a re-run rewrites
+# precheck_results.json byte-identically.

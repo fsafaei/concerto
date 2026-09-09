@@ -139,7 +139,7 @@ fails if it drifts.
 | `cocarry@v1` — Co-carry — rigid dual-arm bar transport | 2 (admitted cooperation tasks) | ADMITTED | AS `null` | [cocarry](docs/reference/tasks/cocarry.md) |
 | `handover_place@v1` — Handover-and-place under takt pressure | 2 (admitted cooperation tasks) | ADMITTED | all untested | [handover_place](docs/reference/tasks/handover_place.md) |
 | `amr_handover_dynamic@v0` — AMR dynamic handover (spec-only candidate) | 3 (documented candidates and closures) | CANDIDATE | all untested | [amr_handover_dynamic](docs/reference/tasks/amr_handover_dynamic.md) |
-| `co_hold_secure@v0` — Co-hold-and-secure (spec-only candidate) | 3 (documented candidates and closures) | CANDIDATE | all untested | [co_hold_secure](docs/reference/tasks/co_hold_secure.md) |
+| `co_hold_secure@v1` — Co-hold-and-secure (Gate-0 candidate) | 3 (documented candidates and closures) | CANDIDATE | all untested | [co_hold_secure](docs/reference/tasks/co_hold_secure.md) |
 | `coinsert@v1` — Co-insert — hold-and-insert (closed; open challenge) | 3 (documented candidates and closures) | CLOSED | all untested | [coinsert](docs/reference/tasks/coinsert.md) |
 
 <!-- CHAMBER-BENCH-TASK-TABLE:END -->
