@@ -5,8 +5,11 @@ from __future__ import annotations
 
 import dataclasses
 import math
+import subprocess
+import sys
 
 import pytest
+from gymnasium.envs.registration import parse_env_id
 
 from concerto import contracts
 from concerto.contracts import ActionField, ObsField, TaskContract
@@ -26,12 +29,12 @@ PICKCUBE_OBS_ORDER = [
 def test_get_pickcube_is_populated() -> None:
     c = contracts.get("pickcube")
     assert c.task_id == "pickcube"
-    assert c.version >= 1
+    assert c.version == 2
     assert c.env_id == "PickCube-v1"
     assert c.robot_uid == "panda"
     assert c.control_mode == "pd_ee_delta_pose"
     assert c.control_hz == 20
-    assert c.max_episode_steps == 50
+    assert c.max_episode_steps == 200
     assert c.obs_dim == 42
     assert c.action_dim == 7
     assert c.quaternion_order == "wxyz"
@@ -64,8 +67,8 @@ def test_pickcube_action_slices() -> None:
         c.action_field("nope")
 
 
-def test_pickcube_action_physical_mapping() -> None:
-    c = contracts.get("pickcube")
+def test_v1_action_physical_mapping() -> None:
+    c = contracts.get("pickcube", 1)
     pos, rot, grip = (c.action_field(n) for n in ("delta_pos", "delta_rot", "gripper"))
     assert pos.to_physical(1.0) == pytest.approx(0.1)
     assert pos.to_physical(-0.5) == pytest.approx(-0.05)
@@ -76,6 +79,67 @@ def test_pickcube_action_physical_mapping() -> None:
     assert grip.to_physical(-1.0) == pytest.approx(-0.01)
     assert grip.to_physical(1.0) == pytest.approx(0.04)
     assert grip.to_physical(0.0) == pytest.approx(0.015)
+
+
+def test_v2_action_physical_mapping() -> None:
+    c = contracts.get("pickcube")
+    pos, rot, grip = (c.action_field(n) for n in ("delta_pos", "delta_rot", "gripper"))
+    assert pos.to_physical(1.0) == pytest.approx(0.005)
+    assert pos.to_physical(-0.5) == pytest.approx(-0.0025)
+    assert pos.to_physical(7.0) == pytest.approx(0.005), "clips before scaling"
+    assert rot.to_physical(1.0) == pytest.approx(-0.05), "the sign flip stays"
+    assert rot.to_physical(0.0) == pytest.approx(0.0)
+    assert grip.to_physical(-1.0) == pytest.approx(-0.01), "gripper unchanged"
+    assert grip.to_physical(1.0) == pytest.approx(0.04)
+
+
+def test_v2_differs_from_v1_only_in_bounds_horizon_and_notes() -> None:
+    v1, v2 = contracts.get("pickcube", 1), contracts.get("pickcube", 2)
+    back = dataclasses.replace(
+        v2,
+        version=1,
+        max_episode_steps=v1.max_episode_steps,
+        action_spec=v1.action_spec,
+        notes=v1.notes,
+    )
+    assert back == v1
+    assert v2.max_episode_steps == 4 * v1.max_episode_steps
+    assert "version 1" in v2.notes
+    assert "ScaleDeltaActions" in v2.notes
+
+
+def test_get_default_is_highest_version() -> None:
+    assert contracts.get("pickcube") is contracts.get("pickcube", 2)
+    assert contracts.get("pickcube", 1).version == 1
+
+
+def test_versions_pickcube() -> None:
+    assert contracts.versions("pickcube") == (1, 2)
+    with pytest.raises(KeyError, match="pickcube"):
+        contracts.versions("does_not_exist")
+
+
+def test_get_unknown_version_raises_listing_known() -> None:
+    with pytest.raises(KeyError, match=r"known: \[1, 2\]"):
+        contracts.get("pickcube", 99)
+
+
+def test_gym_id_names_the_task_and_version() -> None:
+    c = contracts.get("pickcube")
+    assert c.gym_id == "concerto/pickcube-v2"
+    assert parse_env_id(c.gym_id) == ("concerto", "pickcube", 2)
+    assert contracts.get("pickcube", 1).gym_id == "concerto/pickcube-v1"
+
+
+def test_importing_contracts_loads_no_maniskill_or_torch() -> None:
+    code = (
+        "import sys, concerto.contracts as c; c.get('pickcube'); "
+        "print(sorted({m.split('.')[0] for m in sys.modules} & {'mani_skill', 'sapien', 'torch'}))"
+    )
+    out = subprocess.run(  # noqa: S603
+        [sys.executable, "-c", code], check=True, capture_output=True, text=True
+    )
+    assert out.stdout.strip() == "[]"
 
 
 def test_get_unknown_raises_keyerror_listing_known() -> None:

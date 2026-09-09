@@ -5,7 +5,9 @@ A :class:`TaskContract` states, for one task version, what a flat observation
 and a flat action *mean*: field order, dimensions, units, frames, control rate,
 reset joint configuration, and how the simulator applies a delta-pose action.
 The sim env and a real-robot env expose the same contract, so a parity test can
-assert they agree. Contracts are frozen data; any change bumps ``version``.
+assert they agree. Contracts are frozen data; any change is a new ``version``
+registered beside the old one, and :func:`get` returns the highest unless a
+version is asked for.
 """
 
 from __future__ import annotations
@@ -125,6 +127,14 @@ class TaskContract:
         """Name -> slice into the flat action, in spec order."""
         return _slices(self.action_spec)
 
+    @property
+    def gym_id(self) -> str:
+        """The Gymnasium id :mod:`concerto.contracts.sim` registers for this version.
+
+        ``concerto/<task_id>-v<version>``; ``env_id`` is the underlying ManiSkill id.
+        """
+        return f"concerto/{self.task_id}-v{self.version}"
+
     def action_field(self, name: str) -> ActionField:
         """Look up one action field by name."""
         for f in self.action_spec:
@@ -142,22 +152,42 @@ def _slices(fields: tuple[ObsField, ...] | tuple[ActionField, ...]) -> dict[str,
     return out
 
 
-_REGISTRY: dict[str, TaskContract] = {}
+_REGISTRY: dict[str, dict[int, TaskContract]] = {}
 
 
 def register(contract: TaskContract) -> TaskContract:
-    """Add a contract; registering the same ``task_id`` twice is an error."""
-    if contract.task_id in _REGISTRY:
-        raise ValueError(f"task contract {contract.task_id!r} is already registered")
-    _REGISTRY[contract.task_id] = contract
+    """Add a contract; registering the same ``task_id`` and ``version`` twice is an error."""
+    by_version = _REGISTRY.setdefault(contract.task_id, {})
+    if contract.version in by_version:
+        raise ValueError(
+            f"task contract {contract.task_id!r} v{contract.version} is already registered"
+        )
+    by_version[contract.version] = contract
     return contract
 
 
-def get(task_id: str) -> TaskContract:
-    """Return the contract for ``task_id``; the ``KeyError`` lists the known ids."""
+def get(task_id: str, version: int | None = None) -> TaskContract:
+    """Return the highest version of ``task_id``, or exactly ``version`` if given.
+
+    The ``KeyError`` lists the known ids, or the known versions of ``task_id``.
+    """
+    by_version = _REGISTRY.get(task_id)
+    if by_version is None:
+        raise KeyError(f"unknown task contract {task_id!r}; known: {sorted(_REGISTRY)}")
+    if version is None:
+        return by_version[max(by_version)]
+    if version not in by_version:
+        raise KeyError(
+            f"unknown version {version} of task contract {task_id!r}; known: {sorted(by_version)}"
+        )
+    return by_version[version]
+
+
+def versions(task_id: str) -> tuple[int, ...]:
+    """Registered versions of ``task_id``, ascending; the ``KeyError`` lists the known ids."""
     if task_id not in _REGISTRY:
         raise KeyError(f"unknown task contract {task_id!r}; known: {sorted(_REGISTRY)}")
-    return _REGISTRY[task_id]
+    return tuple(sorted(_REGISTRY[task_id]))
 
 
 def list_contracts() -> list[str]:

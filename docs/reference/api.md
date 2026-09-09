@@ -16,6 +16,8 @@ Generated from docstrings via mkdocstrings.
 
 ::: concerto.contracts.pickcube
 
+::: concerto.contracts.actions
+
 ### `concerto.safety`
 
 ::: concerto.safety
