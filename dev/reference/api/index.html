@@ -58184,14 +58184,7 @@ geometry), <code>peg_half_len</code>, optional <code>kp</code> / <code>ki</code>
 
               <details class="mkdocstrings-source">
                 <summary>Source code in <code>src/chamber/partners/coinsert_impedance.py</code></summary>
-                <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">435</span>
-<span class="normal">436</span>
-<span class="normal">437</span>
-<span class="normal">438</span>
-<span class="normal">439</span>
-<span class="normal">440</span>
-<span class="normal">441</span>
-<span class="normal">442</span>
+                <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">442</span>
 <span class="normal">443</span>
 <span class="normal">444</span>
 <span class="normal">445</span>
@@ -58362,7 +58355,51 @@ geometry), <code>peg_half_len</code>, optional <code>kp</code> / <code>ki</code>
 <span class="normal">610</span>
 <span class="normal">611</span>
 <span class="normal">612</span>
-<span class="normal">613</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@register_partner</span><span class="p">(</span><span class="s2">&quot;coinsert_base_inserter&quot;</span><span class="p">)</span>
+<span class="normal">613</span>
+<span class="normal">614</span>
+<span class="normal">615</span>
+<span class="normal">616</span>
+<span class="normal">617</span>
+<span class="normal">618</span>
+<span class="normal">619</span>
+<span class="normal">620</span>
+<span class="normal">621</span>
+<span class="normal">622</span>
+<span class="normal">623</span>
+<span class="normal">624</span>
+<span class="normal">625</span>
+<span class="normal">626</span>
+<span class="normal">627</span>
+<span class="normal">628</span>
+<span class="normal">629</span>
+<span class="normal">630</span>
+<span class="normal">631</span>
+<span class="normal">632</span>
+<span class="normal">633</span>
+<span class="normal">634</span>
+<span class="normal">635</span>
+<span class="normal">636</span>
+<span class="normal">637</span>
+<span class="normal">638</span>
+<span class="normal">639</span>
+<span class="normal">640</span>
+<span class="normal">641</span>
+<span class="normal">642</span>
+<span class="normal">643</span>
+<span class="normal">644</span>
+<span class="normal">645</span>
+<span class="normal">646</span>
+<span class="normal">647</span>
+<span class="normal">648</span>
+<span class="normal">649</span>
+<span class="normal">650</span>
+<span class="normal">651</span>
+<span class="normal">652</span>
+<span class="normal">653</span>
+<span class="normal">654</span>
+<span class="normal">655</span>
+<span class="normal">656</span>
+<span class="normal">657</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@register_partner</span><span class="p">(</span><span class="s2">&quot;coinsert_base_inserter&quot;</span><span class="p">)</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">CoInsertBaseInserter</span><span class="p">(</span><span class="n">_CoInsertControllerBase</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Structured base inserter — impedance approach + spiral-search press (ADR-026 §Decision 1).</span>
 
@@ -58408,6 +58445,30 @@ geometry), <code>peg_half_len</code>, optional <code>kp</code> / <code>ki</code>
         <span class="bp">self</span><span class="o">.</span><span class="n">_spiral_amp</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">extra</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;spiral_amp&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">_BASE_SPIRAL_AMPLITUDE_M</span><span class="p">)))</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_descend_step</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">extra</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;descend_step&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">_BASE_DESCEND_STEP_M</span><span class="p">)))</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_depth_target</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">extra</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;depth_target&quot;</span><span class="p">,</span> <span class="s2">&quot;0.040&quot;</span><span class="p">))</span>
+        <span class="c1"># Unjam-maneuver overrides (defaults = the frozen S2 constants, so the</span>
+        <span class="c1"># co-insert behaviour is byte-identical). The co-hold-secure detent</span>
+        <span class="c1"># press (ADR-029 §Decision) sets ``stall_steps`` very high: pressing</span>
+        <span class="c1"># against a detent ramp LOOKS like a friction stall to this detector,</span>
+        <span class="c1"># and a retract there dumps the integral windup the press needs — a</span>
+        <span class="c1"># detent wants sustained force, not the back-off that unjams a deep</span>
+        <span class="c1"># friction bore.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_stall_steps</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">extra</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;stall_steps&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">_BASE_STALL_STEPS</span><span class="p">)))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_retract_dist</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">extra</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;retract_dist&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">_BASE_RETRACT_M</span><span class="p">)))</span>
+        <span class="c1"># Seat threshold below which the press keeps driving (default = the S2</span>
+        <span class="c1"># 2 mm depth tolerance). The co-hold-secure detent window sits inside</span>
+        <span class="c1"># the last 2 mm of a 10 mm bore (ADR-029 §Decision), so its driver</span>
+        <span class="c1"># tightens this to the click margin — otherwise the press would</span>
+        <span class="c1"># declare &quot;seated&quot; at the detent entry and hold there forever.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_seat_eps</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">extra</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;seat_eps&quot;</span><span class="p">,</span> <span class="s2">&quot;0.002&quot;</span><span class="p">))</span>
+        <span class="c1"># Ratcheting press target (default off = the S2 depth-following press).</span>
+        <span class="c1"># A detent resistance spring-ejects a depth-following position press</span>
+        <span class="c1"># (each bounce resets the target to the realized depth, so no</span>
+        <span class="c1"># sustained force ever builds — the PR-A bring-up pogo). With the</span>
+        <span class="c1"># ratchet on, the press target is monotone within the episode: after</span>
+        <span class="c1"># a bounce the target stays deep, the saturated error sustains the</span>
+        <span class="c1"># press force, and the plug walks through the ramp quasi-statically.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_press_ratchet</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="n">extra</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;press_ratchet&quot;</span><span class="p">,</span> <span class="s2">&quot;0&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;1&quot;</span><span class="p">,</span> <span class="s2">&quot;true&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_ratchet_depth</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="s2">&quot;-inf&quot;</span><span class="p">)</span>
         <span class="c1"># Within-episode stall / unjam state for the lead-in search (zeroed in reset).</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_stall_count</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_retract_count</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
@@ -58425,13 +58486,18 @@ geometry), <code>peg_half_len</code>, optional <code>kp</code> / <code>ki</code>
         <span class="bp">self</span><span class="o">.</span><span class="n">_stall_count</span> <span class="o">=</span> <span class="mi">0</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_retract_count</span> <span class="o">=</span> <span class="mi">0</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_last_depth</span> <span class="o">=</span> <span class="o">-</span><span class="mf">1.0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_ratchet_depth</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="s2">&quot;-inf&quot;</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">assert_episode_state_clear</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Assert the within-episode state — including the stall clock — was cleared (ADR-009).&quot;&quot;&quot;</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">assert_episode_state_clear</span><span class="p">()</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_stall_count</span> <span class="o">!=</span> <span class="mi">0</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">_retract_count</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">if</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_stall_count</span> <span class="o">!=</span> <span class="mi">0</span>
+            <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">_retract_count</span> <span class="o">!=</span> <span class="mi">0</span>
+            <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ratchet_depth</span> <span class="o">!=</span> <span class="nb">float</span><span class="p">(</span><span class="s2">&quot;-inf&quot;</span><span class="p">)</span>
+        <span class="p">):</span>
             <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">: stall clock not cleared after reset. &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">: stall clock / press ratchet not cleared after reset. &quot;</span>
                 <span class="s2">&quot;ADR-009 §Decision: partners are stateless across episodes.&quot;</span>
             <span class="p">)</span>
             <span class="k">raise</span> <span class="ne">AssertionError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
@@ -58453,14 +58519,14 @@ geometry), <code>peg_half_len</code>, optional <code>kp</code> / <code>ki</code>
             <span class="s2">&quot;insertion_envelope_m&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_spiral_amp</span> <span class="o">+</span> <span class="nb">float</span><span class="p">(</span><span class="n">COINSERT_CHAMFER_M</span><span class="p">),</span>
         <span class="p">}</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">act</span><span class="p">(</span>  <span class="c1"># noqa: PLR0915 - the approach/press/seated phase machine + unjam is one cohesive step</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">act</span><span class="p">(</span>  <span class="c1"># noqa: PLR0915, PLR0912 - the approach/press/seated phase machine + unjam is one cohesive step</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">obs</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">object</span><span class="p">],</span> <span class="o">*</span><span class="p">,</span> <span class="n">deterministic</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">floating</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the ego ``pd_joint_delta_pos`` insertion action (ADR-026 §Decision 1).&quot;&quot;&quot;</span>
         <span class="k">del</span> <span class="n">deterministic</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_step</span> <span class="o">+=</span> <span class="mi">1</span>
         <span class="n">gripper_only</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">_PANDA_ARM_DOF</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
-        <span class="n">gripper_only</span><span class="p">[</span><span class="n">_PANDA_ARM_DOF</span><span class="p">]</span> <span class="o">=</span> <span class="n">_GRIPPER_ACTION</span>
+        <span class="n">gripper_only</span><span class="p">[</span><span class="n">_PANDA_ARM_DOF</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_gripper_action</span><span class="p">)</span>
         <span class="n">qpos</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_read_qpos</span><span class="p">(</span><span class="n">obs</span><span class="p">)</span>
         <span class="n">peg</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_read_pose</span><span class="p">(</span><span class="n">obs</span><span class="p">,</span> <span class="s2">&quot;peg_pose&quot;</span><span class="p">)</span>
         <span class="n">sock</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_read_pose</span><span class="p">(</span><span class="n">obs</span><span class="p">,</span> <span class="s2">&quot;receptacle_pose&quot;</span><span class="p">)</span>
@@ -58479,7 +58545,7 @@ geometry), <code>peg_half_len</code>, optional <code>kp</code> / <code>ki</code>
         <span class="n">lateral_mag</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">lateral_vec</span><span class="p">))</span>
 
         <span class="n">e1</span><span class="p">,</span> <span class="n">e2</span> <span class="o">=</span> <span class="n">_lateral_basis</span><span class="p">(</span><span class="n">axis</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">depth</span> <span class="o">&gt;=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_depth_target</span> <span class="o">-</span> <span class="mf">0.002</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">depth</span> <span class="o">&gt;=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_depth_target</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">_seat_eps</span><span class="p">):</span>
             <span class="c1"># Seated: hold (command ~zero velocity) so both arms go static and the</span>
             <span class="c1"># receptacle settles — the success ``static`` ∧ ``settled`` conjuncts</span>
             <span class="c1"># need the press to stop once depth is reached.</span>
@@ -58514,16 +58580,24 @@ geometry), <code>peg_half_len</code>, optional <code>kp</code> / <code>ki</code>
             <span class="c1"># amplitude + the chamfer capture).</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_retract_count</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_retract_count</span> <span class="o">-=</span> <span class="mi">1</span>
-                <span class="n">target_depth</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">depth</span> <span class="o">-</span> <span class="n">_BASE_RETRACT_M</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.005</span><span class="p">)</span>
+                <span class="n">target_depth</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">depth</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">_retract_dist</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.005</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="k">if</span> <span class="n">depth</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_last_depth</span> <span class="o">+</span> <span class="mf">1e-4</span><span class="p">:</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">_stall_count</span> <span class="o">+=</span> <span class="mi">1</span>
                 <span class="k">else</span><span class="p">:</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">_stall_count</span> <span class="o">=</span> <span class="mi">0</span>
-                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_stall_count</span> <span class="o">&gt;=</span> <span class="n">_BASE_STALL_STEPS</span><span class="p">:</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_stall_count</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_stall_steps</span><span class="p">:</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">_retract_count</span> <span class="o">=</span> <span class="n">_BASE_RETRACT_STEPS</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">_stall_count</span> <span class="o">=</span> <span class="mi">0</span>
-                <span class="n">target_depth</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">depth</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_descend_step</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_depth_target</span> <span class="o">+</span> <span class="mf">0.005</span><span class="p">)</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_press_ratchet</span><span class="p">:</span>
+                    <span class="c1"># Monotone press target within the episode (detent press).</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_ratchet_depth</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_ratchet_depth</span><span class="p">,</span> <span class="n">depth</span><span class="p">)</span>
+                    <span class="n">target_depth</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">_ratchet_depth</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_descend_step</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_depth_target</span> <span class="o">+</span> <span class="mf">0.005</span>
+                    <span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_ratchet_depth</span> <span class="o">=</span> <span class="n">target_depth</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">target_depth</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">depth</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_descend_step</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_depth_target</span> <span class="o">+</span> <span class="mf">0.005</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_last_depth</span> <span class="o">=</span> <span class="n">depth</span>
             <span class="n">target</span> <span class="o">=</span> <span class="n">mouth</span> <span class="o">-</span> <span class="n">target_depth</span> <span class="o">*</span> <span class="n">axis</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_retract_count</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
@@ -58603,19 +58677,43 @@ their sum (the envelope). Auditable; emitted into the S2 artifact.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/chamber/partners/coinsert_impedance.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">472</span>
-<span class="normal">473</span>
-<span class="normal">474</span>
-<span class="normal">475</span>
-<span class="normal">476</span>
-<span class="normal">477</span>
-<span class="normal">478</span>
-<span class="normal">479</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">479</span>
 <span class="normal">480</span>
 <span class="normal">481</span>
 <span class="normal">482</span>
 <span class="normal">483</span>
-<span class="normal">484</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">spec</span><span class="p">:</span> <span class="n">PartnerSpec</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="normal">484</span>
+<span class="normal">485</span>
+<span class="normal">486</span>
+<span class="normal">487</span>
+<span class="normal">488</span>
+<span class="normal">489</span>
+<span class="normal">490</span>
+<span class="normal">491</span>
+<span class="normal">492</span>
+<span class="normal">493</span>
+<span class="normal">494</span>
+<span class="normal">495</span>
+<span class="normal">496</span>
+<span class="normal">497</span>
+<span class="normal">498</span>
+<span class="normal">499</span>
+<span class="normal">500</span>
+<span class="normal">501</span>
+<span class="normal">502</span>
+<span class="normal">503</span>
+<span class="normal">504</span>
+<span class="normal">505</span>
+<span class="normal">506</span>
+<span class="normal">507</span>
+<span class="normal">508</span>
+<span class="normal">509</span>
+<span class="normal">510</span>
+<span class="normal">511</span>
+<span class="normal">512</span>
+<span class="normal">513</span>
+<span class="normal">514</span>
+<span class="normal">515</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">spec</span><span class="p">:</span> <span class="n">PartnerSpec</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Bind base-inserter gains (ADR-026 §Decision 1).&quot;&quot;&quot;</span>
     <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">spec</span><span class="p">)</span>
     <span class="n">extra</span> <span class="o">=</span> <span class="n">spec</span><span class="o">.</span><span class="n">extra</span>
@@ -58624,6 +58722,30 @@ their sum (the envelope). Auditable; emitted into the S2 artifact.</p>
     <span class="bp">self</span><span class="o">.</span><span class="n">_spiral_amp</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">extra</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;spiral_amp&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">_BASE_SPIRAL_AMPLITUDE_M</span><span class="p">)))</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">_descend_step</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">extra</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;descend_step&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">_BASE_DESCEND_STEP_M</span><span class="p">)))</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">_depth_target</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">extra</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;depth_target&quot;</span><span class="p">,</span> <span class="s2">&quot;0.040&quot;</span><span class="p">))</span>
+    <span class="c1"># Unjam-maneuver overrides (defaults = the frozen S2 constants, so the</span>
+    <span class="c1"># co-insert behaviour is byte-identical). The co-hold-secure detent</span>
+    <span class="c1"># press (ADR-029 §Decision) sets ``stall_steps`` very high: pressing</span>
+    <span class="c1"># against a detent ramp LOOKS like a friction stall to this detector,</span>
+    <span class="c1"># and a retract there dumps the integral windup the press needs — a</span>
+    <span class="c1"># detent wants sustained force, not the back-off that unjams a deep</span>
+    <span class="c1"># friction bore.</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_stall_steps</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">extra</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;stall_steps&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">_BASE_STALL_STEPS</span><span class="p">)))</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_retract_dist</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">extra</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;retract_dist&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">_BASE_RETRACT_M</span><span class="p">)))</span>
+    <span class="c1"># Seat threshold below which the press keeps driving (default = the S2</span>
+    <span class="c1"># 2 mm depth tolerance). The co-hold-secure detent window sits inside</span>
+    <span class="c1"># the last 2 mm of a 10 mm bore (ADR-029 §Decision), so its driver</span>
+    <span class="c1"># tightens this to the click margin — otherwise the press would</span>
+    <span class="c1"># declare &quot;seated&quot; at the detent entry and hold there forever.</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_seat_eps</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">extra</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;seat_eps&quot;</span><span class="p">,</span> <span class="s2">&quot;0.002&quot;</span><span class="p">))</span>
+    <span class="c1"># Ratcheting press target (default off = the S2 depth-following press).</span>
+    <span class="c1"># A detent resistance spring-ejects a depth-following position press</span>
+    <span class="c1"># (each bounce resets the target to the realized depth, so no</span>
+    <span class="c1"># sustained force ever builds — the PR-A bring-up pogo). With the</span>
+    <span class="c1"># ratchet on, the press target is monotone within the episode: after</span>
+    <span class="c1"># a bounce the target stays deep, the saturated error sustains the</span>
+    <span class="c1"># press force, and the plug walks through the ramp quasi-statically.</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_press_ratchet</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="n">extra</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;press_ratchet&quot;</span><span class="p">,</span> <span class="s2">&quot;0&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;1&quot;</span><span class="p">,</span> <span class="s2">&quot;true&quot;</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_ratchet_depth</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="s2">&quot;-inf&quot;</span><span class="p">)</span>
     <span class="c1"># Within-episode stall / unjam state for the lead-in search (zeroed in reset).</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">_stall_count</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">_retract_count</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
@@ -58654,43 +58776,7 @@ their sum (the envelope). Auditable; emitted into the S2 artifact.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/chamber/partners/coinsert_impedance.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">526</span>
-<span class="normal">527</span>
-<span class="normal">528</span>
-<span class="normal">529</span>
-<span class="normal">530</span>
-<span class="normal">531</span>
-<span class="normal">532</span>
-<span class="normal">533</span>
-<span class="normal">534</span>
-<span class="normal">535</span>
-<span class="normal">536</span>
-<span class="normal">537</span>
-<span class="normal">538</span>
-<span class="normal">539</span>
-<span class="normal">540</span>
-<span class="normal">541</span>
-<span class="normal">542</span>
-<span class="normal">543</span>
-<span class="normal">544</span>
-<span class="normal">545</span>
-<span class="normal">546</span>
-<span class="normal">547</span>
-<span class="normal">548</span>
-<span class="normal">549</span>
-<span class="normal">550</span>
-<span class="normal">551</span>
-<span class="normal">552</span>
-<span class="normal">553</span>
-<span class="normal">554</span>
-<span class="normal">555</span>
-<span class="normal">556</span>
-<span class="normal">557</span>
-<span class="normal">558</span>
-<span class="normal">559</span>
-<span class="normal">560</span>
-<span class="normal">561</span>
-<span class="normal">562</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">562</span>
 <span class="normal">563</span>
 <span class="normal">564</span>
 <span class="normal">565</span>
@@ -58741,14 +58827,58 @@ their sum (the envelope). Auditable; emitted into the S2 artifact.</p>
 <span class="normal">610</span>
 <span class="normal">611</span>
 <span class="normal">612</span>
-<span class="normal">613</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">act</span><span class="p">(</span>  <span class="c1"># noqa: PLR0915 - the approach/press/seated phase machine + unjam is one cohesive step</span>
+<span class="normal">613</span>
+<span class="normal">614</span>
+<span class="normal">615</span>
+<span class="normal">616</span>
+<span class="normal">617</span>
+<span class="normal">618</span>
+<span class="normal">619</span>
+<span class="normal">620</span>
+<span class="normal">621</span>
+<span class="normal">622</span>
+<span class="normal">623</span>
+<span class="normal">624</span>
+<span class="normal">625</span>
+<span class="normal">626</span>
+<span class="normal">627</span>
+<span class="normal">628</span>
+<span class="normal">629</span>
+<span class="normal">630</span>
+<span class="normal">631</span>
+<span class="normal">632</span>
+<span class="normal">633</span>
+<span class="normal">634</span>
+<span class="normal">635</span>
+<span class="normal">636</span>
+<span class="normal">637</span>
+<span class="normal">638</span>
+<span class="normal">639</span>
+<span class="normal">640</span>
+<span class="normal">641</span>
+<span class="normal">642</span>
+<span class="normal">643</span>
+<span class="normal">644</span>
+<span class="normal">645</span>
+<span class="normal">646</span>
+<span class="normal">647</span>
+<span class="normal">648</span>
+<span class="normal">649</span>
+<span class="normal">650</span>
+<span class="normal">651</span>
+<span class="normal">652</span>
+<span class="normal">653</span>
+<span class="normal">654</span>
+<span class="normal">655</span>
+<span class="normal">656</span>
+<span class="normal">657</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">act</span><span class="p">(</span>  <span class="c1"># noqa: PLR0915, PLR0912 - the approach/press/seated phase machine + unjam is one cohesive step</span>
     <span class="bp">self</span><span class="p">,</span> <span class="n">obs</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">object</span><span class="p">],</span> <span class="o">*</span><span class="p">,</span> <span class="n">deterministic</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">floating</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Return the ego ``pd_joint_delta_pos`` insertion action (ADR-026 §Decision 1).&quot;&quot;&quot;</span>
     <span class="k">del</span> <span class="n">deterministic</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">_step</span> <span class="o">+=</span> <span class="mi">1</span>
     <span class="n">gripper_only</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">_PANDA_ARM_DOF</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
-    <span class="n">gripper_only</span><span class="p">[</span><span class="n">_PANDA_ARM_DOF</span><span class="p">]</span> <span class="o">=</span> <span class="n">_GRIPPER_ACTION</span>
+    <span class="n">gripper_only</span><span class="p">[</span><span class="n">_PANDA_ARM_DOF</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_gripper_action</span><span class="p">)</span>
     <span class="n">qpos</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_read_qpos</span><span class="p">(</span><span class="n">obs</span><span class="p">)</span>
     <span class="n">peg</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_read_pose</span><span class="p">(</span><span class="n">obs</span><span class="p">,</span> <span class="s2">&quot;peg_pose&quot;</span><span class="p">)</span>
     <span class="n">sock</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_read_pose</span><span class="p">(</span><span class="n">obs</span><span class="p">,</span> <span class="s2">&quot;receptacle_pose&quot;</span><span class="p">)</span>
@@ -58767,7 +58897,7 @@ their sum (the envelope). Auditable; emitted into the S2 artifact.</p>
     <span class="n">lateral_mag</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">lateral_vec</span><span class="p">))</span>
 
     <span class="n">e1</span><span class="p">,</span> <span class="n">e2</span> <span class="o">=</span> <span class="n">_lateral_basis</span><span class="p">(</span><span class="n">axis</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">depth</span> <span class="o">&gt;=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_depth_target</span> <span class="o">-</span> <span class="mf">0.002</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">depth</span> <span class="o">&gt;=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_depth_target</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">_seat_eps</span><span class="p">):</span>
         <span class="c1"># Seated: hold (command ~zero velocity) so both arms go static and the</span>
         <span class="c1"># receptacle settles — the success ``static`` ∧ ``settled`` conjuncts</span>
         <span class="c1"># need the press to stop once depth is reached.</span>
@@ -58802,16 +58932,24 @@ their sum (the envelope). Auditable; emitted into the S2 artifact.</p>
         <span class="c1"># amplitude + the chamfer capture).</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_retract_count</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_retract_count</span> <span class="o">-=</span> <span class="mi">1</span>
-            <span class="n">target_depth</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">depth</span> <span class="o">-</span> <span class="n">_BASE_RETRACT_M</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.005</span><span class="p">)</span>
+            <span class="n">target_depth</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">depth</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">_retract_dist</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.005</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">depth</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_last_depth</span> <span class="o">+</span> <span class="mf">1e-4</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_stall_count</span> <span class="o">+=</span> <span class="mi">1</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_stall_count</span> <span class="o">=</span> <span class="mi">0</span>
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_stall_count</span> <span class="o">&gt;=</span> <span class="n">_BASE_STALL_STEPS</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_stall_count</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_stall_steps</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_retract_count</span> <span class="o">=</span> <span class="n">_BASE_RETRACT_STEPS</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_stall_count</span> <span class="o">=</span> <span class="mi">0</span>
-            <span class="n">target_depth</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">depth</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_descend_step</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_depth_target</span> <span class="o">+</span> <span class="mf">0.005</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_press_ratchet</span><span class="p">:</span>
+                <span class="c1"># Monotone press target within the episode (detent press).</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_ratchet_depth</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_ratchet_depth</span><span class="p">,</span> <span class="n">depth</span><span class="p">)</span>
+                <span class="n">target_depth</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_ratchet_depth</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_descend_step</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_depth_target</span> <span class="o">+</span> <span class="mf">0.005</span>
+                <span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_ratchet_depth</span> <span class="o">=</span> <span class="n">target_depth</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">target_depth</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">depth</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_descend_step</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_depth_target</span> <span class="o">+</span> <span class="mf">0.005</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_last_depth</span> <span class="o">=</span> <span class="n">depth</span>
         <span class="n">target</span> <span class="o">=</span> <span class="n">mouth</span> <span class="o">-</span> <span class="n">target_depth</span> <span class="o">*</span> <span class="n">axis</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_retract_count</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
@@ -58853,20 +58991,28 @@ their sum (the envelope). Auditable; emitted into the S2 artifact.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/chamber/partners/coinsert_impedance.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">499</span>
-<span class="normal">500</span>
-<span class="normal">501</span>
-<span class="normal">502</span>
-<span class="normal">503</span>
-<span class="normal">504</span>
-<span class="normal">505</span>
-<span class="normal">506</span>
-<span class="normal">507</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">assert_episode_state_clear</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">531</span>
+<span class="normal">532</span>
+<span class="normal">533</span>
+<span class="normal">534</span>
+<span class="normal">535</span>
+<span class="normal">536</span>
+<span class="normal">537</span>
+<span class="normal">538</span>
+<span class="normal">539</span>
+<span class="normal">540</span>
+<span class="normal">541</span>
+<span class="normal">542</span>
+<span class="normal">543</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">assert_episode_state_clear</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Assert the within-episode state — including the stall clock — was cleared (ADR-009).&quot;&quot;&quot;</span>
     <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">assert_episode_state_clear</span><span class="p">()</span>
-    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_stall_count</span> <span class="o">!=</span> <span class="mi">0</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">_retract_count</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+    <span class="k">if</span> <span class="p">(</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_stall_count</span> <span class="o">!=</span> <span class="mi">0</span>
+        <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">_retract_count</span> <span class="o">!=</span> <span class="mi">0</span>
+        <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ratchet_depth</span> <span class="o">!=</span> <span class="nb">float</span><span class="p">(</span><span class="s2">&quot;-inf&quot;</span><span class="p">)</span>
+    <span class="p">):</span>
         <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
-            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">: stall clock not cleared after reset. &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">: stall clock / press ratchet not cleared after reset. &quot;</span>
             <span class="s2">&quot;ADR-009 §Decision: partners are stateless across episodes.&quot;</span>
         <span class="p">)</span>
         <span class="k">raise</span> <span class="ne">AssertionError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
@@ -58894,17 +59040,19 @@ their sum (the envelope). Auditable; emitted into the S2 artifact.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/chamber/partners/coinsert_impedance.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">492</span>
-<span class="normal">493</span>
-<span class="normal">494</span>
-<span class="normal">495</span>
-<span class="normal">496</span>
-<span class="normal">497</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">reset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">seed</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">523</span>
+<span class="normal">524</span>
+<span class="normal">525</span>
+<span class="normal">526</span>
+<span class="normal">527</span>
+<span class="normal">528</span>
+<span class="normal">529</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">reset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">seed</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Clear within-episode state including the lead-in-search stall clock (ADR-009).&quot;&quot;&quot;</span>
     <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">reset</span><span class="p">(</span><span class="n">seed</span><span class="o">=</span><span class="n">seed</span><span class="p">)</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">_stall_count</span> <span class="o">=</span> <span class="mi">0</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">_retract_count</span> <span class="o">=</span> <span class="mi">0</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">_last_depth</span> <span class="o">=</span> <span class="o">-</span><span class="mf">1.0</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_ratchet_depth</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="s2">&quot;-inf&quot;</span><span class="p">)</span>
 </code></pre></div></td></tr></table></div>
             </details>
     </div>
@@ -58964,51 +59112,7 @@ geometry; <code>base_yaw_deg</code> = 180 for the mirrored partner seat),
 
               <details class="mkdocstrings-source">
                 <summary>Source code in <code>src/chamber/partners/coinsert_impedance.py</code></summary>
-                <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">616</span>
-<span class="normal">617</span>
-<span class="normal">618</span>
-<span class="normal">619</span>
-<span class="normal">620</span>
-<span class="normal">621</span>
-<span class="normal">622</span>
-<span class="normal">623</span>
-<span class="normal">624</span>
-<span class="normal">625</span>
-<span class="normal">626</span>
-<span class="normal">627</span>
-<span class="normal">628</span>
-<span class="normal">629</span>
-<span class="normal">630</span>
-<span class="normal">631</span>
-<span class="normal">632</span>
-<span class="normal">633</span>
-<span class="normal">634</span>
-<span class="normal">635</span>
-<span class="normal">636</span>
-<span class="normal">637</span>
-<span class="normal">638</span>
-<span class="normal">639</span>
-<span class="normal">640</span>
-<span class="normal">641</span>
-<span class="normal">642</span>
-<span class="normal">643</span>
-<span class="normal">644</span>
-<span class="normal">645</span>
-<span class="normal">646</span>
-<span class="normal">647</span>
-<span class="normal">648</span>
-<span class="normal">649</span>
-<span class="normal">650</span>
-<span class="normal">651</span>
-<span class="normal">652</span>
-<span class="normal">653</span>
-<span class="normal">654</span>
-<span class="normal">655</span>
-<span class="normal">656</span>
-<span class="normal">657</span>
-<span class="normal">658</span>
-<span class="normal">659</span>
-<span class="normal">660</span>
+                <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">660</span>
 <span class="normal">661</span>
 <span class="normal">662</span>
 <span class="normal">663</span>
@@ -59059,7 +59163,51 @@ geometry; <code>base_yaw_deg</code> = 180 for the mirrored partner seat),
 <span class="normal">708</span>
 <span class="normal">709</span>
 <span class="normal">710</span>
-<span class="normal">711</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@register_partner</span><span class="p">(</span><span class="s2">&quot;coinsert_reference_holder&quot;</span><span class="p">)</span>
+<span class="normal">711</span>
+<span class="normal">712</span>
+<span class="normal">713</span>
+<span class="normal">714</span>
+<span class="normal">715</span>
+<span class="normal">716</span>
+<span class="normal">717</span>
+<span class="normal">718</span>
+<span class="normal">719</span>
+<span class="normal">720</span>
+<span class="normal">721</span>
+<span class="normal">722</span>
+<span class="normal">723</span>
+<span class="normal">724</span>
+<span class="normal">725</span>
+<span class="normal">726</span>
+<span class="normal">727</span>
+<span class="normal">728</span>
+<span class="normal">729</span>
+<span class="normal">730</span>
+<span class="normal">731</span>
+<span class="normal">732</span>
+<span class="normal">733</span>
+<span class="normal">734</span>
+<span class="normal">735</span>
+<span class="normal">736</span>
+<span class="normal">737</span>
+<span class="normal">738</span>
+<span class="normal">739</span>
+<span class="normal">740</span>
+<span class="normal">741</span>
+<span class="normal">742</span>
+<span class="normal">743</span>
+<span class="normal">744</span>
+<span class="normal">745</span>
+<span class="normal">746</span>
+<span class="normal">747</span>
+<span class="normal">748</span>
+<span class="normal">749</span>
+<span class="normal">750</span>
+<span class="normal">751</span>
+<span class="normal">752</span>
+<span class="normal">753</span>
+<span class="normal">754</span>
+<span class="normal">755</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@register_partner</span><span class="p">(</span><span class="s2">&quot;coinsert_reference_holder&quot;</span><span class="p">)</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">CoInsertReferenceHolder</span><span class="p">(</span><span class="n">_CoInsertControllerBase</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Cooperative reference holder — tracks the socket, yields compliantly (ADR-026 §Decision 1).</span>
 
@@ -59128,7 +59276,7 @@ geometry; <code>base_yaw_deg</code> = 180 for the mirrored partner seat),
         <span class="k">del</span> <span class="n">deterministic</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_step</span> <span class="o">+=</span> <span class="mi">1</span>
         <span class="n">gripper_only</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">_PANDA_ARM_DOF</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
-        <span class="n">gripper_only</span><span class="p">[</span><span class="n">_PANDA_ARM_DOF</span><span class="p">]</span> <span class="o">=</span> <span class="n">_GRIPPER_ACTION</span>
+        <span class="n">gripper_only</span><span class="p">[</span><span class="n">_PANDA_ARM_DOF</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_gripper_action</span><span class="p">)</span>
         <span class="n">qpos</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_read_qpos</span><span class="p">(</span><span class="n">obs</span><span class="p">)</span>
         <span class="n">sock</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_read_pose</span><span class="p">(</span><span class="n">obs</span><span class="p">,</span> <span class="s2">&quot;receptacle_pose&quot;</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">qpos</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">sock</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -59189,14 +59337,14 @@ geometry; <code>base_yaw_deg</code> = 180 for the mirrored partner seat),
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/chamber/partners/coinsert_impedance.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">641</span>
-<span class="normal">642</span>
-<span class="normal">643</span>
-<span class="normal">644</span>
-<span class="normal">645</span>
-<span class="normal">646</span>
-<span class="normal">647</span>
-<span class="normal">648</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">spec</span><span class="p">:</span> <span class="n">PartnerSpec</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">685</span>
+<span class="normal">686</span>
+<span class="normal">687</span>
+<span class="normal">688</span>
+<span class="normal">689</span>
+<span class="normal">690</span>
+<span class="normal">691</span>
+<span class="normal">692</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">spec</span><span class="p">:</span> <span class="n">PartnerSpec</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Bind reference-holder gains (ADR-026 §Decision 1).&quot;&quot;&quot;</span>
     <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">spec</span><span class="p">)</span>
     <span class="n">extra</span> <span class="o">=</span> <span class="n">spec</span><span class="o">.</span><span class="n">extra</span>
@@ -59237,47 +59385,47 @@ rather than fighting it. Orientation is held by :meth:<code>_joint_step_action</
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/chamber/partners/coinsert_impedance.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">671</span>
-<span class="normal">672</span>
-<span class="normal">673</span>
-<span class="normal">674</span>
-<span class="normal">675</span>
-<span class="normal">676</span>
-<span class="normal">677</span>
-<span class="normal">678</span>
-<span class="normal">679</span>
-<span class="normal">680</span>
-<span class="normal">681</span>
-<span class="normal">682</span>
-<span class="normal">683</span>
-<span class="normal">684</span>
-<span class="normal">685</span>
-<span class="normal">686</span>
-<span class="normal">687</span>
-<span class="normal">688</span>
-<span class="normal">689</span>
-<span class="normal">690</span>
-<span class="normal">691</span>
-<span class="normal">692</span>
-<span class="normal">693</span>
-<span class="normal">694</span>
-<span class="normal">695</span>
-<span class="normal">696</span>
-<span class="normal">697</span>
-<span class="normal">698</span>
-<span class="normal">699</span>
-<span class="normal">700</span>
-<span class="normal">701</span>
-<span class="normal">702</span>
-<span class="normal">703</span>
-<span class="normal">704</span>
-<span class="normal">705</span>
-<span class="normal">706</span>
-<span class="normal">707</span>
-<span class="normal">708</span>
-<span class="normal">709</span>
-<span class="normal">710</span>
-<span class="normal">711</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">act</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obs</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">object</span><span class="p">],</span> <span class="o">*</span><span class="p">,</span> <span class="n">deterministic</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">floating</span><span class="p">]:</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">715</span>
+<span class="normal">716</span>
+<span class="normal">717</span>
+<span class="normal">718</span>
+<span class="normal">719</span>
+<span class="normal">720</span>
+<span class="normal">721</span>
+<span class="normal">722</span>
+<span class="normal">723</span>
+<span class="normal">724</span>
+<span class="normal">725</span>
+<span class="normal">726</span>
+<span class="normal">727</span>
+<span class="normal">728</span>
+<span class="normal">729</span>
+<span class="normal">730</span>
+<span class="normal">731</span>
+<span class="normal">732</span>
+<span class="normal">733</span>
+<span class="normal">734</span>
+<span class="normal">735</span>
+<span class="normal">736</span>
+<span class="normal">737</span>
+<span class="normal">738</span>
+<span class="normal">739</span>
+<span class="normal">740</span>
+<span class="normal">741</span>
+<span class="normal">742</span>
+<span class="normal">743</span>
+<span class="normal">744</span>
+<span class="normal">745</span>
+<span class="normal">746</span>
+<span class="normal">747</span>
+<span class="normal">748</span>
+<span class="normal">749</span>
+<span class="normal">750</span>
+<span class="normal">751</span>
+<span class="normal">752</span>
+<span class="normal">753</span>
+<span class="normal">754</span>
+<span class="normal">755</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">act</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obs</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">object</span><span class="p">],</span> <span class="o">*</span><span class="p">,</span> <span class="n">deterministic</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">floating</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Return the holder ``pd_joint_delta_pos`` cooperative-hold action (ADR-026 §Decision 1).</span>
 
 <span class="sd">    Cooperative reference behaviour: hold the socket steady at the</span>
@@ -59291,7 +59439,7 @@ rather than fighting it. Orientation is held by :meth:<code>_joint_step_action</
     <span class="k">del</span> <span class="n">deterministic</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">_step</span> <span class="o">+=</span> <span class="mi">1</span>
     <span class="n">gripper_only</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">_PANDA_ARM_DOF</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
-    <span class="n">gripper_only</span><span class="p">[</span><span class="n">_PANDA_ARM_DOF</span><span class="p">]</span> <span class="o">=</span> <span class="n">_GRIPPER_ACTION</span>
+    <span class="n">gripper_only</span><span class="p">[</span><span class="n">_PANDA_ARM_DOF</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_gripper_action</span><span class="p">)</span>
     <span class="n">qpos</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_read_qpos</span><span class="p">(</span><span class="n">obs</span><span class="p">)</span>
     <span class="n">sock</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_read_pose</span><span class="p">(</span><span class="n">obs</span><span class="p">,</span> <span class="s2">&quot;receptacle_pose&quot;</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">qpos</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">sock</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -59342,15 +59490,15 @@ rather than fighting it. Orientation is held by :meth:<code>_joint_step_action</
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/chamber/partners/coinsert_impedance.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">661</span>
-<span class="normal">662</span>
-<span class="normal">663</span>
-<span class="normal">664</span>
-<span class="normal">665</span>
-<span class="normal">666</span>
-<span class="normal">667</span>
-<span class="normal">668</span>
-<span class="normal">669</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">assert_episode_state_clear</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">705</span>
+<span class="normal">706</span>
+<span class="normal">707</span>
+<span class="normal">708</span>
+<span class="normal">709</span>
+<span class="normal">710</span>
+<span class="normal">711</span>
+<span class="normal">712</span>
+<span class="normal">713</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">assert_episode_state_clear</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Assert within-episode state — incl. the nominal mouth pose — was cleared (ADR-009).&quot;&quot;&quot;</span>
     <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">assert_episode_state_clear</span><span class="p">()</span>
     <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nominal_mouth</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
@@ -59383,10 +59531,10 @@ rather than fighting it. Orientation is held by :meth:<code>_joint_step_action</
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/chamber/partners/coinsert_impedance.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">656</span>
-<span class="normal">657</span>
-<span class="normal">658</span>
-<span class="normal">659</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">reset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">seed</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">700</span>
+<span class="normal">701</span>
+<span class="normal">702</span>
+<span class="normal">703</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">reset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">seed</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Clear within-episode state including the captured nominal mouth pose (ADR-009).&quot;&quot;&quot;</span>
     <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">reset</span><span class="p">(</span><span class="n">seed</span><span class="o">=</span><span class="n">seed</span><span class="p">)</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">_nominal_mouth</span> <span class="o">=</span> <span class="kc">None</span>
