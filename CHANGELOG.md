@@ -8,6 +8,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 While the project is on `0.x`, MINOR-version bumps may break the public API
 per SemVer §4.
 
+## [0.9.0](https://github.com/fsafaei/concerto/compare/v0.8.2...v0.9.0) (2026-09-09)
+
+
+### Features
+
+* **chamber:** co_hold_secure v1 — decision pack, env, and pre-stated solvability/coupling precheck (non-gating) ([#310](https://github.com/fsafaei/concerto/issues/310)) ([ec50b73](https://github.com/fsafaei/concerto/commit/ec50b73540fc5195477ec9ca7f7b5eb796927374))
+* **contracts:** pickcube v2 with scaled sim actions, a versioned registry and Gymnasium ids ([#340](https://github.com/fsafaei/concerto/issues/340)) ([0940a41](https://github.com/fsafaei/concerto/commit/0940a411bf75b459f79eb3d0f5d92e3eac598fb5))
+* **contracts:** task contracts — the sim/real observation-action agreement ([#333](https://github.com/fsafaei/concerto/issues/333)) ([9df378e](https://github.com/fsafaei/concerto/commit/9df378eb213e2ec3e1eb0058c986254a60742c15))
+* **evaluation:** A4 wrapped-evidence support + the committed co-carry ego-robustness profile ([#308](https://github.com/fsafaei/concerto/issues/308)) ([ab2266e](https://github.com/fsafaei/concerto/commit/ab2266eb85c58be411d5469c6ceae12d05530d72))
+* **evaluation:** ADR-027 §Admission A4 — ego-robustness (instrument) admission gate ([#307](https://github.com/fsafaei/concerto/issues/307)) ([0eb6d9d](https://github.com/fsafaei/concerto/commit/0eb6d9d4ee95cffdc2eaab253ba3a55433b47278))
+* **spikes:** handover ladder Slice-0 oracle-headroom probe (eval-only, non-gating) — NO-GO ([#309](https://github.com/fsafaei/concerto/issues/309)) ([bdd869f](https://github.com/fsafaei/concerto/commit/bdd869f1fa7f61640726c0669137f307b13ac3d6))
+
+
+### Bug Fixes
+
+* **tests:** de-flake the QP-saturation timing assertions ([#335](https://github.com/fsafaei/concerto/issues/335)) ([1a692f6](https://github.com/fsafaei/concerto/commit/1a692f62d51ce6ce7327672406aeb09c9219f974))
+
+
+### Documentation
+
+* **adr:** ADR-027 §Admission — add the ego-robustness gate (A4) ([#303](https://github.com/fsafaei/concerto/issues/303)) ([f5ba154](https://github.com/fsafaei/concerto/commit/f5ba1547af871010b3f165e1c620fb82bc7f9f72))
+* **readme:** sync README + CITATION.cff for v0.8.2 and PyPI availability ([#306](https://github.com/fsafaei/concerto/issues/306)) ([c2c2973](https://github.com/fsafaei/concerto/commit/c2c297360eaa1874243c40e0bed03427120a36dd))
+* remove the project logo from the README and the docs site ([#304](https://github.com/fsafaei/concerto/issues/304)) ([99131af](https://github.com/fsafaei/concerto/commit/99131af334fb05018cc59b79052fa28150e4f34d))
+
 ## [0.8.2](https://github.com/fsafaei/concerto/compare/v0.8.1...v0.8.2) (2026-07-15)
 
 
