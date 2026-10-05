@@ -4,10 +4,10 @@
 Importing this module imports SAPIEN through ``mani_skill.envs``; it is kept out
 of the package ``__init__`` on purpose. The import also registers one Gymnasium
 id per contract version (:attr:`TaskContract.gym_id`, e.g.
-``concerto/pickcube-v2``) whose entry point is :func:`make_gym_env`: a single
+``concerto/pickcube-v3``) whose entry point is :func:`make_gym_env`: a single
 CPU env with unbatched numpy observations and actions that any plain Gymnasium
 consumer can train on. Gymnasium imports the module named before the colon, so
-``gym.make("concerto.contracts.sim:concerto/pickcube-v2")`` works wherever
+``gym.make("concerto.contracts.sim:concerto/pickcube-v3")`` works wherever
 concerto is installed, for example as roborl's ``--env-id``.
 """
 

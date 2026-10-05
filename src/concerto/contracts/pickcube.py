@@ -10,7 +10,9 @@ Every number here was read from the installed ManiSkill 3.0.1 package:
 Version 1 is the env as ManiSkill ships it. Version 2 keeps everything but asks
 for 20x smaller translation steps, 2x smaller rotation steps and a 4x longer
 horizon, realised in the sim by :class:`concerto.contracts.actions.ScaleDeltaActions`
-in front of the unchanged controller; both stay registered.
+in front of the unchanged controller. Version 3 keeps v2 exactly but doubles the
+horizon to 400 steps so the task is solvable given the controller's realised
+per-step reach (ADR-030). All three stay registered.
 """
 
 from __future__ import annotations
@@ -42,6 +44,18 @@ _NOTES_V2 = (
     "equals ActionField.to_physical of the raw action. Why: robolab's conservative safety "
     "envelope passes at most 0.005 m and 0.05 rad per step at speed scale 1.0, so a policy "
     "trained on the version-1 bounds would be clamped 20x on the real arm. " + _NOTES_V1
+)
+
+_NOTES_V3 = (
+    "Version 3 differs from version 2 only in the horizon: max_episode_steps is 400 "
+    "(was 200). Everything else -- the 20 Hz pd_ee_delta_pose controller with "
+    "use_target=False, the 42-dim observation, and the +-0.005 m / -0.05 rad per-step "
+    "bounds -- is unchanged. Why: at 20 Hz the sim (and, by assumption, the real arm) "
+    "realises only ~39% of a commanded 5 mm step, because the joint-PD first-order lag "
+    "(tau ~ 100 ms) exceeds the 50 ms control period and the 5 mm safety envelope caps "
+    "how far the target may lead, so realised reach is ~1.9 mm/step regardless of "
+    "controller mode. PickCube needs ~0.39 m of pick-then-place travel; 400 steps give "
+    "~0.78 m of budget (>=2x margin) where 200 steps gave none. See ADR-030. " + _NOTES_V2
 )
 
 PICKCUBE_V1: TaskContract = register(
@@ -87,7 +101,7 @@ PICKCUBE_V1: TaskContract = register(
     )
 )
 
-PICKCUBE: TaskContract = register(
+PICKCUBE_V2: TaskContract = register(
     dataclasses.replace(
         PICKCUBE_V1,
         version=2,
@@ -102,4 +116,16 @@ PICKCUBE: TaskContract = register(
         notes=_NOTES_V2,
     )
 )
-"""The current pickcube contract (version 2)."""
+"""Pickcube contract version 2 (200-step horizon); superseded as the default by v3 (ADR-030)."""
+
+PICKCUBE_V3: TaskContract = register(
+    dataclasses.replace(
+        PICKCUBE_V2,
+        version=3,
+        max_episode_steps=400,
+        notes=_NOTES_V3,
+    )
+)
+
+PICKCUBE: TaskContract = PICKCUBE_V3
+"""The current pickcube contract (version 3): version 2 with a 400-step horizon (ADR-030)."""

@@ -5,7 +5,7 @@ Gated on :func:`chamber.utils.device.sapien_gpu_available`; skipped on
 Vulkan-less hosts. On a SAPIEN-capable host it pins, per contract version,
 the spaces and horizon, the field layout, the controller frame and bounds
 (times the ``ScaleDeltaActions`` scale), the reset configuration, and the
-sign and size of the delta-pose actions. It also builds the registered
+sign and size of the delta-pose actions, and the ADR-030 reach margin. It also builds the registered
 Gymnasium id the way a plain-Gymnasium trainer does and checks what that
 consumer sees.
 """
@@ -20,7 +20,15 @@ from scipy.spatial.transform import Rotation
 from chamber.utils.device import sapien_gpu_available
 from concerto import contracts
 
-_TRACKING_FRACTION = 0.5  # the PD controller must realise at least this much of a commanded delta
+# The PD controller realises a first-order-lag fraction 1 - e^(-T/tau) of a commanded delta,
+# ~39% at 20 Hz (tau ~ 100 ms); per-step tracking is a rescaled action space, not the acceptance
+# criterion (that is the reach-margin gate, ADR-030). This floor only guards against gross
+# regressions (wrong sign, near-zero motion); the never-exceeds upper bound is asserted separately.
+_TRACKING_FRACTION = 0.2
+# ADR-030 reach-margin gate: horizon x realised per-step reach must cover twice the mean
+# pick-then-place TCP travel over PickCube resets.
+REQUIRED_REACH_M = 0.387
+_REACH_MARGIN = 2.0
 _ATOL_M = 1e-3
 _ATOL_RAD = 1e-3
 
@@ -55,7 +63,7 @@ def _run_out(env: gym.Env, action: np.ndarray) -> tuple[int, dict]:
     reason="Requires Vulkan/GPU (SAPIEN); skipped on CPU-only machines",
 )
 class TestPickCubeContractMatchesSim:
-    @pytest.fixture(params=[1, 2], ids=lambda v: f"v{v}")
+    @pytest.fixture(params=[1, 2, 3], ids=lambda v: f"v{v}")
     def contract(self, request):
         return contracts.get("pickcube", request.param)
 
@@ -130,6 +138,24 @@ class TestPickCubeContractMatchesSim:
         assert delta[0] >= _TRACKING_FRACTION * n * bound
         assert abs(delta[1]) < delta[0] / 4
         assert abs(delta[2]) < delta[0] / 4
+
+    def test_horizon_covers_reach_margin(self, env, contract) -> None:
+        """ADR-030 §Decision: ``horizon x realised reach >= 2 x REQUIRED_REACH_M`` from v3 on."""
+        n = _n_steps(contract)
+        env.reset(seed=0)
+        p0, _ = _tcp_pose(env)
+        action = np.zeros(7, dtype=np.float32)
+        action[0] = 1.0
+        for _ in range(n):
+            env.step(action)
+        p1, _ = _tcp_pose(env)
+        budget = contract.max_episode_steps * (p1[0] - p0[0]) / n
+        margin = budget / REQUIRED_REACH_M
+        print(f"v{contract.version}: reach budget {budget:.3f} m, {margin:.2f}x the mean travel")
+        if contract.version >= 3:
+            assert margin >= _REACH_MARGIN
+        elif contract.version == 2:
+            assert margin < _REACH_MARGIN, "v2 is the horizon ADR-030 found too short"
 
     def test_plus_z_rotation_action_turns_negatively_about_base_z(self, env, contract) -> None:
         n = _n_steps(contract)

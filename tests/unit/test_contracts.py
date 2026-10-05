@@ -29,12 +29,12 @@ PICKCUBE_OBS_ORDER = [
 def test_get_pickcube_is_populated() -> None:
     c = contracts.get("pickcube")
     assert c.task_id == "pickcube"
-    assert c.version == 2
+    assert c.version == 3
     assert c.env_id == "PickCube-v1"
     assert c.robot_uid == "panda"
     assert c.control_mode == "pd_ee_delta_pose"
     assert c.control_hz == 20
-    assert c.max_episode_steps == 200
+    assert c.max_episode_steps == 400
     assert c.obs_dim == 42
     assert c.action_dim == 7
     assert c.quaternion_order == "wxyz"
@@ -82,7 +82,7 @@ def test_v1_action_physical_mapping() -> None:
 
 
 def test_v2_action_physical_mapping() -> None:
-    c = contracts.get("pickcube")
+    c = contracts.get("pickcube", 2)
     pos, rot, grip = (c.action_field(n) for n in ("delta_pos", "delta_rot", "gripper"))
     assert pos.to_physical(1.0) == pytest.approx(0.005)
     assert pos.to_physical(-0.5) == pytest.approx(-0.0025)
@@ -108,26 +108,39 @@ def test_v2_differs_from_v1_only_in_bounds_horizon_and_notes() -> None:
     assert "ScaleDeltaActions" in v2.notes
 
 
+def test_v3_differs_from_v2_only_in_horizon() -> None:
+    v2, v3 = contracts.get("pickcube", 2), contracts.get("pickcube", 3)
+    back = dataclasses.replace(
+        v3, version=2, max_episode_steps=v2.max_episode_steps, notes=v2.notes
+    )
+    assert back == v2
+    assert v3.max_episode_steps == 400 == 2 * v2.max_episode_steps
+    assert v3.control_mode == v2.control_mode == "pd_ee_delta_pose"  # controller unchanged
+    assert v3.obs_dim == v2.obs_dim == 42  # observation unchanged
+    assert v3.action_spec == v2.action_spec  # 5 mm / 0.05 rad bounds unchanged
+    assert "ADR-030" in v3.notes
+
+
 def test_get_default_is_highest_version() -> None:
-    assert contracts.get("pickcube") is contracts.get("pickcube", 2)
+    assert contracts.get("pickcube") is contracts.get("pickcube", 3)
     assert contracts.get("pickcube", 1).version == 1
 
 
 def test_versions_pickcube() -> None:
-    assert contracts.versions("pickcube") == (1, 2)
+    assert contracts.versions("pickcube") == (1, 2, 3)
     with pytest.raises(KeyError, match="pickcube"):
         contracts.versions("does_not_exist")
 
 
 def test_get_unknown_version_raises_listing_known() -> None:
-    with pytest.raises(KeyError, match=r"known: \[1, 2\]"):
+    with pytest.raises(KeyError, match=r"known: \[1, 2, 3\]"):
         contracts.get("pickcube", 99)
 
 
 def test_gym_id_names_the_task_and_version() -> None:
     c = contracts.get("pickcube")
-    assert c.gym_id == "concerto/pickcube-v2"
-    assert parse_env_id(c.gym_id) == ("concerto", "pickcube", 2)
+    assert c.gym_id == "concerto/pickcube-v3"
+    assert parse_env_id(c.gym_id) == ("concerto", "pickcube", 3)
     assert contracts.get("pickcube", 1).gym_id == "concerto/pickcube-v1"
 
 
