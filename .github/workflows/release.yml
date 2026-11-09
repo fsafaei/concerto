@@ -96,7 +96,7 @@ jobs:
       - name: Skip when there is no open release branch
         if: steps.checkout_release_branch.outcome != 'success'
         run: echo "No release-please branch this run; nothing to sync."
-      - uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d  # v10.0.1
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2  # v10.3.3
         if: steps.checkout_release_branch.outcome == 'success'
         with:
           python-version: "3.11"
@@ -146,7 +146,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:
           ref: ${{ github.event.inputs.ref || github.event.inputs.tag || needs.release-please.outputs.tag_name }}
-      - uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d  # v10.0.1
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2  # v10.3.3
         with:
           python-version: "3.11"
       - run: uv sync --group dev
@@ -155,7 +155,7 @@ jobs:
       # the GitHub release for an existing tag.
       - run: uv run cyclonedx-py environment -o sbom.spdx.json
         if: github.event_name == 'push'
-      - uses: softprops/action-gh-release@efb35369e0ad2afab669f228072c1b0d510eae64  # v3.0.3
+      - uses: softprops/action-gh-release@8a0cd651e5b2365bd640854a3fa5dfc70e4875f3  # v3.0.4
         if: github.event_name == 'push'
         with:
           tag_name: ${{ env.PUBLISH_TAG }}
@@ -176,7 +176,7 @@ jobs:
       - uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8  # v4.2.2
         with:
           subject-path: 'dist/*'
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9  # v7.0.2
         with:
           name: dist
           path: dist/
@@ -202,11 +202,11 @@ jobs:
     permissions:
       id-token: write  # PyPI trusted publishing
     steps:
-      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c  # v8.0.1
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333  # v8.0.2
         with:
           name: dist
           path: dist
-      - uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d  # v10.0.1
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2  # v10.3.3
       - run: uv publish --publish-url https://test.pypi.org/legacy/ --check-url https://test.pypi.org/simple/ --trusted-publishing always
 
   # Production-PyPI publish. Gated on the TestPyPI smoke check (unless
@@ -231,11 +231,11 @@ jobs:
     permissions:
       id-token: write  # PyPI trusted publishing
     steps:
-      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c  # v8.0.1
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333  # v8.0.2
         with:
           name: dist
           path: dist
-      - uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d  # v10.0.1
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2  # v10.3.3
       # --check-url lets a re-dispatch after a transient failure skip
       # files the index already holds instead of erroring on the
       # duplicate upload.
